@@ -1,22 +1,53 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Cotopia Streaming Platform API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication and user management
+  - name: songs
+    description: Song streaming and management
+  - name: videos
+    description: Video streaming and management
+  - name: artists
+    description: Artist profiles and management
+  - name: labels
+    description: Label profiles and management
+  - name: playlists
+    description: Playlist management
+  - name: comments
+    description: Comments and replies
+  - name: favorites
+    description: User favorites
+  - name: follows
+    description: Follow system
+  - name: submissions
+    description: Content submissions
+  - name: library
+    description: User library and history
+  - name: home
+    description: Home page aggregated data
+  - name: discover
+    description: Discovery and trending
+  - name: company
+    description: Company posts and announcements
+  - name: admin
+    description: Admin dashboard
+  - name: payments
+    description: Payment processing
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +55,2180 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ── Auth ─────────────────────────────────────────────────────────────────
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Validation error
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Log in
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Log out current user
+      responses:
+        "200":
+          description: OK
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user profile
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Unauthenticated
+    patch:
+      operationId: updateMe
+      tags: [auth]
+      summary: Update current user profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  # ── Songs ─────────────────────────────────────────────────────────────────
+  /songs:
+    get:
+      operationId: listSongs
+      tags: [songs]
+      summary: List songs
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+          description: Search query
+        - in: query
+          name: artistId
+          schema:
+            type: integer
+        - in: query
+          name: genre
+          schema:
+            type: string
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SongList"
+    post:
+      operationId: createSong
+      tags: [songs]
+      summary: Create a new song (artist/label)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SongInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Song"
+
+  /songs/featured:
+    get:
+      operationId: getFeaturedSongs
+      tags: [songs]
+      summary: Get featured songs for home page
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Song"
+
+  /songs/trending:
+    get:
+      operationId: getTrendingSongs
+      tags: [songs]
+      summary: Get trending songs
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Song"
+
+  /songs/{id}:
+    get:
+      operationId: getSong
+      tags: [songs]
+      summary: Get a song by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SongDetail"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateSong
+      tags: [songs]
+      summary: Update a song
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SongUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Song"
+    delete:
+      operationId: deleteSong
+      tags: [songs]
+      summary: Delete a song
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: No content
+
+  /songs/{id}/play:
+    post:
+      operationId: recordSongPlay
+      tags: [songs]
+      summary: Record a song play event
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+
+  /songs/{id}/comments:
+    get:
+      operationId: getSongComments
+      tags: [comments]
+      summary: Get comments for a song
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Comment"
+    post:
+      operationId: createSongComment
+      tags: [comments]
+      summary: Add a comment to a song
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommentInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comment"
+
+  /songs/{id}/rate:
+    post:
+      operationId: rateSong
+      tags: [songs]
+      summary: Rate a song (1-5)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RatingInput"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RatingResult"
+
+  # ── Videos ────────────────────────────────────────────────────────────────
+  /videos:
+    get:
+      operationId: listVideos
+      tags: [videos]
+      summary: List videos
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+        - in: query
+          name: artistId
+          schema:
+            type: integer
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VideoList"
+    post:
+      operationId: createVideo
+      tags: [videos]
+      summary: Create a new video
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VideoInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Video"
+
+  /videos/featured:
+    get:
+      operationId: getFeaturedVideos
+      tags: [videos]
+      summary: Get featured videos
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Video"
+
+  /videos/trending:
+    get:
+      operationId: getTrendingVideos
+      tags: [videos]
+      summary: Get trending videos
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Video"
+
+  /videos/{id}:
+    get:
+      operationId: getVideo
+      tags: [videos]
+      summary: Get a video by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VideoDetail"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateVideo
+      tags: [videos]
+      summary: Update a video
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VideoUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Video"
+    delete:
+      operationId: deleteVideo
+      tags: [videos]
+      summary: Delete a video
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: No content
+
+  /videos/{id}/view:
+    post:
+      operationId: recordVideoView
+      tags: [videos]
+      summary: Record a video view
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+
+  /videos/{id}/comments:
+    get:
+      operationId: getVideoComments
+      tags: [comments]
+      summary: Get comments for a video
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Comment"
+    post:
+      operationId: createVideoComment
+      tags: [comments]
+      summary: Add a comment to a video
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommentInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comment"
+
+  /videos/{id}/rate:
+    post:
+      operationId: rateVideo
+      tags: [videos]
+      summary: Rate a video (1-5)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RatingInput"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RatingResult"
+
+  # ── Artists ───────────────────────────────────────────────────────────────
+  /artists:
+    get:
+      operationId: listArtists
+      tags: [artists]
+      summary: List artists
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Artist"
+
+  /artists/new:
+    get:
+      operationId: getNewArtists
+      tags: [artists]
+      summary: Get newly joined artists
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Artist"
+
+  /artists/featured:
+    get:
+      operationId: getFeaturedArtists
+      tags: [artists]
+      summary: Get featured artists
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Artist"
+
+  /artists/{id}:
+    get:
+      operationId: getArtist
+      tags: [artists]
+      summary: Get an artist profile
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArtistProfile"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateArtist
+      tags: [artists]
+      summary: Update artist profile
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ArtistUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Artist"
+
+  /artists/{id}/follow:
+    post:
+      operationId: followArtist
+      tags: [follows]
+      summary: Follow an artist
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+    delete:
+      operationId: unfollowArtist
+      tags: [follows]
+      summary: Unfollow an artist
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+
+  # ── Labels ────────────────────────────────────────────────────────────────
+  /labels:
+    get:
+      operationId: listLabels
+      tags: [labels]
+      summary: List labels
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Label"
+
+  /labels/featured:
+    get:
+      operationId: getFeaturedLabels
+      tags: [labels]
+      summary: Get featured labels
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Label"
+
+  /labels/{id}:
+    get:
+      operationId: getLabel
+      tags: [labels]
+      summary: Get a label profile
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LabelProfile"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateLabel
+      tags: [labels]
+      summary: Update label profile
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LabelUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Label"
+
+  /labels/{id}/follow:
+    post:
+      operationId: followLabel
+      tags: [follows]
+      summary: Follow a label
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+    delete:
+      operationId: unfollowLabel
+      tags: [follows]
+      summary: Unfollow a label
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+
+  # ── Playlists ─────────────────────────────────────────────────────────────
+  /playlists:
+    get:
+      operationId: listPlaylists
+      tags: [playlists]
+      summary: Get current user playlists
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Playlist"
+    post:
+      operationId: createPlaylist
+      tags: [playlists]
+      summary: Create a playlist
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlaylistInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Playlist"
+
+  /playlists/{id}:
+    get:
+      operationId: getPlaylist
+      tags: [playlists]
+      summary: Get a playlist with its songs
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlaylistDetail"
+        "404":
+          description: Not found
+    patch:
+      operationId: updatePlaylist
+      tags: [playlists]
+      summary: Update a playlist
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlaylistUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Playlist"
+    delete:
+      operationId: deletePlaylist
+      tags: [playlists]
+      summary: Delete a playlist
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: No content
+
+  /playlists/{id}/songs:
+    post:
+      operationId: addSongToPlaylist
+      tags: [playlists]
+      summary: Add a song to a playlist
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlaylistSongInput"
+      responses:
+        "200":
+          description: OK
+
+  /playlists/{id}/songs/{songId}:
+    delete:
+      operationId: removeSongFromPlaylist
+      tags: [playlists]
+      summary: Remove a song from a playlist
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: songId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: No content
+
+  # ── Comments ──────────────────────────────────────────────────────────────
+  /comments/{id}:
+    delete:
+      operationId: deleteComment
+      tags: [comments]
+      summary: Delete a comment
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: No content
+
+  # ── Favorites ─────────────────────────────────────────────────────────────
+  /favorites/songs:
+    get:
+      operationId: getFavoriteSongs
+      tags: [favorites]
+      summary: Get user's favorite songs
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Song"
+
+  /favorites/songs/{id}:
+    post:
+      operationId: favoriteSong
+      tags: [favorites]
+      summary: Add a song to favorites
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+    delete:
+      operationId: unfavoriteSong
+      tags: [favorites]
+      summary: Remove a song from favorites
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+
+  /favorites/videos:
+    get:
+      operationId: getFavoriteVideos
+      tags: [favorites]
+      summary: Get user's favorite videos
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Video"
+
+  /favorites/videos/{id}:
+    post:
+      operationId: favoriteVideo
+      tags: [favorites]
+      summary: Add a video to favorites
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+    delete:
+      operationId: unfavoriteVideo
+      tags: [favorites]
+      summary: Remove a video from favorites
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+
+  # ── Submissions ───────────────────────────────────────────────────────────
+  /submissions:
+    get:
+      operationId: listSubmissions
+      tags: [submissions]
+      summary: List submissions (own for artists, all for admins)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Submission"
+    post:
+      operationId: createSubmission
+      tags: [submissions]
+      summary: Submit content for review
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmissionInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Submission"
+
+  /submissions/{id}:
+    get:
+      operationId: getSubmission
+      tags: [submissions]
+      summary: Get a submission
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Submission"
+    patch:
+      operationId: updateSubmission
+      tags: [submissions]
+      summary: Update submission status (admin) or content (artist in draft)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmissionUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Submission"
+
+  # ── Library ───────────────────────────────────────────────────────────────
+  /library/history:
+    get:
+      operationId: getHistory
+      tags: [library]
+      summary: Get user's listening/viewing history
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 50
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HistoryItem"
+
+  # ── Home ──────────────────────────────────────────────────────────────────
+  /home:
+    get:
+      operationId: getHomeFeed
+      tags: [home]
+      summary: Get aggregated home page data
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HomeFeed"
+
+  # ── Discover ──────────────────────────────────────────────────────────────
+  /discover:
+    get:
+      operationId: getDiscover
+      tags: [discover]
+      summary: Get discovery page aggregated data
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiscoverFeed"
+
+  # ── Company Posts ─────────────────────────────────────────────────────────
+  /company/posts:
+    get:
+      operationId: listCompanyPosts
+      tags: [company]
+      summary: List company posts/announcements
+      parameters:
+        - in: query
+          name: type
+          schema:
+            type: string
+            enum: [announcement, video, product_update, artist_spotlight, label_spotlight, campaign]
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CompanyPost"
+    post:
+      operationId: createCompanyPost
+      tags: [company]
+      summary: Create a company post (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompanyPostInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompanyPost"
+
+  /company/posts/{id}:
+    get:
+      operationId: getCompanyPost
+      tags: [company]
+      summary: Get a company post
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompanyPost"
+    patch:
+      operationId: updateCompanyPost
+      tags: [company]
+      summary: Update a company post (admin only)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompanyPostUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompanyPost"
+    delete:
+      operationId: deleteCompanyPost
+      tags: [company]
+      summary: Delete a company post (admin only)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: No content
+
+  # ── Admin ─────────────────────────────────────────────────────────────────
+  /admin/users:
+    get:
+      operationId: adminListUsers
+      tags: [admin]
+      summary: List all users (admin)
+      parameters:
+        - in: query
+          name: role
+          schema:
+            type: string
+        - in: query
+          name: q
+          schema:
+            type: string
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 50
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUserList"
+
+  /admin/users/{id}:
+    patch:
+      operationId: adminUpdateUser
+      tags: [admin]
+      summary: Update a user (admin)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminUserUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /admin/submissions:
+    get:
+      operationId: adminListSubmissions
+      tags: [admin]
+      summary: List all submissions for review (admin)
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [draft, pending_review, approved, rejected, published]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Submission"
+
+  /admin/analytics:
+    get:
+      operationId: getAdminAnalytics
+      tags: [admin]
+      summary: Get platform analytics overview
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalyticsSummary"
+
+  /admin/settings:
+    get:
+      operationId: getAppSettings
+      tags: [admin]
+      summary: Get app settings / CMS config
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppSettings"
+    patch:
+      operationId: updateAppSettings
+      tags: [admin]
+      summary: Update app settings (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AppSettingsUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppSettings"
+
+  # ── Payments ──────────────────────────────────────────────────────────────
+  /payments/initiate:
+    post:
+      operationId: initiatePayment
+      tags: [payments]
+      summary: Initiate a PayPal payment for submission fee
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentInitiateInput"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentResponse"
+
 components:
   schemas:
     HealthStatus:
       type: object
+      required: [status]
       properties:
         status:
           type: string
-      required:
-        - status
 
+    # ── Auth ────────────────────────────────────────────────────────────────
+    RegisterInput:
+      type: object
+      required: [email, password, username, role]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+        username:
+          type: string
+        displayName:
+          type: string
+        role:
+          type: string
+          enum: [listener, artist, label, business]
+
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+
+    AuthResponse:
+      type: object
+      required: [user, token]
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        token:
+          type: string
+
+    User:
+      type: object
+      required: [id, email, username, role, createdAt]
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        username:
+          type: string
+        displayName:
+          type: ["string", "null"]
+        avatarUrl:
+          type: ["string", "null"]
+        role:
+          type: string
+          enum: [listener, artist, label, business, admin]
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+
+    UserUpdate:
+      type: object
+      properties:
+        displayName:
+          type: string
+        avatarUrl:
+          type: string
+        bio:
+          type: string
+
+    # ── Songs ───────────────────────────────────────────────────────────────
+    Song:
+      type: object
+      required: [id, title, artistId, artistName, duration, status, createdAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        artistId:
+          type: integer
+        artistName:
+          type: string
+        albumId:
+          type: ["integer", "null"]
+        albumName:
+          type: ["string", "null"]
+        genre:
+          type: ["string", "null"]
+        duration:
+          type: integer
+        coverUrl:
+          type: ["string", "null"]
+        streamUrl:
+          type: ["string", "null"]
+        playCount:
+          type: integer
+        avgRating:
+          type: ["number", "null"]
+        status:
+          type: string
+          enum: [draft, pending_review, approved, rejected, published]
+        createdAt:
+          type: string
+
+    SongDetail:
+      allOf:
+        - $ref: "#/components/schemas/Song"
+        - type: object
+          properties:
+            commentCount:
+              type: integer
+            userRating:
+              type: ["integer", "null"]
+            isFavorited:
+              type: boolean
+
+    SongInput:
+      type: object
+      required: [title, duration]
+      properties:
+        title:
+          type: string
+        albumId:
+          type: integer
+        genre:
+          type: string
+        duration:
+          type: integer
+        coverUrl:
+          type: string
+        streamUrl:
+          type: string
+        lyrics:
+          type: string
+
+    SongUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        genre:
+          type: string
+        coverUrl:
+          type: string
+        streamUrl:
+          type: string
+        lyrics:
+          type: string
+
+    SongList:
+      type: object
+      required: [items, total]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Song"
+        total:
+          type: integer
+
+    # ── Videos ──────────────────────────────────────────────────────────────
+    Video:
+      type: object
+      required: [id, title, artistId, artistName, duration, status, createdAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        artistId:
+          type: integer
+        artistName:
+          type: string
+        genre:
+          type: ["string", "null"]
+        duration:
+          type: integer
+        thumbnailUrl:
+          type: ["string", "null"]
+        videoUrl:
+          type: ["string", "null"]
+        viewCount:
+          type: integer
+        avgRating:
+          type: ["number", "null"]
+        status:
+          type: string
+          enum: [draft, pending_review, approved, rejected, published]
+        createdAt:
+          type: string
+
+    VideoDetail:
+      allOf:
+        - $ref: "#/components/schemas/Video"
+        - type: object
+          properties:
+            commentCount:
+              type: integer
+            userRating:
+              type: ["integer", "null"]
+            isFavorited:
+              type: boolean
+            description:
+              type: ["string", "null"]
+
+    VideoInput:
+      type: object
+      required: [title, duration]
+      properties:
+        title:
+          type: string
+        genre:
+          type: string
+        duration:
+          type: integer
+        thumbnailUrl:
+          type: string
+        videoUrl:
+          type: string
+        description:
+          type: string
+
+    VideoUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        genre:
+          type: string
+        thumbnailUrl:
+          type: string
+        videoUrl:
+          type: string
+        description:
+          type: string
+
+    VideoList:
+      type: object
+      required: [items, total]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Video"
+        total:
+          type: integer
+
+    # ── Artists ─────────────────────────────────────────────────────────────
+    Artist:
+      type: object
+      required: [id, userId, stageName, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        stageName:
+          type: string
+        bio:
+          type: ["string", "null"]
+        avatarUrl:
+          type: ["string", "null"]
+        bannerUrl:
+          type: ["string", "null"]
+        genre:
+          type: ["string", "null"]
+        followerCount:
+          type: integer
+        songCount:
+          type: integer
+        isFollowed:
+          type: boolean
+        createdAt:
+          type: string
+
+    ArtistProfile:
+      allOf:
+        - $ref: "#/components/schemas/Artist"
+        - type: object
+          properties:
+            songs:
+              type: array
+              items:
+                $ref: "#/components/schemas/Song"
+            videos:
+              type: array
+              items:
+                $ref: "#/components/schemas/Video"
+            labelId:
+              type: ["integer", "null"]
+            labelName:
+              type: ["string", "null"]
+
+    ArtistUpdate:
+      type: object
+      properties:
+        stageName:
+          type: string
+        bio:
+          type: string
+        avatarUrl:
+          type: string
+        bannerUrl:
+          type: string
+        genre:
+          type: string
+
+    # ── Labels ──────────────────────────────────────────────────────────────
+    Label:
+      type: object
+      required: [id, userId, name, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        name:
+          type: string
+        bio:
+          type: ["string", "null"]
+        logoUrl:
+          type: ["string", "null"]
+        bannerUrl:
+          type: ["string", "null"]
+        followerCount:
+          type: integer
+        artistCount:
+          type: integer
+        isFollowed:
+          type: boolean
+        createdAt:
+          type: string
+
+    LabelProfile:
+      allOf:
+        - $ref: "#/components/schemas/Label"
+        - type: object
+          properties:
+            artists:
+              type: array
+              items:
+                $ref: "#/components/schemas/Artist"
+            recentReleases:
+              type: array
+              items:
+                $ref: "#/components/schemas/Song"
+
+    LabelUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        bio:
+          type: string
+        logoUrl:
+          type: string
+        bannerUrl:
+          type: string
+
+    # ── Playlists ────────────────────────────────────────────────────────────
+    Playlist:
+      type: object
+      required: [id, userId, name, isPublic, songCount, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        coverUrl:
+          type: ["string", "null"]
+        isPublic:
+          type: boolean
+        songCount:
+          type: integer
+        createdAt:
+          type: string
+
+    PlaylistDetail:
+      allOf:
+        - $ref: "#/components/schemas/Playlist"
+        - type: object
+          properties:
+            songs:
+              type: array
+              items:
+                $ref: "#/components/schemas/Song"
+
+    PlaylistInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        isPublic:
+          type: boolean
+
+    PlaylistUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        coverUrl:
+          type: string
+        isPublic:
+          type: boolean
+
+    PlaylistSongInput:
+      type: object
+      required: [songId]
+      properties:
+        songId:
+          type: integer
+
+    # ── Comments ─────────────────────────────────────────────────────────────
+    Comment:
+      type: object
+      required: [id, userId, username, content, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        username:
+          type: string
+        avatarUrl:
+          type: ["string", "null"]
+        content:
+          type: string
+        parentId:
+          type: ["integer", "null"]
+        replies:
+          type: array
+          items:
+            $ref: "#/components/schemas/Comment"
+        createdAt:
+          type: string
+
+    CommentInput:
+      type: object
+      required: [content]
+      properties:
+        content:
+          type: string
+        parentId:
+          type: integer
+
+    # ── Ratings ──────────────────────────────────────────────────────────────
+    RatingInput:
+      type: object
+      required: [rating]
+      properties:
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+
+    RatingResult:
+      type: object
+      required: [avgRating, ratingCount]
+      properties:
+        avgRating:
+          type: number
+        ratingCount:
+          type: integer
+
+    # ── Submissions ───────────────────────────────────────────────────────────
+    Submission:
+      type: object
+      required: [id, userId, type, title, status, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        submitterName:
+          type: string
+        type:
+          type: string
+          enum: [song, video]
+        title:
+          type: string
+        contentId:
+          type: ["integer", "null"]
+        status:
+          type: string
+          enum: [draft, pending_review, approved, rejected, published]
+        paymentStatus:
+          type: string
+          enum: [unpaid, paid, refunded]
+        adminNotes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    SubmissionInput:
+      type: object
+      required: [type, contentId]
+      properties:
+        type:
+          type: string
+          enum: [song, video]
+        contentId:
+          type: integer
+
+    SubmissionUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [draft, pending_review, approved, rejected, published]
+        adminNotes:
+          type: string
+
+    # ── Library ───────────────────────────────────────────────────────────────
+    HistoryItem:
+      type: object
+      required: [id, type, contentId, contentTitle, playedAt]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: [song, video]
+        contentId:
+          type: integer
+        contentTitle:
+          type: string
+        coverUrl:
+          type: ["string", "null"]
+        artistName:
+          type: ["string", "null"]
+        playedAt:
+          type: string
+
+    # ── Home Feed ─────────────────────────────────────────────────────────────
+    HomeFeed:
+      type: object
+      required: [featuredSongs, featuredVideos, featuredArtists, featuredLabels, trendingSongs, newReleases, announcements]
+      properties:
+        featuredSongs:
+          type: array
+          items:
+            $ref: "#/components/schemas/Song"
+        featuredVideos:
+          type: array
+          items:
+            $ref: "#/components/schemas/Video"
+        featuredArtists:
+          type: array
+          items:
+            $ref: "#/components/schemas/Artist"
+        featuredLabels:
+          type: array
+          items:
+            $ref: "#/components/schemas/Label"
+        trendingSongs:
+          type: array
+          items:
+            $ref: "#/components/schemas/Song"
+        newReleases:
+          type: array
+          items:
+            $ref: "#/components/schemas/Song"
+        announcements:
+          type: array
+          items:
+            $ref: "#/components/schemas/CompanyPost"
+
+    # ── Discover ──────────────────────────────────────────────────────────────
+    DiscoverFeed:
+      type: object
+      required: [trendingSongs, trendingVideos, topRatedSongs, mostDiscussed, newArtists, newLabels]
+      properties:
+        trendingSongs:
+          type: array
+          items:
+            $ref: "#/components/schemas/Song"
+        trendingVideos:
+          type: array
+          items:
+            $ref: "#/components/schemas/Video"
+        topRatedSongs:
+          type: array
+          items:
+            $ref: "#/components/schemas/Song"
+        mostDiscussed:
+          type: array
+          items:
+            $ref: "#/components/schemas/Song"
+        newArtists:
+          type: array
+          items:
+            $ref: "#/components/schemas/Artist"
+        newLabels:
+          type: array
+          items:
+            $ref: "#/components/schemas/Label"
+
+    # ── Company Posts ─────────────────────────────────────────────────────────
+    CompanyPost:
+      type: object
+      required: [id, title, type, content, isPinned, createdAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        type:
+          type: string
+          enum: [announcement, video, product_update, artist_spotlight, label_spotlight, campaign]
+        content:
+          type: string
+        imageUrl:
+          type: ["string", "null"]
+        videoUrl:
+          type: ["string", "null"]
+        isPinned:
+          type: boolean
+        createdAt:
+          type: string
+
+    CompanyPostInput:
+      type: object
+      required: [title, type, content]
+      properties:
+        title:
+          type: string
+        type:
+          type: string
+          enum: [announcement, video, product_update, artist_spotlight, label_spotlight, campaign]
+        content:
+          type: string
+        imageUrl:
+          type: string
+        videoUrl:
+          type: string
+        isPinned:
+          type: boolean
+
+    CompanyPostUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+        imageUrl:
+          type: string
+        videoUrl:
+          type: string
+        isPinned:
+          type: boolean
+
+    # ── Admin ─────────────────────────────────────────────────────────────────
+    AdminUserList:
+      type: object
+      required: [items, total]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/User"
+        total:
+          type: integer
+
+    AdminUserUpdate:
+      type: object
+      properties:
+        role:
+          type: string
+          enum: [listener, artist, label, business, admin]
+        isActive:
+          type: boolean
+
+    AnalyticsSummary:
+      type: object
+      required: [totalUsers, totalSongs, totalVideos, totalPlays, totalViews, totalComments, pendingSubmissions]
+      properties:
+        totalUsers:
+          type: integer
+        totalSongs:
+          type: integer
+        totalVideos:
+          type: integer
+        totalPlays:
+          type: integer
+        totalViews:
+          type: integer
+        totalComments:
+          type: integer
+        pendingSubmissions:
+          type: integer
+        usersByRole:
+          type: object
+          additionalProperties:
+            type: integer
+        topSongs:
+          type: array
+          items:
+            $ref: "#/components/schemas/Song"
+        topVideos:
+          type: array
+          items:
+            $ref: "#/components/schemas/Video"
+
+    AppSettings:
+      type: object
+      required: [id, appName]
+      properties:
+        id:
+          type: integer
+        appName:
+          type: string
+        logoUrl:
+          type: ["string", "null"]
+        primaryColor:
+          type: ["string", "null"]
+        secondaryColor:
+          type: ["string", "null"]
+        accentColor:
+          type: ["string", "null"]
+        footerText:
+          type: ["string", "null"]
+        songSubmissionFee:
+          type: number
+        videoSubmissionFee:
+          type: number
+        maintenanceMode:
+          type: boolean
+
+    AppSettingsUpdate:
+      type: object
+      properties:
+        appName:
+          type: string
+        logoUrl:
+          type: string
+        primaryColor:
+          type: string
+        secondaryColor:
+          type: string
+        accentColor:
+          type: string
+        footerText:
+          type: string
+        songSubmissionFee:
+          type: number
+        videoSubmissionFee:
+          type: number
+        maintenanceMode:
+          type: boolean
+
+    # ── Payments ──────────────────────────────────────────────────────────────
+    PaymentInitiateInput:
+      type: object
+      required: [submissionId]
+      properties:
+        submissionId:
+          type: integer
+
+    PaymentResponse:
+      type: object
+      required: [paypalOrderId, approvalUrl, amount]
+      properties:
+        paypalOrderId:
+          type: string
+        approvalUrl:
+          type: string
+        amount:
+          type: number

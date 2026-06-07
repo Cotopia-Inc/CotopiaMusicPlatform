@@ -1,0 +1,224 @@
+PROJECT NAME: Cotopia Streaming Platform MVP
+
+OVERVIEW
+
+Build a modern web-based music and video streaming platform for Cotopia. The platform is owned by Cotopia (parent company) and supports artists, labels, businesses, listeners, and administrators.
+
+This is an MVP intended to validate the business model before scaling to enterprise infrastructure.
+
+TECH STACK
+
+* Next.js
+* React
+* Bootstrap 5
+* Supabase PostgreSQL
+* Supabase Auth
+* Supabase Storage
+* PayPal Integration
+* GitHub
+* Replit Compatible
+* VS Code Compatible
+
+USER ROLES
+
+1. Listener
+2. Artist
+3. Label
+4. Business
+5. Admin
+
+CORE FEATURES
+
+AUTHENTICATION
+
+* Registration
+* Login
+* Password Reset
+* Role Selection
+* Profile Management
+
+HOME PAGE
+
+* Featured Songs
+* Featured Videos
+* Featured Artists
+* Featured Labels
+* Trending Content
+* New Releases
+* Company Announcements
+
+MUSIC
+
+* Stream Songs
+* Search Songs
+* Song Details Page
+* Ratings
+* Comments
+* Playlists
+* Favorites
+
+VIDEOS
+
+* Stream Videos
+* Search Videos
+* Video Details Page
+* Ratings
+* Comments
+
+DISCOVER
+
+* Trending Songs
+* Trending Videos
+* Top Rated
+* Most Discussed
+* New Artists
+* New Labels
+
+COMPANY HUB
+
+* Company Announcements
+* Company Videos
+* Product Updates
+* Artist Spotlights
+* Label Spotlights
+* Marketing Campaigns
+
+LIBRARY
+
+* Saved Songs
+* Saved Videos
+* Playlists
+* History
+
+PROFILES
+
+Artist Profiles:
+
+* Bio
+* Banner
+* Songs
+* Videos
+* Followers
+
+Label Profiles:
+
+* Bio
+* Artists
+* Releases
+
+Business Profiles:
+
+* Company Information
+* Description
+
+SOCIAL FEATURES
+
+* Follow Users
+* Follow Artists
+* Follow Labels
+* Comments
+* Replies
+* Ratings
+* Notifications
+
+SUBMISSIONS
+
+Artists and Labels can:
+
+* Upload Songs
+* Upload Videos
+* Submit for Review
+* Track Submission Status
+
+Submission Status:
+
+* Draft
+* Pending Review
+* Approved
+* Rejected
+* Published
+
+PAYMENTS
+
+Use PayPal for:
+
+* Song Submission Fees
+* Video Submission Fees
+* Future Subscription Plans
+
+ADMIN DASHBOARD
+
+User Management
+
+Content Management
+
+Submission Review
+
+Homepage Management
+
+Announcement Management
+
+Analytics Dashboard
+
+Theme Settings
+
+Branding Controls
+
+ANALYTICS
+
+Track:
+
+* Song Plays
+* Song Completion
+* Video Views
+* Searches
+* Comments
+* Ratings
+* Follows
+* Registrations
+* Logins
+
+CMS
+
+Admin can edit:
+
+* App Name
+* Logo
+* Colors
+* Homepage Layout
+* Featured Content
+* Menus
+* Footer
+
+DATABASE TABLES
+
+Create database models for:
+
+* users
+* profiles
+* artists
+* labels
+* business_profiles
+* songs
+* albums
+* videos
+* comments
+* ratings
+* follows
+* playlists
+* playlist_items
+* submissions
+* payments
+* analytics_events
+* company_posts
+* app_settings
+
+IMPORTANT
+
+Build the project in a modular and scalable manner.
+
+Do not implement live streaming yet.
+
+Prepare the architecture so live streaming, embed players, APIs, and mobile apps can be added later without major restructuring.
+
+Branding should use placeholder values that can be changed through the admin CMS.

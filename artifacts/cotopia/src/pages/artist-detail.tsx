@@ -1,0 +1,168 @@
+import { useParams, Link } from "wouter";
+import { useGetArtist, getGetArtistQueryKey, useFollowArtist, useUnfollowArtist } from "@workspace/api-client-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Play, Users, Music } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/lib/auth";
+import { useQueryClient } from "@tanstack/react-query";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+export default function ArtistDetail() {
+  const { id } = useParams();
+  const artistId = Number(id);
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  const { data: artist, isLoading } = useGetArtist(artistId, {
+    query: { enabled: !!artistId, queryKey: getGetArtistQueryKey(artistId) }
+  });
+
+  const followMutation = useFollowArtist();
+  const unfollowMutation = useUnfollowArtist();
+
+  const handleFollowToggle = () => {
+    if (!artist) return;
+    const mutation = artist.isFollowed ? unfollowMutation : followMutation;
+    mutation.mutate({ id: artistId }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getGetArtistQueryKey(artistId) });
+      }
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-8 pb-24">
+        <Skeleton className="w-full h-64 rounded-xl" />
+        <div className="flex gap-8 px-8 -mt-16 relative z-10">
+          <Skeleton className="w-48 h-48 rounded-full border-4 border-background" />
+          <div className="pt-16 space-y-4">
+            <Skeleton className="h-10 w-64" />
+            <Skeleton className="h-4 w-32" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!artist) return <div className="p-8 text-center text-muted-foreground">Artist not found</div>;
+
+  return (
+    <div className="space-y-12 pb-24">
+      {/* Banner */}
+      <div className="w-full h-64 md:h-80 rounded-xl overflow-hidden bg-secondary border border-border relative">
+        {artist.bannerUrl ? (
+          <img src={artist.bannerUrl} alt="Banner" className="w-full h-full object-cover opacity-60" />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-r from-primary/20 to-secondary" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
+      </div>
+
+      {/* Header Info */}
+      <div className="flex flex-col md:flex-row gap-8 px-8 -mt-24 relative z-10">
+        <div className="w-48 h-48 rounded-full overflow-hidden bg-card border-4 border-background shadow-2xl flex-shrink-0">
+          {artist.avatarUrl ? (
+            <img src={artist.avatarUrl} alt={artist.stageName} className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-5xl font-bold text-muted-foreground bg-secondary">
+              {artist.stageName.charAt(0)}
+            </div>
+          )}
+        </div>
+        <div className="pt-4 md:pt-16 flex-1 flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div className="space-y-2">
+            <h1 className="text-5xl font-extrabold tracking-tighter">{artist.stageName}</h1>
+            <div className="flex items-center gap-4 text-muted-foreground font-medium">
+              <span className="flex items-center gap-1"><Users className="w-4 h-4" /> {artist.followerCount?.toLocaleString() || 0} followers</span>
+              <span className="flex items-center gap-1"><Music className="w-4 h-4" /> {artist.songCount || 0} tracks</span>
+              {artist.labelName && (
+                <span className="text-primary">Label: {artist.labelName}</span>
+              )}
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <Button size="lg" className="rounded-full px-8 font-bold">
+              <Play className="w-5 h-5 mr-2 fill-current" /> Play
+            </Button>
+            {user && (
+              <Button 
+                variant={artist.isFollowed ? "outline" : "secondary"} 
+                size="lg" 
+                className="rounded-full px-6"
+                onClick={handleFollowToggle}
+                disabled={followMutation.isPending || unfollowMutation.isPending}
+              >
+                {artist.isFollowed ? "Following" : "Follow"}
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="px-8">
+        <Tabs defaultValue="tracks">
+          <TabsList className="bg-transparent border-b border-border w-full justify-start rounded-none h-auto p-0 space-x-6">
+            <TabsTrigger value="tracks" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 py-3 text-base">Popular Tracks</TabsTrigger>
+            <TabsTrigger value="videos" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 py-3 text-base">Videos</TabsTrigger>
+            <TabsTrigger value="about" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 py-3 text-base">About</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="tracks" className="pt-6">
+            {artist.songs && artist.songs.length > 0 ? (
+              <div className="space-y-2">
+                {artist.songs.map((song, idx) => (
+                  <Link key={song.id} href={`/songs/${song.id}`}>
+                    <div className="flex items-center gap-4 p-3 rounded-md hover:bg-secondary/50 group cursor-pointer transition-colors">
+                      <span className="w-6 text-center text-muted-foreground text-sm group-hover:hidden">{idx + 1}</span>
+                      <Play className="w-4 h-4 fill-current text-primary hidden group-hover:block ml-1 mr-1" />
+                      <div className="w-10 h-10 rounded bg-secondary overflow-hidden">
+                        {song.coverUrl && <img src={song.coverUrl} alt={song.title} className="w-full h-full object-cover" />}
+                      </div>
+                      <div className="flex-1 font-medium">{song.title}</div>
+                      <div className="text-muted-foreground text-sm w-32">{song.playCount?.toLocaleString() || 0} plays</div>
+                      <div className="text-muted-foreground text-sm w-16 text-right">{Math.floor(song.duration / 60)}:{(song.duration % 60).toString().padStart(2, '0')}</div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground py-8">No tracks available.</p>
+            )}
+          </TabsContent>
+
+          <TabsContent value="videos" className="pt-6">
+             {artist.videos && artist.videos.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {artist.videos.map((video) => (
+                    <Link key={video.id} href={`/videos/${video.id}`}>
+                      <div className="group cursor-pointer space-y-3">
+                        <div className="aspect-video relative overflow-hidden rounded-md bg-secondary border border-border">
+                          {video.thumbnailUrl && <img src={video.thumbnailUrl} alt={video.title} className="object-cover w-full h-full group-hover:scale-105 transition-transform" />}
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Play className="w-10 h-10 fill-current text-white" />
+                          </div>
+                        </div>
+                        <h4 className="font-medium text-sm truncate">{video.title}</h4>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+             ) : (
+               <p className="text-muted-foreground py-8">No videos available.</p>
+             )}
+          </TabsContent>
+          
+          <TabsContent value="about" className="pt-6">
+            <div className="max-w-3xl">
+              <h3 className="text-xl font-bold mb-4">Biography</h3>
+              <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                {artist.bio || "No biography provided."}
+              </p>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+}

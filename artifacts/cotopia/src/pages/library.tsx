@@ -1,0 +1,171 @@
+import { useGetFavoriteSongs, getGetFavoriteSongsQueryKey, useListPlaylists, getListPlaylistsQueryKey, useGetHistory, getGetHistoryQueryKey } from "@workspace/api-client-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Play, Music, ListMusic, Clock, Plus, BookOpen } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Link } from "wouter";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/lib/auth";
+
+export default function Library() {
+  const { user } = useAuth();
+  
+  const { data: favoriteSongs, isLoading: loadingFavs } = useGetFavoriteSongs({
+    query: { enabled: !!user, queryKey: getGetFavoriteSongsQueryKey() }
+  });
+
+  const { data: playlists, isLoading: loadingPlaylists } = useListPlaylists({
+    query: { enabled: !!user, queryKey: getListPlaylistsQueryKey() }
+  });
+
+  const { data: history, isLoading: loadingHistory } = useGetHistory(
+    { limit: 50 },
+    { query: { enabled: !!user, queryKey: getGetHistoryQueryKey({ limit: 50 }) } }
+  );
+
+  if (!user) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
+        <BookOpen className="w-16 h-16 text-muted-foreground" />
+        <h2 className="text-2xl font-bold">Your Library</h2>
+        <p className="text-muted-foreground">Sign in to save songs, create playlists, and view your history.</p>
+        <Link href="/login">
+          <Button>Sign In</Button>
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8 pb-24">
+      <div className="flex items-center justify-between">
+        <h1 className="text-4xl font-extrabold tracking-tight">Your Library</h1>
+        <Button className="gap-2">
+          <Plus className="w-4 h-4" /> New Playlist
+        </Button>
+      </div>
+
+      <Tabs defaultValue="likes" className="w-full">
+        <TabsList className="bg-transparent border-b border-border w-full justify-start rounded-none h-auto p-0 space-x-6">
+          <TabsTrigger value="likes" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 py-3 text-base flex gap-2">
+            <Heart className="w-4 h-4" /> Liked Songs
+          </TabsTrigger>
+          <TabsTrigger value="playlists" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 py-3 text-base flex gap-2">
+            <ListMusic className="w-4 h-4" /> Playlists
+          </TabsTrigger>
+          <TabsTrigger value="history" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 py-3 text-base flex gap-2">
+            <Clock className="w-4 h-4" /> Listening History
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="likes" className="pt-6">
+          {loadingFavs ? (
+            <div className="space-y-2">
+              {Array(5).fill(0).map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}
+            </div>
+          ) : favoriteSongs?.length ? (
+            <div className="space-y-2">
+              {favoriteSongs.map((song, idx) => (
+                <Link key={song.id} href={`/songs/${song.id}`}>
+                  <div className="flex items-center gap-4 p-3 rounded-md hover:bg-secondary/50 group cursor-pointer transition-colors">
+                    <span className="w-6 text-center text-muted-foreground text-sm group-hover:hidden">{idx + 1}</span>
+                    <Play className="w-4 h-4 fill-current text-primary hidden group-hover:block ml-1 mr-1" />
+                    <div className="w-12 h-12 rounded bg-secondary overflow-hidden">
+                      {song.coverUrl && <img src={song.coverUrl} alt={song.title} className="w-full h-full object-cover" />}
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-semibold">{song.title}</div>
+                      <div className="text-sm text-muted-foreground">{song.artistName}</div>
+                    </div>
+                    <div className="text-muted-foreground text-sm w-16 text-right">
+                      {Math.floor(song.duration / 60)}:{(song.duration % 60).toString().padStart(2, '0')}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="py-16 text-center text-muted-foreground">
+              <Heart className="w-12 h-12 mx-auto mb-4 opacity-20" />
+              <p>You haven't liked any songs yet.</p>
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="playlists" className="pt-6">
+           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+            {loadingPlaylists ? (
+              Array(4).fill(0).map((_, i) => (
+                <div key={i} className="space-y-3">
+                  <Skeleton className="aspect-square rounded-md" />
+                  <Skeleton className="h-4 w-3/4" />
+                </div>
+              ))
+            ) : playlists?.length ? (
+              playlists.map((playlist) => (
+                <Link key={playlist.id} href={`/playlists/${playlist.id}`}>
+                  <div className="group cursor-pointer space-y-3">
+                    <div className="aspect-square relative overflow-hidden rounded-md bg-secondary border border-border flex items-center justify-center">
+                      {playlist.coverUrl ? (
+                        <img src={playlist.coverUrl} alt={playlist.name} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
+                      ) : (
+                        <ListMusic className="w-12 h-12 text-muted-foreground opacity-50" />
+                      )}
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-sm truncate">{playlist.name}</h4>
+                      <p className="text-xs text-muted-foreground truncate">{playlist.songCount} songs</p>
+                    </div>
+                  </div>
+                </Link>
+              ))
+            ) : (
+              <div className="col-span-full py-16 text-center text-muted-foreground">
+                <p>You haven't created any playlists yet.</p>
+              </div>
+            )}
+           </div>
+        </TabsContent>
+
+        <TabsContent value="history" className="pt-6">
+          {loadingHistory ? (
+             <div className="space-y-2">
+              {Array(5).fill(0).map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}
+            </div>
+          ) : history?.length ? (
+            <div className="space-y-2">
+              {history.map((item) => (
+                <Link key={item.id} href={`/${item.type}s/${item.contentId}`}>
+                  <div className="flex items-center gap-4 p-3 rounded-md hover:bg-secondary/50 group cursor-pointer transition-colors">
+                    <div className="w-12 h-12 rounded bg-secondary overflow-hidden flex items-center justify-center">
+                      {item.coverUrl ? (
+                        <img src={item.coverUrl} alt={item.contentTitle} className="w-full h-full object-cover" />
+                      ) : (
+                        item.type === 'song' ? <Music className="w-5 h-5 text-muted-foreground" /> : <Play className="w-5 h-5 text-muted-foreground" />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-semibold">{item.contentTitle}</div>
+                      <div className="text-sm text-muted-foreground">{item.artistName} • <span className="uppercase text-[10px] tracking-wider text-primary">{item.type}</span></div>
+                    </div>
+                    <div className="text-muted-foreground text-xs text-right">
+                      {new Date(item.playedAt).toLocaleDateString()}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+             <div className="py-16 text-center text-muted-foreground">
+              <p>Your listening history is empty.</p>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+// Temporary Heart icon for the library page since we can't import it at the top level without causing a duplicate definition if we already imported it.
+function Heart(props: any) {
+  return <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>;
+}
