@@ -218,6 +218,21 @@ export default function VideoDetail() {
             </div>
           </div>
 
+          {/* Now Playing strip */}
+          {video && (
+            <div className="px-3 py-2 border-b border-border/50 bg-primary/5 flex items-center gap-2 flex-shrink-0">
+              <div className="w-8 h-8 rounded overflow-hidden flex-shrink-0 bg-secondary">
+                {video.thumbnailUrl
+                  ? <img src={video.thumbnailUrl} alt={video.title} className="w-full h-full object-cover" />
+                  : <div className="w-full h-full bg-gradient-to-br from-primary/30 to-secondary" />}
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-semibold truncate leading-tight">{video.title}</p>
+                <p className="text-[10px] text-muted-foreground truncate leading-tight">{video.artistName}</p>
+              </div>
+            </div>
+          )}
+
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-3 space-y-3 min-h-0">
             {loadingChat ? (
