@@ -41,6 +41,8 @@ tags:
     description: Admin dashboard
   - name: payments
     description: Payment processing
+  - name: chat
+    description: Live chat messages on content pages
 
 paths:
   /healthz:
@@ -1426,6 +1428,72 @@ paths:
                 $ref: "#/components/schemas/AppSettings"
 
   # ── Payments ──────────────────────────────────────────────────────────────
+  # ── Chat ─────────────────────────────────────────────────────────────────
+  /chat/{contentType}/{contentId}:
+    get:
+      operationId: getChatMessages
+      tags: [chat]
+      summary: Get chat messages for a song or video
+      parameters:
+        - name: contentType
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [song, video]
+        - name: contentId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChatMessage"
+    post:
+      operationId: postChatMessage
+      tags: [chat]
+      summary: Post a chat message
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: contentType
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [song, video]
+        - name: contentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatMessageInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatMessage"
+        "401":
+          description: Unauthorized
+
   /payments/initiate:
     post:
       operationId: initiatePayment
@@ -1872,6 +1940,36 @@ components:
       properties:
         songId:
           type: integer
+
+    # ── Chat ─────────────────────────────────────────────────────────────────
+    ChatMessage:
+      type: object
+      required: [id, userId, username, contentType, contentId, message, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        username:
+          type: string
+        avatarUrl:
+          type: ["string", "null"]
+        contentType:
+          type: string
+          enum: [song, video]
+        contentId:
+          type: integer
+        message:
+          type: string
+        createdAt:
+          type: string
+
+    ChatMessageInput:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
 
     # ── Comments ─────────────────────────────────────────────────────────────
     Comment:

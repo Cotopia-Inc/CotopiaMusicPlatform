@@ -31,12 +31,15 @@ import type {
   ArtistProfile,
   ArtistUpdate,
   AuthResponse,
+  ChatMessage,
+  ChatMessageInput,
   Comment,
   CommentInput,
   CompanyPost,
   CompanyPostInput,
   CompanyPostUpdate,
   DiscoverFeed,
+  GetChatMessagesParams,
   GetHistoryParams,
   GetTrendingSongsParams,
   GetTrendingVideosParams,
@@ -5544,6 +5547,174 @@ export const useUpdateAppSettings = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getUpdateAppSettingsMutationOptions(options));
+    }
+
+export const getGetChatMessagesUrl = (contentType: 'song' | 'video',
+    contentId: number,
+    params?: GetChatMessagesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/chat/${contentType}/${contentId}?${stringifiedParams}` : `/api/chat/${contentType}/${contentId}`
+}
+
+/**
+ * @summary Get chat messages for a song or video
+ */
+export const getChatMessages = async (contentType: 'song' | 'video',
+    contentId: number,
+    params?: GetChatMessagesParams, options?: RequestInit): Promise<ChatMessage[]> => {
+
+  return customFetch<ChatMessage[]>(getGetChatMessagesUrl(contentType,contentId,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetChatMessagesQueryKey = (contentType: 'song' | 'video',
+    contentId: number,
+    params?: GetChatMessagesParams,) => {
+    return [
+    `/api/chat/${contentType}/${contentId}`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetChatMessagesQueryOptions = <TData = Awaited<ReturnType<typeof getChatMessages>>, TError = ErrorType<unknown>>(contentType: 'song' | 'video',
+    contentId: number,
+    params?: GetChatMessagesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getChatMessages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetChatMessagesQueryKey(contentType,contentId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getChatMessages>>> = ({ signal }) => getChatMessages(contentType,contentId,params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(contentType && contentId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getChatMessages>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetChatMessagesQueryResult = NonNullable<Awaited<ReturnType<typeof getChatMessages>>>
+export type GetChatMessagesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get chat messages for a song or video
+ */
+
+export function useGetChatMessages<TData = Awaited<ReturnType<typeof getChatMessages>>, TError = ErrorType<unknown>>(
+ contentType: 'song' | 'video',
+    contentId: number,
+    params?: GetChatMessagesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getChatMessages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetChatMessagesQueryOptions(contentType,contentId,params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getPostChatMessageUrl = (contentType: 'song' | 'video',
+    contentId: number,) => {
+
+
+
+
+  return `/api/chat/${contentType}/${contentId}`
+}
+
+/**
+ * @summary Post a chat message
+ */
+export const postChatMessage = async (contentType: 'song' | 'video',
+    contentId: number,
+    chatMessageInput: ChatMessageInput, options?: RequestInit): Promise<ChatMessage> => {
+
+  return customFetch<ChatMessage>(getPostChatMessageUrl(contentType,contentId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      chatMessageInput,)
+  }
+);}
+
+
+
+
+export const getPostChatMessageMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postChatMessage>>, TError,{contentType: 'song' | 'video';contentId: number;data: BodyType<ChatMessageInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof postChatMessage>>, TError,{contentType: 'song' | 'video';contentId: number;data: BodyType<ChatMessageInput>}, TContext> => {
+
+const mutationKey = ['postChatMessage'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postChatMessage>>, {contentType: 'song' | 'video';contentId: number;data: BodyType<ChatMessageInput>}> = (props) => {
+          const {contentType,contentId,data} = props ?? {};
+
+          return  postChatMessage(contentType,contentId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostChatMessageMutationResult = NonNullable<Awaited<ReturnType<typeof postChatMessage>>>
+    export type PostChatMessageMutationBody = BodyType<ChatMessageInput>
+    export type PostChatMessageMutationError = ErrorType<void>
+
+    /**
+ * @summary Post a chat message
+ */
+export const usePostChatMessage = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postChatMessage>>, TError,{contentType: 'song' | 'video';contentId: number;data: BodyType<ChatMessageInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof postChatMessage>>,
+        TError,
+        {contentType: 'song' | 'video';contentId: number;data: BodyType<ChatMessageInput>},
+        TContext
+      > => {
+      return useMutation(getPostChatMessageMutationOptions(options));
     }
 
 export const getInitiatePaymentUrl = () => {

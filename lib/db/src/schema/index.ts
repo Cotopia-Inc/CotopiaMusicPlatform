@@ -15,3 +15,4 @@ export * from "./analytics";
 export * from "./company_posts";
 export * from "./app_settings";
 export * from "./history";
+export * from "./chat_messages";

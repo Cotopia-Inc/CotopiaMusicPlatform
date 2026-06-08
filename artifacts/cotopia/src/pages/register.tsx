@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useLocation, Link } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Music } from "lucide-react";
+import { Radio } from "lucide-react";
 
 const formSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
@@ -27,131 +26,109 @@ export default function Register() {
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      username: "",
-      email: "",
-      password: "",
-      role: RegisterInputRole.listener,
-    },
+    defaultValues: { username: "", email: "", password: "", role: RegisterInputRole.listener },
   });
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
     registerMutation.mutate({ data: values }, {
       onSuccess: (res) => {
         login(res.user, res.token);
-        toast({
-          title: "Account created",
-          description: "Welcome to Cotopia.",
-        });
+        toast({ title: "Welcome to Everyday Radio", description: "Powered by Cotopia." });
         setLocation("/");
       },
       onError: () => {
-        toast({
-          variant: "destructive",
-          title: "Registration failed",
-          description: "Please check your details and try again.",
-        });
+        toast({ variant: "destructive", title: "Registration failed", description: "Please check your details and try again." });
       }
     });
   };
 
   return (
     <div className="min-h-screen w-full flex bg-background">
+      {/* Left Panel */}
       <div className="hidden lg:flex w-1/2 bg-card relative overflow-hidden flex-col justify-between p-12 border-r border-border">
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-20" />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
-        <div className="relative z-10 flex items-center gap-3">
-          <Music className="w-8 h-8 text-primary" />
-          <span className="text-2xl font-bold tracking-tighter">Cotopia</span>
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
+        <div className="relative z-10">
+          <div className="flex items-center gap-2">
+            <Radio className="w-6 h-6 text-primary" />
+            <span className="text-xl font-extrabold tracking-tighter">Everyday Radio</span>
+          </div>
+          <p className="text-[11px] text-muted-foreground tracking-widest uppercase mt-0.5 pl-8">Powered by Cotopia</p>
         </div>
         <div className="relative z-10 space-y-4 max-w-md">
-          <h1 className="text-4xl font-extrabold tracking-tight">Your stage awaits.</h1>
+          <h1 className="text-5xl font-extrabold tracking-tight leading-none">Your stage awaits.</h1>
           <p className="text-lg text-muted-foreground">Discover new sounds, share your creations, and connect with a community that lives for music.</p>
         </div>
       </div>
-      
+
+      {/* Right Panel */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
-        <div className="w-full max-w-sm space-y-8">
+        <div className="w-full max-w-sm space-y-6">
+          {/* Mobile logo */}
+          <div className="flex lg:hidden flex-col items-center gap-1">
+            <div className="flex items-center gap-2">
+              <Radio className="w-6 h-6 text-primary" />
+              <span className="text-xl font-extrabold tracking-tighter">Everyday Radio</span>
+            </div>
+            <p className="text-[10px] text-muted-foreground tracking-widest uppercase">Powered by Cotopia</p>
+          </div>
+
           <div className="space-y-2 text-center">
             <h2 className="text-3xl font-bold tracking-tight">Create an account</h2>
-            <p className="text-muted-foreground">Enter your details to get started</p>
+            <p className="text-muted-foreground text-sm">Join the Everyday Radio community</p>
           </div>
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="username"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Username</FormLabel>
+              <FormField control={form.control} name="username" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Username</FormLabel>
+                  <FormControl><Input placeholder="johndoe" {...field} className="bg-secondary/50 border-secondary h-11" /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="email" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl><Input placeholder="name@example.com" {...field} className="bg-secondary/50 border-secondary h-11" /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="password" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl><Input type="password" placeholder="••••••••" {...field} className="bg-secondary/50 border-secondary h-11" /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="role" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>I am a...</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <Input placeholder="johndoe" {...field} className="bg-secondary/50 border-secondary h-12" />
+                      <SelectTrigger className="bg-secondary/50 border-secondary h-11">
+                        <SelectValue placeholder="Select your role" />
+                      </SelectTrigger>
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input placeholder="name@example.com" {...field} className="bg-secondary/50 border-secondary h-12" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} className="bg-secondary/50 border-secondary h-12" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="role"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>I am a...</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="bg-secondary/50 border-secondary h-12">
-                          <SelectValue placeholder="Select a role" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value={RegisterInputRole.listener}>Listener</SelectItem>
-                        <SelectItem value={RegisterInputRole.artist}>Artist</SelectItem>
-                        <SelectItem value={RegisterInputRole.label}>Label</SelectItem>
-                        <SelectItem value={RegisterInputRole.business}>Business</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit" className="w-full h-12 text-base font-semibold mt-4" disabled={registerMutation.isPending}>
-                {registerMutation.isPending ? "Creating account..." : "Sign Up"}
+                    <SelectContent>
+                      <SelectItem value={RegisterInputRole.listener}>Listener</SelectItem>
+                      <SelectItem value={RegisterInputRole.artist}>Artist</SelectItem>
+                      <SelectItem value={RegisterInputRole.label}>Label</SelectItem>
+                      <SelectItem value={RegisterInputRole.business}>Business</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <Button type="submit" className="w-full h-11 text-sm font-semibold bg-primary mt-2" disabled={registerMutation.isPending}>
+                {registerMutation.isPending ? "Creating account..." : "Get Started"}
               </Button>
             </form>
           </Form>
 
           <div className="text-center text-sm">
             <span className="text-muted-foreground">Already have an account? </span>
-            <Link href="/login" className="text-primary hover:underline font-semibold">
-              Sign in
-            </Link>
+            <Link href="/login" className="text-primary hover:underline font-semibold">Sign in</Link>
           </div>
         </div>
       </div>

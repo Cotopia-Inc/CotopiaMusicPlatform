@@ -15,6 +15,7 @@ import discoverRouter from "./discover";
 import companyRouter from "./company";
 import adminRouter from "./admin";
 import paymentsRouter from "./payments";
+import chatRouter from "./chat";
 
 const router: IRouter = Router();
 
@@ -34,5 +35,6 @@ router.use(discoverRouter);
 router.use(companyRouter);
 router.use(adminRouter);
 router.use(paymentsRouter);
+router.use(chatRouter);
 
 export default router;

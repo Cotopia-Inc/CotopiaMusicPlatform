@@ -1,0 +1,319 @@
+Update the current project into a more complete branded MVP.
+
+The official app name is:
+
+Everyday Radio
+
+Branding line:
+
+Powered by Cotopia
+
+Cotopia is the parent company. Cotopia Music & Marketing is the record label division, but this app is a separate streaming/social platform powered by Cotopia.
+
+Main improvements needed:
+
+1. Replace all “Cotopia” app branding with “Everyday Radio”
+2. Add “Powered by Cotopia” in the sidebar, footer, login page, register page, and admin dashboard
+3. Make the UI look less generic and more like a real premium streaming platform
+4. Add a full admin dashboard
+5. Add song/video chat features
+6. Add Company Hub
+7. Add submission management
+8. Add PayPal-ready payment structure
+9. Keep live streaming out of MVP for now
+
+DESIGN DIRECTION
+
+Use a premium dark radio/music platform look.
+
+Style:
+
+* Dark cinematic background
+* Purple, black, white, and electric accent colors
+* Rounded cards
+* Professional spacing
+* Better hero sections
+* More realistic artist/song/video cards
+* Platform badges
+* “Everyday Radio Verified” badges
+* “Powered by Cotopia” branding
+* Better homepage sections
+
+Update sidebar navigation to:
+
+Home
+Discover
+Songs
+Videos
+Artists
+Labels
+Company Hub
+Submit
+Library
+Admin
+
+Only show Admin to admin users.
+
+ADMIN DASHBOARD
+
+Create /admin route.
+
+Admin dashboard must include:
+
+* Overview metrics
+* Total users
+* Total artists
+* Total labels
+* Total songs
+* Total videos
+* Total submissions
+* Total comments
+* Total ratings
+* Total revenue placeholder
+* Pending submissions
+* Recent users
+* Recent comments
+* Reported content
+
+Admin pages:
+
+/admin/users
+/admin/artists
+/admin/labels
+/admin/songs
+/admin/videos
+/admin/submissions
+/admin/comments
+/admin/ratings
+/admin/payments
+/admin/company-hub
+/admin/settings
+/admin/theme
+
+Admin must be able to:
+
+* View users
+* Change user roles
+* Suspend users
+* Verify artists
+* Verify labels
+* Approve songs
+* Reject songs
+* Approve videos
+* Reject videos
+* Feature songs
+* Feature videos
+* Feature artists
+* Feature labels
+* Delete comments
+* View payments
+* Edit app settings
+* Edit homepage content
+* Edit theme colors
+* Edit platform name/logo text
+
+CHAT FEATURES
+
+Add chat/discussion for songs and videos.
+
+Each song page should include:
+
+* Audio player
+* Song details
+* Artist info
+* Rating section
+* Comment section
+* Live-style chat/discussion panel
+* “Now listening” placeholder count
+* Fan reactions
+* Artist pinned message placeholder
+
+Each video page should include:
+
+* Video player
+* Video details
+* Artist info
+* Rating section
+* Comment section
+* Chat/discussion panel
+* Fan reactions
+
+Database/API should support:
+
+comments
+chat_messages
+ratings
+reactions
+
+Chat messages should include:
+
+id
+user_id
+content_type
+content_id
+message
+created_at
+
+COMPANY HUB
+
+Create /company route or /hub route.
+
+Company Hub should be a public communication section for Cotopia.
+
+It should include:
+
+* Company announcements
+* Company videos
+* Product updates
+* Platform updates
+* Artist spotlights
+* Label spotlights
+* Distributor opportunity posts
+* Premium digital software posts
+
+For MVP, Company Hub supports uploaded/pre-recorded videos only.
+Do not add live streaming yet.
+
+Company Hub database model:
+
+company_posts:
+id
+title
+slug
+post_type
+content
+video_url
+featured_image
+published
+featured
+created_at
+updated_at
+
+SUBMISSIONS
+
+Create /submit route.
+
+Artists and labels can submit:
+
+* Songs
+* Music videos
+* Lyric videos
+* Visualizers
+* Live performance videos
+* Behind the scenes videos
+* Promotional videos
+
+Submission form should include:
+
+title
+description
+content type
+genre
+mood
+artist
+label
+audio file URL placeholder
+video file URL placeholder
+cover image
+release date
+explicit content yes/no
+payment status
+submission status
+
+Statuses:
+
+draft
+pending_payment
+paid
+pending_review
+approved
+rejected
+published
+
+PAYPAL READY
+
+Do not fully process real payments yet unless simple.
+Create placeholder PayPal payment flow structure.
+
+Add payments table/model:
+
+id
+user_id
+submission_id
+provider
+provider_transaction_id
+amount
+currency
+status
+created_at
+
+Provider should default to PayPal.
+
+PLAYER
+
+Improve bottom player to feel more real.
+
+Add:
+
+* Cover art
+* Song title
+* Artist name
+* Play/pause
+* Previous/next
+* Progress bar
+* Volume
+* Like/favorite
+* Queue placeholder
+* “Everyday Radio” mini branding
+
+PUBLIC SHARE PAGES
+
+Make sure songs, videos, artists, labels, and company posts have clean shareable URLs.
+
+Examples:
+
+/songs/song-slug
+/videos/video-slug
+/artists/artist-slug
+/labels/label-slug
+/hub/post-slug
+
+EMBED PLAYER FOUNDATION
+
+Do not build full API yet, but create placeholder routes:
+
+/embed/song/[id]
+/embed/video/[id]
+/embed/playlist/[id]
+
+These pages should show a clean embeddable player with “Powered by Cotopia”.
+
+AUTH
+
+Keep existing login/register.
+
+Role options:
+
+Listener
+Artist
+Label
+Business
+Admin
+
+Only admins should access admin pages.
+
+FINAL GOAL
+
+Make the MVP feel like a real branded product called Everyday Radio, powered by Cotopia.
+
+It should not feel like a generic demo.
+
+Focus on:
+
+* Real app layout
+* Admin dashboard
+* Chat/discussion
+* Company Hub
+* Submission flow
+* Better branding
+* Better usability

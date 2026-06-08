@@ -1595,6 +1595,46 @@ export const UpdateAppSettingsResponse = zod.object({
 
 
 /**
+ * @summary Get chat messages for a song or video
+ */
+export const GetChatMessagesParams = zod.object({
+  "contentType": zod.enum(['song', 'video']),
+  "contentId": zod.coerce.number()
+})
+
+export const getChatMessagesQueryLimitDefault = 50;
+
+export const GetChatMessagesQueryParams = zod.object({
+  "limit": zod.coerce.number().default(getChatMessagesQueryLimitDefault)
+})
+
+export const GetChatMessagesResponseItem = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "username": zod.string(),
+  "avatarUrl": zod.string().nullish(),
+  "contentType": zod.enum(['song', 'video']),
+  "contentId": zod.number(),
+  "message": zod.string(),
+  "createdAt": zod.string()
+})
+export const GetChatMessagesResponse = zod.array(GetChatMessagesResponseItem)
+
+
+/**
+ * @summary Post a chat message
+ */
+export const PostChatMessageParams = zod.object({
+  "contentType": zod.enum(['song', 'video']),
+  "contentId": zod.coerce.number()
+})
+
+export const PostChatMessageBody = zod.object({
+  "message": zod.string()
+})
+
+
+/**
  * @summary Initiate a PayPal payment for submission fee
  */
 export const InitiatePaymentBody = zod.object({

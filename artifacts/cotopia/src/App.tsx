@@ -29,6 +29,13 @@ import AdminDashboard from "@/pages/admin-dashboard";
 import AdminUsers from "@/pages/admin-users";
 import AdminSubmissions from "@/pages/admin-submissions";
 import AdminSettings from "@/pages/admin-settings";
+import AdminSongs from "@/pages/admin-songs";
+import AdminVideos from "@/pages/admin-videos";
+import AdminComments from "@/pages/admin-comments";
+
+import EmbedSong from "@/pages/embed-song";
+import EmbedVideo from "@/pages/embed-video";
+import EmbedPlaylist from "@/pages/embed-playlist";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -44,7 +51,13 @@ function Router() {
     <Switch>
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
-      
+
+      {/* Embed routes (no layout) */}
+      <Route path="/embed/song/:id" component={EmbedSong} />
+      <Route path="/embed/video/:id" component={EmbedVideo} />
+      <Route path="/embed/playlist/:id" component={EmbedPlaylist} />
+
+      {/* Main app routes */}
       <Route path="/">
         <Layout><Home /></Layout>
       </Route>
@@ -94,6 +107,7 @@ function Router() {
         <Layout><Profile /></Layout>
       </Route>
 
+      {/* Admin routes */}
       <Route path="/admin">
         <Layout><AdminDashboard /></Layout>
       </Route>
@@ -103,10 +117,19 @@ function Router() {
       <Route path="/admin/submissions">
         <Layout><AdminSubmissions /></Layout>
       </Route>
+      <Route path="/admin/songs">
+        <Layout><AdminSongs /></Layout>
+      </Route>
+      <Route path="/admin/videos">
+        <Layout><AdminVideos /></Layout>
+      </Route>
+      <Route path="/admin/comments">
+        <Layout><AdminComments /></Layout>
+      </Route>
       <Route path="/admin/settings">
         <Layout><AdminSettings /></Layout>
       </Route>
-      
+
       <Route component={NotFound} />
     </Switch>
   );

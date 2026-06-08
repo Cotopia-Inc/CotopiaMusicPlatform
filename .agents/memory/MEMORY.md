@@ -1,2 +1,3 @@
 - [Cotopia array vs paginated endpoints](cotopia-endpoints.md) — artists/labels/company-posts/submissions return plain arrays, not {items,total}; only songs/videos/discover are paginated
 - [Cotopia catalog setup](cotopia-catalog.md) — bcryptjs and @types/bcryptjs in pnpm catalog; scripts needs @workspace/db workspace:* dependency
+- [Orval codegen type collision fix](orval-codegen-collision.md) — after adding an endpoint with both path AND query params, remove the duplicate TS type from generated/types/index.ts before typecheck:libs

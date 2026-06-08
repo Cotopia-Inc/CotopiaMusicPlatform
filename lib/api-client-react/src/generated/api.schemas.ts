@@ -289,6 +289,30 @@ export interface PlaylistSongInput {
   songId: number;
 }
 
+export type ChatMessageContentType = typeof ChatMessageContentType[keyof typeof ChatMessageContentType];
+
+
+export const ChatMessageContentType = {
+  song: 'song',
+  video: 'video',
+} as const;
+
+export interface ChatMessage {
+  id: number;
+  userId: number;
+  username: string;
+  /** @nullable */
+  avatarUrl?: string | null;
+  contentType: ChatMessageContentType;
+  contentId: number;
+  message: string;
+  createdAt: string;
+}
+
+export interface ChatMessageInput {
+  message: string;
+}
+
 export interface Comment {
   id: number;
   userId: number;
@@ -641,4 +665,8 @@ export const AdminListSubmissionsStatus = {
   rejected: 'rejected',
   published: 'published',
 } as const;
+
+export type GetChatMessagesParams = {
+limit?: number;
+};
 
