@@ -1,3 +1,4 @@
+import { eq } from "drizzle-orm";
 import {
   db,
   usersTable,
@@ -12,6 +13,7 @@ import {
   commentsTable,
   followsTable,
   favoritesTable,
+  chatMessagesTable,
 } from "@workspace/db";
 import bcrypt from "bcryptjs";
 
@@ -244,6 +246,93 @@ async function seed() {
         content,
       }).onConflictDoNothing()
     ));
+  }
+
+  // Resolve user IDs — fall back to DB query if inserts were no-ops (re-seed)
+  const resolveUser = async (inserted: typeof listener1, email: string) => {
+    if (inserted) return inserted;
+    const [found] = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1);
+    return found ?? null;
+  };
+  const [rListener1, rArtist1, rArtist2, rArtist3] = await Promise.all([
+    resolveUser(listener1, "alex@example.com"),
+    resolveUser(artist1User, "nova@example.com"),
+    resolveUser(artist2User, "midnight@example.com"),
+    resolveUser(artist3User, "lyra@example.com"),
+  ]);
+
+  // Resolve song/video IDs similarly
+  const resolveSongs = async () => {
+    if (songs.length > 0) return songs;
+    return db.select().from(songsTable).where(eq(songsTable.status, "published")).limit(9);
+  };
+  const resolveVideos = async () => {
+    if (videos.length > 0) return videos;
+    return db.select().from(videosTable).where(eq(videosTable.status, "published")).limit(5);
+  };
+  const [allSongs, allVideos] = await Promise.all([resolveSongs(), resolveVideos()]);
+
+  // Chat messages — seed demo fan chat for songs and videos
+  const chatUsers = [rListener1, rArtist1, rArtist2, rArtist3].filter(Boolean);
+  const songChatLines = [
+    "This hook is smooth.",
+    "That beat is crazy.",
+    "Adding this to my playlist.",
+    "Who else replayed this twice?",
+    "Love this one.",
+    "Nova Sounds never misses.",
+    "The way this builds up is insane.",
+    "Been on repeat since it dropped.",
+    "The vibes on this are immaculate.",
+    "This is everything.",
+  ];
+  const videoChatLines = [
+    "The visuals match the energy perfectly.",
+    "This video is art.",
+    "I've watched this like 5 times.",
+    "The cinematography is stunning.",
+    "Okay this is actually insane.",
+    "Production value through the roof.",
+    "The concept is so unique.",
+    "This deserves more views fr.",
+    "Midnight Echo never disappoints.",
+    "The editing is fire.",
+  ];
+
+  if (chatUsers.length > 0 && allSongs.length > 0) {
+    for (let si = 0; si < Math.min(allSongs.length, 4); si++) {
+      const song = allSongs[si];
+      const lines = songChatLines.slice(0, 5 + (si * 2) % 5);
+      for (let li = 0; li < lines.length; li++) {
+        const u = chatUsers[li % chatUsers.length];
+        if (!u) continue;
+        await db.insert(chatMessagesTable).values({
+          userId: u.id,
+          contentType: "song",
+          contentId: song.id,
+          message: lines[li],
+        }).onConflictDoNothing();
+      }
+    }
+    console.log("✓ Song chat messages seeded");
+  }
+
+  if (chatUsers.length > 0 && allVideos.length > 0) {
+    for (let vi = 0; vi < Math.min(allVideos.length, 3); vi++) {
+      const video = allVideos[vi];
+      const lines = videoChatLines.slice(0, 4 + (vi * 2) % 4);
+      for (let li = 0; li < lines.length; li++) {
+        const u = chatUsers[li % chatUsers.length];
+        if (!u) continue;
+        await db.insert(chatMessagesTable).values({
+          userId: u.id,
+          contentType: "video",
+          contentId: video.id,
+          message: lines[li],
+        }).onConflictDoNothing();
+      }
+    }
+    console.log("✓ Video chat messages seeded");
   }
 
   // Company posts

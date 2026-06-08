@@ -358,15 +358,23 @@ router.post("/songs/:id/rate", requireAuth, async (req: AuthRequest, res): Promi
     return;
   }
 
-  await db.insert(ratingsTable).values({
-    userId: req.user!.userId,
-    contentType: "song",
-    contentId: params.data.id,
-    rating: parsed.data.rating,
-  }).onConflictDoUpdate({
-    target: [ratingsTable.userId, ratingsTable.contentType, ratingsTable.contentId],
-    set: { rating: parsed.data.rating },
-  });
+  if (parsed.data.rating === 0) {
+    await db.delete(ratingsTable).where(and(
+      eq(ratingsTable.userId, req.user!.userId),
+      eq(ratingsTable.contentType, "song"),
+      eq(ratingsTable.contentId, params.data.id),
+    ));
+  } else {
+    await db.insert(ratingsTable).values({
+      userId: req.user!.userId,
+      contentType: "song",
+      contentId: params.data.id,
+      rating: parsed.data.rating,
+    }).onConflictDoUpdate({
+      target: [ratingsTable.userId, ratingsTable.contentType, ratingsTable.contentId],
+      set: { rating: parsed.data.rating },
+    });
+  }
 
   const [result] = await db
     .select({ avg: avg(ratingsTable.rating), count: count() })

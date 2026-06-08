@@ -1,0 +1,116 @@
+Upgrade the upload, chat, dropdown, like, and rating UX.
+
+1. FILE UPLOADS
+
+Users must be able to upload files directly from their device, not only paste links.
+
+Update Submit Music page to support:
+
+* Audio file upload from device
+* Video file upload from device
+* Cover image upload from device
+* Thumbnail image upload from device
+
+Use file input fields:
+
+* accept audio files: mp3, wav, m4a
+* accept video files: mp4, mov, webm
+* accept image files: jpg, png, webp
+
+For MVP, if real storage is not fully connected yet, create local/demo upload placeholders and store the uploaded file name/preview URL. Prepare the code so Supabase Storage can be connected next.
+
+Users should still have the option to paste a URL, but device upload should be the main option.
+
+2. DROPDOWN MENUS
+
+Fix all dropdowns so users can scroll through options when the dropdown opens.
+
+This applies to:
+
+* Content Type
+* Genre
+* Mood
+* Submission Plan
+* Role selection
+* Any admin dropdowns
+
+Dropdowns should not get cut off by containers or hidden behind the bottom player.
+
+3. CHAT PANEL
+
+Make the chat feel real and readable.
+
+Current chat looks hidden behind the song title and does not show messages clearly.
+
+Fix song and video chat panels:
+
+* Chat messages must appear in a clean scrollable message area
+* Each message should show username, avatar or initials, message text, and timestamp
+* Seed demo chat messages so the chat does not look empty
+* New messages should appear immediately after sending
+* Chat input should stay at the bottom
+* Chat should not overlap the song title or cover art
+* Chat panel should have enough contrast to read clearly
+* Add placeholder text: “Join the conversation…”
+* Add system message when no chat exists: “Be the first to start the conversation”
+
+Example demo messages:
+
+* “This hook is smooth.”
+* “That beat is crazy.”
+* “Adding this to my playlist.”
+* “Who else replayed this twice?”
+
+4. HEART / FAVORITE TOGGLE
+
+When a user clicks the heart:
+
+* First click favorites the song/video
+* Second click unfavorites it
+* Visual state should change clearly
+
+Use filled heart for favorited and outline heart for not favorited.
+
+5. STAR RATING TOGGLE
+
+Users should be able to click a star rating and also change or clear it.
+
+Behavior:
+
+* Clicking 1 star sets rating to 1
+* Clicking 5 stars sets rating to 5
+* Clicking the same selected rating again clears the rating
+* UI updates immediately
+* Average rating updates after rating change
+
+6. ADMIN + ARTIST METRICS NOTE
+
+Keep admin metrics refresh-based for MVP, not real-time streaming analytics yet.
+
+Artist metrics should include:
+
+* Streams
+* Views
+* Favorites
+* Ratings
+* Comments
+* Playlist adds placeholder
+* Followers
+* Submission status
+* Top songs
+* Top videos
+
+7. TESTING
+
+After finishing, provide a short testing checklist:
+
+* Upload audio from device
+* Upload cover image from device
+* Upload video from device
+* Submit content
+* Confirm PayPal demo payment
+* Approve in admin
+* Open song detail page
+* Test chat
+* Test heart toggle
+* Test star rating toggle

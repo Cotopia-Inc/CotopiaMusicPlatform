@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -19,7 +19,7 @@ import { useAuth } from "@/lib/auth";
 import {
   Music, Video, CheckCircle, CreditCard, FileText,
   ChevronRight, ChevronLeft, Radio, Star, Zap, Upload,
-  Calendar, AlertCircle, Loader2
+  Calendar, AlertCircle, Loader2, ImageIcon, Film, Mic
 } from "lucide-react";
 
 const GENRES = ["Pop", "Hip-Hop", "R&B", "Electronic", "Rock", "Jazz", "Classical", "Country", "Reggae", "Latin", "Afrobeats", "Indie", "Alternative", "Metal", "Folk", "Soul", "Blues", "Other"];
@@ -32,8 +32,8 @@ const detailsSchema = z.object({
   genre: z.string().optional(),
   mood: z.string().optional(),
   description: z.string().max(1000).optional(),
-  fileUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
-  coverUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+  fileUrl: z.string().optional(),
+  coverUrl: z.string().optional(),
   releaseDate: z.string().optional(),
   isExplicit: z.boolean().default(false),
 });
@@ -52,11 +52,108 @@ const PLAN_PRICES = {
 };
 
 const PLAN_FEATURES = {
-  basic: ["Submission review within 7 days", "Standard placement", "Artist profile listing"],
+  basic: ["Review within 7 days", "Standard placement", "Artist profile listing"],
   premium: ["Priority review within 48 hours", "Featured placement", "Social media spotlight", "Radio scheduling", "Analytics report"],
 };
 
 const STEPS = ["Content Details", "Type & Plan", "Payment", "Complete"];
+
+// ── File upload field ──────────────────────────────────────────────────────
+interface FileUploadFieldProps {
+  label: string;
+  accept: string;
+  icon: React.ReactNode;
+  hint: string;
+  value: string;
+  onChange: (url: string, filename: string) => void;
+  urlPlaceholder: string;
+}
+
+function FileUploadField({ label, accept, icon, hint, value, onChange, urlPlaceholder }: FileUploadFieldProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [filename, setFilename] = useState<string>("");
+  const [urlMode, setUrlMode] = useState(false);
+
+  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    // Create a local object URL for preview/storage. Swap for Supabase upload when storage is connected.
+    const objectUrl = URL.createObjectURL(file);
+    setFilename(file.name);
+    onChange(objectUrl, file.name);
+  };
+
+  return (
+    <div className="space-y-2">
+      <FormLabel className="flex items-center gap-2 text-sm font-medium">
+        {icon}
+        {label}
+        <span className="text-muted-foreground text-xs font-normal">(optional)</span>
+      </FormLabel>
+
+      {!urlMode ? (
+        <div className="space-y-2">
+          <div
+            onClick={() => inputRef.current?.click()}
+            className="flex items-center gap-3 p-4 rounded-lg border-2 border-dashed border-border/60 bg-secondary/20 hover:bg-secondary/40 hover:border-primary/40 cursor-pointer transition-all group"
+          >
+            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
+              <Upload className="w-4 h-4 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              {filename ? (
+                <div>
+                  <p className="text-sm font-medium text-foreground truncate">{filename}</p>
+                  <p className="text-xs text-green-400 mt-0.5">File selected ✓</p>
+                </div>
+              ) : (
+                <div>
+                  <p className="text-sm font-medium">Click to upload from device</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{hint}</p>
+                </div>
+              )}
+            </div>
+            {filename && (
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setFilename(""); onChange("", ""); if (inputRef.current) inputRef.current.value = ""; }}
+                className="text-muted-foreground hover:text-foreground text-xs px-2 py-1 rounded hover:bg-secondary transition-colors flex-shrink-0"
+              >
+                Remove
+              </button>
+            )}
+          </div>
+          <input ref={inputRef} type="file" accept={accept} onChange={handleFile} className="hidden" />
+          <button
+            type="button"
+            onClick={() => setUrlMode(true)}
+            className="text-xs text-primary hover:underline"
+          >
+            Or paste a URL instead
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-1.5">
+          <Input
+            value={value.startsWith("blob:") ? "" : value}
+            onChange={(e) => onChange(e.target.value, "")}
+            placeholder={urlPlaceholder}
+            className="bg-secondary/50 border-secondary"
+          />
+          <button
+            type="button"
+            onClick={() => setUrlMode(false)}
+            className="text-xs text-primary hover:underline"
+          >
+            ← Upload from device instead
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
 
 export default function Submit() {
   const { user } = useAuth();
@@ -98,14 +195,8 @@ export default function Submit() {
   const watchPlan = planForm.watch("plan");
   const price = PLAN_PRICES[watchType]?.[watchPlan] ?? 9.99;
 
-  const onDetailsNext = detailsForm.handleSubmit(() => {
-    setStep(1);
-  });
-
-  const onPlanNext = planForm.handleSubmit((values) => {
-    setPlanValues(values);
-    setStep(2);
-  });
+  const onDetailsNext = detailsForm.handleSubmit(() => setStep(1));
+  const onPlanNext = planForm.handleSubmit((values) => { setPlanValues(values); setStep(2); });
 
   const handleCreateAndInitiate = () => {
     const details = detailsForm.getValues();
@@ -130,30 +221,19 @@ export default function Submit() {
       onSuccess: (submission) => {
         setSubmissionId(submission.id);
         initiateMutation.mutate({ data: { submissionId: submission.id } }, {
-          onSuccess: (payment) => {
-            setPaypalOrderId(payment.paypalOrderId);
-            setPaymentInitiated(true);
-          },
-          onError: () => {
-            toast({ variant: "destructive", title: "Payment initiation failed", description: "Please try again." });
-          },
+          onSuccess: (payment) => { setPaypalOrderId(payment.paypalOrderId); setPaymentInitiated(true); },
+          onError: () => toast({ variant: "destructive", title: "Payment initiation failed" }),
         });
       },
-      onError: () => {
-        toast({ variant: "destructive", title: "Submission creation failed", description: "Please check your details and try again." });
-      },
+      onError: () => toast({ variant: "destructive", title: "Submission creation failed", description: "Check your details and try again." }),
     });
   };
 
   const handleCapturePayment = () => {
     if (!submissionId || !paypalOrderId) return;
     captureMutation.mutate({ data: { submissionId, paypalOrderId } }, {
-      onSuccess: () => {
-        setStep(3);
-      },
-      onError: () => {
-        toast({ variant: "destructive", title: "Payment capture failed", description: "Please try again." });
-      },
+      onSuccess: () => setStep(3),
+      onError: () => toast({ variant: "destructive", title: "Payment capture failed" }),
     });
   };
 
@@ -168,7 +248,7 @@ export default function Submit() {
           <span>EVERYDAY RADIO</span>
         </div>
         <h1 className="text-4xl font-extrabold tracking-tight">Submit Your Content</h1>
-        <p className="text-muted-foreground">Get your music or video in front of our audience. Submit for review and let the world hear your sound.</p>
+        <p className="text-muted-foreground">Get your music or video in front of our audience.</p>
       </div>
 
       {/* Step indicator */}
@@ -195,7 +275,7 @@ export default function Submit() {
       {/* ── Step 0: Content Details ── */}
       {step === 0 && (
         <div className="bg-card rounded-xl border border-border shadow-sm p-8 space-y-6">
-          <div className="flex items-center gap-3 mb-2">
+          <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
               <FileText className="w-5 h-5 text-primary" />
             </div>
@@ -287,32 +367,41 @@ export default function Submit() {
                   </FormItem>
                 )} />
 
-                <FormField control={detailsForm.control} name="fileUrl" render={({ field }) => (
-                  <FormItem className="md:col-span-2">
-                    <FormLabel className="flex items-center gap-2">
-                      <Upload className="w-3.5 h-3.5" />
-                      Audio / Video File URL <span className="text-muted-foreground text-xs">(optional)</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input placeholder="https://drive.google.com/... or https://soundcloud.com/..." {...field} className="bg-secondary/50 border-secondary" />
-                    </FormControl>
-                    <p className="text-xs text-muted-foreground mt-1">Paste a shareable link to your audio or video file.</p>
-                    <FormMessage />
-                  </FormItem>
-                )} />
+                {/* Audio/video file upload */}
+                <div className="md:col-span-2">
+                  <FormField control={detailsForm.control} name="fileUrl" render={({ field }) => (
+                    <FormItem>
+                      <FileUploadField
+                        label="Audio / Video File"
+                        accept=".mp3,.wav,.m4a,.mp4,.mov,.webm,audio/*,video/*"
+                        icon={<Mic className="w-3.5 h-3.5" />}
+                        hint="MP3, WAV, M4A, MP4, MOV, WebM accepted"
+                        value={field.value ?? ""}
+                        onChange={(url) => field.onChange(url)}
+                        urlPlaceholder="https://drive.google.com/... or https://soundcloud.com/..."
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                </div>
 
-                <FormField control={detailsForm.control} name="coverUrl" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-2">
-                      <Upload className="w-3.5 h-3.5" />
-                      Cover Image URL <span className="text-muted-foreground text-xs">(optional)</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input placeholder="https://..." {...field} className="bg-secondary/50 border-secondary" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
+                {/* Cover image upload */}
+                <div className="md:col-span-2">
+                  <FormField control={detailsForm.control} name="coverUrl" render={({ field }) => (
+                    <FormItem>
+                      <FileUploadField
+                        label="Cover / Thumbnail Image"
+                        accept=".jpg,.jpeg,.png,.webp,image/*"
+                        icon={<ImageIcon className="w-3.5 h-3.5" />}
+                        hint="JPG, PNG, or WebP — minimum 500×500px recommended"
+                        value={field.value ?? ""}
+                        onChange={(url) => field.onChange(url)}
+                        urlPlaceholder="https://... (direct image URL)"
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                </div>
 
                 <FormField control={detailsForm.control} name="releaseDate" render={({ field }) => (
                   <FormItem>
@@ -328,8 +417,8 @@ export default function Submit() {
                 )} />
 
                 <FormField control={detailsForm.control} name="isExplicit" render={({ field }) => (
-                  <FormItem className="md:col-span-2">
-                    <div className="flex items-center gap-3 p-4 rounded-lg border border-border bg-secondary/20">
+                  <FormItem className="flex items-center">
+                    <div className="flex items-center gap-3 p-4 rounded-lg border border-border bg-secondary/20 w-full mt-5">
                       <button
                         type="button"
                         role="checkbox"
@@ -346,7 +435,7 @@ export default function Submit() {
                           Explicit Content
                           {field.value && <Badge variant="destructive" className="text-[10px] px-1.5 py-0">E</Badge>}
                         </p>
-                        <p className="text-xs text-muted-foreground">This content contains explicit language or themes.</p>
+                        <p className="text-xs text-muted-foreground">Contains explicit language or themes.</p>
                       </div>
                     </div>
                   </FormItem>
@@ -355,8 +444,7 @@ export default function Submit() {
 
               <div className="flex justify-end pt-2">
                 <Button type="submit" className="gap-2 px-6">
-                  Next: Choose Plan
-                  <ChevronRight className="w-4 h-4" />
+                  Next: Choose Plan <ChevronRight className="w-4 h-4" />
                 </Button>
               </div>
             </form>
@@ -367,40 +455,29 @@ export default function Submit() {
       {/* ── Step 1: Type & Plan ── */}
       {step === 1 && (
         <div className="bg-card rounded-xl border border-border shadow-sm p-8 space-y-6">
-          <div className="flex items-center gap-3 mb-2">
+          <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
               <Star className="w-5 h-5 text-primary" />
             </div>
             <div>
               <h2 className="font-bold text-lg">Content Type & Submission Plan</h2>
-              <p className="text-xs text-muted-foreground">Choose your content type and the level of exposure you want</p>
+              <p className="text-xs text-muted-foreground">Choose content type and the level of exposure you want</p>
             </div>
           </div>
 
           <Form {...planForm}>
             <form onSubmit={onPlanNext} className="space-y-6">
-              {/* Content Type */}
               <div>
                 <FormLabel className="text-sm font-semibold mb-3 block">What are you submitting?</FormLabel>
                 <FormField control={planForm.control} name="type" render={({ field }) => (
                   <FormItem>
                     <div className="grid grid-cols-2 gap-3">
                       {(["song", "video"] as const).map((t) => (
-                        <button
-                          key={t}
-                          type="button"
-                          onClick={() => field.onChange(t)}
-                          className={`relative p-5 rounded-xl border-2 transition-all text-left ${
-                            field.value === t
-                              ? "border-primary bg-primary/10"
-                              : "border-border bg-secondary/20 hover:border-border/80"
-                          }`}
-                        >
-                          {t === "song" ? <Music className="w-7 h-7 mb-2 text-primary" /> : <Video className="w-7 h-7 mb-2 text-primary" />}
+                        <button key={t} type="button" onClick={() => field.onChange(t)}
+                          className={`relative p-5 rounded-xl border-2 transition-all text-left ${field.value === t ? "border-primary bg-primary/10" : "border-border bg-secondary/20 hover:border-border/80"}`}>
+                          {t === "song" ? <Music className="w-7 h-7 mb-2 text-primary" /> : <Film className="w-7 h-7 mb-2 text-primary" />}
                           <p className="font-bold capitalize">{t}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            {t === "song" ? "Audio track or single" : "Music video or visual content"}
-                          </p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{t === "song" ? "Audio track or single" : "Music video or visual content"}</p>
                           {field.value === t && (
                             <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
                               <CheckCircle className="w-3.5 h-3.5 text-primary-foreground" />
@@ -414,32 +491,19 @@ export default function Submit() {
                 )} />
               </div>
 
-              {/* Plan Selection */}
               <div>
-                <FormLabel className="text-sm font-semibold mb-3 block">Choose your submission plan</FormLabel>
+                <FormLabel className="text-sm font-semibold mb-3 block">Choose your plan</FormLabel>
                 <FormField control={planForm.control} name="plan" render={({ field }) => (
                   <FormItem>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {(["basic", "premium"] as const).map((p) => (
-                        <button
-                          key={p}
-                          type="button"
-                          onClick={() => field.onChange(p)}
-                          className={`relative p-5 rounded-xl border-2 transition-all text-left ${
-                            field.value === p
-                              ? "border-primary bg-primary/10"
-                              : "border-border bg-secondary/20 hover:border-border/80"
-                          }`}
-                        >
+                        <button key={p} type="button" onClick={() => field.onChange(p)}
+                          className={`relative p-5 rounded-xl border-2 transition-all text-left ${field.value === p ? "border-primary bg-primary/10" : "border-border bg-secondary/20 hover:border-border/80"}`}>
                           {p === "premium" && (
-                            <Badge className="absolute top-3 right-3 text-[10px] bg-amber-500/20 text-amber-400 border-amber-500/30">
-                              ⭐ Popular
-                            </Badge>
+                            <Badge className="absolute top-3 right-3 text-[10px] bg-amber-500/20 text-amber-400 border-amber-500/30">⭐ Popular</Badge>
                           )}
                           <div className="flex items-center gap-2 mb-3">
-                            {p === "basic"
-                              ? <Radio className="w-5 h-5 text-primary" />
-                              : <Zap className="w-5 h-5 text-amber-400" />}
+                            {p === "basic" ? <Radio className="w-5 h-5 text-primary" /> : <Zap className="w-5 h-5 text-amber-400" />}
                             <span className="font-bold capitalize">{p}</span>
                           </div>
                           <p className="text-2xl font-extrabold mb-3">
@@ -464,12 +528,10 @@ export default function Submit() {
 
               <div className="flex justify-between pt-2">
                 <Button type="button" variant="outline" onClick={() => setStep(0)} className="gap-2">
-                  <ChevronLeft className="w-4 h-4" />
-                  Back
+                  <ChevronLeft className="w-4 h-4" /> Back
                 </Button>
                 <Button type="submit" className="gap-2 px-6">
-                  Next: Payment
-                  <ChevronRight className="w-4 h-4" />
+                  Next: Payment <ChevronRight className="w-4 h-4" />
                 </Button>
               </div>
             </form>
@@ -480,9 +542,8 @@ export default function Submit() {
       {/* ── Step 2: Payment ── */}
       {step === 2 && (
         <div className="space-y-4">
-          {/* Order summary */}
           <div className="bg-card rounded-xl border border-border shadow-sm p-6 space-y-4">
-            <div className="flex items-center gap-3 mb-2">
+            <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
                 <CreditCard className="w-5 h-5 text-primary" />
               </div>
@@ -518,26 +579,15 @@ export default function Submit() {
             </div>
           </div>
 
-          {/* PayPal demo */}
           <div className="bg-card rounded-xl border border-border shadow-sm p-6 space-y-4">
             <div className="flex items-center gap-2 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
               <AlertCircle className="w-4 h-4 text-blue-400 flex-shrink-0" />
-              <p className="text-xs text-blue-300">
-                <strong>Demo Mode:</strong> This is a simulated PayPal payment. No real charges will be made.
-              </p>
+              <p className="text-xs text-blue-300"><strong>Demo Mode:</strong> This is a simulated PayPal payment. No real charges.</p>
             </div>
 
             {!paymentInitiated ? (
-              <Button
-                className="w-full h-12 text-base gap-3 bg-[#0070ba] hover:bg-[#005ea6] text-white"
-                onClick={handleCreateAndInitiate}
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <><Loader2 className="w-4 h-4 animate-spin" /> Processing…</>
-                ) : (
-                  <><CreditCard className="w-5 h-5" /> Pay ${price.toFixed(2)} with PayPal</>
-                )}
+              <Button className="w-full h-12 text-base gap-3 bg-[#0070ba] hover:bg-[#005ea6] text-white" onClick={handleCreateAndInitiate} disabled={isLoading}>
+                {isLoading ? <><Loader2 className="w-4 h-4 animate-spin" /> Processing…</> : <><CreditCard className="w-5 h-5" /> Pay ${price.toFixed(2)} with PayPal</>}
               </Button>
             ) : (
               <div className="space-y-3">
@@ -548,16 +598,8 @@ export default function Submit() {
                     <p className="text-xs text-muted-foreground font-mono mt-0.5">{paypalOrderId}</p>
                   </div>
                 </div>
-                <Button
-                  className="w-full h-12 text-base gap-3"
-                  onClick={handleCapturePayment}
-                  disabled={captureMutation.isPending}
-                >
-                  {captureMutation.isPending ? (
-                    <><Loader2 className="w-4 h-4 animate-spin" /> Confirming payment…</>
-                  ) : (
-                    <><CheckCircle className="w-5 h-5" /> Confirm Payment — Complete Submission</>
-                  )}
+                <Button className="w-full h-12 text-base gap-3" onClick={handleCapturePayment} disabled={captureMutation.isPending}>
+                  {captureMutation.isPending ? <><Loader2 className="w-4 h-4 animate-spin" /> Confirming…</> : <><CheckCircle className="w-5 h-5" /> Confirm Payment — Complete Submission</>}
                 </Button>
               </div>
             )}
@@ -565,8 +607,7 @@ export default function Submit() {
 
           <div className="flex justify-start">
             <Button type="button" variant="outline" onClick={() => { setStep(1); setPaymentInitiated(false); setPaypalOrderId(null); }} className="gap-2">
-              <ChevronLeft className="w-4 h-4" />
-              Back
+              <ChevronLeft className="w-4 h-4" /> Back
             </Button>
           </div>
         </div>
@@ -582,28 +623,17 @@ export default function Submit() {
             <h2 className="text-2xl font-extrabold">Submission Received!</h2>
             <p className="text-muted-foreground max-w-md mx-auto">
               <strong className="text-foreground">{detailsForm.getValues("title")}</strong> has been submitted for review.
-              Our team will evaluate your content and get back to you.
             </p>
           </div>
-
           <div className="flex items-center justify-center gap-2 p-4 rounded-lg bg-primary/10 border border-primary/20 max-w-xs mx-auto">
             <Radio className="w-4 h-4 text-primary" />
             <p className="text-sm font-medium">Status: <span className="text-primary">Pending Review</span></p>
           </div>
-
           <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
             <Button onClick={() => setLocation("/submissions")} className="gap-2">
-              <FileText className="w-4 h-4" />
-              View My Submissions
+              <FileText className="w-4 h-4" /> View My Submissions
             </Button>
-            <Button variant="outline" onClick={() => {
-              setStep(0);
-              setSubmissionId(null);
-              setPaypalOrderId(null);
-              setPaymentInitiated(false);
-              detailsForm.reset();
-              planForm.reset();
-            }}>
+            <Button variant="outline" onClick={() => { setStep(0); setSubmissionId(null); setPaypalOrderId(null); setPaymentInitiated(false); detailsForm.reset(); planForm.reset(); }}>
               Submit Another
             </Button>
           </div>
