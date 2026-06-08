@@ -304,12 +304,13 @@ export const RateSongParams = zod.object({
   "id": zod.coerce.number()
 })
 
+export const rateSongBodyRatingMin = 0;
 export const rateSongBodyRatingMax = 5;
 
 
 
 export const RateSongBody = zod.object({
-  "rating": zod.number().min(1).max(rateSongBodyRatingMax)
+  "rating": zod.number().min(rateSongBodyRatingMin).max(rateSongBodyRatingMax)
 })
 
 export const RateSongResponse = zod.object({
@@ -524,12 +525,13 @@ export const RateVideoParams = zod.object({
   "id": zod.coerce.number()
 })
 
+export const rateVideoBodyRatingMin = 0;
 export const rateVideoBodyRatingMax = 5;
 
 
 
 export const RateVideoBody = zod.object({
-  "rating": zod.number().min(1).max(rateVideoBodyRatingMax)
+  "rating": zod.number().min(rateVideoBodyRatingMin).max(rateVideoBodyRatingMax)
 })
 
 export const RateVideoResponse = zod.object({

@@ -8,7 +8,7 @@
 
 export interface RatingInput {
   /**
-     * @minimum 1
+     * @minimum 0
      * @maximum 5
      */
   rating: number;

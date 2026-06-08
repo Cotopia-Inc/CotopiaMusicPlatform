@@ -5,9 +5,10 @@ import {
   useRateSong, useFavoriteSong, useUnfavoriteSong,
 } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Play, Heart, Star, Send, Radio, Users, BadgeCheck, MessageCircle } from "lucide-react";
+import { Play, Pause, Heart, Star, Send, Radio, Users, BadgeCheck, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
+import { usePlayer } from "@/lib/player";
 import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { useQueryClient } from "@tanstack/react-query";
@@ -44,6 +45,9 @@ export default function SongDetail() {
   const [localFavorited, setLocalFavorited] = useState<boolean | null>(null);
   const [localRating, setLocalRating] = useState<number | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  const { play: playerPlay, isPlaying, track: currentTrack } = usePlayer();
+  const isThisSongPlaying = isPlaying && currentTrack?.id === songId;
 
   const postChatMutation = usePostChatMessage();
   const rateMutation = useRateSong();
@@ -165,8 +169,14 @@ export default function SongDetail() {
 
         {/* Actions */}
         <div className="flex items-center gap-4 flex-wrap">
-          <Button size="icon" className="w-14 h-14 rounded-full bg-primary text-primary-foreground hover:scale-105 transition-transform shadow-lg shadow-primary/30">
-            <Play className="w-6 h-6 ml-0.5 fill-current" />
+          <Button
+            size="icon"
+            className="w-14 h-14 rounded-full bg-primary text-primary-foreground hover:scale-105 transition-transform shadow-lg shadow-primary/30"
+            onClick={() => song && playerPlay({ id: song.id, title: song.title, artistName: song.artistName ?? "", coverUrl: song.coverUrl, streamUrl: song.streamUrl, duration: song.duration })}
+          >
+            {isThisSongPlaying
+              ? <Pause className="w-6 h-6 fill-current" />
+              : <Play className="w-6 h-6 ml-0.5 fill-current" />}
           </Button>
 
           {/* Heart toggle */}

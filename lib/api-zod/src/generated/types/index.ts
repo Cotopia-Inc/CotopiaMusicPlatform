@@ -31,6 +31,7 @@ export * from './companyPostInputType';
 export * from './companyPostType';
 export * from './companyPostUpdate';
 export * from './discoverFeed';
+
 export * from './getHistoryParams';
 export * from './getTrendingSongsParams';
 export * from './getTrendingVideosParams';

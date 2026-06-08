@@ -1,20 +1,33 @@
-import { Play, SkipBack, SkipForward, Volume2, Heart, ListMusic, Radio } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Volume2, ListMusic, Radio, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
+import { usePlayer, formatDuration } from "@/lib/player";
 
 export function Player() {
+  const { track, isPlaying, currentTime, duration, volume, togglePlay, seek, setVolume } = usePlayer();
+
+  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+
   return (
     <div className="h-20 bg-card/95 backdrop-blur border-t border-border/50 w-full flex items-center justify-between px-4 z-50 flex-shrink-0">
       {/* Track Info */}
       <div className="flex items-center gap-3 w-[30%] min-w-0">
         <div className="w-12 h-12 rounded-md bg-secondary border border-border/50 flex-shrink-0 overflow-hidden shadow-md">
-          <div className="w-full h-full bg-gradient-to-br from-primary/30 to-secondary flex items-center justify-center">
-            <Radio className="w-4 h-4 text-primary/60" />
-          </div>
+          {track?.coverUrl ? (
+            <img src={track.coverUrl} alt={track.title} className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-primary/30 to-secondary flex items-center justify-center">
+              <Radio className="w-4 h-4 text-primary/60" />
+            </div>
+          )}
         </div>
         <div className="min-w-0">
-          <p className="text-sm font-semibold truncate leading-tight">Select a track</p>
-          <p className="text-xs text-muted-foreground truncate leading-tight mt-0.5">Everyday Radio</p>
+          <p className="text-sm font-semibold truncate leading-tight">
+            {track ? track.title : "Select a track"}
+          </p>
+          <p className="text-xs text-muted-foreground truncate leading-tight mt-0.5">
+            {track ? track.artistName : "Everyday Radio"}
+          </p>
         </div>
         <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary flex-shrink-0 w-8 h-8">
           <Heart className="w-4 h-4" />
@@ -29,18 +42,31 @@ export function Player() {
           </Button>
           <Button
             size="icon"
+            onClick={togglePlay}
             className="w-9 h-9 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105 transition-transform shadow-lg shadow-primary/25"
           >
-            <Play className="w-4 h-4 ml-0.5 fill-current" />
+            {isPlaying
+              ? <Pause className="w-4 h-4 fill-current" />
+              : <Play className="w-4 h-4 ml-0.5 fill-current" />}
           </Button>
           <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground w-8 h-8">
             <SkipForward className="w-4 h-4" />
           </Button>
         </div>
         <div className="w-full flex items-center gap-2">
-          <span className="text-[10px] text-muted-foreground w-8 text-right tabular-nums">0:00</span>
-          <Slider defaultValue={[0]} max={100} step={1} className="flex-1 h-1" />
-          <span className="text-[10px] text-muted-foreground w-8 tabular-nums">0:00</span>
+          <span className="text-[10px] text-muted-foreground w-8 text-right tabular-nums">
+            {formatDuration(currentTime)}
+          </span>
+          <Slider
+            value={[progress]}
+            max={100}
+            step={0.1}
+            className="flex-1 h-1"
+            onValueChange={([v]) => seek((v / 100) * duration)}
+          />
+          <span className="text-[10px] text-muted-foreground w-8 tabular-nums">
+            {track ? formatDuration(duration || track.duration || 0) : "0:00"}
+          </span>
         </div>
       </div>
 
@@ -50,7 +76,13 @@ export function Player() {
           <ListMusic className="w-4 h-4" />
         </Button>
         <Volume2 className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-        <Slider defaultValue={[75]} max={100} step={1} className="w-20 h-1" />
+        <Slider
+          value={[volume * 100]}
+          max={100}
+          step={1}
+          className="w-20 h-1"
+          onValueChange={([v]) => setVolume(v / 100)}
+        />
       </div>
     </div>
   );
