@@ -182,10 +182,15 @@ export default function SongDetail() {
           {/* Heart toggle */}
           <button
             onClick={handleToggleFavorite}
-            className={`p-2 rounded-full transition-all hover:scale-110 ${isFavorited ? "text-red-500" : "text-muted-foreground hover:text-red-400"}`}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all text-sm font-medium ${
+              isFavorited
+                ? "bg-red-500/10 border-red-500/40 text-red-500 hover:bg-red-500/20"
+                : "border-border text-muted-foreground hover:border-red-400 hover:text-red-400"
+            }`}
             title={isFavorited ? "Remove from favorites" : "Add to favorites"}
           >
-            <Heart className={`w-7 h-7 transition-all ${isFavorited ? "fill-current" : ""}`} />
+            <Heart className={`w-4 h-4 transition-all ${isFavorited ? "fill-current" : ""}`} />
+            {isFavorited ? "Liked" : "Like"}
           </button>
 
           {/* Star rating */}
