@@ -55,6 +55,7 @@ import type {
   ListSongsParams,
   ListVideosParams,
   LoginInput,
+  PaymentCaptureInput,
   PaymentInitiateInput,
   PaymentResponse,
   Playlist,
@@ -5715,6 +5716,77 @@ export const usePostChatMessage = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getPostChatMessageMutationOptions(options));
+    }
+
+export const getCapturePaymentUrl = () => {
+
+
+
+
+  return `/api/payments/capture`
+}
+
+/**
+ * @summary Capture a PayPal demo payment and move submission to pending_review
+ */
+export const capturePayment = async (paymentCaptureInput: PaymentCaptureInput, options?: RequestInit): Promise<Submission> => {
+
+  return customFetch<Submission>(getCapturePaymentUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      paymentCaptureInput,)
+  }
+);}
+
+
+
+
+export const getCapturePaymentMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof capturePayment>>, TError,{data: BodyType<PaymentCaptureInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof capturePayment>>, TError,{data: BodyType<PaymentCaptureInput>}, TContext> => {
+
+const mutationKey = ['capturePayment'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof capturePayment>>, {data: BodyType<PaymentCaptureInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  capturePayment(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CapturePaymentMutationResult = NonNullable<Awaited<ReturnType<typeof capturePayment>>>
+    export type CapturePaymentMutationBody = BodyType<PaymentCaptureInput>
+    export type CapturePaymentMutationError = ErrorType<void>
+
+    /**
+ * @summary Capture a PayPal demo payment and move submission to pending_review
+ */
+export const useCapturePayment = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof capturePayment>>, TError,{data: BodyType<PaymentCaptureInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof capturePayment>>,
+        TError,
+        {data: BodyType<PaymentCaptureInput>},
+        TContext
+      > => {
+      return useMutation(getCapturePaymentMutationOptions(options));
     }
 
 export const getInitiatePaymentUrl = () => {

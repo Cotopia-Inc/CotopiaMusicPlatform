@@ -1494,6 +1494,29 @@ paths:
         "401":
           description: Unauthorized
 
+  /payments/capture:
+    post:
+      operationId: capturePayment
+      tags: [payments]
+      summary: Capture a PayPal demo payment and move submission to pending_review
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentCaptureInput"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Submission"
+        "404":
+          description: Not found
+
   /payments/initiate:
     post:
       operationId: initiatePayment
@@ -2056,13 +2079,35 @@ components:
 
     SubmissionInput:
       type: object
-      required: [type, contentId]
+      required: [type, title]
       properties:
         type:
           type: string
           enum: [song, video]
-        contentId:
-          type: integer
+        plan:
+          type: string
+          enum: [basic, premium]
+          default: basic
+        title:
+          type: string
+        artistName:
+          type: string
+        labelName:
+          type: string
+        genre:
+          type: string
+        mood:
+          type: string
+        description:
+          type: string
+        fileUrl:
+          type: string
+        coverUrl:
+          type: string
+        releaseDate:
+          type: string
+        isExplicit:
+          type: boolean
 
     SubmissionUpdate:
       type: object
@@ -2319,6 +2364,15 @@ components:
       properties:
         submissionId:
           type: integer
+
+    PaymentCaptureInput:
+      type: object
+      required: [submissionId, paypalOrderId]
+      properties:
+        submissionId:
+          type: integer
+        paypalOrderId:
+          type: string
 
     PaymentResponse:
       type: object

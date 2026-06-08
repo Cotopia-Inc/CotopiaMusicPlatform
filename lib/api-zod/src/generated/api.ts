@@ -1064,9 +1064,21 @@ export const ListSubmissionsResponse = zod.array(ListSubmissionsResponseItem)
 /**
  * @summary Submit content for review
  */
+export const createSubmissionBodyPlanDefault = `basic`;
+
 export const CreateSubmissionBody = zod.object({
   "type": zod.enum(['song', 'video']),
-  "contentId": zod.number()
+  "plan": zod.enum(['basic', 'premium']).default(createSubmissionBodyPlanDefault),
+  "title": zod.string(),
+  "artistName": zod.string().optional(),
+  "labelName": zod.string().optional(),
+  "genre": zod.string().optional(),
+  "mood": zod.string().optional(),
+  "description": zod.string().optional(),
+  "fileUrl": zod.string().optional(),
+  "coverUrl": zod.string().optional(),
+  "releaseDate": zod.string().optional(),
+  "isExplicit": zod.boolean().optional()
 })
 
 
@@ -1631,6 +1643,29 @@ export const PostChatMessageParams = zod.object({
 
 export const PostChatMessageBody = zod.object({
   "message": zod.string()
+})
+
+
+/**
+ * @summary Capture a PayPal demo payment and move submission to pending_review
+ */
+export const CapturePaymentBody = zod.object({
+  "submissionId": zod.number(),
+  "paypalOrderId": zod.string()
+})
+
+export const CapturePaymentResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "submitterName": zod.string().optional(),
+  "type": zod.enum(['song', 'video']),
+  "title": zod.string(),
+  "contentId": zod.number().nullish(),
+  "status": zod.enum(['draft', 'pending_review', 'approved', 'rejected', 'published']),
+  "paymentStatus": zod.enum(['unpaid', 'paid', 'refunded']).optional(),
+  "adminNotes": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().optional()
 })
 
 

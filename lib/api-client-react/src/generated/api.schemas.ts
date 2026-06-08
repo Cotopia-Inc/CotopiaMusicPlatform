@@ -396,9 +396,27 @@ export const SubmissionInputType = {
   video: 'video',
 } as const;
 
+export type SubmissionInputPlan = typeof SubmissionInputPlan[keyof typeof SubmissionInputPlan];
+
+
+export const SubmissionInputPlan = {
+  basic: 'basic',
+  premium: 'premium',
+} as const;
+
 export interface SubmissionInput {
   type: SubmissionInputType;
-  contentId: number;
+  plan?: SubmissionInputPlan;
+  title: string;
+  artistName?: string;
+  labelName?: string;
+  genre?: string;
+  mood?: string;
+  description?: string;
+  fileUrl?: string;
+  coverUrl?: string;
+  releaseDate?: string;
+  isExplicit?: boolean;
 }
 
 export type SubmissionUpdateStatus = typeof SubmissionUpdateStatus[keyof typeof SubmissionUpdateStatus];
@@ -578,6 +596,11 @@ export interface AppSettingsUpdate {
 
 export interface PaymentInitiateInput {
   submissionId: number;
+}
+
+export interface PaymentCaptureInput {
+  submissionId: number;
+  paypalOrderId: string;
 }
 
 export interface PaymentResponse {

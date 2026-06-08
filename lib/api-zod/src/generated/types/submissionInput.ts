@@ -5,9 +5,20 @@
  * Cotopia Streaming Platform API
  * OpenAPI spec version: 0.1.0
  */
+import type { SubmissionInputPlan } from './submissionInputPlan';
 import type { SubmissionInputType } from './submissionInputType';
 
 export interface SubmissionInput {
   type: SubmissionInputType;
-  contentId: number;
+  plan?: SubmissionInputPlan;
+  title: string;
+  artistName?: string;
+  labelName?: string;
+  genre?: string;
+  mood?: string;
+  description?: string;
+  fileUrl?: string;
+  coverUrl?: string;
+  releaseDate?: string;
+  isExplicit?: boolean;
 }

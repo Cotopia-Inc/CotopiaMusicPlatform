@@ -10,7 +10,9 @@ export const submissionsTable = pgTable("submissions", {
   contentId: integer("content_id"),
   status: text("status").notNull().default("pending_review"), // draft | pending_review | approved | rejected | published
   paymentStatus: text("payment_status").notNull().default("unpaid"), // unpaid | paid | refunded
+  submitterNotes: text("submitter_notes"),
   adminNotes: text("admin_notes"),
+  plan: text("plan").notNull().default("basic"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
