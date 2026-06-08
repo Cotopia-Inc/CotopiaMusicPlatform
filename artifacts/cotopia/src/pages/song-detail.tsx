@@ -44,6 +44,7 @@ export default function SongDetail() {
   const [chatInput, setChatInput] = useState("");
   const [localFavorited, setLocalFavorited] = useState<boolean | null>(null);
   const [localRating, setLocalRating] = useState<number | null>(null);
+  const [hoveredRating, setHoveredRating] = useState<number | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const { play: playerPlay, isPlaying, track: currentTrack } = usePlayer();
@@ -194,17 +195,22 @@ export default function SongDetail() {
           </button>
 
           {/* Star rating */}
-          <div className="flex items-center gap-1">
-            {[1, 2, 3, 4, 5].map((star) => (
-              <button
-                key={star}
-                onClick={() => handleRate(star)}
-                className="p-0.5 hover:scale-125 transition-transform"
-                title={userRating === star ? "Click to clear rating" : `Rate ${star} stars`}
-              >
-                <Star className={`w-5 h-5 transition-colors ${userRating && userRating >= star ? 'fill-primary text-primary' : 'text-muted-foreground/40 hover:text-primary'}`} />
-              </button>
-            ))}
+          <div className="flex items-center gap-1" onMouseLeave={() => setHoveredRating(null)}>
+            {[1, 2, 3, 4, 5].map((star) => {
+              const displayRating = hoveredRating ?? userRating;
+              const filled = displayRating !== null && displayRating >= star;
+              return (
+                <button
+                  key={star}
+                  onClick={() => handleRate(star)}
+                  onMouseEnter={() => setHoveredRating(star)}
+                  className="p-0.5 hover:scale-125 transition-transform"
+                  title={userRating === star ? "Click to clear rating" : `Rate ${star} stars`}
+                >
+                  <Star className={`w-5 h-5 transition-colors ${filled ? 'fill-primary text-primary' : 'text-muted-foreground/40'}`} />
+                </button>
+              );
+            })}
             <span className="text-sm text-muted-foreground ml-2 tabular-nums">
               {song.avgRating ? song.avgRating.toFixed(1) : '—'}
             </span>
