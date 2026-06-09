@@ -90,11 +90,11 @@ function FileUploadField({ label, accept, icon, hint, value, onChange, urlPlaceh
 
   return (
     <div className="space-y-2">
-      <FormLabel className="flex items-center gap-2 text-sm font-medium">
+      <p className="flex items-center gap-2 text-sm font-medium">
         {icon}
         {label}
         <span className="text-muted-foreground text-xs font-normal">(optional)</span>
-      </FormLabel>
+      </p>
 
       {!urlMode ? (
         <div className="space-y-2">
@@ -489,7 +489,7 @@ export default function Submit() {
           <Form {...planForm}>
             <form onSubmit={onPlanNext} className="space-y-6">
               <div>
-                <FormLabel className="text-sm font-semibold mb-3 block">What are you submitting?</FormLabel>
+                <p className="text-sm font-semibold mb-3">What are you submitting?</p>
                 <FormField control={planForm.control} name="type" render={({ field }) => (
                   <FormItem>
                     <div className="grid grid-cols-2 gap-3">
@@ -513,7 +513,7 @@ export default function Submit() {
               </div>
 
               <div>
-                <FormLabel className="text-sm font-semibold mb-3 block">Choose your plan</FormLabel>
+                <p className="text-sm font-semibold mb-3">Choose your plan</p>
                 <FormField control={planForm.control} name="plan" render={({ field }) => (
                   <FormItem>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
