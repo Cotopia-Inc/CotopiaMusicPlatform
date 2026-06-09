@@ -1,5 +1,5 @@
 import { useGetHomeFeed, getGetHomeFeedQueryKey } from "@workspace/api-client-react";
-import { Play, Radio, BadgeCheck, TrendingUp } from "lucide-react";
+import { Play, Radio, BadgeCheck, TrendingUp, Video } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "wouter";
 import { Badge } from "@/components/ui/badge";
@@ -126,31 +126,39 @@ export default function Home() {
                 </div>
               ))
             ) : feed?.featuredVideos?.map((video) => (
-              <Link key={video.id} href={`/videos/${video.id}`}>
-                <div className="group cursor-pointer space-y-3">
+              <div key={video.id} className="group cursor-pointer space-y-3">
+                <Link href={`/videos/${video.id}`}>
                   <div className="w-full aspect-video relative overflow-hidden rounded-xl bg-secondary border border-border/50 shadow-md">
                     {video.thumbnailUrl ? (
                       <img src={video.thumbnailUrl} alt={video.title} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary" />
+                      <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary flex items-center justify-center">
+                        <Video className="w-10 h-10 text-primary/30" />
+                      </div>
                     )}
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <div className="bg-primary text-primary-foreground rounded-full p-4 shadow-lg">
+                      <button
+                        className="bg-primary text-primary-foreground rounded-full p-4 shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-all duration-300"
+                        title={`Play ${video.title}`}
+                        onClick={(e) => { e.preventDefault(); play({ id: video.id, title: video.title, artistName: video.artistName ?? "", coverUrl: video.thumbnailUrl, videoUrl: video.videoUrl, duration: video.duration }); }}
+                      >
                         <Play className="w-6 h-6 fill-current ml-0.5" />
-                      </div>
+                      </button>
                     </div>
-                    {video.status === "published" && (
+                    {video.isFeatured && (
                       <div className="absolute top-2 left-2">
                         <Badge className="text-[9px] bg-primary/80 backdrop-blur px-1.5 py-0.5">Featured</Badge>
                       </div>
                     )}
                   </div>
-                  <div>
-                    <h4 className="font-semibold text-sm truncate">{video.title}</h4>
-                    <p className="text-xs text-muted-foreground">{video.artistName}</p>
-                  </div>
+                </Link>
+                <div>
+                  <Link href={`/videos/${video.id}`}>
+                    <h4 className="font-semibold text-sm truncate hover:text-primary transition-colors">{video.title}</h4>
+                  </Link>
+                  <p className="text-xs text-muted-foreground">{video.artistName}</p>
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
         </section>

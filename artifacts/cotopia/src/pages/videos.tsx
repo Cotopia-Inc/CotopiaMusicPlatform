@@ -1,13 +1,15 @@
 import { useListVideos, getListVideosQueryKey } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Play, Search } from "lucide-react";
+import { Play, Search, Video as VideoIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
+import { usePlayer } from "@/lib/player";
 
 export default function Videos() {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const { play } = usePlayer();
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 500);
@@ -25,8 +27,8 @@ export default function Videos() {
         <h1 className="text-4xl font-extrabold tracking-tight">Videos</h1>
         <div className="relative w-64">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input 
-            placeholder="Search videos..." 
+          <Input
+            placeholder="Search videos..."
             className="pl-9 bg-secondary/50 border-secondary"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -45,26 +47,34 @@ export default function Videos() {
           ))
         ) : data?.items?.length ? (
           data.items.map((video) => (
-            <Link key={video.id} href={`/videos/${video.id}`}>
-              <div className="group cursor-pointer space-y-3">
+            <div key={video.id} className="group cursor-pointer space-y-3">
+              <Link href={`/videos/${video.id}`}>
                 <div className="aspect-video relative overflow-hidden rounded-md bg-secondary border border-border">
                   {video.thumbnailUrl ? (
                     <img src={video.thumbnailUrl} alt={video.title} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">No Thumbnail</div>
+                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                      <VideoIcon className="w-10 h-10 opacity-30" />
+                    </div>
                   )}
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <button className="bg-primary text-primary-foreground rounded-full p-4 transform scale-90 group-hover:scale-100 transition-all duration-300">
+                    <button
+                      className="bg-primary text-primary-foreground rounded-full p-4 transform scale-90 group-hover:scale-100 transition-all duration-300 shadow-lg"
+                      title={`Play ${video.title}`}
+                      onClick={(e) => { e.preventDefault(); play({ id: video.id, title: video.title, artistName: video.artistName ?? "", coverUrl: video.thumbnailUrl, videoUrl: video.videoUrl, duration: video.duration }); }}
+                    >
                       <Play className="w-8 h-8 fill-current ml-1" />
                     </button>
                   </div>
                 </div>
-                <div>
-                  <h4 className="font-semibold text-sm truncate">{video.title}</h4>
-                  <p className="text-xs text-muted-foreground truncate hover:underline">{video.artistName}</p>
-                </div>
+              </Link>
+              <div>
+                <Link href={`/videos/${video.id}`}>
+                  <h4 className="font-semibold text-sm truncate hover:text-primary transition-colors">{video.title}</h4>
+                </Link>
+                <p className="text-xs text-muted-foreground truncate">{video.artistName}</p>
               </div>
-            </Link>
+            </div>
           ))
         ) : (
           <div className="col-span-full text-muted-foreground py-12 text-center">No videos found matching your search.</div>

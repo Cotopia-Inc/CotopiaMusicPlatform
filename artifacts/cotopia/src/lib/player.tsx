@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useRef, useEffect, type ReactNode } from "react";
+import { createContext, useContext, useState, useRef, useEffect, useCallback, type ReactNode } from "react";
 
 export interface Track {
   id: number;
@@ -6,25 +6,27 @@ export interface Track {
   artistName: string;
   coverUrl?: string | null;
   streamUrl?: string | null;
+  videoUrl?: string | null;
   duration?: number;
   isFavorited?: boolean;
 }
 
-interface PlayerState {
+interface PlayerContextValue {
   track: Track | null;
   isPlaying: boolean;
   currentTime: number;
   duration: number;
   volume: number;
   trackFavorited: boolean;
-}
-
-interface PlayerContextValue extends PlayerState {
+  nowPlayingOpen: boolean;
+  isVideoTrack: boolean;
   play: (track: Track) => void;
   togglePlay: () => void;
   seek: (time: number) => void;
   setVolume: (v: number) => void;
   setTrackFavorited: (v: boolean) => void;
+  setNowPlayingOpen: (v: boolean) => void;
+  registerVideoElement: (el: HTMLVideoElement | null) => void;
   audioRef: React.RefObject<HTMLAudioElement | null>;
 }
 
@@ -37,11 +39,16 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const [duration, setDuration] = useState(0);
   const [volume, setVolumeState] = useState(0.75);
   const [trackFavorited, setTrackFavorited] = useState(false);
+  const [nowPlayingOpen, setNowPlayingOpen] = useState(false);
+
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const videoElRef = useRef<HTMLVideoElement | null>(null);
+  const volumeRef = useRef(0.75);
+  const videoHandlersRef = useRef<Record<string, EventListener>>({});
 
   useEffect(() => {
     const audio = new Audio();
-    audio.volume = volume;
+    audio.volume = volumeRef.current;
     audioRef.current = audio;
 
     audio.addEventListener("timeupdate", () => setCurrentTime(audio.currentTime));
@@ -49,60 +56,96 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     audio.addEventListener("ended", () => setIsPlaying(false));
     audio.addEventListener("play", () => setIsPlaying(true));
     audio.addEventListener("pause", () => setIsPlaying(false));
-    // Suppress "no supported sources" errors from null stream URLs
-    audio.addEventListener("error", () => { setIsPlaying(false); });
+    audio.addEventListener("error", () => setIsPlaying(false));
 
     return () => { audio.pause(); audio.src = ""; };
   }, []);
 
+  const registerVideoElement = useCallback((el: HTMLVideoElement | null) => {
+    const old = videoElRef.current;
+    if (old) {
+      Object.entries(videoHandlersRef.current).forEach(([ev, fn]) => old.removeEventListener(ev, fn));
+      old.pause();
+    }
+
+    videoElRef.current = el;
+    videoHandlersRef.current = {};
+
+    if (!el) return;
+
+    const handlers: Record<string, EventListener> = {
+      timeupdate: () => setCurrentTime(el.currentTime),
+      durationchange: () => setDuration(el.duration || 0),
+      ended: () => setIsPlaying(false),
+      play: () => setIsPlaying(true),
+      pause: () => setIsPlaying(false),
+      error: () => setIsPlaying(false),
+    };
+    videoHandlersRef.current = handlers;
+    Object.entries(handlers).forEach(([ev, fn]) => el.addEventListener(ev, fn));
+  }, []);
+
+  const getMedia = () => track?.videoUrl ? videoElRef.current : audioRef.current;
+
   const play = (newTrack: Track) => {
+    const isVideo = !!newTrack.videoUrl;
     const audio = audioRef.current;
-    if (!audio) return;
+    const video = videoElRef.current;
 
     if (track?.id === newTrack.id) {
-      // Same track — toggle play/pause only if there's an actual src
-      if (audio.src && audio.src !== window.location.href) {
-        if (isPlaying) { audio.pause(); } else { audio.play().catch(() => {}); }
-      }
+      const media = getMedia();
+      if (!media) return;
+      if (isPlaying) { media.pause(); } else { media.play().catch(() => {}); }
       return;
     }
 
-    // New track
     setTrack(newTrack);
     setTrackFavorited(newTrack.isFavorited ?? false);
     setCurrentTime(0);
     setDuration(newTrack.duration ?? 0);
 
-    if (newTrack.streamUrl) {
+    if (isVideo && video && newTrack.videoUrl) {
+      if (audio) { audio.pause(); audio.src = ""; }
+      video.src = newTrack.videoUrl;
+      video.volume = volumeRef.current;
+      video.play().catch(() => {});
+      setNowPlayingOpen(true);
+    } else if (!isVideo && audio && newTrack.streamUrl) {
+      if (video) { video.pause(); video.src = ""; }
       audio.src = newTrack.streamUrl;
-      audio.load();
       audio.play().catch(() => {});
+    } else {
+      setTrack(newTrack);
     }
-    // If no streamUrl, just show track info in bar without touching audio element
   };
 
   const togglePlay = () => {
-    const audio = audioRef.current;
-    if (!audio || !track) return;
-    if (audio.src && audio.src !== window.location.href) {
-      if (isPlaying) { audio.pause(); } else { audio.play().catch(() => {}); }
-    }
+    const media = getMedia();
+    if (!media || !track) return;
+    if (isPlaying) { media.pause(); } else { media.play().catch(() => {}); }
   };
 
   const seek = (time: number) => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    audio.currentTime = time;
+    const media = getMedia();
+    if (!media) return;
+    media.currentTime = time;
     setCurrentTime(time);
   };
 
   const setVolume = (v: number) => {
+    volumeRef.current = v;
     setVolumeState(v);
     if (audioRef.current) audioRef.current.volume = v;
+    if (videoElRef.current) videoElRef.current.volume = v;
   };
 
   return (
-    <PlayerContext.Provider value={{ track, isPlaying, currentTime, duration, volume, trackFavorited, play, togglePlay, seek, setVolume, setTrackFavorited, audioRef }}>
+    <PlayerContext.Provider value={{
+      track, isPlaying, currentTime, duration, volume, trackFavorited, nowPlayingOpen,
+      isVideoTrack: !!track?.videoUrl,
+      play, togglePlay, seek, setVolume, setTrackFavorited, setNowPlayingOpen,
+      registerVideoElement, audioRef,
+    }}>
       {children}
     </PlayerContext.Provider>
   );
