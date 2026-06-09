@@ -65,7 +65,7 @@ router.patch("/admin/users/:id", requireAuth, requireRole(...ADMIN_ROLES), async
 
 // ── Role Management (master_admin only) ──────────────────────────────────
 
-router.patch("/admin/users/:id/role", requireAuth, requireRole("master_admin"), async (req: AuthRequest, res): Promise<void> => {
+router.patch("/admin/users/:id/role", requireAuth, requireRole(...ADMIN_ROLES), async (req: AuthRequest, res): Promise<void> => {
   const idRaw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const id = parseInt(idRaw, 10);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }

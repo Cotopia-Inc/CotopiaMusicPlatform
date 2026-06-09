@@ -1,5 +1,7 @@
 import jwt from "jsonwebtoken";
 import type { Request, Response, NextFunction } from "express";
+import { db, usersTable } from "@workspace/db";
+import { eq } from "drizzle-orm";
 
 const JWT_SECRET = process.env.SESSION_SECRET ?? "cotopia-dev-secret-change-in-production";
 
@@ -20,7 +22,7 @@ export interface AuthRequest extends Request {
   user?: JwtPayload;
 }
 
-export function requireAuth(req: AuthRequest, res: Response, next: NextFunction): void {
+export async function requireAuth(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
   const auth = req.headers.authorization;
   if (!auth?.startsWith("Bearer ")) {
     res.status(401).json({ error: "Unauthorized" });
@@ -28,18 +30,30 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
   }
   const token = auth.slice(7);
   try {
-    req.user = verifyToken(token);
+    const payload = verifyToken(token);
+    const [fresh] = await db
+      .select({ role: usersTable.role })
+      .from(usersTable)
+      .where(eq(usersTable.id, payload.userId))
+      .limit(1);
+    req.user = { userId: payload.userId, role: fresh?.role ?? payload.role };
     next();
   } catch {
     res.status(401).json({ error: "Invalid token" });
   }
 }
 
-export function optionalAuth(req: AuthRequest, _res: Response, next: NextFunction): void {
+export async function optionalAuth(req: AuthRequest, _res: Response, next: NextFunction): Promise<void> {
   const auth = req.headers.authorization;
   if (auth?.startsWith("Bearer ")) {
     try {
-      req.user = verifyToken(auth.slice(7));
+      const payload = verifyToken(auth.slice(7));
+      const [fresh] = await db
+        .select({ role: usersTable.role })
+        .from(usersTable)
+        .where(eq(usersTable.id, payload.userId))
+        .limit(1);
+      req.user = { userId: payload.userId, role: fresh?.role ?? payload.role };
     } catch {
       // ignore invalid token in optional auth
     }
