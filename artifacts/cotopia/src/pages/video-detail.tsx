@@ -5,10 +5,10 @@ import {
   useRateVideo, useFavoriteVideo, useUnfavoriteVideo,
 } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Play, Heart, Star, Send, Radio, Users, BadgeCheck, MessageCircle } from "lucide-react";
+import { Play, Heart, Star, Send, Radio, Users, BadgeCheck, MessageCircle, Maximize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
@@ -44,7 +44,20 @@ export default function VideoDetail() {
   const [localFavorited, setLocalFavorited] = useState<boolean | null>(null);
   const [localRating, setLocalRating] = useState<number | null>(null);
   const [hoveredRating, setHoveredRating] = useState<number | null>(null);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  const handlePlayVideo = useCallback(() => {
+    setIsVideoPlaying(true);
+    setTimeout(() => videoRef.current?.play(), 50);
+  }, []);
+
+  const handleFullscreen = useCallback(() => {
+    if (videoRef.current) {
+      videoRef.current.requestFullscreen?.();
+    }
+  }, []);
 
   const postChatMutation = usePostChatMessage();
   const rateMutation = useRateVideo();
@@ -129,25 +142,55 @@ export default function VideoDetail() {
     <div className="pb-24 space-y-4">
       {/* ── Video player with chat overlay ── */}
       <div className="relative w-full rounded-xl overflow-hidden bg-black border border-border shadow-2xl" style={{ aspectRatio: "16/9" }}>
-        {/* Thumbnail / video */}
-        {video.thumbnailUrl && (
-          <img src={video.thumbnailUrl} alt={video.title} className="absolute inset-0 w-full h-full object-cover opacity-60" />
+        {/* Real video element (shown once play is clicked) */}
+        {isVideoPlaying && video.videoUrl ? (
+          <video
+            ref={videoRef}
+            src={video.videoUrl}
+            className="absolute inset-0 w-full h-full object-contain"
+            controls
+            autoPlay
+            style={{ zIndex: 10 }}
+          />
+        ) : (
+          <>
+            {/* Thumbnail */}
+            {video.thumbnailUrl && (
+              <img src={video.thumbnailUrl} alt={video.title} className="absolute inset-0 w-full h-full object-cover opacity-60" />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/80" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+
+            {/* Play button (centered, shifted left so it clears chat) */}
+            <div className="absolute inset-0 pr-72 flex items-center justify-center">
+              <button
+                onClick={handlePlayVideo}
+                className="bg-primary text-primary-foreground rounded-full p-5 hover:scale-110 transition-transform duration-300 shadow-2xl shadow-primary/40"
+              >
+                <Play className="w-10 h-10 fill-current ml-1" />
+              </button>
+            </div>
+          </>
         )}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/80" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
-        {/* Play button (centered, shifted left so it clears chat) */}
-        <div className="absolute inset-0 pr-72 flex items-center justify-center">
-          <button className="bg-primary text-primary-foreground rounded-full p-5 hover:scale-110 transition-transform duration-300 shadow-2xl shadow-primary/40">
-            <Play className="w-10 h-10 fill-current ml-1" />
+        {/* Fullscreen button (when playing) */}
+        {isVideoPlaying && video.videoUrl && (
+          <button
+            onClick={handleFullscreen}
+            className="absolute top-3 left-3 z-20 bg-black/50 hover:bg-black/70 text-white rounded-lg p-1.5 transition-colors"
+            title="Fullscreen"
+          >
+            <Maximize2 className="w-4 h-4" />
           </button>
-        </div>
+        )}
 
-        {/* Branding badge */}
-        <div className="absolute bottom-3 left-3 flex items-center gap-1 bg-black/60 backdrop-blur px-2 py-1 rounded-full">
-          <Radio className="w-3 h-3 text-primary" />
-          <span className="text-[10px] text-white font-semibold">Everyday Radio</span>
-        </div>
+        {/* Branding badge (hidden when video is playing with controls) */}
+        {!isVideoPlaying && (
+          <div className="absolute bottom-3 left-3 flex items-center gap-1 bg-black/60 backdrop-blur px-2 py-1 rounded-full">
+            <Radio className="w-3 h-3 text-primary" />
+            <span className="text-[10px] text-white font-semibold">Everyday Radio</span>
+          </div>
+        )}
 
         {/* ── Chat overlay panel ── */}
         <div className="absolute right-0 top-0 bottom-0 w-72 flex flex-col bg-black/75 backdrop-blur-md border-l border-white/10">

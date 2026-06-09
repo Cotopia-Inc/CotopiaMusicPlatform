@@ -239,6 +239,17 @@ export default function Submit() {
 
   const isLoading = createMutation.isPending || initiateMutation.isPending;
 
+  if (!user) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
+        <Music className="w-16 h-16 text-muted-foreground" />
+        <h2 className="text-2xl font-bold">Sign in to Submit</h2>
+        <p className="text-muted-foreground">You need an account to submit music or video.</p>
+        <Button onClick={() => setLocation("/login")}>Sign In</Button>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-3xl mx-auto pb-24 space-y-8">
       {/* Header */}

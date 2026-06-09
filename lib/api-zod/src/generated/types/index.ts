@@ -6,6 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './adminChatMessage';
+export * from './adminListChatMessagesContentType';
+export * from './adminListChatMessagesParams';
 export * from './adminListSubmissionsParams';
 export * from './adminListSubmissionsStatus';
 export * from './adminListUsersParams';
@@ -31,7 +34,6 @@ export * from './companyPostInputType';
 export * from './companyPostType';
 export * from './companyPostUpdate';
 export * from './discoverFeed';
-
 export * from './getHistoryParams';
 export * from './getTrendingSongsParams';
 export * from './getTrendingVideosParams';

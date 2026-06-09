@@ -1609,6 +1609,29 @@ export const UpdateAppSettingsResponse = zod.object({
 
 
 /**
+ * @summary List all chat messages (admin only)
+ */
+export const adminListChatMessagesQueryLimitDefault = 100;
+
+export const AdminListChatMessagesQueryParams = zod.object({
+  "limit": zod.coerce.number().default(adminListChatMessagesQueryLimitDefault),
+  "contentType": zod.enum(['song', 'video']).optional()
+})
+
+export const AdminListChatMessagesResponseItem = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "username": zod.string(),
+  "avatarUrl": zod.string().nullish(),
+  "contentType": zod.string(),
+  "contentId": zod.number(),
+  "message": zod.string(),
+  "createdAt": zod.string()
+})
+export const AdminListChatMessagesResponse = zod.array(AdminListChatMessagesResponseItem)
+
+
+/**
  * @summary Get chat messages for a song or video
  */
 export const GetChatMessagesParams = zod.object({

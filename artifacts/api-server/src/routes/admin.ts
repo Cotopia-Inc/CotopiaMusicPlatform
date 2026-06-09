@@ -3,7 +3,7 @@ import { eq, desc, ilike, and, count, avg, sql } from "drizzle-orm";
 import {
   db, usersTable, submissionsTable, songsTable, videosTable, artistsTable,
   labelsTable, albumsTable, commentsTable, ratingsTable, analyticsEventsTable,
-  appSettingsTable, followsTable,
+  appSettingsTable, followsTable, chatMessagesTable,
 } from "@workspace/db";
 import {
   AdminListUsersQueryParams, AdminUpdateUserBody, AdminListUsersParams,
@@ -176,6 +176,30 @@ router.patch("/admin/settings", requireAuth, requireRole("admin"), async (req: A
 
   const [updated] = await db.update(appSettingsTable).set(dbData).where(eq(appSettingsTable.id, existing.id)).returning();
   res.json({ ...updated, songSubmissionFee: parseFloat(updated.songSubmissionFee), videoSubmissionFee: parseFloat(updated.videoSubmissionFee) });
+});
+
+router.get("/admin/chat", requireAuth, requireRole("admin"), async (req: AuthRequest, res): Promise<void> => {
+  const limit = Math.min(Number(req.query.limit) || 100, 200);
+  const contentType = req.query.contentType as string | undefined;
+
+  const messages = await db
+    .select({
+      id: chatMessagesTable.id,
+      userId: chatMessagesTable.userId,
+      username: usersTable.username,
+      avatarUrl: usersTable.avatarUrl,
+      contentType: chatMessagesTable.contentType,
+      contentId: chatMessagesTable.contentId,
+      message: chatMessagesTable.message,
+      createdAt: chatMessagesTable.createdAt,
+    })
+    .from(chatMessagesTable)
+    .innerJoin(usersTable, eq(chatMessagesTable.userId, usersTable.id))
+    .where(contentType ? eq(chatMessagesTable.contentType, contentType) : undefined)
+    .orderBy(desc(chatMessagesTable.createdAt))
+    .limit(limit);
+
+  res.json(messages);
 });
 
 export default router;

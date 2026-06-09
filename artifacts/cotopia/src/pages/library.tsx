@@ -1,16 +1,25 @@
-import { useGetFavoriteSongs, getGetFavoriteSongsQueryKey, useListPlaylists, getListPlaylistsQueryKey, useGetHistory, getGetHistoryQueryKey } from "@workspace/api-client-react";
+import { useState } from "react";
+import { useGetFavoriteSongs, getGetFavoriteSongsQueryKey, useListPlaylists, getListPlaylistsQueryKey, useGetHistory, getGetHistoryQueryKey, useCreatePlaylist } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Play, Music, ListMusic, Clock, Plus, BookOpen, Heart } from "lucide-react";
+import { Play, Music, ListMusic, Clock, Plus, BookOpen, Heart, X } from "lucide-react";
 import { usePlayer } from "@/lib/player";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Link } from "wouter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/auth";
+import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Library() {
   const { user } = useAuth();
   const { play } = usePlayer();
-  
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const [showNewPlaylist, setShowNewPlaylist] = useState(false);
+  const [newPlaylistName, setNewPlaylistName] = useState("");
+
   const { data: favoriteSongs, isLoading: loadingFavs } = useGetFavoriteSongs({
     query: { enabled: !!user, queryKey: getGetFavoriteSongsQueryKey() }
   });
@@ -23,6 +32,22 @@ export default function Library() {
     { limit: 50 },
     { query: { enabled: !!user, queryKey: getGetHistoryQueryKey({ limit: 50 }) } }
   );
+
+  const createPlaylistMutation = useCreatePlaylist();
+
+  const handleCreatePlaylist = () => {
+    const name = newPlaylistName.trim();
+    if (!name) return;
+    createPlaylistMutation.mutate({ data: { name } }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListPlaylistsQueryKey() });
+        setShowNewPlaylist(false);
+        setNewPlaylistName("");
+        toast({ title: "Playlist created", description: `"${name}" is ready.` });
+      },
+      onError: () => toast({ variant: "destructive", title: "Failed to create playlist" }),
+    });
+  };
 
   if (!user) {
     return (
@@ -41,10 +66,38 @@ export default function Library() {
     <div className="space-y-8 pb-24">
       <div className="flex items-center justify-between">
         <h1 className="text-4xl font-extrabold tracking-tight">Your Library</h1>
-        <Button className="gap-2">
+        <Button className="gap-2" onClick={() => setShowNewPlaylist(true)}>
           <Plus className="w-4 h-4" /> New Playlist
         </Button>
       </div>
+
+      {/* New Playlist dialog */}
+      {showNewPlaylist && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowNewPlaylist(false)}>
+          <div className="bg-card border border-border rounded-xl p-6 w-full max-w-sm shadow-2xl space-y-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold">New Playlist</h2>
+              <button onClick={() => setShowNewPlaylist(false)} className="text-muted-foreground hover:text-foreground transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <Input
+              placeholder="Playlist name"
+              value={newPlaylistName}
+              onChange={(e) => setNewPlaylistName(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleCreatePlaylist()}
+              className="bg-secondary/50 border-secondary"
+              autoFocus
+            />
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => { setShowNewPlaylist(false); setNewPlaylistName(""); }}>Cancel</Button>
+              <Button onClick={handleCreatePlaylist} disabled={!newPlaylistName.trim() || createPlaylistMutation.isPending}>
+                {createPlaylistMutation.isPending ? "Creating…" : "Create"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Tabs defaultValue="likes" className="w-full">
         <TabsList className="bg-transparent border-b border-border w-full justify-start rounded-none h-auto p-0 space-x-6">
@@ -168,4 +221,3 @@ export default function Library() {
     </div>
   );
 }
-

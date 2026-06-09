@@ -309,6 +309,18 @@ export interface ChatMessage {
   createdAt: string;
 }
 
+export interface AdminChatMessage {
+  id: number;
+  userId: number;
+  username: string;
+  /** @nullable */
+  avatarUrl?: string | null;
+  contentType: string;
+  contentId: number;
+  message: string;
+  createdAt: string;
+}
+
 export interface ChatMessageInput {
   message: string;
 }
@@ -687,6 +699,19 @@ export const AdminListSubmissionsStatus = {
   approved: 'approved',
   rejected: 'rejected',
   published: 'published',
+} as const;
+
+export type AdminListChatMessagesParams = {
+limit?: number;
+contentType?: AdminListChatMessagesContentType;
+};
+
+export type AdminListChatMessagesContentType = typeof AdminListChatMessagesContentType[keyof typeof AdminListChatMessagesContentType];
+
+
+export const AdminListChatMessagesContentType = {
+  song: 'song',
+  video: 'video',
 } as const;
 
 export type GetChatMessagesParams = {

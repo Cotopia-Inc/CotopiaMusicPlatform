@@ -20,6 +20,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AdminChatMessage,
+  AdminListChatMessagesParams,
   AdminListSubmissionsParams,
   AdminListUsersParams,
   AdminUserList,
@@ -5549,6 +5551,90 @@ export const useUpdateAppSettings = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getUpdateAppSettingsMutationOptions(options));
     }
+
+export const getAdminListChatMessagesUrl = (params?: AdminListChatMessagesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/admin/chat?${stringifiedParams}` : `/api/admin/chat`
+}
+
+/**
+ * @summary List all chat messages (admin only)
+ */
+export const adminListChatMessages = async (params?: AdminListChatMessagesParams, options?: RequestInit): Promise<AdminChatMessage[]> => {
+
+  return customFetch<AdminChatMessage[]>(getAdminListChatMessagesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getAdminListChatMessagesQueryKey = (params?: AdminListChatMessagesParams,) => {
+    return [
+    `/api/admin/chat`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getAdminListChatMessagesQueryOptions = <TData = Awaited<ReturnType<typeof adminListChatMessages>>, TError = ErrorType<unknown>>(params?: AdminListChatMessagesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof adminListChatMessages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminListChatMessagesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminListChatMessages>>> = ({ signal }) => adminListChatMessages(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminListChatMessages>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type AdminListChatMessagesQueryResult = NonNullable<Awaited<ReturnType<typeof adminListChatMessages>>>
+export type AdminListChatMessagesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List all chat messages (admin only)
+ */
+
+export function useAdminListChatMessages<TData = Awaited<ReturnType<typeof adminListChatMessages>>, TError = ErrorType<unknown>>(
+ params?: AdminListChatMessagesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof adminListChatMessages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getAdminListChatMessagesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 
 export const getGetChatMessagesUrl = (contentType: 'song' | 'video',
     contentId: number,
