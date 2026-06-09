@@ -73,9 +73,24 @@ router.patch("/admin/users/:id/role", requireAuth, requireRole(...ADMIN_ROLES), 
   const parsed = AdminChangeUserRoleBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
 
-  // Prevent demoting yourself
+  // Prevent changing your own role
   if (req.user!.userId === id) {
     res.status(400).json({ error: "Cannot change your own role" });
+    return;
+  }
+
+  const callerRole = req.user!.role;
+  const targetRole = parsed.data.role;
+
+  // Only master_admin can assign master_admin
+  if (targetRole === "master_admin" && callerRole !== "master_admin") {
+    res.status(403).json({ error: "Only master admins can assign the master admin role" });
+    return;
+  }
+
+  // Only admin or master_admin can assign admin
+  if (targetRole === "admin" && callerRole !== "admin" && callerRole !== "master_admin") {
+    res.status(403).json({ error: "Only admins can assign the admin role" });
     return;
   }
 

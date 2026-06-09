@@ -179,7 +179,12 @@ export default function AdminRoles() {
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Assign Role</DropdownMenuLabel>
                         <DropdownMenuSeparator />
-                        {ALL_ROLES.filter(r => r !== u.role).map(r => (
+                        {ALL_ROLES.filter(r => {
+                            if (r === u.role) return false;
+                            if (r === "master_admin" && user?.role !== "master_admin") return false;
+                            if (r === "admin" && user?.role !== "admin" && user?.role !== "master_admin") return false;
+                            return true;
+                          }).map(r => (
                           <DropdownMenuItem key={r} onClick={() => handleRoleChange(u.id, r)}>
                             <span className={`w-2 h-2 rounded-full mr-2 inline-block ${ROLE_COLORS[r]?.split(" ")[0] ?? "bg-muted"}`} />
                             {r.replace("_", " ")}
