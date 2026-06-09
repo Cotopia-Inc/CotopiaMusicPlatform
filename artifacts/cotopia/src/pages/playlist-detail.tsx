@@ -1,4 +1,5 @@
 import { useParams, Link } from "wouter";
+import { UserLink } from "@/components/user-link";
 import { useGetPlaylist, getGetPlaylistQueryKey } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Play, ListMusic, MoreVertical, BadgeCheck } from "lucide-react";
@@ -88,12 +89,12 @@ export default function PlaylistDetail() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="font-medium truncate">{song.title}</div>
-                  <Link href={`/artists/${song.artistId}`} onClick={(e) => e.stopPropagation()}>
-                    <span className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-0.5 truncate">
-                      {song.artistName}
-                      <BadgeCheck className="w-3 h-3 text-primary/70 flex-shrink-0" />
-                    </span>
-                  </Link>
+                  <UserLink
+                    username={song.artistName}
+                    artistId={song.artistId}
+                    isVerified={true}
+                    className="text-sm text-muted-foreground truncate"
+                  />
                 </div>
                 <div className="text-muted-foreground text-sm w-32 text-right">
                   {Math.floor(song.duration / 60)}:{(song.duration % 60).toString().padStart(2, '0')}

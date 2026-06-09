@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { eq, and, desc } from "drizzle-orm";
-import { db, chatMessagesTable, usersTable } from "@workspace/db";
+import { db, chatMessagesTable, usersTable, artistsTable } from "@workspace/db";
 import { requireAuth, optionalAuth, type AuthRequest } from "../lib/auth";
 import { GetChatMessagesParams, PostChatMessageParams, PostChatMessageBody } from "@workspace/api-zod";
 
@@ -21,6 +21,8 @@ router.get("/chat/:contentType/:contentId", optionalAuth, async (req: AuthReques
       userId: chatMessagesTable.userId,
       username: usersTable.username,
       avatarUrl: usersTable.avatarUrl,
+      isVerified: usersTable.isVerified,
+      artistId: artistsTable.id,
       contentType: chatMessagesTable.contentType,
       contentId: chatMessagesTable.contentId,
       message: chatMessagesTable.message,
@@ -28,6 +30,7 @@ router.get("/chat/:contentType/:contentId", optionalAuth, async (req: AuthReques
     })
     .from(chatMessagesTable)
     .innerJoin(usersTable, eq(chatMessagesTable.userId, usersTable.id))
+    .leftJoin(artistsTable, eq(artistsTable.userId, usersTable.id))
     .where(
       and(
         eq(chatMessagesTable.contentType, params.data.contentType),
@@ -63,17 +66,25 @@ router.post("/chat/:contentType/:contentId", requireAuth, async (req: AuthReques
     })
     .returning();
 
-  const [user] = await db
-    .select({ username: usersTable.username, avatarUrl: usersTable.avatarUrl })
+  const [userRow] = await db
+    .select({
+      username: usersTable.username,
+      avatarUrl: usersTable.avatarUrl,
+      isVerified: usersTable.isVerified,
+      artistId: artistsTable.id,
+    })
     .from(usersTable)
+    .leftJoin(artistsTable, eq(artistsTable.userId, usersTable.id))
     .where(eq(usersTable.id, req.user!.userId))
     .limit(1);
 
   res.status(201).json({
     id: inserted.id,
     userId: inserted.userId,
-    username: user.username,
-    avatarUrl: user.avatarUrl,
+    username: userRow.username,
+    avatarUrl: userRow.avatarUrl,
+    isVerified: userRow.isVerified,
+    artistId: userRow.artistId ?? null,
     contentType: inserted.contentType,
     contentId: inserted.contentId,
     message: inserted.message,

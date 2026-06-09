@@ -2428,7 +2428,7 @@ components:
     # ── Chat ─────────────────────────────────────────────────────────────────
     ChatMessage:
       type: object
-      required: [id, userId, username, contentType, contentId, message, createdAt]
+      required: [id, userId, username, contentType, contentId, message, createdAt, isVerified]
       properties:
         id:
           type: integer
@@ -2438,6 +2438,10 @@ components:
           type: string
         avatarUrl:
           type: ["string", "null"]
+        isVerified:
+          type: boolean
+        artistId:
+          type: ["integer", "null"]
         contentType:
           type: string
           enum: [song, video]
@@ -2450,7 +2454,7 @@ components:
 
     AdminChatMessage:
       type: object
-      required: [id, userId, username, contentType, contentId, message, createdAt]
+      required: [id, userId, username, contentType, contentId, message, createdAt, isVerified]
       properties:
         id:
           type: integer
@@ -2460,6 +2464,10 @@ components:
           type: string
         avatarUrl:
           type: ["string", "null"]
+        isVerified:
+          type: boolean
+        artistId:
+          type: ["integer", "null"]
         contentType:
           type: string
         contentId:

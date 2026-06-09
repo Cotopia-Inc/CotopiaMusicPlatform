@@ -2,6 +2,7 @@ import { useGetHomeFeed, getGetHomeFeedQueryKey } from "@workspace/api-client-re
 import { Play, Radio, BadgeCheck, TrendingUp, Video } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "wouter";
+import { UserLink } from "@/components/user-link";
 import { Badge } from "@/components/ui/badge";
 import { usePlayer } from "@/lib/player";
 
@@ -94,12 +95,12 @@ export default function Home() {
                   <Link href={`/songs/${song.id}`}>
                     <h4 className="font-semibold text-sm truncate leading-tight hover:text-primary transition-colors">{song.title}</h4>
                   </Link>
-                  <Link href={`/artists/${song.artistId}`} onClick={(e) => e.stopPropagation()}>
-                    <span className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-0.5 truncate mt-0.5">
-                      {song.artistName}
-                      <BadgeCheck className="w-3 h-3 text-primary/70 flex-shrink-0" />
-                    </span>
-                  </Link>
+                  <UserLink
+                    username={song.artistName}
+                    artistId={song.artistId}
+                    isVerified={true}
+                    className="text-xs text-muted-foreground mt-0.5"
+                  />
                 </div>
               </div>
             ))
@@ -161,12 +162,12 @@ export default function Home() {
                   <Link href={`/videos/${video.id}`}>
                     <h4 className="font-semibold text-sm truncate hover:text-primary transition-colors">{video.title}</h4>
                   </Link>
-                  <Link href={`/artists/${video.artistId}`} onClick={(e) => e.stopPropagation()}>
-                    <span className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-0.5">
-                      {video.artistName}
-                      <BadgeCheck className="w-3 h-3 text-primary/70 flex-shrink-0" />
-                    </span>
-                  </Link>
+                  <UserLink
+                    username={video.artistName}
+                    artistId={video.artistId}
+                    isVerified={true}
+                    className="text-xs text-muted-foreground"
+                  />
                 </div>
               </div>
             ))}

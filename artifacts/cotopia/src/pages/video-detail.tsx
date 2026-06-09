@@ -14,6 +14,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { UserLink } from "@/components/user-link";
 
 function formatTime(iso: string) {
   const d = new Date(iso);
@@ -245,7 +246,12 @@ export default function VideoDetail() {
                         : msg.username[0].toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <span className="text-[10px] font-semibold text-primary mr-1.5">{msg.username}</span>
+                      <UserLink
+                        username={msg.username}
+                        artistId={msg.artistId}
+                        isVerified={msg.isVerified}
+                        className="text-[10px] font-semibold text-primary mr-1.5"
+                      />
                       <span className="text-[10px] text-white/80 break-words leading-relaxed">{msg.message}</span>
                     </div>
                   </div>

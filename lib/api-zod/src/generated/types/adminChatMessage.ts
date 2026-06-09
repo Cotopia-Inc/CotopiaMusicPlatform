@@ -12,6 +12,9 @@ export interface AdminChatMessage {
   username: string;
   /** @nullable */
   avatarUrl?: string | null;
+  isVerified: boolean;
+  /** @nullable */
+  artistId?: number | null;
   contentType: string;
   contentId: number;
   message: string;

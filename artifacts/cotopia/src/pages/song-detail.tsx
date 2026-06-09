@@ -5,7 +5,7 @@ import {
   useRateSong, useFavoriteSong, useUnfavoriteSong,
 } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Play, Pause, Heart, Star, Send, Radio, Users, BadgeCheck, MessageCircle } from "lucide-react";
+import { Play, Pause, Heart, Star, Send, Radio, Users, MessageCircle, BadgeCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { usePlayer } from "@/lib/player";
@@ -15,6 +15,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { UserLink } from "@/components/user-link";
 
 function formatTime(iso: string) {
   const d = new Date(iso);
@@ -280,7 +281,12 @@ export default function SongDetail() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-baseline gap-2">
-                      <span className="text-[11px] font-semibold text-foreground">{msg.username}</span>
+                      <UserLink
+                        username={msg.username}
+                        artistId={msg.artistId}
+                        isVerified={msg.isVerified}
+                        className="text-[11px] font-semibold text-foreground"
+                      />
                       <span className="text-[10px] text-muted-foreground/60">{formatTime(msg.createdAt)}</span>
                     </div>
                     <div className="bg-secondary/60 rounded-lg px-3 py-2 mt-0.5">
