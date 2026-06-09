@@ -34,6 +34,7 @@ import AdminSongs from "@/pages/admin-songs";
 import AdminVideos from "@/pages/admin-videos";
 import AdminComments from "@/pages/admin-comments";
 
+import NotificationsPage from "@/pages/notifications";
 import EmbedSong from "@/pages/embed-song";
 import EmbedVideo from "@/pages/embed-video";
 import EmbedPlaylist from "@/pages/embed-playlist";
@@ -106,6 +107,9 @@ function Router() {
       </Route>
       <Route path="/profile">
         <Layout><Profile /></Layout>
+      </Route>
+      <Route path="/notifications">
+        <Layout><NotificationsPage /></Layout>
       </Route>
 
       {/* Admin routes */}

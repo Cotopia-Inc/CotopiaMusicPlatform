@@ -1,12 +1,22 @@
 import { Link, useLocation } from "wouter";
-import { Home, Compass, Music, Video, Users, Mic2, Library, Building2, LayoutDashboard, LogIn, LogOut, Settings, Send, Radio } from "lucide-react";
+import { Home, Compass, Music, Video, Users, Mic2, Library, Building2, LayoutDashboard, LogIn, LogOut, Settings, Send, Radio, Bell } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useGetUnreadNotificationCount, getGetUnreadNotificationCountQueryKey } from "@workspace/api-client-react";
 
 export function Sidebar() {
   const [location] = useLocation();
   const { user, logout } = useAuth();
+
+  const { data: unreadData } = useGetUnreadNotificationCount({
+    query: {
+      enabled: !!user,
+      queryKey: getGetUnreadNotificationCountQueryKey(),
+      refetchInterval: 30_000,
+    }
+  });
+  const unreadCount = unreadData?.count ?? 0;
 
   const mainLinks = [
     { href: "/", label: "Home", icon: Home },
@@ -87,6 +97,33 @@ export function Sidebar() {
                 </Link>
               );
             })}
+
+            {/* Notifications link */}
+            <Link href="/notifications">
+              <Button
+                variant={isActive("/notifications") ? "secondary" : "ghost"}
+                className={cn(
+                  "w-full justify-start gap-3 text-sm h-9 relative",
+                  isActive("/notifications") ? "font-semibold text-primary bg-primary/10 hover:bg-primary/15" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <div className="relative flex-shrink-0">
+                  <Bell className="w-4 h-4" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 min-w-[14px] h-[14px] rounded-full bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center px-0.5 leading-none">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
+                </div>
+                Notifications
+                {unreadCount > 0 && (
+                  <span className="ml-auto text-[10px] font-bold text-primary bg-primary/15 rounded-full px-1.5 py-0.5 leading-none">
+                    {unreadCount}
+                  </span>
+                )}
+              </Button>
+            </Link>
+
             {user.role === "admin" && (
               <>
                 <div className="pt-4 pb-1">
@@ -116,7 +153,9 @@ export function Sidebar() {
           <>
             <div className="flex items-center gap-3 px-2 py-1">
               <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xs font-bold flex-shrink-0">
-                {user.username[0].toUpperCase()}
+                {user.avatarUrl
+                  ? <img src={user.avatarUrl} alt={user.username} className="w-full h-full object-cover rounded-full" />
+                  : user.username[0].toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-semibold truncate">{user.username}</p>

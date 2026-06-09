@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { eq, desc, and } from "drizzle-orm";
-import { db, submissionsTable, usersTable, songsTable, videosTable, artistsTable } from "@workspace/db";
+import { db, submissionsTable, usersTable, songsTable, videosTable, artistsTable, notificationsTable } from "@workspace/db";
 import {
   CreateSubmissionBody, GetSubmissionParams,
   UpdateSubmissionParams, UpdateSubmissionBody,
@@ -149,6 +149,26 @@ router.patch("/submissions/:id", requireAuth, async (req: AuthRequest, res): Pro
     } else {
       await db.update(videosTable).set({ status: "published" }).where(eq(videosTable.id, submission.contentId));
     }
+  }
+
+  // Fire a notification when admin approves or rejects
+  if (parsed.data.status === "approved" || parsed.data.status === "rejected") {
+    const enriched = await enrichSubmission(submission);
+    const approved = parsed.data.status === "approved";
+    await db.insert(notificationsTable).values({
+      userId: submission.userId,
+      type: approved ? "submission_approved" : "submission_rejected",
+      title: approved
+        ? `"${enriched.title}" has been approved!`
+        : `"${enriched.title}" was not approved`,
+      message: parsed.data.adminNotes
+        ? `Admin note: ${parsed.data.adminNotes}`
+        : approved
+          ? "Your submission has been approved and will be published shortly. Thanks for your contribution!"
+          : "Your submission did not meet our current requirements. You're welcome to revise and resubmit.",
+      submissionId: submission.id,
+      isRead: false,
+    });
   }
 
   const enriched = await enrichSubmission(submission);

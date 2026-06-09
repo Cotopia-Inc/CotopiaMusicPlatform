@@ -610,6 +610,27 @@ export interface AppSettingsUpdate {
   maintenanceMode?: boolean;
 }
 
+export type NotificationType = typeof NotificationType[keyof typeof NotificationType];
+
+
+export const NotificationType = {
+  submission_approved: 'submission_approved',
+  submission_rejected: 'submission_rejected',
+  general: 'general',
+} as const;
+
+export interface Notification {
+  id: number;
+  userId: number;
+  type: NotificationType;
+  title: string;
+  message: string;
+  isRead: boolean;
+  /** @nullable */
+  submissionId?: number | null;
+  createdAt: string;
+}
+
 export interface PaymentInitiateInput {
   submissionId: number;
 }
@@ -717,6 +738,18 @@ export const AdminListChatMessagesContentType = {
   song: 'song',
   video: 'video',
 } as const;
+
+export type ListNotificationsParams = {
+unreadOnly?: boolean;
+};
+
+export type GetUnreadNotificationCount200 = {
+  count: number;
+};
+
+export type MarkAllNotificationsRead200 = {
+  updated: number;
+};
 
 export type GetChatMessagesParams = {
 limit?: number;
