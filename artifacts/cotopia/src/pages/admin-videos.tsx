@@ -1,19 +1,38 @@
-import { useListVideos, getListVideosQueryKey } from "@workspace/api-client-react";
+import { useListVideos, getListVideosQueryKey, useUpdateVideo } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Search, Star } from "lucide-react";
+import { Search, Star, Sparkles } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
 export default function AdminVideos() {
   const [search, setSearch] = useState("");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data, isLoading } = useListVideos(
     { q: search, limit: 50 },
     { query: { queryKey: getListVideosQueryKey({ q: search, limit: 50 }) } }
   );
+
+  const updateVideo = useUpdateVideo();
+
+  const handleToggleFeature = (id: number, currentFeatured: boolean | null | undefined) => {
+    updateVideo.mutate(
+      { id, data: { isFeatured: !currentFeatured } },
+      {
+        onSuccess: () => {
+          toast({ title: currentFeatured ? "Video removed from featured" : "Video featured!" });
+          queryClient.invalidateQueries({ queryKey: getListVideosQueryKey({ q: search, limit: 50 }) });
+        },
+        onError: () => toast({ variant: "destructive", title: "Failed to update video" }),
+      }
+    );
+  };
 
   return (
     <div className="space-y-8 pb-24">
@@ -41,7 +60,7 @@ export default function AdminVideos() {
             <TableRow>
               <TableHead>Video</TableHead>
               <TableHead>Artist</TableHead>
-              <TableHead>Type</TableHead>
+              <TableHead>Genre</TableHead>
               <TableHead>Views</TableHead>
               <TableHead>Rating</TableHead>
               <TableHead>Status</TableHead>
@@ -84,11 +103,25 @@ export default function AdminVideos() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline" className="text-xs text-muted-foreground capitalize">{video.status}</Badge>
+                    <div className="flex items-center gap-1.5">
+                      <Badge variant="outline" className="text-xs text-muted-foreground capitalize">{video.status}</Badge>
+                      {video.isFeatured && (
+                        <Badge className="text-[9px] bg-amber-500/20 text-amber-400 border-amber-500/30 border px-1.5">
+                          <Sparkles className="w-2.5 h-2.5 mr-0.5" />Featured
+                        </Badge>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="outline" size="sm" className="text-xs">
-                      Feature
+                    <Button
+                      variant={video.isFeatured ? "default" : "outline"}
+                      size="sm"
+                      className={`text-xs gap-1.5 ${video.isFeatured ? "bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border-amber-500/30 border" : ""}`}
+                      onClick={() => handleToggleFeature(video.id, video.isFeatured)}
+                      disabled={updateVideo.isPending}
+                    >
+                      <Sparkles className="w-3 h-3" />
+                      {video.isFeatured ? "Unfeature" : "Feature"}
                     </Button>
                   </TableCell>
                 </TableRow>

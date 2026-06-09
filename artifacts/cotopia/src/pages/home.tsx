@@ -82,7 +82,7 @@ export default function Home() {
                         <Play className="w-5 h-5 fill-current ml-0.5" />
                       </button>
                     </div>
-                    {song.status === "published" && (
+                    {song.isFeatured && (
                       <div className="absolute top-2 left-2">
                         <Badge className="text-[9px] bg-primary/80 backdrop-blur px-1.5 py-0.5">Featured</Badge>
                       </div>

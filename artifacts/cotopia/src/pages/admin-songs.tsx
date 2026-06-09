@@ -1,19 +1,38 @@
-import { useListSongs, getListSongsQueryKey } from "@workspace/api-client-react";
+import { useListSongs, getListSongsQueryKey, useUpdateSong } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Search, Star } from "lucide-react";
+import { Search, Star, Sparkles } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
 export default function AdminSongs() {
   const [search, setSearch] = useState("");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data, isLoading } = useListSongs(
     { q: search, limit: 50 },
     { query: { queryKey: getListSongsQueryKey({ q: search, limit: 50 }) } }
   );
+
+  const updateSong = useUpdateSong();
+
+  const handleToggleFeature = (id: number, currentFeatured: boolean | null | undefined) => {
+    updateSong.mutate(
+      { id, data: { isFeatured: !currentFeatured } },
+      {
+        onSuccess: () => {
+          toast({ title: currentFeatured ? "Song removed from featured" : "Song featured!" });
+          queryClient.invalidateQueries({ queryKey: getListSongsQueryKey({ q: search, limit: 50 }) });
+        },
+        onError: () => toast({ variant: "destructive", title: "Failed to update song" }),
+      }
+    );
+  };
 
   return (
     <div className="space-y-8 pb-24">
@@ -87,11 +106,25 @@ export default function AdminSongs() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline" className="text-xs text-muted-foreground capitalize">{song.status}</Badge>
+                    <div className="flex items-center gap-1.5">
+                      <Badge variant="outline" className="text-xs text-muted-foreground capitalize">{song.status}</Badge>
+                      {song.isFeatured && (
+                        <Badge className="text-[9px] bg-amber-500/20 text-amber-400 border-amber-500/30 border px-1.5">
+                          <Sparkles className="w-2.5 h-2.5 mr-0.5" />Featured
+                        </Badge>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="outline" size="sm" className="text-xs">
-                      Feature
+                    <Button
+                      variant={song.isFeatured ? "default" : "outline"}
+                      size="sm"
+                      className={`text-xs gap-1.5 ${song.isFeatured ? "bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border-amber-500/30 border" : ""}`}
+                      onClick={() => handleToggleFeature(song.id, song.isFeatured)}
+                      disabled={updateSong.isPending}
+                    >
+                      <Sparkles className="w-3 h-3" />
+                      {song.isFeatured ? "Unfeature" : "Feature"}
                     </Button>
                   </TableCell>
                 </TableRow>

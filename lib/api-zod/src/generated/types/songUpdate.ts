@@ -12,4 +12,5 @@ export interface SongUpdate {
   coverUrl?: string;
   streamUrl?: string;
   lyrics?: string;
+  isFeatured?: boolean;
 }

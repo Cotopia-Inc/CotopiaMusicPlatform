@@ -26,6 +26,7 @@ async function getVideoWithArtist(id: number, userId?: number) {
       thumbnailUrl: videosTable.thumbnailUrl,
       videoUrl: videosTable.videoUrl,
       viewCount: videosTable.viewCount,
+      isFeatured: videosTable.isFeatured,
       status: videosTable.status,
       description: videosTable.description,
       createdAt: videosTable.createdAt,
@@ -88,6 +89,7 @@ router.get("/videos", optionalAuth, async (req: AuthRequest, res): Promise<void>
       thumbnailUrl: videosTable.thumbnailUrl,
       videoUrl: videosTable.videoUrl,
       viewCount: videosTable.viewCount,
+      isFeatured: videosTable.isFeatured,
       status: videosTable.status,
       createdAt: videosTable.createdAt,
     })
@@ -195,6 +197,22 @@ router.patch("/videos/:id", requireAuth, async (req: AuthRequest, res): Promise<
     res.status(400).json({ error: parsed.error.message });
     return;
   }
+
+  const [existing] = await db.select().from(videosTable).where(eq(videosTable.id, params.data.id)).limit(1);
+  if (!existing) {
+    res.status(404).json({ error: "Video not found" });
+    return;
+  }
+
+  const isAdmin = req.user!.role === "admin" || req.user!.role === "master_admin";
+  if (!isAdmin) {
+    const [artist] = await db.select().from(artistsTable).where(eq(artistsTable.userId, req.user!.userId)).limit(1);
+    if (!artist || existing.artistId !== artist.id) {
+      res.status(403).json({ error: "Forbidden" });
+      return;
+    }
+  }
+
   await db.update(videosTable).set(parsed.data).where(eq(videosTable.id, params.data.id));
   const result = await getVideoWithArtist(params.data.id, req.user?.userId);
   res.json(result);

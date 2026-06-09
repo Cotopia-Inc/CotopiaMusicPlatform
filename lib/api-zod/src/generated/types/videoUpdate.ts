@@ -12,4 +12,5 @@ export interface VideoUpdate {
   thumbnailUrl?: string;
   videoUrl?: string;
   description?: string;
+  isFeatured?: boolean;
 }

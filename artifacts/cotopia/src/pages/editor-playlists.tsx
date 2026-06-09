@@ -9,15 +9,19 @@ import { useAuth } from "@/lib/auth";
 import { useLocation } from "wouter";
 import { useEffect } from "react";
 import { ListMusic, Plus, Trash2, Edit3, Music, X, Search, Check } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 
 const EDITOR_ROLES = ["editor", "admin", "master_admin"];
 
@@ -65,7 +69,6 @@ export default function EditorPlaylists() {
   const [newForm, setNewForm] = useState({ name: "", description: "", playlistType: "featured", isPublic: true });
   const [editForm, setEditForm] = useState({ name: "", description: "", playlistType: "featured", isPublic: true });
 
-  // Songs for adding to playlist
   const { data: songsData } = useListSongs({ limit: 50, q: songSearch || undefined });
   const availableSongs = songsData?.items ?? [];
 
@@ -197,10 +200,7 @@ export default function EditorPlaylists() {
                     variant="outline"
                     size="sm"
                     className="flex-1 gap-1.5 text-xs"
-                    onClick={() => {
-                      setSelectedPlaylist(p);
-                      setManageSongsOpen(true);
-                    }}
+                    onClick={() => { setSelectedPlaylist(p); setManageSongsOpen(true); }}
                   >
                     <Music className="w-3.5 h-3.5" />Manage Songs
                   </Button>
@@ -239,7 +239,7 @@ export default function EditorPlaylists() {
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <Label>Name *</Label>
+              <Label>Name <span className="text-destructive">*</span></Label>
               <Input placeholder="Playlist name" value={newForm.name} onChange={e => setNewForm(f => ({ ...f, name: e.target.value }))} />
             </div>
             <div className="space-y-2">
@@ -247,19 +247,29 @@ export default function EditorPlaylists() {
               <Input placeholder="Short description" value={newForm.description} onChange={e => setNewForm(f => ({ ...f, description: e.target.value }))} />
             </div>
             <div className="space-y-2">
-              <Label>Type *</Label>
-              <select
-                className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
-                value={newForm.playlistType}
-                onChange={e => setNewForm(f => ({ ...f, playlistType: e.target.value }))}
-              >
-                {PLAYLIST_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-              </select>
+              <Label>Type <span className="text-destructive">*</span></Label>
+              <Select value={newForm.playlistType} onValueChange={v => setNewForm(f => ({ ...f, playlistType: v }))}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PLAYLIST_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-secondary/20">
+              <div>
+                <p className="text-sm font-medium">Public</p>
+                <p className="text-xs text-muted-foreground">Visible to all listeners</p>
+              </div>
+              <Switch checked={newForm.isPublic} onCheckedChange={v => setNewForm(f => ({ ...f, isPublic: v }))} />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
-            <Button onClick={handleCreate} disabled={createPlaylist.isPending}>Create</Button>
+            <Button onClick={handleCreate} disabled={createPlaylist.isPending || !newForm.name}>
+              {createPlaylist.isPending ? "Creating…" : "Create"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -281,18 +291,28 @@ export default function EditorPlaylists() {
             </div>
             <div className="space-y-2">
               <Label>Type</Label>
-              <select
-                className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
-                value={editForm.playlistType}
-                onChange={e => setEditForm(f => ({ ...f, playlistType: e.target.value }))}
-              >
-                {PLAYLIST_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-              </select>
+              <Select value={editForm.playlistType} onValueChange={v => setEditForm(f => ({ ...f, playlistType: v }))}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PLAYLIST_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-secondary/20">
+              <div>
+                <p className="text-sm font-medium">Public</p>
+                <p className="text-xs text-muted-foreground">Visible to all listeners</p>
+              </div>
+              <Switch checked={editForm.isPublic} onCheckedChange={v => setEditForm(f => ({ ...f, isPublic: v }))} />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
-            <Button onClick={handleUpdate} disabled={updatePlaylist.isPending}>Save</Button>
+            <Button onClick={handleUpdate} disabled={updatePlaylist.isPending}>
+              {updatePlaylist.isPending ? "Saving…" : "Save Changes"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

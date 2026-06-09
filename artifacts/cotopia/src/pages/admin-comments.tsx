@@ -1,13 +1,18 @@
 import { useState } from "react";
-import { useAdminListChatMessages, getAdminListChatMessagesQueryKey } from "@workspace/api-client-react";
+import {
+  useAdminListChatMessages, getAdminListChatMessagesQueryKey,
+  useDeleteComment,
+} from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MessageSquare, Search, Music, Video } from "lucide-react";
+import { MessageSquare, Search, Music, Video, Trash2 } from "lucide-react";
 import { Link } from "wouter";
+import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
 function formatTime(iso: string) {
   const d = new Date(iso);
@@ -22,21 +27,33 @@ function formatTime(iso: string) {
 export default function AdminComments() {
   const [search, setSearch] = useState("");
   const [contentTypeFilter, setContentTypeFilter] = useState<"all" | "song" | "video">("all");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const queryParams = {
+    limit: 100,
+    contentType: contentTypeFilter !== "all" ? contentTypeFilter as "song" | "video" : undefined,
+  };
 
   const { data: messages, isLoading } = useAdminListChatMessages(
-    {
-      limit: 100,
-      contentType: contentTypeFilter !== "all" ? contentTypeFilter : undefined,
-    },
-    {
-      query: {
-        queryKey: getAdminListChatMessagesQueryKey({
-          limit: 100,
-          contentType: contentTypeFilter !== "all" ? contentTypeFilter : undefined,
-        })
-      }
-    }
+    queryParams,
+    { query: { queryKey: getAdminListChatMessagesQueryKey(queryParams) } }
   );
+
+  const deleteMutation = useDeleteComment();
+
+  const handleDelete = (id: number) => {
+    deleteMutation.mutate(
+      { id },
+      {
+        onSuccess: () => {
+          toast({ title: "Message deleted" });
+          queryClient.invalidateQueries({ queryKey: getAdminListChatMessagesQueryKey(queryParams) });
+        },
+        onError: () => toast({ variant: "destructive", title: "Failed to delete message" }),
+      }
+    );
+  };
 
   const filtered = messages?.filter((m) =>
     !search ||
@@ -49,7 +66,7 @@ export default function AdminComments() {
       <div>
         <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Admin</p>
         <h1 className="text-4xl font-extrabold tracking-tight mb-2">Live Chat Moderation</h1>
-        <p className="text-muted-foreground">Review chat messages posted on songs and videos.</p>
+        <p className="text-muted-foreground">Review and remove chat messages posted on songs and videos.</p>
       </div>
 
       <div className="flex items-center gap-4 flex-wrap">
@@ -85,14 +102,15 @@ export default function AdminComments() {
               <TableHead>Message</TableHead>
               <TableHead>Content</TableHead>
               <TableHead>Type</TableHead>
-              <TableHead className="text-right">When</TableHead>
+              <TableHead>When</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               Array(8).fill(0).map((_, i) => (
                 <TableRow key={i}>
-                  {Array(5).fill(0).map((__, j) => (
+                  {Array(6).fill(0).map((__, j) => (
                     <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>
                   ))}
                 </TableRow>
@@ -116,7 +134,7 @@ export default function AdminComments() {
                   <TableCell>
                     <Link href={`/${msg.contentType}s/${msg.contentId}`}>
                       <span className="text-sm text-primary hover:underline cursor-pointer">
-                        #{msg.contentId}
+                        View {msg.contentType}
                       </span>
                     </Link>
                   </TableCell>
@@ -128,14 +146,26 @@ export default function AdminComments() {
                       {msg.contentType}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right text-xs text-muted-foreground whitespace-nowrap">
+                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                     {formatTime(msg.createdAt)}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                      onClick={() => handleDelete(msg.id)}
+                      disabled={deleteMutation.isPending}
+                      title="Delete message"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-16 text-muted-foreground">
+                <TableCell colSpan={6} className="text-center py-16 text-muted-foreground">
                   <div className="flex flex-col items-center gap-3">
                     <MessageSquare className="w-10 h-10 text-muted-foreground/30" />
                     <div>

@@ -2097,6 +2097,8 @@ components:
         status:
           type: string
           enum: [draft, pending_review, approved, rejected, published]
+        isFeatured:
+          type: boolean
         createdAt:
           type: string
 
@@ -2144,6 +2146,8 @@ components:
           type: string
         lyrics:
           type: string
+        isFeatured:
+          type: boolean
 
     SongList:
       type: object
@@ -2184,6 +2188,8 @@ components:
         status:
           type: string
           enum: [draft, pending_review, approved, rejected, published]
+        isFeatured:
+          type: boolean
         createdAt:
           type: string
 
@@ -2231,6 +2237,8 @@ components:
           type: string
         description:
           type: string
+        isFeatured:
+          type: boolean
 
     VideoList:
       type: object

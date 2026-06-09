@@ -35,7 +35,7 @@ export default function AdminSettings() {
   const [formData, setFormData] = useState({
     appName: "",
     logoUrl: "",
-    primaryColor: "",
+    primaryColor: "#7c3aed",
     songSubmissionFee: 0,
     videoSubmissionFee: 0,
     maintenanceMode: false
@@ -46,7 +46,7 @@ export default function AdminSettings() {
       setFormData({
         appName: settings.appName || "",
         logoUrl: settings.logoUrl || "",
-        primaryColor: settings.primaryColor || "",
+        primaryColor: settings.primaryColor || "#7c3aed",
         songSubmissionFee: settings.songSubmissionFee || 0,
         videoSubmissionFee: settings.videoSubmissionFee || 0,
         maintenanceMode: settings.maintenanceMode || false
@@ -142,13 +142,40 @@ export default function AdminSettings() {
                 className="bg-secondary/50 border-secondary"
               />
             </div>
+
+            {/* ── Color picker ── */}
             <div className="space-y-2">
-              <Label>Primary Color (Hex)</Label>
-              <Input 
-                value={formData.primaryColor}
-                onChange={(e) => setFormData({...formData, primaryColor: e.target.value})}
-                className="bg-secondary/50 border-secondary"
-              />
+              <Label>Primary Color</Label>
+              <div className="flex items-center gap-3">
+                <div className="relative flex-shrink-0">
+                  <input
+                    type="color"
+                    value={/^#[0-9a-fA-F]{6}$/.test(formData.primaryColor) ? formData.primaryColor : "#7c3aed"}
+                    onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
+                    className="sr-only"
+                    id="primaryColorPicker"
+                  />
+                  <label
+                    htmlFor="primaryColorPicker"
+                    className="flex items-center justify-center w-10 h-10 rounded-lg border-2 border-border cursor-pointer hover:border-primary/50 transition-colors shadow-sm overflow-hidden"
+                    title="Pick a color"
+                  >
+                    <span
+                      className="w-full h-full block"
+                      style={{ backgroundColor: /^#[0-9a-fA-F]{3,8}$/.test(formData.primaryColor) ? formData.primaryColor : "#7c3aed" }}
+                    />
+                  </label>
+                </div>
+                <Input
+                  value={formData.primaryColor}
+                  onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
+                  placeholder="#7c3aed"
+                  maxLength={9}
+                  className="bg-secondary/50 border-secondary font-mono flex-1"
+                  spellCheck={false}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">Click the swatch to open the color picker, or type a hex value directly.</p>
             </div>
           </div>
         </div>
@@ -160,6 +187,8 @@ export default function AdminSettings() {
               <Label>Song Submission Fee ($)</Label>
               <Input 
                 type="number"
+                min={0}
+                step={0.01}
                 value={formData.songSubmissionFee}
                 onChange={(e) => setFormData({...formData, songSubmissionFee: Number(e.target.value)})}
                 className="bg-secondary/50 border-secondary"
@@ -169,6 +198,8 @@ export default function AdminSettings() {
               <Label>Video Submission Fee ($)</Label>
               <Input 
                 type="number"
+                min={0}
+                step={0.01}
                 value={formData.videoSubmissionFee}
                 onChange={(e) => setFormData({...formData, videoSubmissionFee: Number(e.target.value)})}
                 className="bg-secondary/50 border-secondary"

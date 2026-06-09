@@ -27,5 +27,6 @@ export interface Song {
   /** @nullable */
   avgRating?: number | null;
   status: SongStatus;
+  isFeatured?: boolean;
   createdAt: string;
 }

@@ -105,6 +105,7 @@ export interface Song {
   /** @nullable */
   avgRating?: number | null;
   status: SongStatus;
+  isFeatured?: boolean;
   createdAt: string;
 }
 
@@ -131,6 +132,7 @@ export interface SongUpdate {
   coverUrl?: string;
   streamUrl?: string;
   lyrics?: string;
+  isFeatured?: boolean;
 }
 
 export interface SongList {
@@ -165,6 +167,7 @@ export interface Video {
   /** @nullable */
   avgRating?: number | null;
   status: VideoStatus;
+  isFeatured?: boolean;
   createdAt: string;
 }
 
@@ -192,6 +195,7 @@ export interface VideoUpdate {
   thumbnailUrl?: string;
   videoUrl?: string;
   description?: string;
+  isFeatured?: boolean;
 }
 
 export interface VideoList {

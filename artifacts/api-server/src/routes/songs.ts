@@ -29,6 +29,7 @@ async function getSongWithArtist(id: number, userId?: number) {
       coverUrl: songsTable.coverUrl,
       streamUrl: songsTable.streamUrl,
       playCount: songsTable.playCount,
+      isFeatured: songsTable.isFeatured,
       status: songsTable.status,
       createdAt: songsTable.createdAt,
     })
@@ -96,6 +97,7 @@ router.get("/songs", optionalAuth, async (req: AuthRequest, res): Promise<void> 
       coverUrl: songsTable.coverUrl,
       streamUrl: songsTable.streamUrl,
       playCount: songsTable.playCount,
+      isFeatured: songsTable.isFeatured,
       status: songsTable.status,
       createdAt: songsTable.createdAt,
     })
@@ -239,10 +241,13 @@ router.patch("/songs/:id", requireAuth, async (req: AuthRequest, res): Promise<v
     return;
   }
 
-  const [artist] = await db.select().from(artistsTable).where(eq(artistsTable.userId, req.user!.userId)).limit(1);
-  if (!artist || (existing.artistId !== artist.id && req.user!.role !== "admin")) {
-    res.status(403).json({ error: "Forbidden" });
-    return;
+  const isAdmin = req.user!.role === "admin" || req.user!.role === "master_admin";
+  if (!isAdmin) {
+    const [artist] = await db.select().from(artistsTable).where(eq(artistsTable.userId, req.user!.userId)).limit(1);
+    if (!artist || existing.artistId !== artist.id) {
+      res.status(403).json({ error: "Forbidden" });
+      return;
+    }
   }
 
   await db.update(songsTable).set(parsed.data).where(eq(songsTable.id, params.data.id));
