@@ -253,7 +253,12 @@ export default function SongDetail() {
             </div>
             <div className="min-w-0">
               <p className="text-xs font-semibold truncate leading-tight">{song.title}</p>
-              <p className="text-[10px] text-muted-foreground truncate leading-tight">{song.artistName}</p>
+              <Link href={`/artists/${song.artistId}`}>
+                <span className="text-[10px] text-muted-foreground hover:text-primary transition-colors truncate leading-tight flex items-center gap-0.5">
+                  {song.artistName}
+                  <BadgeCheck className="w-2.5 h-2.5 text-green-500 flex-shrink-0" />
+                </span>
+              </Link>
             </div>
           </div>
         )}

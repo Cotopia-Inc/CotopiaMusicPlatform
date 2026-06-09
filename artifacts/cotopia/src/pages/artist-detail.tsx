@@ -1,7 +1,7 @@
 import { useParams, Link } from "wouter";
 import { useGetArtist, getGetArtistQueryKey, useFollowArtist, useUnfollowArtist, useTrackAnalyticsEvent } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Play, Users, Music } from "lucide-react";
+import { Play, Users, Music, BadgeCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { usePlayer } from "@/lib/player";
@@ -68,18 +68,26 @@ export default function ArtistDetail() {
 
       {/* Header Info */}
       <div className="flex flex-col md:flex-row gap-8 px-8 -mt-24 relative z-10">
-        <div className="w-48 h-48 rounded-full overflow-hidden bg-card border-4 border-background shadow-2xl flex-shrink-0">
-          {artist.avatarUrl ? (
-            <img src={artist.avatarUrl} alt={artist.stageName} className="w-full h-full object-cover" />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-5xl font-bold text-muted-foreground bg-secondary">
-              {artist.stageName.charAt(0)}
-            </div>
-          )}
+        <div className="relative w-48 h-48 flex-shrink-0">
+          <div className="w-full h-full rounded-full overflow-hidden bg-card border-4 border-background shadow-2xl">
+            {artist.avatarUrl ? (
+              <img src={artist.avatarUrl} alt={artist.stageName} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-5xl font-bold text-muted-foreground bg-secondary">
+                {artist.stageName.charAt(0)}
+              </div>
+            )}
+          </div>
+          <div className="absolute bottom-2 right-2 bg-background rounded-full p-0.5 shadow-lg">
+            <BadgeCheck className="w-7 h-7 text-green-500" />
+          </div>
         </div>
         <div className="pt-4 md:pt-16 flex-1 flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="space-y-2">
-            <h1 className="text-5xl font-extrabold tracking-tighter">{artist.stageName}</h1>
+            <h1 className="text-5xl font-extrabold tracking-tighter flex items-center gap-3">
+              {artist.stageName}
+              <BadgeCheck className="w-8 h-8 text-green-500 flex-shrink-0" />
+            </h1>
             <div className="flex items-center gap-4 text-muted-foreground font-medium">
               <span className="flex items-center gap-1"><Users className="w-4 h-4" /> {artist.followerCount?.toLocaleString() || 0} followers</span>
               <span className="flex items-center gap-1"><Music className="w-4 h-4" /> {artist.songCount || 0} tracks</span>

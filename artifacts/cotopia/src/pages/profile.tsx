@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Upload, X, Loader2 } from "lucide-react";
+import { Upload, X, Loader2, BadgeCheck } from "lucide-react";
 import { useUpload } from "@workspace/object-storage-web";
 
 export default function Profile() {
@@ -79,14 +79,24 @@ export default function Profile() {
   return (
     <div className="max-w-2xl mx-auto space-y-12 pb-24">
       <div className="text-center space-y-4">
-        <div className="w-32 h-32 mx-auto rounded-full bg-secondary border border-border overflow-hidden flex items-center justify-center">
-          {avatarUrl ? (
-            <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-          ) : (
-            <span className="text-2xl font-bold text-muted-foreground">{profile.username[0].toUpperCase()}</span>
+        <div className="relative w-32 h-32 mx-auto">
+          <div className="w-full h-full rounded-full bg-secondary border border-border overflow-hidden flex items-center justify-center">
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-2xl font-bold text-muted-foreground">{profile.username[0].toUpperCase()}</span>
+            )}
+          </div>
+          {profile.isVerified && (
+            <div className="absolute bottom-1 right-1 bg-background rounded-full p-0.5 shadow-lg">
+              <BadgeCheck className="w-6 h-6 text-green-500" />
+            </div>
           )}
         </div>
-        <h1 className="text-3xl font-extrabold tracking-tight">{profile.username}</h1>
+        <h1 className="text-3xl font-extrabold tracking-tight flex items-center justify-center gap-2">
+          {profile.username}
+          {profile.isVerified && <BadgeCheck className="w-6 h-6 text-green-500 flex-shrink-0" />}
+        </h1>
         <p className="text-muted-foreground uppercase tracking-widest text-xs font-semibold">{profile.role}</p>
       </div>
 

@@ -220,7 +220,12 @@ export default function VideoDetail() {
             </div>
             <div className="min-w-0">
               <p className="text-[11px] font-semibold truncate leading-tight text-white">{video.title}</p>
-              <p className="text-[9px] text-white/50 truncate leading-tight">{video.artistName}</p>
+              <Link href={`/artists/${video.artistId}`}>
+                <span className="text-[9px] text-white/50 hover:text-white/80 transition-colors truncate leading-tight flex items-center gap-0.5">
+                  {video.artistName}
+                  <BadgeCheck className="w-2.5 h-2.5 text-green-500 flex-shrink-0" />
+                </span>
+              </Link>
             </div>
           </div>
 
