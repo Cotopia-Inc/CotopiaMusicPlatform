@@ -1,5 +1,5 @@
 import { useParams, Link } from "wouter";
-import { useGetArtist, getGetArtistQueryKey, useFollowArtist, useUnfollowArtist } from "@workspace/api-client-react";
+import { useGetArtist, getGetArtistQueryKey, useFollowArtist, useUnfollowArtist, useTrackAnalyticsEvent } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Play, Users, Music } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -21,13 +21,18 @@ export default function ArtistDetail() {
 
   const followMutation = useFollowArtist();
   const unfollowMutation = useUnfollowArtist();
+  const trackEvent = useTrackAnalyticsEvent();
 
   const handleFollowToggle = () => {
     if (!artist) return;
-    const mutation = artist.isFollowed ? unfollowMutation : followMutation;
+    const isFollowing = artist.isFollowed;
+    const mutation = isFollowing ? unfollowMutation : followMutation;
     mutation.mutate({ id: artistId }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getGetArtistQueryKey(artistId) });
+        if (!isFollowing) {
+          trackEvent.mutate({ data: { eventType: "engagement", eventName: "follow", contentType: "user" as const, contentId: artistId } });
+        }
       }
     });
   };

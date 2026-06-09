@@ -43,8 +43,11 @@ export const LoginResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string().nullish(),
   "avatarUrl": zod.string().nullish(),
-  "role": zod.enum(['listener', 'artist', 'label', 'business', 'admin']),
+  "bio": zod.string().nullish(),
+  "role": zod.enum(['listener', 'artist', 'label', 'business', 'admin', 'moderator', 'editor', 'master_admin']),
   "isActive": zod.boolean().optional(),
+  "isVerified": zod.boolean().optional(),
+  "isSuspended": zod.boolean().optional(),
   "createdAt": zod.string()
 }),
   "token": zod.string()
@@ -60,8 +63,11 @@ export const GetMeResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string().nullish(),
   "avatarUrl": zod.string().nullish(),
-  "role": zod.enum(['listener', 'artist', 'label', 'business', 'admin']),
+  "bio": zod.string().nullish(),
+  "role": zod.enum(['listener', 'artist', 'label', 'business', 'admin', 'moderator', 'editor', 'master_admin']),
   "isActive": zod.boolean().optional(),
+  "isVerified": zod.boolean().optional(),
+  "isSuspended": zod.boolean().optional(),
   "createdAt": zod.string()
 })
 
@@ -81,8 +87,11 @@ export const UpdateMeResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string().nullish(),
   "avatarUrl": zod.string().nullish(),
-  "role": zod.enum(['listener', 'artist', 'label', 'business', 'admin']),
+  "bio": zod.string().nullish(),
+  "role": zod.enum(['listener', 'artist', 'label', 'business', 'admin', 'moderator', 'editor', 'master_admin']),
   "isActive": zod.boolean().optional(),
+  "isVerified": zod.boolean().optional(),
+  "isSuspended": zod.boolean().optional(),
   "createdAt": zod.string()
 })
 
@@ -1468,8 +1477,11 @@ export const AdminListUsersResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string().nullish(),
   "avatarUrl": zod.string().nullish(),
-  "role": zod.enum(['listener', 'artist', 'label', 'business', 'admin']),
+  "bio": zod.string().nullish(),
+  "role": zod.enum(['listener', 'artist', 'label', 'business', 'admin', 'moderator', 'editor', 'master_admin']),
   "isActive": zod.boolean().optional(),
+  "isVerified": zod.boolean().optional(),
+  "isSuspended": zod.boolean().optional(),
   "createdAt": zod.string()
 })),
   "total": zod.number()
@@ -1484,8 +1496,10 @@ export const AdminUpdateUserParams = zod.object({
 })
 
 export const AdminUpdateUserBody = zod.object({
-  "role": zod.enum(['listener', 'artist', 'label', 'business', 'admin']).optional(),
-  "isActive": zod.boolean().optional()
+  "role": zod.enum(['listener', 'artist', 'label', 'business', 'admin', 'moderator', 'editor', 'master_admin']).optional(),
+  "isActive": zod.boolean().optional(),
+  "isVerified": zod.boolean().optional(),
+  "isSuspended": zod.boolean().optional()
 })
 
 export const AdminUpdateUserResponse = zod.object({
@@ -1494,8 +1508,11 @@ export const AdminUpdateUserResponse = zod.object({
   "username": zod.string(),
   "displayName": zod.string().nullish(),
   "avatarUrl": zod.string().nullish(),
-  "role": zod.enum(['listener', 'artist', 'label', 'business', 'admin']),
+  "bio": zod.string().nullish(),
+  "role": zod.enum(['listener', 'artist', 'label', 'business', 'admin', 'moderator', 'editor', 'master_admin']),
   "isActive": zod.boolean().optional(),
+  "isVerified": zod.boolean().optional(),
+  "isSuspended": zod.boolean().optional(),
   "createdAt": zod.string()
 })
 
@@ -1637,6 +1654,283 @@ export const AdminListChatMessagesResponseItem = zod.object({
   "createdAt": zod.string()
 })
 export const AdminListChatMessagesResponse = zod.array(AdminListChatMessagesResponseItem)
+
+
+/**
+ * @summary Direct admin song upload (bypasses payment and submission flow)
+ */
+export const AdminUploadSongBody = zod.object({
+  "title": zod.string(),
+  "artistId": zod.number(),
+  "albumId": zod.number().optional(),
+  "genre": zod.string().optional(),
+  "duration": zod.number().optional(),
+  "streamUrl": zod.string(),
+  "coverUrl": zod.string().optional(),
+  "releaseDate": zod.string().optional(),
+  "isFeatured": zod.boolean().optional()
+})
+
+
+/**
+ * @summary Direct admin video upload (bypasses payment and submission flow)
+ */
+export const AdminUploadVideoBody = zod.object({
+  "title": zod.string(),
+  "artistId": zod.number(),
+  "genre": zod.string().optional(),
+  "description": zod.string().optional(),
+  "duration": zod.number().optional(),
+  "videoUrl": zod.string(),
+  "thumbnailUrl": zod.string().optional(),
+  "releaseDate": zod.string().optional(),
+  "isFeatured": zod.boolean().optional()
+})
+
+
+/**
+ * @summary Get listener activity metrics (admin)
+ */
+export const adminListListenersQueryLimitDefault = 50;
+export const adminListListenersQueryOffsetDefault = 0;
+
+export const AdminListListenersQueryParams = zod.object({
+  "limit": zod.coerce.number().default(adminListListenersQueryLimitDefault),
+  "offset": zod.coerce.number().default(adminListListenersQueryOffsetDefault),
+  "q": zod.coerce.string().optional()
+})
+
+export const AdminListListenersResponse = zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "username": zod.string(),
+  "displayName": zod.string().nullish(),
+  "email": zod.string(),
+  "avatarUrl": zod.string().nullish(),
+  "isVerified": zod.boolean().optional(),
+  "isSuspended": zod.boolean().optional(),
+  "favoriteCount": zod.number().optional(),
+  "commentCount": zod.number().optional(),
+  "followCount": zod.number().optional(),
+  "createdAt": zod.string()
+})),
+  "total": zod.number()
+})
+
+
+/**
+ * @summary Change a user role (master_admin only)
+ */
+export const AdminChangeUserRoleParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const AdminChangeUserRoleBody = zod.object({
+  "role": zod.enum(['listener', 'artist', 'label', 'business', 'admin', 'moderator', 'editor', 'master_admin']),
+  "isVerified": zod.boolean().optional(),
+  "isSuspended": zod.boolean().optional(),
+  "reason": zod.string().optional()
+})
+
+export const AdminChangeUserRoleResponse = zod.object({
+  "id": zod.number(),
+  "email": zod.string(),
+  "username": zod.string(),
+  "displayName": zod.string().nullish(),
+  "avatarUrl": zod.string().nullish(),
+  "bio": zod.string().nullish(),
+  "role": zod.enum(['listener', 'artist', 'label', 'business', 'admin', 'moderator', 'editor', 'master_admin']),
+  "isActive": zod.boolean().optional(),
+  "isVerified": zod.boolean().optional(),
+  "isSuspended": zod.boolean().optional(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Track an analytics event
+ */
+export const TrackAnalyticsEventBody = zod.object({
+  "eventType": zod.enum(['user', 'content', 'engagement', 'admin']),
+  "eventName": zod.string(),
+  "contentType": zod.enum(['song', 'video', 'playlist', 'user']).optional(),
+  "contentId": zod.number().optional(),
+  "metadata": zod.object({
+
+}).passthrough().optional()
+})
+
+
+/**
+ * @summary Get analytics for the current artist
+ */
+export const GetArtistAnalyticsResponse = zod.object({
+  "totalPlays": zod.number(),
+  "totalViews": zod.number(),
+  "totalFavorites": zod.number(),
+  "followerCount": zod.number(),
+  "topSongs": zod.array(zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "artistId": zod.number(),
+  "artistName": zod.string(),
+  "albumId": zod.number().nullish(),
+  "albumName": zod.string().nullish(),
+  "genre": zod.string().nullish(),
+  "duration": zod.number(),
+  "coverUrl": zod.string().nullish(),
+  "streamUrl": zod.string().nullish(),
+  "playCount": zod.number().optional(),
+  "avgRating": zod.number().nullish(),
+  "status": zod.enum(['draft', 'pending_review', 'approved', 'rejected', 'published']),
+  "createdAt": zod.string()
+})),
+  "topVideos": zod.array(zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "artistId": zod.number(),
+  "artistName": zod.string(),
+  "genre": zod.string().nullish(),
+  "duration": zod.number(),
+  "thumbnailUrl": zod.string().nullish(),
+  "videoUrl": zod.string().nullish(),
+  "viewCount": zod.number().optional(),
+  "avgRating": zod.number().nullish(),
+  "status": zod.enum(['draft', 'pending_review', 'approved', 'rejected', 'published']),
+  "createdAt": zod.string()
+})),
+  "recentActivity": zod.array(zod.object({
+  "date": zod.string().optional(),
+  "plays": zod.number().optional(),
+  "views": zod.number().optional()
+})).optional()
+})
+
+
+/**
+ * @summary List all editorial playlists (public)
+ */
+export const ListEditorialPlaylistsResponseItem = zod.object({
+  "id": zod.number(),
+  "userId": zod.number().optional(),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "coverUrl": zod.string().nullish(),
+  "isPublic": zod.boolean().optional(),
+  "isEditorial": zod.boolean(),
+  "playlistType": zod.enum(['user', 'featured', 'mood', 'genre', 'new_artist', 'cotopia_picks', 'radio_picks']),
+  "songCount": zod.number(),
+  "createdAt": zod.string()
+})
+export const ListEditorialPlaylistsResponse = zod.array(ListEditorialPlaylistsResponseItem)
+
+
+/**
+ * @summary Create an editorial playlist (editor/admin)
+ */
+export const CreateEditorialPlaylistBody = zod.object({
+  "name": zod.string(),
+  "description": zod.string().optional(),
+  "coverUrl": zod.string().optional(),
+  "isPublic": zod.boolean().optional(),
+  "playlistType": zod.enum(['featured', 'mood', 'genre', 'new_artist', 'cotopia_picks', 'radio_picks'])
+})
+
+
+/**
+ * @summary Get editorial playlist detail
+ */
+export const GetEditorialPlaylistParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetEditorialPlaylistResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number().optional(),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "coverUrl": zod.string().nullish(),
+  "isPublic": zod.boolean().optional(),
+  "isEditorial": zod.boolean(),
+  "playlistType": zod.enum(['user', 'featured', 'mood', 'genre', 'new_artist', 'cotopia_picks', 'radio_picks']),
+  "songCount": zod.number(),
+  "createdAt": zod.string()
+}).and(zod.object({
+  "songs": zod.array(zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "artistId": zod.number(),
+  "artistName": zod.string(),
+  "albumId": zod.number().nullish(),
+  "albumName": zod.string().nullish(),
+  "genre": zod.string().nullish(),
+  "duration": zod.number(),
+  "coverUrl": zod.string().nullish(),
+  "streamUrl": zod.string().nullish(),
+  "playCount": zod.number().optional(),
+  "avgRating": zod.number().nullish(),
+  "status": zod.enum(['draft', 'pending_review', 'approved', 'rejected', 'published']),
+  "createdAt": zod.string()
+})).optional()
+}))
+
+
+/**
+ * @summary Update an editorial playlist (editor/admin)
+ */
+export const UpdateEditorialPlaylistParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateEditorialPlaylistBody = zod.object({
+  "name": zod.string(),
+  "description": zod.string().optional(),
+  "coverUrl": zod.string().optional(),
+  "isPublic": zod.boolean().optional(),
+  "playlistType": zod.enum(['featured', 'mood', 'genre', 'new_artist', 'cotopia_picks', 'radio_picks'])
+})
+
+export const UpdateEditorialPlaylistResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number().optional(),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "coverUrl": zod.string().nullish(),
+  "isPublic": zod.boolean().optional(),
+  "isEditorial": zod.boolean(),
+  "playlistType": zod.enum(['user', 'featured', 'mood', 'genre', 'new_artist', 'cotopia_picks', 'radio_picks']),
+  "songCount": zod.number(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Delete an editorial playlist (editor/admin)
+ */
+export const DeleteEditorialPlaylistParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary Add a song to an editorial playlist
+ */
+export const AddSongToEditorialPlaylistParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const AddSongToEditorialPlaylistBody = zod.object({
+  "songId": zod.number()
+})
+
+
+/**
+ * @summary Remove a song from an editorial playlist
+ */
+export const RemoveSongFromEditorialPlaylistParams = zod.object({
+  "id": zod.coerce.number(),
+  "songId": zod.coerce.number()
+})
 
 
 /**

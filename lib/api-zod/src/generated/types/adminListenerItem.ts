@@ -5,21 +5,19 @@
  * Cotopia Streaming Platform API
  * OpenAPI spec version: 0.1.0
  */
-import type { UserRole } from './userRole';
 
-export interface User {
+export interface AdminListenerItem {
   id: number;
-  email: string;
   username: string;
   /** @nullable */
   displayName?: string | null;
+  email: string;
   /** @nullable */
   avatarUrl?: string | null;
-  /** @nullable */
-  bio?: string | null;
-  role: UserRole;
-  isActive?: boolean;
   isVerified?: boolean;
   isSuspended?: boolean;
+  favoriteCount?: number;
+  commentCount?: number;
+  followCount?: number;
   createdAt: string;
 }

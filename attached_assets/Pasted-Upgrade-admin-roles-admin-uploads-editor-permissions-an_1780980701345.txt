@@ -1,0 +1,358 @@
+Upgrade admin roles, admin uploads, editor permissions, and analytics tracking.
+
+1. MASTER ADMIN ROLE
+
+Add a new top-level role:
+
+master_admin
+
+There should only be one master_admin account.
+
+Seed account:
+
+[admin@cotopia.com](mailto:admin@cotopia.com)
+password123
+role: master_admin
+
+Only master_admin can assign or change staff roles.
+
+Staff roles:
+
+* master_admin
+* admin
+* moderator
+* editor
+
+Rules:
+
+* master_admin can do everything
+* admin can manage content, users, submissions, company hub, settings, uploads
+* moderator can manage comments, reports, flagged content, chat moderation
+* editor can review songs/videos, listen/watch content, add songs/videos to playlists, recommend content, feature suggestions, and create editorial playlists
+* listener, artist, label, and business cannot access staff tools
+
+2. ROLE MANAGEMENT
+
+Create admin page:
+
+/admin/roles
+
+Only master_admin can access this page.
+
+Master admin can:
+
+* View all users
+* Assign staff role
+* Remove staff role
+* Change user role
+* Verify artists
+* Verify labels
+* Suspend users
+
+Add Staff Roles to the user table/profile system if not already present.
+
+3. ADMIN DIRECT UPLOAD
+
+Admins and master_admin should be able to upload music and videos directly from the dashboard with no payment required.
+
+Create pages:
+
+/admin/upload-song
+/admin/upload-video
+
+Admin upload fields:
+
+Song:
+
+* Title
+* Artist Name
+* Label Name
+* Genre
+* Mood
+* Description
+* Audio file upload
+* Cover image upload
+* Release date
+* Explicit content yes/no
+* Status: draft, published, featured
+
+Video:
+
+* Title
+* Artist Name
+* Label Name
+* Genre
+* Mood
+* Description
+* Video file upload
+* Thumbnail image upload
+* Release date
+* Explicit content yes/no
+* Status: draft, published, featured
+
+Admin uploads bypass payment and submission review.
+
+Admin can publish immediately.
+
+4. EDITOR ROLE FEATURES
+
+Create editor dashboard:
+
+/editor
+
+Editor can:
+
+* Listen to songs
+* Watch videos
+* Add songs to editorial playlists
+* Add videos to editorial collections
+* Recommend songs for homepage
+* Recommend videos for homepage
+* Recommend artists for spotlight
+* Recommend labels for spotlight
+* Leave internal review notes
+* Mark content as “recommended”
+
+Editor cannot:
+
+* Delete users
+* Change roles
+* Access payments
+* Change app settings
+* Suspend users
+* Approve staff roles
+
+5. EDITORIAL PLAYLISTS
+
+Add editorial playlist system.
+
+Editors and admins can create:
+
+* Featured Playlists
+* Mood Playlists
+* Genre Playlists
+* New Artist Playlists
+* Cotopia Picks
+* Everyday Radio Picks
+
+Playlist fields:
+
+* Title
+* Description
+* Cover image
+* Created by
+* Playlist type
+* Featured yes/no
+* Public yes/no
+
+Track playlist adds as analytics events.
+
+6. FULL ANALYTICS TRACKING
+
+Track the following events:
+
+User Events:
+
+* registration
+* login
+* profile update
+* follow artist
+* follow label
+* unfollow artist
+* unfollow label
+
+Content Events:
+
+* song uploaded
+* video uploaded
+* song submitted
+* video submitted
+* song approved
+* video approved
+* song rejected
+* video rejected
+* song published
+* video published
+
+Engagement Events:
+
+* song play
+* song pause
+* song complete
+* song skip
+* video play
+* video pause
+* video complete
+* rating added
+* rating changed
+* rating removed
+* favorite added
+* favorite removed
+* comment added
+* comment removed
+* chat message sent
+* share clicked
+* playlist add
+* playlist remove
+
+Admin Events:
+
+* role changed
+* user suspended
+* user verified
+* content featured
+* content unfeatured
+* company post created
+* company post updated
+
+Store these in analytics_events.
+
+Fields:
+
+id
+user_id
+event_name
+event_type
+content_type
+content_id
+metadata JSON
+created_at
+
+7. ARTIST ANALYTICS DASHBOARD
+
+Create:
+
+/artist/analytics
+
+Artists should see only their own content metrics.
+
+Artist can track:
+
+* total streams
+* total video views
+* total likes/favorites
+* total ratings
+* average rating
+* total comments
+* total chat messages
+* followers
+* playlist adds
+* shares
+* top songs
+* top videos
+* recent submissions
+* approval status
+* estimated revenue placeholder
+
+Some metrics can be demo/placeholder for MVP, but should be structured from analytics_events where possible.
+
+8. ADMIN ANALYTICS DASHBOARD
+
+Create:
+
+/admin/analytics
+
+Admin and master_admin can track platform-wide metrics:
+
+* total users
+* total listeners
+* total artists
+* total labels
+* total businesses
+* total songs
+* total videos
+* total uploads
+* total submissions
+* total pending submissions
+* total approved submissions
+* total rejected submissions
+* total streams
+* total video views
+* total playlist adds
+* total shares
+* total likes/favorites
+* total follows
+* total comments
+* total chat messages
+* top listeners
+* top artists
+* top songs
+* top videos
+* top labels
+* most active users
+* streams per listener
+* views per listener
+* average session placeholder
+* revenue placeholder
+
+Admin metrics should update on page refresh for MVP.
+Realtime dashboard is not required yet.
+
+9. LISTENER LEVEL METRICS
+
+Admin should be able to see listener-level activity.
+
+Create:
+
+/admin/listeners
+
+For each listener show:
+
+* username
+* email
+* total streams
+* total video views
+* total likes/favorites
+* total comments
+* total chat messages
+* total playlist adds
+* artists followed
+* labels followed
+* last login
+* account status
+
+10. UI NAVIGATION
+
+Update sidebar:
+
+Admin section:
+
+* Dashboard
+* Analytics
+* Users
+* Roles
+* Listeners
+* Upload Song
+* Upload Video
+* Submissions
+* Songs
+* Videos
+* Comments
+* Payments
+* Settings
+
+Only show Roles to master_admin.
+
+Show Editor section only to editors/admin/master_admin:
+
+* Editor Dashboard
+* Editorial Playlists
+* Recommended Content
+
+11. IMPORTANT
+
+Do not remove existing listener, artist, label, business, submission, chat, or company hub features.
+
+Add these features cleanly and keep the app stable.
+
+After completing, provide a testing guide for:
+
+* Logging in as master_admin
+* Assigning roles
+* Uploading a song as admin without payment
+* Uploading a video as admin without payment
+* Testing editor role
+* Creating editorial playlist
+* Viewing artist analytics
+* Viewing admin analytics
+* Viewing listener metrics

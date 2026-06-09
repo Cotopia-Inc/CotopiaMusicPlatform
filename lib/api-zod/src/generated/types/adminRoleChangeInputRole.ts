@@ -6,10 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type UserRole = typeof UserRole[keyof typeof UserRole];
+export type AdminRoleChangeInputRole = typeof AdminRoleChangeInputRole[keyof typeof AdminRoleChangeInputRole];
 
 
-export const UserRole = {
+export const AdminRoleChangeInputRole = {
   listener: 'listener',
   artist: 'artist',
   label: 'label',

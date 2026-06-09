@@ -41,6 +41,9 @@ export const UserRole = {
   label: 'label',
   business: 'business',
   admin: 'admin',
+  moderator: 'moderator',
+  editor: 'editor',
+  master_admin: 'master_admin',
 } as const;
 
 export interface User {
@@ -51,8 +54,12 @@ export interface User {
   displayName?: string | null;
   /** @nullable */
   avatarUrl?: string | null;
+  /** @nullable */
+  bio?: string | null;
   role: UserRole;
   isActive?: boolean;
+  isVerified?: boolean;
+  isSuspended?: boolean;
   createdAt: string;
 }
 
@@ -558,11 +565,16 @@ export const AdminUserUpdateRole = {
   label: 'label',
   business: 'business',
   admin: 'admin',
+  moderator: 'moderator',
+  editor: 'editor',
+  master_admin: 'master_admin',
 } as const;
 
 export interface AdminUserUpdate {
   role?: AdminUserUpdateRole;
   isActive?: boolean;
+  isVerified?: boolean;
+  isSuspended?: boolean;
 }
 
 export type AnalyticsSummaryUsersByRole = {[key: string]: number};
@@ -666,6 +678,170 @@ export interface ErrorEnvelope {
   error: string;
 }
 
+export interface AdminUploadSongInput {
+  title: string;
+  artistId: number;
+  albumId?: number;
+  genre?: string;
+  duration?: number;
+  streamUrl: string;
+  coverUrl?: string;
+  releaseDate?: string;
+  isFeatured?: boolean;
+}
+
+export interface AdminUploadVideoInput {
+  title: string;
+  artistId: number;
+  genre?: string;
+  description?: string;
+  duration?: number;
+  videoUrl: string;
+  thumbnailUrl?: string;
+  releaseDate?: string;
+  isFeatured?: boolean;
+}
+
+export type AdminRoleChangeInputRole = typeof AdminRoleChangeInputRole[keyof typeof AdminRoleChangeInputRole];
+
+
+export const AdminRoleChangeInputRole = {
+  listener: 'listener',
+  artist: 'artist',
+  label: 'label',
+  business: 'business',
+  admin: 'admin',
+  moderator: 'moderator',
+  editor: 'editor',
+  master_admin: 'master_admin',
+} as const;
+
+export interface AdminRoleChangeInput {
+  role: AdminRoleChangeInputRole;
+  isVerified?: boolean;
+  isSuspended?: boolean;
+  reason?: string;
+}
+
+export interface AdminListenerItem {
+  id: number;
+  username: string;
+  /** @nullable */
+  displayName?: string | null;
+  email: string;
+  /** @nullable */
+  avatarUrl?: string | null;
+  isVerified?: boolean;
+  isSuspended?: boolean;
+  favoriteCount?: number;
+  commentCount?: number;
+  followCount?: number;
+  createdAt: string;
+}
+
+export interface AdminListenerList {
+  items: AdminListenerItem[];
+  total: number;
+}
+
+export type AnalyticsEventInputEventType = typeof AnalyticsEventInputEventType[keyof typeof AnalyticsEventInputEventType];
+
+
+export const AnalyticsEventInputEventType = {
+  user: 'user',
+  content: 'content',
+  engagement: 'engagement',
+  admin: 'admin',
+} as const;
+
+export type AnalyticsEventInputContentType = typeof AnalyticsEventInputContentType[keyof typeof AnalyticsEventInputContentType];
+
+
+export const AnalyticsEventInputContentType = {
+  song: 'song',
+  video: 'video',
+  playlist: 'playlist',
+  user: 'user',
+} as const;
+
+export type AnalyticsEventInputMetadata = { [key: string]: unknown };
+
+export interface AnalyticsEventInput {
+  eventType: AnalyticsEventInputEventType;
+  eventName: string;
+  contentType?: AnalyticsEventInputContentType;
+  contentId?: number;
+  metadata?: AnalyticsEventInputMetadata;
+}
+
+export type ArtistAnalyticsRecentActivityItem = {
+  date?: string;
+  plays?: number;
+  views?: number;
+};
+
+export interface ArtistAnalytics {
+  totalPlays: number;
+  totalViews: number;
+  totalFavorites: number;
+  followerCount: number;
+  topSongs: Song[];
+  topVideos: Video[];
+  recentActivity?: ArtistAnalyticsRecentActivityItem[];
+}
+
+export type EditorialPlaylistPlaylistType = typeof EditorialPlaylistPlaylistType[keyof typeof EditorialPlaylistPlaylistType];
+
+
+export const EditorialPlaylistPlaylistType = {
+  user: 'user',
+  featured: 'featured',
+  mood: 'mood',
+  genre: 'genre',
+  new_artist: 'new_artist',
+  cotopia_picks: 'cotopia_picks',
+  radio_picks: 'radio_picks',
+} as const;
+
+export interface EditorialPlaylist {
+  id: number;
+  userId?: number;
+  name: string;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  coverUrl?: string | null;
+  isPublic?: boolean;
+  isEditorial: boolean;
+  playlistType: EditorialPlaylistPlaylistType;
+  songCount: number;
+  createdAt: string;
+}
+
+export type EditorialPlaylistDetail = EditorialPlaylist & {
+  songs?: Song[];
+};
+
+export type EditorialPlaylistInputPlaylistType = typeof EditorialPlaylistInputPlaylistType[keyof typeof EditorialPlaylistInputPlaylistType];
+
+
+export const EditorialPlaylistInputPlaylistType = {
+  featured: 'featured',
+  mood: 'mood',
+  genre: 'genre',
+  new_artist: 'new_artist',
+  cotopia_picks: 'cotopia_picks',
+  radio_picks: 'radio_picks',
+} as const;
+
+export interface EditorialPlaylistInput {
+  name: string;
+  description?: string;
+  coverUrl?: string;
+  isPublic?: boolean;
+  playlistType: EditorialPlaylistInputPlaylistType;
+}
+
 export type ListSongsParams = {
 /**
  * Search query
@@ -758,6 +934,12 @@ export const AdminListChatMessagesContentType = {
   song: 'song',
   video: 'video',
 } as const;
+
+export type AdminListListenersParams = {
+limit?: number;
+offset?: number;
+q?: string;
+};
 
 export type ListNotificationsParams = {
 unreadOnly?: boolean;

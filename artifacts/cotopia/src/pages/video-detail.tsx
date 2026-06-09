@@ -2,7 +2,7 @@ import { useParams } from "wouter";
 import {
   useGetVideo, getGetVideoQueryKey,
   useGetChatMessages, getGetChatMessagesQueryKey, usePostChatMessage,
-  useRateVideo, useFavoriteVideo, useUnfavoriteVideo,
+  useRateVideo, useFavoriteVideo, useUnfavoriteVideo, useTrackAnalyticsEvent,
 } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Play, Heart, Star, Send, Radio, Users, BadgeCheck, MessageCircle, Maximize2 } from "lucide-react";
@@ -51,7 +51,10 @@ export default function VideoDetail() {
   const handlePlayVideo = useCallback(() => {
     setIsVideoPlaying(true);
     setTimeout(() => videoRef.current?.play(), 50);
-  }, []);
+    if (videoId) {
+      trackEvent.mutate({ data: { eventType: "content", eventName: "video_play", contentType: "video", contentId: videoId } });
+    }
+  }, [videoId]);
 
   const handleFullscreen = useCallback(() => {
     if (videoRef.current) {
@@ -63,6 +66,7 @@ export default function VideoDetail() {
   const rateMutation = useRateVideo();
   const favoriteMutation = useFavoriteVideo();
   const unfavoriteMutation = useUnfavoriteVideo();
+  const trackEvent = useTrackAnalyticsEvent();
 
   const isFavorited = localFavorited ?? video?.isFavorited ?? false;
   const userRating = localRating ?? video?.userRating ?? null;

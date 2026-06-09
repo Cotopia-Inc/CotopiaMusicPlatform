@@ -22,14 +22,21 @@ import type {
 import type {
   AdminChatMessage,
   AdminListChatMessagesParams,
+  AdminListListenersParams,
   AdminListSubmissionsParams,
   AdminListUsersParams,
+  AdminListenerList,
+  AdminRoleChangeInput,
+  AdminUploadSongInput,
+  AdminUploadVideoInput,
   AdminUserList,
   AdminUserUpdate,
+  AnalyticsEventInput,
   AnalyticsSummary,
   AppSettings,
   AppSettingsUpdate,
   Artist,
+  ArtistAnalytics,
   ArtistProfile,
   ArtistUpdate,
   AuthResponse,
@@ -41,6 +48,9 @@ import type {
   CompanyPostInput,
   CompanyPostUpdate,
   DiscoverFeed,
+  EditorialPlaylist,
+  EditorialPlaylistDetail,
+  EditorialPlaylistInput,
   ErrorEnvelope,
   GetChatMessagesParams,
   GetHistoryParams,
@@ -5642,6 +5652,963 @@ export function useAdminListChatMessages<TData = Awaited<ReturnType<typeof admin
 
 
 
+
+export const getAdminUploadSongUrl = () => {
+
+
+
+
+  return `/api/admin/upload-song`
+}
+
+/**
+ * @summary Direct admin song upload (bypasses payment and submission flow)
+ */
+export const adminUploadSong = async (adminUploadSongInput: AdminUploadSongInput, options?: RequestInit): Promise<Song> => {
+
+  return customFetch<Song>(getAdminUploadSongUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      adminUploadSongInput,)
+  }
+);}
+
+
+
+
+export const getAdminUploadSongMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminUploadSong>>, TError,{data: BodyType<AdminUploadSongInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminUploadSong>>, TError,{data: BodyType<AdminUploadSongInput>}, TContext> => {
+
+const mutationKey = ['adminUploadSong'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminUploadSong>>, {data: BodyType<AdminUploadSongInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  adminUploadSong(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminUploadSongMutationResult = NonNullable<Awaited<ReturnType<typeof adminUploadSong>>>
+    export type AdminUploadSongMutationBody = BodyType<AdminUploadSongInput>
+    export type AdminUploadSongMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Direct admin song upload (bypasses payment and submission flow)
+ */
+export const useAdminUploadSong = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminUploadSong>>, TError,{data: BodyType<AdminUploadSongInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof adminUploadSong>>,
+        TError,
+        {data: BodyType<AdminUploadSongInput>},
+        TContext
+      > => {
+      return useMutation(getAdminUploadSongMutationOptions(options));
+    }
+
+export const getAdminUploadVideoUrl = () => {
+
+
+
+
+  return `/api/admin/upload-video`
+}
+
+/**
+ * @summary Direct admin video upload (bypasses payment and submission flow)
+ */
+export const adminUploadVideo = async (adminUploadVideoInput: AdminUploadVideoInput, options?: RequestInit): Promise<Video> => {
+
+  return customFetch<Video>(getAdminUploadVideoUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      adminUploadVideoInput,)
+  }
+);}
+
+
+
+
+export const getAdminUploadVideoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminUploadVideo>>, TError,{data: BodyType<AdminUploadVideoInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminUploadVideo>>, TError,{data: BodyType<AdminUploadVideoInput>}, TContext> => {
+
+const mutationKey = ['adminUploadVideo'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminUploadVideo>>, {data: BodyType<AdminUploadVideoInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  adminUploadVideo(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminUploadVideoMutationResult = NonNullable<Awaited<ReturnType<typeof adminUploadVideo>>>
+    export type AdminUploadVideoMutationBody = BodyType<AdminUploadVideoInput>
+    export type AdminUploadVideoMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Direct admin video upload (bypasses payment and submission flow)
+ */
+export const useAdminUploadVideo = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminUploadVideo>>, TError,{data: BodyType<AdminUploadVideoInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof adminUploadVideo>>,
+        TError,
+        {data: BodyType<AdminUploadVideoInput>},
+        TContext
+      > => {
+      return useMutation(getAdminUploadVideoMutationOptions(options));
+    }
+
+export const getAdminListListenersUrl = (params?: AdminListListenersParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/admin/listeners?${stringifiedParams}` : `/api/admin/listeners`
+}
+
+/**
+ * @summary Get listener activity metrics (admin)
+ */
+export const adminListListeners = async (params?: AdminListListenersParams, options?: RequestInit): Promise<AdminListenerList> => {
+
+  return customFetch<AdminListenerList>(getAdminListListenersUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getAdminListListenersQueryKey = (params?: AdminListListenersParams,) => {
+    return [
+    `/api/admin/listeners`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getAdminListListenersQueryOptions = <TData = Awaited<ReturnType<typeof adminListListeners>>, TError = ErrorType<unknown>>(params?: AdminListListenersParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof adminListListeners>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminListListenersQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminListListeners>>> = ({ signal }) => adminListListeners(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminListListeners>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type AdminListListenersQueryResult = NonNullable<Awaited<ReturnType<typeof adminListListeners>>>
+export type AdminListListenersQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get listener activity metrics (admin)
+ */
+
+export function useAdminListListeners<TData = Awaited<ReturnType<typeof adminListListeners>>, TError = ErrorType<unknown>>(
+ params?: AdminListListenersParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof adminListListeners>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getAdminListListenersQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getAdminChangeUserRoleUrl = (id: number,) => {
+
+
+
+
+  return `/api/admin/users/${id}/role`
+}
+
+/**
+ * @summary Change a user role (master_admin only)
+ */
+export const adminChangeUserRole = async (id: number,
+    adminRoleChangeInput: AdminRoleChangeInput, options?: RequestInit): Promise<User> => {
+
+  return customFetch<User>(getAdminChangeUserRoleUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      adminRoleChangeInput,)
+  }
+);}
+
+
+
+
+export const getAdminChangeUserRoleMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminChangeUserRole>>, TError,{id: number;data: BodyType<AdminRoleChangeInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminChangeUserRole>>, TError,{id: number;data: BodyType<AdminRoleChangeInput>}, TContext> => {
+
+const mutationKey = ['adminChangeUserRole'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminChangeUserRole>>, {id: number;data: BodyType<AdminRoleChangeInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  adminChangeUserRole(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminChangeUserRoleMutationResult = NonNullable<Awaited<ReturnType<typeof adminChangeUserRole>>>
+    export type AdminChangeUserRoleMutationBody = BodyType<AdminRoleChangeInput>
+    export type AdminChangeUserRoleMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Change a user role (master_admin only)
+ */
+export const useAdminChangeUserRole = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminChangeUserRole>>, TError,{id: number;data: BodyType<AdminRoleChangeInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof adminChangeUserRole>>,
+        TError,
+        {id: number;data: BodyType<AdminRoleChangeInput>},
+        TContext
+      > => {
+      return useMutation(getAdminChangeUserRoleMutationOptions(options));
+    }
+
+export const getTrackAnalyticsEventUrl = () => {
+
+
+
+
+  return `/api/analytics/events`
+}
+
+/**
+ * @summary Track an analytics event
+ */
+export const trackAnalyticsEvent = async (analyticsEventInput: AnalyticsEventInput, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getTrackAnalyticsEventUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      analyticsEventInput,)
+  }
+);}
+
+
+
+
+export const getTrackAnalyticsEventMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trackAnalyticsEvent>>, TError,{data: BodyType<AnalyticsEventInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof trackAnalyticsEvent>>, TError,{data: BodyType<AnalyticsEventInput>}, TContext> => {
+
+const mutationKey = ['trackAnalyticsEvent'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof trackAnalyticsEvent>>, {data: BodyType<AnalyticsEventInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  trackAnalyticsEvent(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TrackAnalyticsEventMutationResult = NonNullable<Awaited<ReturnType<typeof trackAnalyticsEvent>>>
+    export type TrackAnalyticsEventMutationBody = BodyType<AnalyticsEventInput>
+    export type TrackAnalyticsEventMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Track an analytics event
+ */
+export const useTrackAnalyticsEvent = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trackAnalyticsEvent>>, TError,{data: BodyType<AnalyticsEventInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof trackAnalyticsEvent>>,
+        TError,
+        {data: BodyType<AnalyticsEventInput>},
+        TContext
+      > => {
+      return useMutation(getTrackAnalyticsEventMutationOptions(options));
+    }
+
+export const getGetArtistAnalyticsUrl = () => {
+
+
+
+
+  return `/api/artist/analytics`
+}
+
+/**
+ * @summary Get analytics for the current artist
+ */
+export const getArtistAnalytics = async ( options?: RequestInit): Promise<ArtistAnalytics> => {
+
+  return customFetch<ArtistAnalytics>(getGetArtistAnalyticsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetArtistAnalyticsQueryKey = () => {
+    return [
+    `/api/artist/analytics`
+    ] as const;
+    }
+
+
+export const getGetArtistAnalyticsQueryOptions = <TData = Awaited<ReturnType<typeof getArtistAnalytics>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getArtistAnalytics>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetArtistAnalyticsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getArtistAnalytics>>> = ({ signal }) => getArtistAnalytics({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getArtistAnalytics>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetArtistAnalyticsQueryResult = NonNullable<Awaited<ReturnType<typeof getArtistAnalytics>>>
+export type GetArtistAnalyticsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get analytics for the current artist
+ */
+
+export function useGetArtistAnalytics<TData = Awaited<ReturnType<typeof getArtistAnalytics>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getArtistAnalytics>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetArtistAnalyticsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getListEditorialPlaylistsUrl = () => {
+
+
+
+
+  return `/api/editorial-playlists`
+}
+
+/**
+ * @summary List all editorial playlists (public)
+ */
+export const listEditorialPlaylists = async ( options?: RequestInit): Promise<EditorialPlaylist[]> => {
+
+  return customFetch<EditorialPlaylist[]>(getListEditorialPlaylistsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListEditorialPlaylistsQueryKey = () => {
+    return [
+    `/api/editorial-playlists`
+    ] as const;
+    }
+
+
+export const getListEditorialPlaylistsQueryOptions = <TData = Awaited<ReturnType<typeof listEditorialPlaylists>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listEditorialPlaylists>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListEditorialPlaylistsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listEditorialPlaylists>>> = ({ signal }) => listEditorialPlaylists({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listEditorialPlaylists>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListEditorialPlaylistsQueryResult = NonNullable<Awaited<ReturnType<typeof listEditorialPlaylists>>>
+export type ListEditorialPlaylistsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List all editorial playlists (public)
+ */
+
+export function useListEditorialPlaylists<TData = Awaited<ReturnType<typeof listEditorialPlaylists>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listEditorialPlaylists>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListEditorialPlaylistsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateEditorialPlaylistUrl = () => {
+
+
+
+
+  return `/api/editorial-playlists`
+}
+
+/**
+ * @summary Create an editorial playlist (editor/admin)
+ */
+export const createEditorialPlaylist = async (editorialPlaylistInput: EditorialPlaylistInput, options?: RequestInit): Promise<EditorialPlaylist> => {
+
+  return customFetch<EditorialPlaylist>(getCreateEditorialPlaylistUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      editorialPlaylistInput,)
+  }
+);}
+
+
+
+
+export const getCreateEditorialPlaylistMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createEditorialPlaylist>>, TError,{data: BodyType<EditorialPlaylistInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createEditorialPlaylist>>, TError,{data: BodyType<EditorialPlaylistInput>}, TContext> => {
+
+const mutationKey = ['createEditorialPlaylist'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createEditorialPlaylist>>, {data: BodyType<EditorialPlaylistInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createEditorialPlaylist(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateEditorialPlaylistMutationResult = NonNullable<Awaited<ReturnType<typeof createEditorialPlaylist>>>
+    export type CreateEditorialPlaylistMutationBody = BodyType<EditorialPlaylistInput>
+    export type CreateEditorialPlaylistMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create an editorial playlist (editor/admin)
+ */
+export const useCreateEditorialPlaylist = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createEditorialPlaylist>>, TError,{data: BodyType<EditorialPlaylistInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createEditorialPlaylist>>,
+        TError,
+        {data: BodyType<EditorialPlaylistInput>},
+        TContext
+      > => {
+      return useMutation(getCreateEditorialPlaylistMutationOptions(options));
+    }
+
+export const getGetEditorialPlaylistUrl = (id: number,) => {
+
+
+
+
+  return `/api/editorial-playlists/${id}`
+}
+
+/**
+ * @summary Get editorial playlist detail
+ */
+export const getEditorialPlaylist = async (id: number, options?: RequestInit): Promise<EditorialPlaylistDetail> => {
+
+  return customFetch<EditorialPlaylistDetail>(getGetEditorialPlaylistUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetEditorialPlaylistQueryKey = (id: number,) => {
+    return [
+    `/api/editorial-playlists/${id}`
+    ] as const;
+    }
+
+
+export const getGetEditorialPlaylistQueryOptions = <TData = Awaited<ReturnType<typeof getEditorialPlaylist>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEditorialPlaylist>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetEditorialPlaylistQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getEditorialPlaylist>>> = ({ signal }) => getEditorialPlaylist(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEditorialPlaylist>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetEditorialPlaylistQueryResult = NonNullable<Awaited<ReturnType<typeof getEditorialPlaylist>>>
+export type GetEditorialPlaylistQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get editorial playlist detail
+ */
+
+export function useGetEditorialPlaylist<TData = Awaited<ReturnType<typeof getEditorialPlaylist>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEditorialPlaylist>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetEditorialPlaylistQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getUpdateEditorialPlaylistUrl = (id: number,) => {
+
+
+
+
+  return `/api/editorial-playlists/${id}`
+}
+
+/**
+ * @summary Update an editorial playlist (editor/admin)
+ */
+export const updateEditorialPlaylist = async (id: number,
+    editorialPlaylistInput: EditorialPlaylistInput, options?: RequestInit): Promise<EditorialPlaylist> => {
+
+  return customFetch<EditorialPlaylist>(getUpdateEditorialPlaylistUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      editorialPlaylistInput,)
+  }
+);}
+
+
+
+
+export const getUpdateEditorialPlaylistMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateEditorialPlaylist>>, TError,{id: number;data: BodyType<EditorialPlaylistInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateEditorialPlaylist>>, TError,{id: number;data: BodyType<EditorialPlaylistInput>}, TContext> => {
+
+const mutationKey = ['updateEditorialPlaylist'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateEditorialPlaylist>>, {id: number;data: BodyType<EditorialPlaylistInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateEditorialPlaylist(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateEditorialPlaylistMutationResult = NonNullable<Awaited<ReturnType<typeof updateEditorialPlaylist>>>
+    export type UpdateEditorialPlaylistMutationBody = BodyType<EditorialPlaylistInput>
+    export type UpdateEditorialPlaylistMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update an editorial playlist (editor/admin)
+ */
+export const useUpdateEditorialPlaylist = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateEditorialPlaylist>>, TError,{id: number;data: BodyType<EditorialPlaylistInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateEditorialPlaylist>>,
+        TError,
+        {id: number;data: BodyType<EditorialPlaylistInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateEditorialPlaylistMutationOptions(options));
+    }
+
+export const getDeleteEditorialPlaylistUrl = (id: number,) => {
+
+
+
+
+  return `/api/editorial-playlists/${id}`
+}
+
+/**
+ * @summary Delete an editorial playlist (editor/admin)
+ */
+export const deleteEditorialPlaylist = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteEditorialPlaylistUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteEditorialPlaylistMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteEditorialPlaylist>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteEditorialPlaylist>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteEditorialPlaylist'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteEditorialPlaylist>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteEditorialPlaylist(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteEditorialPlaylistMutationResult = NonNullable<Awaited<ReturnType<typeof deleteEditorialPlaylist>>>
+
+    export type DeleteEditorialPlaylistMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete an editorial playlist (editor/admin)
+ */
+export const useDeleteEditorialPlaylist = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteEditorialPlaylist>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteEditorialPlaylist>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteEditorialPlaylistMutationOptions(options));
+    }
+
+export const getAddSongToEditorialPlaylistUrl = (id: number,) => {
+
+
+
+
+  return `/api/editorial-playlists/${id}/songs`
+}
+
+/**
+ * @summary Add a song to an editorial playlist
+ */
+export const addSongToEditorialPlaylist = async (id: number,
+    playlistSongInput: PlaylistSongInput, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getAddSongToEditorialPlaylistUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      playlistSongInput,)
+  }
+);}
+
+
+
+
+export const getAddSongToEditorialPlaylistMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addSongToEditorialPlaylist>>, TError,{id: number;data: BodyType<PlaylistSongInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof addSongToEditorialPlaylist>>, TError,{id: number;data: BodyType<PlaylistSongInput>}, TContext> => {
+
+const mutationKey = ['addSongToEditorialPlaylist'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof addSongToEditorialPlaylist>>, {id: number;data: BodyType<PlaylistSongInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  addSongToEditorialPlaylist(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AddSongToEditorialPlaylistMutationResult = NonNullable<Awaited<ReturnType<typeof addSongToEditorialPlaylist>>>
+    export type AddSongToEditorialPlaylistMutationBody = BodyType<PlaylistSongInput>
+    export type AddSongToEditorialPlaylistMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Add a song to an editorial playlist
+ */
+export const useAddSongToEditorialPlaylist = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addSongToEditorialPlaylist>>, TError,{id: number;data: BodyType<PlaylistSongInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof addSongToEditorialPlaylist>>,
+        TError,
+        {id: number;data: BodyType<PlaylistSongInput>},
+        TContext
+      > => {
+      return useMutation(getAddSongToEditorialPlaylistMutationOptions(options));
+    }
+
+export const getRemoveSongFromEditorialPlaylistUrl = (id: number,
+    songId: number,) => {
+
+
+
+
+  return `/api/editorial-playlists/${id}/songs/${songId}`
+}
+
+/**
+ * @summary Remove a song from an editorial playlist
+ */
+export const removeSongFromEditorialPlaylist = async (id: number,
+    songId: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getRemoveSongFromEditorialPlaylistUrl(id,songId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getRemoveSongFromEditorialPlaylistMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeSongFromEditorialPlaylist>>, TError,{id: number;songId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof removeSongFromEditorialPlaylist>>, TError,{id: number;songId: number}, TContext> => {
+
+const mutationKey = ['removeSongFromEditorialPlaylist'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof removeSongFromEditorialPlaylist>>, {id: number;songId: number}> = (props) => {
+          const {id,songId} = props ?? {};
+
+          return  removeSongFromEditorialPlaylist(id,songId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RemoveSongFromEditorialPlaylistMutationResult = NonNullable<Awaited<ReturnType<typeof removeSongFromEditorialPlaylist>>>
+
+    export type RemoveSongFromEditorialPlaylistMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Remove a song from an editorial playlist
+ */
+export const useRemoveSongFromEditorialPlaylist = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeSongFromEditorialPlaylist>>, TError,{id: number;songId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof removeSongFromEditorialPlaylist>>,
+        TError,
+        {id: number;songId: number},
+        TContext
+      > => {
+      return useMutation(getRemoveSongFromEditorialPlaylistMutationOptions(options));
+    }
 
 export const getListNotificationsUrl = (params?: ListNotificationsParams,) => {
   const normalizedParams = new URLSearchParams();

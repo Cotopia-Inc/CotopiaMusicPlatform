@@ -15,4 +15,7 @@ export const AdminUserUpdateRole = {
   label: 'label',
   business: 'business',
   admin: 'admin',
+  moderator: 'moderator',
+  editor: 'editor',
+  master_admin: 'master_admin',
 } as const;

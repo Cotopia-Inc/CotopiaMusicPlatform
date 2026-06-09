@@ -1,9 +1,17 @@
 import { Link, useLocation } from "wouter";
-import { Home, Compass, Music, Video, Users, Mic2, Library, Building2, LayoutDashboard, LogIn, LogOut, Settings, Send, Radio, Bell } from "lucide-react";
+import {
+  Home, Compass, Music, Video, Users, Mic2, Library, Building2,
+  LayoutDashboard, LogIn, LogOut, Settings, Send, Radio, Bell,
+  BarChart3, Upload, ListMusic, Shield, UserCheck, Layers,
+  MessageSquare, FileText, CreditCard, Eye, BookOpen,
+} from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useGetUnreadNotificationCount, getGetUnreadNotificationCountQueryKey } from "@workspace/api-client-react";
+
+const ADMIN_ROLES = ["admin", "master_admin"];
+const STAFF_ROLES = ["admin", "master_admin", "moderator", "editor"];
 
 export function Sidebar() {
   const [location] = useLocation();
@@ -35,8 +43,39 @@ export function Sidebar() {
     { href: "/profile", label: "Profile", icon: Settings },
   ];
 
+  const adminLinks = [
+    { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
+    { href: "/admin/users", label: "Users", icon: Users },
+    { href: "/admin/listeners", label: "Listeners", icon: Eye },
+    { href: "/admin/upload-song", label: "Upload Song", icon: Upload },
+    { href: "/admin/upload-video", label: "Upload Video", icon: Upload },
+    { href: "/admin/submissions", label: "Submissions", icon: FileText },
+    { href: "/admin/songs", label: "Songs", icon: Music },
+    { href: "/admin/videos", label: "Videos", icon: Video },
+    { href: "/admin/comments", label: "Comments", icon: MessageSquare },
+    { href: "/admin/settings", label: "Settings", icon: Settings },
+  ];
+
+  const editorLinks = [
+    { href: "/editor", label: "Editor Dashboard", icon: BookOpen },
+    { href: "/editor/playlists", label: "Editorial Playlists", icon: ListMusic },
+  ];
+
   const isActive = (href: string) =>
-    href === "/" ? location === "/" : location.startsWith(href);
+    href === "/" ? location === "/" : location === href || (href !== "/" && location.startsWith(href + "/")) || location === href;
+
+  const isAdminActive = (href: string) => {
+    if (href === "/admin") return location === "/admin";
+    return location.startsWith(href);
+  };
+
+  const role = user?.role ?? "";
+  const isAdmin = ADMIN_ROLES.includes(role);
+  const isMasterAdmin = role === "master_admin";
+  const isEditor = role === "editor";
+  const isStaff = STAFF_ROLES.includes(role);
+  const isModerator = role === "moderator";
 
   return (
     <div className="w-64 h-full bg-card border-r border-border flex flex-col flex-shrink-0">
@@ -76,6 +115,7 @@ export function Sidebar() {
 
         {user && (
           <>
+            {/* Your Space */}
             <div className="pt-4 pb-1">
               <p className="px-3 text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Your Space</p>
             </div>
@@ -98,7 +138,7 @@ export function Sidebar() {
               );
             })}
 
-            {/* Notifications link */}
+            {/* Notifications */}
             <Link href="/notifications">
               <Button
                 variant={isActive("/notifications") ? "secondary" : "ghost"}
@@ -124,23 +164,98 @@ export function Sidebar() {
               </Button>
             </Link>
 
-            {user.role === "admin" && (
+            {/* Artist Analytics */}
+            {role === "artist" && (
               <>
                 <div className="pt-4 pb-1">
-                  <p className="px-3 text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Admin</p>
+                  <p className="px-3 text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Artist Tools</p>
                 </div>
-                <Link href="/admin">
+                <Link href="/artist/analytics">
                   <Button
-                    variant={isActive("/admin") ? "secondary" : "ghost"}
+                    variant={isActive("/artist/analytics") ? "secondary" : "ghost"}
                     className={cn(
                       "w-full justify-start gap-3 text-sm h-9",
-                      isActive("/admin") ? "font-semibold text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
+                      isActive("/artist/analytics") ? "font-semibold text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
                     )}
                   >
-                    <LayoutDashboard className="w-4 h-4 flex-shrink-0" />
-                    Dashboard
+                    <BarChart3 className="w-4 h-4 flex-shrink-0" />
+                    My Analytics
                   </Button>
                 </Link>
+              </>
+            )}
+
+            {/* Editor section */}
+            {(isEditor || isAdmin || isMasterAdmin) && (
+              <>
+                <div className="pt-4 pb-1">
+                  <p className="px-3 text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Editorial</p>
+                </div>
+                {editorLinks.map((link) => {
+                  const Icon = link.icon;
+                  const active = isAdminActive(link.href);
+                  return (
+                    <Link key={link.href} href={link.href}>
+                      <Button
+                        variant={active ? "secondary" : "ghost"}
+                        className={cn(
+                          "w-full justify-start gap-3 text-sm h-9",
+                          active ? "font-semibold text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        <Icon className="w-4 h-4 flex-shrink-0" />
+                        {link.label}
+                      </Button>
+                    </Link>
+                  );
+                })}
+              </>
+            )}
+
+            {/* Admin section */}
+            {(isAdmin || isMasterAdmin || isModerator) && (
+              <>
+                <div className="pt-4 pb-1">
+                  <div className="flex items-center gap-2 px-3">
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Admin</p>
+                    {isMasterAdmin && (
+                      <span className="text-[9px] font-bold bg-amber-500/20 text-amber-400 rounded px-1 py-0.5 leading-none uppercase tracking-wider">Master</span>
+                    )}
+                  </div>
+                </div>
+                {adminLinks.map((link) => {
+                  const active = isAdminActive(link.href);
+                  const Icon = link.icon;
+                  return (
+                    <Link key={link.href} href={link.href}>
+                      <Button
+                        variant={active ? "secondary" : "ghost"}
+                        className={cn(
+                          "w-full justify-start gap-3 text-sm h-9",
+                          active ? "font-semibold text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        <Icon className="w-4 h-4 flex-shrink-0" />
+                        {link.label}
+                      </Button>
+                    </Link>
+                  );
+                })}
+                {/* Role Management — master_admin only */}
+                {isMasterAdmin && (
+                  <Link href="/admin/roles">
+                    <Button
+                      variant={isAdminActive("/admin/roles") ? "secondary" : "ghost"}
+                      className={cn(
+                        "w-full justify-start gap-3 text-sm h-9",
+                        isAdminActive("/admin/roles") ? "font-semibold text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      <Shield className="w-4 h-4 flex-shrink-0" />
+                      Role Management
+                    </Button>
+                  </Link>
+                )}
               </>
             )}
           </>
@@ -152,14 +267,14 @@ export function Sidebar() {
         {user ? (
           <>
             <div className="flex items-center gap-3 px-2 py-1">
-              <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xs font-bold flex-shrink-0">
+              <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xs font-bold flex-shrink-0 overflow-hidden">
                 {user.avatarUrl
-                  ? <img src={user.avatarUrl} alt={user.username} className="w-full h-full object-cover rounded-full" />
+                  ? <img src={user.avatarUrl} alt={user.username} className="w-full h-full object-cover" />
                   : user.username[0].toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-semibold truncate">{user.username}</p>
-                <p className="text-[10px] text-muted-foreground capitalize">{user.role}</p>
+                <p className="text-[10px] text-muted-foreground capitalize">{user.role.replace("_", " ")}</p>
               </div>
             </div>
             <Button variant="outline" size="sm" className="w-full justify-start gap-2 text-xs" onClick={() => logout()}>

@@ -11,6 +11,8 @@ export const playlistsTable = pgTable("playlists", {
   description: text("description"),
   coverUrl: text("cover_url"),
   isPublic: boolean("is_public").notNull().default(false),
+  isEditorial: boolean("is_editorial").notNull().default(false),
+  playlistType: text("playlist_type").default("user"), // user | featured | mood | genre | new_artist | cotopia_picks | radio_picks
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

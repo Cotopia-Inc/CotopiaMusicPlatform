@@ -3,9 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { usePlayer, formatDuration } from "@/lib/player";
 import { useAuth } from "@/lib/auth";
-import { useFavoriteSong, useUnfavoriteSong, getGetSongQueryKey } from "@workspace/api-client-react";
+import { useFavoriteSong, useUnfavoriteSong, getGetSongQueryKey, useTrackAnalyticsEvent } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { useEffect, useRef } from "react";
 
 export function Player() {
   const { track, isPlaying, currentTime, duration, volume, trackFavorited, setTrackFavorited, togglePlay, seek, setVolume } = usePlayer();
@@ -14,6 +15,17 @@ export function Player() {
   const { toast } = useToast();
   const favoriteMutation = useFavoriteSong();
   const unfavoriteMutation = useUnfavoriteSong();
+  const trackEvent = useTrackAnalyticsEvent();
+  const lastTrackedId = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (track && track.id !== lastTrackedId.current) {
+      lastTrackedId.current = track.id;
+      trackEvent.mutate({
+        data: { eventType: "content", eventName: "song_play", contentType: "song", contentId: track.id },
+      });
+    }
+  }, [track?.id]);
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
@@ -28,7 +40,10 @@ export function Player() {
     if (next) {
       favoriteMutation.mutate({ id: track.id }, {
         onError: () => { setTrackFavorited(!next); toast({ variant: "destructive", title: "Failed to favorite" }); },
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetSongQueryKey(track.id) }),
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getGetSongQueryKey(track.id) });
+          trackEvent.mutate({ data: { eventType: "engagement", eventName: "favorite_added", contentType: "song", contentId: track.id } });
+        },
       });
     } else {
       unfavoriteMutation.mutate({ id: track.id }, {

@@ -33,6 +33,14 @@ import AdminSettings from "@/pages/admin-settings";
 import AdminSongs from "@/pages/admin-songs";
 import AdminVideos from "@/pages/admin-videos";
 import AdminComments from "@/pages/admin-comments";
+import AdminAnalytics from "@/pages/admin-analytics";
+import AdminRoles from "@/pages/admin-roles";
+import AdminUploadSong from "@/pages/admin-upload-song";
+import AdminUploadVideo from "@/pages/admin-upload-video";
+import AdminListeners from "@/pages/admin-listeners";
+import EditorDashboard from "@/pages/editor-dashboard";
+import EditorPlaylists from "@/pages/editor-playlists";
+import ArtistAnalytics from "@/pages/artist-analytics";
 
 import NotificationsPage from "@/pages/notifications";
 import EmbedSong from "@/pages/embed-song";
@@ -116,8 +124,23 @@ function Router() {
       <Route path="/admin">
         <Layout><AdminDashboard /></Layout>
       </Route>
+      <Route path="/admin/analytics">
+        <Layout><AdminAnalytics /></Layout>
+      </Route>
       <Route path="/admin/users">
         <Layout><AdminUsers /></Layout>
+      </Route>
+      <Route path="/admin/roles">
+        <Layout><AdminRoles /></Layout>
+      </Route>
+      <Route path="/admin/listeners">
+        <Layout><AdminListeners /></Layout>
+      </Route>
+      <Route path="/admin/upload-song">
+        <Layout><AdminUploadSong /></Layout>
+      </Route>
+      <Route path="/admin/upload-video">
+        <Layout><AdminUploadVideo /></Layout>
       </Route>
       <Route path="/admin/submissions">
         <Layout><AdminSubmissions /></Layout>
@@ -133,6 +156,19 @@ function Router() {
       </Route>
       <Route path="/admin/settings">
         <Layout><AdminSettings /></Layout>
+      </Route>
+
+      {/* Editor routes */}
+      <Route path="/editor">
+        <Layout><EditorDashboard /></Layout>
+      </Route>
+      <Route path="/editor/playlists">
+        <Layout><EditorPlaylists /></Layout>
+      </Route>
+
+      {/* Artist routes */}
+      <Route path="/artist/analytics">
+        <Layout><ArtistAnalytics /></Layout>
       </Route>
 
       <Route component={NotFound} />

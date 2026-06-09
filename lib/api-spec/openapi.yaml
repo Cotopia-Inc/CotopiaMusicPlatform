@@ -47,6 +47,10 @@ tags:
     description: Object storage upload and serving endpoints.
   - name: notifications
     description: User notifications
+  - name: analytics
+    description: Analytics event tracking
+  - name: editorial
+    description: Editorial playlist management
 
 paths:
   /healthz:
@@ -1457,6 +1461,256 @@ paths:
                 items:
                   $ref: "#/components/schemas/AdminChatMessage"
 
+  /admin/upload-song:
+    post:
+      operationId: adminUploadSong
+      tags: [admin]
+      summary: Direct admin song upload (bypasses payment and submission flow)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminUploadSongInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Song"
+
+  /admin/upload-video:
+    post:
+      operationId: adminUploadVideo
+      tags: [admin]
+      summary: Direct admin video upload (bypasses payment and submission flow)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminUploadVideoInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Video"
+
+  /admin/listeners:
+    get:
+      operationId: adminListListeners
+      tags: [admin]
+      summary: Get listener activity metrics (admin)
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 50
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            default: 0
+        - in: query
+          name: q
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminListenerList"
+
+  /admin/users/{id}/role:
+    patch:
+      operationId: adminChangeUserRole
+      tags: [admin]
+      summary: Change a user role (master_admin only)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminRoleChangeInput"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  # ── Analytics Events ─────────────────────────────────────────────────────
+  /analytics/events:
+    post:
+      operationId: trackAnalyticsEvent
+      tags: [analytics]
+      summary: Track an analytics event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnalyticsEventInput"
+      responses:
+        "200":
+          description: OK
+
+  # ── Artist Analytics ─────────────────────────────────────────────────────
+  /artist/analytics:
+    get:
+      operationId: getArtistAnalytics
+      tags: [artists]
+      summary: Get analytics for the current artist
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArtistAnalytics"
+
+  # ── Editorial Playlists ───────────────────────────────────────────────────
+  /editorial-playlists:
+    get:
+      operationId: listEditorialPlaylists
+      tags: [playlists]
+      summary: List all editorial playlists (public)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EditorialPlaylist"
+    post:
+      operationId: createEditorialPlaylist
+      tags: [playlists]
+      summary: Create an editorial playlist (editor/admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EditorialPlaylistInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EditorialPlaylist"
+
+  /editorial-playlists/{id}:
+    get:
+      operationId: getEditorialPlaylist
+      tags: [playlists]
+      summary: Get editorial playlist detail
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EditorialPlaylistDetail"
+    patch:
+      operationId: updateEditorialPlaylist
+      tags: [playlists]
+      summary: Update an editorial playlist (editor/admin)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EditorialPlaylistInput"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EditorialPlaylist"
+    delete:
+      operationId: deleteEditorialPlaylist
+      tags: [playlists]
+      summary: Delete an editorial playlist (editor/admin)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /editorial-playlists/{id}/songs:
+    post:
+      operationId: addSongToEditorialPlaylist
+      tags: [playlists]
+      summary: Add a song to an editorial playlist
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlaylistSongInput"
+      responses:
+        "200":
+          description: OK
+
+  /editorial-playlists/{id}/songs/{songId}:
+    delete:
+      operationId: removeSongFromEditorialPlaylist
+      tags: [playlists]
+      summary: Remove a song from an editorial playlist
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: songId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Removed
+
   # ── Notifications ────────────────────────────────────────────────────────
   /notifications:
     get:
@@ -1787,10 +2041,16 @@ components:
           type: ["string", "null"]
         avatarUrl:
           type: ["string", "null"]
+        bio:
+          type: ["string", "null"]
         role:
           type: string
-          enum: [listener, artist, label, business, admin]
+          enum: [listener, artist, label, business, admin, moderator, editor, master_admin]
         isActive:
+          type: boolean
+        isVerified:
+          type: boolean
+        isSuspended:
           type: boolean
         createdAt:
           type: string
@@ -2493,8 +2753,12 @@ components:
       properties:
         role:
           type: string
-          enum: [listener, artist, label, business, admin]
+          enum: [listener, artist, label, business, admin, moderator, editor, master_admin]
         isActive:
+          type: boolean
+        isVerified:
+          type: boolean
+        isSuspended:
           type: boolean
 
     AnalyticsSummary:
@@ -2657,3 +2921,207 @@ components:
       properties:
         error:
           type: string
+
+    # ── Admin Upload ────────────────────────────────────────────────────────
+    AdminUploadSongInput:
+      type: object
+      required: [title, artistId, streamUrl]
+      properties:
+        title:
+          type: string
+        artistId:
+          type: integer
+        albumId:
+          type: integer
+        genre:
+          type: string
+        duration:
+          type: integer
+        streamUrl:
+          type: string
+        coverUrl:
+          type: string
+        releaseDate:
+          type: string
+        isFeatured:
+          type: boolean
+
+    AdminUploadVideoInput:
+      type: object
+      required: [title, artistId, videoUrl]
+      properties:
+        title:
+          type: string
+        artistId:
+          type: integer
+        genre:
+          type: string
+        description:
+          type: string
+        duration:
+          type: integer
+        videoUrl:
+          type: string
+        thumbnailUrl:
+          type: string
+        releaseDate:
+          type: string
+        isFeatured:
+          type: boolean
+
+    AdminRoleChangeInput:
+      type: object
+      required: [role]
+      properties:
+        role:
+          type: string
+          enum: [listener, artist, label, business, admin, moderator, editor, master_admin]
+        isVerified:
+          type: boolean
+        isSuspended:
+          type: boolean
+        reason:
+          type: string
+
+    # ── Admin Listeners ─────────────────────────────────────────────────────
+    AdminListenerItem:
+      type: object
+      required: [id, username, email, createdAt]
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        displayName:
+          type: ["string", "null"]
+        email:
+          type: string
+        avatarUrl:
+          type: ["string", "null"]
+        isVerified:
+          type: boolean
+        isSuspended:
+          type: boolean
+        favoriteCount:
+          type: integer
+        commentCount:
+          type: integer
+        followCount:
+          type: integer
+        createdAt:
+          type: string
+
+    AdminListenerList:
+      type: object
+      required: [items, total]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminListenerItem"
+        total:
+          type: integer
+
+    # ── Analytics ─────────────────────────────────────────────────────────────
+    AnalyticsEventInput:
+      type: object
+      required: [eventType, eventName]
+      properties:
+        eventType:
+          type: string
+          enum: [user, content, engagement, admin]
+        eventName:
+          type: string
+        contentType:
+          type: string
+          enum: [song, video, playlist, user]
+        contentId:
+          type: integer
+        metadata:
+          type: object
+
+    # ── Artist Analytics ───────────────────────────────────────────────────
+    ArtistAnalytics:
+      type: object
+      required: [totalPlays, totalViews, totalFavorites, followerCount, topSongs, topVideos]
+      properties:
+        totalPlays:
+          type: integer
+        totalViews:
+          type: integer
+        totalFavorites:
+          type: integer
+        followerCount:
+          type: integer
+        topSongs:
+          type: array
+          items:
+            $ref: "#/components/schemas/Song"
+        topVideos:
+          type: array
+          items:
+            $ref: "#/components/schemas/Video"
+        recentActivity:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+              plays:
+                type: integer
+              views:
+                type: integer
+
+    # ── Editorial Playlists ────────────────────────────────────────────────
+    EditorialPlaylist:
+      type: object
+      required: [id, name, playlistType, isEditorial, songCount, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        coverUrl:
+          type: ["string", "null"]
+        isPublic:
+          type: boolean
+        isEditorial:
+          type: boolean
+        playlistType:
+          type: string
+          enum: [user, featured, mood, genre, new_artist, cotopia_picks, radio_picks]
+        songCount:
+          type: integer
+        createdAt:
+          type: string
+
+    EditorialPlaylistDetail:
+      allOf:
+        - $ref: "#/components/schemas/EditorialPlaylist"
+        - type: object
+          properties:
+            songs:
+              type: array
+              items:
+                $ref: "#/components/schemas/Song"
+
+    EditorialPlaylistInput:
+      type: object
+      required: [name, playlistType]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        coverUrl:
+          type: string
+        isPublic:
+          type: boolean
+        playlistType:
+          type: string
+          enum: [featured, mood, genre, new_artist, cotopia_picks, radio_picks]

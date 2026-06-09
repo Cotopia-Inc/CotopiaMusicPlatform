@@ -18,6 +18,9 @@ import paymentsRouter from "./payments";
 import chatRouter from "./chat";
 import notificationsRouter from "./notifications";
 import storageRouter from "./storage";
+import analyticsRouter from "./analytics";
+import artistAnalyticsRouter from "./artist-analytics";
+import editorialPlaylistsRouter from "./editorial-playlists";
 
 const router: IRouter = Router();
 
@@ -40,5 +43,8 @@ router.use(paymentsRouter);
 router.use(chatRouter);
 router.use(notificationsRouter);
 router.use(storageRouter);
+router.use(analyticsRouter);
+router.use(artistAnalyticsRouter);
+router.use(editorialPlaylistsRouter);
 
 export default router;

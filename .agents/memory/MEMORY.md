@@ -2,3 +2,4 @@
 - [Cotopia catalog setup](cotopia-catalog.md) — bcryptjs and @types/bcryptjs in pnpm catalog; scripts needs @workspace/db workspace:* dependency
 - [Orval codegen type collision fix](orval-codegen-collision.md) — after adding an endpoint with both path AND query params, remove the duplicate TS type from generated/types/index.ts before typecheck:libs
 - [Cotopia object storage setup](cotopia-object-storage.md) — GCS-backed file storage wired up; useUpload hook in @workspace/object-storage-web; serving URL = /api/storage + objectPath; objectStorage.ts line needs `as { signed_url: string }` cast
+- [Cotopia hook and schema quirks](cotopia-hook-quirks.md) — useUpload uses onSuccess (not onChange/onUpload); useListArtists returns Artist[] directly; conditional Orval hooks need queryKey in options; AnalyticsEventInputContentType only allows song/video/playlist/user; follows table uses targetType/targetId (not followeeType/followeeId)

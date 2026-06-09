@@ -5,11 +5,11 @@
  * Cotopia Streaming Platform API
  * OpenAPI spec version: 0.1.0
  */
-import type { AdminUserUpdateRole } from './adminUserUpdateRole';
+import type { AdminRoleChangeInputRole } from './adminRoleChangeInputRole';
 
-export interface AdminUserUpdate {
-  role?: AdminUserUpdateRole;
-  isActive?: boolean;
+export interface AdminRoleChangeInput {
+  role: AdminRoleChangeInputRole;
   isVerified?: boolean;
   isSuspended?: boolean;
+  reason?: string;
 }

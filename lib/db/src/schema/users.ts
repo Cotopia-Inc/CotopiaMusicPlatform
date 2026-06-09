@@ -10,7 +10,9 @@ export const usersTable = pgTable("users", {
   displayName: text("display_name"),
   avatarUrl: text("avatar_url"),
   bio: text("bio"),
-  role: text("role").notNull().default("listener"), // listener | artist | label | business | admin
+  role: text("role").notNull().default("listener"), // listener | artist | label | business | admin | moderator | editor | master_admin
+  isVerified: boolean("is_verified").notNull().default(false),
+  isSuspended: boolean("is_suspended").notNull().default(false),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
