@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Upload, X } from "lucide-react";
+import { Upload, X, Loader2 } from "lucide-react";
+import { useUpload } from "@workspace/object-storage-web";
 
 export default function Profile() {
   const { user } = useAuth();
@@ -34,12 +35,17 @@ export default function Profile() {
   const updateMutation = useUpdateMe();
   const { toast } = useToast();
 
-  const handleAvatarFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const { uploadFile: uploadAvatar, isUploading: isUploadingAvatar, progress: uploadProgress } = useUpload({
+    onSuccess: (res) => {
+      setAvatarUrl(`/api/storage${res.objectPath}`);
+    },
+  });
+
+  const handleAvatarFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const objectUrl = URL.createObjectURL(file);
     setAvatarFilename(file.name);
-    setAvatarUrl(objectUrl);
+    await uploadAvatar(file);
   };
 
   const clearAvatar = () => {
@@ -103,17 +109,22 @@ export default function Profile() {
           {!avatarUrlMode ? (
             <div className="space-y-2">
               <div
-                onClick={() => fileInputRef.current?.click()}
-                className="flex items-center gap-3 p-4 rounded-lg border-2 border-dashed border-border/60 bg-secondary/20 hover:bg-secondary/40 hover:border-primary/40 cursor-pointer transition-all group"
+                onClick={() => !isUploadingAvatar && fileInputRef.current?.click()}
+                className={`flex items-center gap-3 p-4 rounded-lg border-2 border-dashed border-border/60 bg-secondary/20 hover:bg-secondary/40 hover:border-primary/40 transition-all group ${isUploadingAvatar ? "cursor-wait opacity-70" : "cursor-pointer"}`}
               >
                 <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
-                  <Upload className="w-4 h-4 text-primary" />
+                  {isUploadingAvatar ? <Loader2 className="w-4 h-4 text-primary animate-spin" /> : <Upload className="w-4 h-4 text-primary" />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  {avatarFilename ? (
+                  {isUploadingAvatar ? (
                     <div>
                       <p className="text-sm font-medium text-foreground truncate">{avatarFilename}</p>
-                      <p className="text-xs text-green-400 mt-0.5">Photo selected ✓</p>
+                      <p className="text-xs text-primary mt-0.5">Uploading… {uploadProgress}%</p>
+                    </div>
+                  ) : avatarFilename && avatarUrl ? (
+                    <div>
+                      <p className="text-sm font-medium text-foreground truncate">{avatarFilename}</p>
+                      <p className="text-xs text-green-400 mt-0.5">Uploaded ✓</p>
                     </div>
                   ) : (
                     <div>
@@ -122,7 +133,7 @@ export default function Profile() {
                     </div>
                   )}
                 </div>
-                {avatarFilename && (
+                {avatarFilename && avatarUrl && !isUploadingAvatar && (
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); clearAvatar(); }}
@@ -132,7 +143,7 @@ export default function Profile() {
                   </button>
                 )}
               </div>
-              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarFile} className="hidden" />
+              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarFile} className="hidden" disabled={isUploadingAvatar} />
               <button
                 type="button"
                 onClick={() => setAvatarUrlMode(true)}
@@ -144,7 +155,7 @@ export default function Profile() {
           ) : (
             <div className="space-y-1.5">
               <Input 
-                value={avatarUrl.startsWith("blob:") ? "" : avatarUrl}
+                value={avatarUrl.startsWith("/api/storage") ? "" : avatarUrl}
                 onChange={(e) => setAvatarUrl(e.target.value)} 
                 placeholder="https://... (direct image URL)"
                 className="bg-secondary/50 border-secondary"

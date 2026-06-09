@@ -21,6 +21,7 @@ import {
   ChevronRight, ChevronLeft, Radio, Star, Zap, Upload,
   Calendar, AlertCircle, Loader2, ImageIcon, Film, Mic
 } from "lucide-react";
+import { useUpload } from "@workspace/object-storage-web";
 
 const GENRES = ["Pop", "Hip-Hop", "R&B", "Electronic", "Rock", "Jazz", "Classical", "Country", "Reggae", "Latin", "Afrobeats", "Indie", "Alternative", "Metal", "Folk", "Soul", "Blues", "Other"];
 const MOODS = ["Energetic", "Chill", "Romantic", "Dark", "Happy", "Melancholic", "Motivational", "Party", "Peaceful", "Nostalgic", "Intense", "Dreamy"];
@@ -74,13 +75,17 @@ function FileUploadField({ label, accept, icon, hint, value, onChange, urlPlaceh
   const [filename, setFilename] = useState<string>("");
   const [urlMode, setUrlMode] = useState(false);
 
-  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const { uploadFile, isUploading, progress } = useUpload({
+    onSuccess: (res) => {
+      onChange(`/api/storage${res.objectPath}`, filename);
+    },
+  });
+
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    // Create a local object URL for preview/storage. Swap for Supabase upload when storage is connected.
-    const objectUrl = URL.createObjectURL(file);
     setFilename(file.name);
-    onChange(objectUrl, file.name);
+    await uploadFile(file);
   };
 
   return (
@@ -94,17 +99,22 @@ function FileUploadField({ label, accept, icon, hint, value, onChange, urlPlaceh
       {!urlMode ? (
         <div className="space-y-2">
           <div
-            onClick={() => inputRef.current?.click()}
-            className="flex items-center gap-3 p-4 rounded-lg border-2 border-dashed border-border/60 bg-secondary/20 hover:bg-secondary/40 hover:border-primary/40 cursor-pointer transition-all group"
+            onClick={() => !isUploading && inputRef.current?.click()}
+            className={`flex items-center gap-3 p-4 rounded-lg border-2 border-dashed border-border/60 bg-secondary/20 hover:bg-secondary/40 hover:border-primary/40 transition-all group ${isUploading ? "cursor-wait opacity-70" : "cursor-pointer"}`}
           >
             <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
-              <Upload className="w-4 h-4 text-primary" />
+              {isUploading ? <Loader2 className="w-4 h-4 text-primary animate-spin" /> : <Upload className="w-4 h-4 text-primary" />}
             </div>
             <div className="flex-1 min-w-0">
-              {filename ? (
+              {isUploading ? (
                 <div>
                   <p className="text-sm font-medium text-foreground truncate">{filename}</p>
-                  <p className="text-xs text-green-400 mt-0.5">File selected ✓</p>
+                  <p className="text-xs text-primary mt-0.5">Uploading… {progress}%</p>
+                </div>
+              ) : filename && value ? (
+                <div>
+                  <p className="text-sm font-medium text-foreground truncate">{filename}</p>
+                  <p className="text-xs text-green-400 mt-0.5">Uploaded ✓</p>
                 </div>
               ) : (
                 <div>
@@ -113,7 +123,7 @@ function FileUploadField({ label, accept, icon, hint, value, onChange, urlPlaceh
                 </div>
               )}
             </div>
-            {filename && (
+            {filename && value && !isUploading && (
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); setFilename(""); onChange("", ""); if (inputRef.current) inputRef.current.value = ""; }}
@@ -123,7 +133,7 @@ function FileUploadField({ label, accept, icon, hint, value, onChange, urlPlaceh
               </button>
             )}
           </div>
-          <input ref={inputRef} type="file" accept={accept} onChange={handleFile} className="hidden" />
+          <input ref={inputRef} type="file" accept={accept} onChange={handleFile} className="hidden" disabled={isUploading} />
           <button
             type="button"
             onClick={() => setUrlMode(true)}
@@ -135,7 +145,7 @@ function FileUploadField({ label, accept, icon, hint, value, onChange, urlPlaceh
       ) : (
         <div className="space-y-1.5">
           <Input
-            value={value.startsWith("blob:") ? "" : value}
+            value={value.startsWith("/api/storage") ? "" : value}
             onChange={(e) => onChange(e.target.value, "")}
             placeholder={urlPlaceholder}
             className="bg-secondary/50 border-secondary"

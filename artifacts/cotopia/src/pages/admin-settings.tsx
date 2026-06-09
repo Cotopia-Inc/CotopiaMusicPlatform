@@ -3,9 +3,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Upload, Loader2 } from "lucide-react";
+import { useUpload } from "@workspace/object-storage-web";
 
 export default function AdminSettings() {
   const { data: settings, isLoading } = useGetAppSettings({
@@ -14,6 +16,21 @@ export default function AdminSettings() {
 
   const updateMutation = useUpdateAppSettings();
   const { toast } = useToast();
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const [logoFilename, setLogoFilename] = useState("");
+
+  const { uploadFile: uploadLogo, isUploading: isUploadingLogo, progress: logoProgress } = useUpload({
+    onSuccess: (res) => {
+      setFormData((prev) => ({ ...prev, logoUrl: `/api/storage${res.objectPath}` }));
+    },
+  });
+
+  const handleLogoFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setLogoFilename(file.name);
+    await uploadLogo(file);
+  };
 
   const [formData, setFormData] = useState({
     appName: "",
@@ -75,10 +92,53 @@ export default function AdminSettings() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Logo URL</Label>
-              <Input 
-                value={formData.logoUrl}
-                onChange={(e) => setFormData({...formData, logoUrl: e.target.value})}
+              <Label>Logo</Label>
+              <div
+                onClick={() => !isUploadingLogo && logoInputRef.current?.click()}
+                className={`flex items-center gap-3 p-4 rounded-lg border-2 border-dashed border-border/60 bg-secondary/20 hover:bg-secondary/40 hover:border-primary/40 transition-all group ${isUploadingLogo ? "cursor-wait opacity-70" : "cursor-pointer"}`}
+              >
+                <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  {isUploadingLogo ? <Loader2 className="w-4 h-4 text-primary animate-spin" /> : <Upload className="w-4 h-4 text-primary" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  {isUploadingLogo ? (
+                    <div>
+                      <p className="text-sm font-medium truncate">{logoFilename}</p>
+                      <p className="text-xs text-primary mt-0.5">Uploading… {logoProgress}%</p>
+                    </div>
+                  ) : logoFilename && formData.logoUrl ? (
+                    <div>
+                      <p className="text-sm font-medium truncate">{logoFilename}</p>
+                      <p className="text-xs text-green-400 mt-0.5">Uploaded ✓</p>
+                    </div>
+                  ) : formData.logoUrl ? (
+                    <div>
+                      <p className="text-sm font-medium">Current logo set</p>
+                      <p className="text-xs text-muted-foreground mt-0.5 truncate">{formData.logoUrl}</p>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="text-sm font-medium">Click to upload logo from device</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">PNG, SVG, or WebP recommended</p>
+                    </div>
+                  )}
+                </div>
+                {formData.logoUrl && !isUploadingLogo && (
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); setFormData((p) => ({ ...p, logoUrl: "" })); setLogoFilename(""); if (logoInputRef.current) logoInputRef.current.value = ""; }}
+                    className="text-muted-foreground hover:text-foreground text-xs px-2 py-1 rounded hover:bg-secondary transition-colors flex-shrink-0"
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+              <input ref={logoInputRef} type="file" accept="image/*" onChange={handleLogoFile} className="hidden" disabled={isUploadingLogo} />
+              <p className="text-xs text-muted-foreground">Or paste a URL directly:</p>
+              <Input
+                value={formData.logoUrl.startsWith("/api/storage") ? "" : formData.logoUrl}
+                onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
+                placeholder="https://... (direct image URL)"
                 className="bg-secondary/50 border-secondary"
               />
             </div>
