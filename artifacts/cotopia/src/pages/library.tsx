@@ -1,6 +1,7 @@
 import { useGetFavoriteSongs, getGetFavoriteSongsQueryKey, useListPlaylists, getListPlaylistsQueryKey, useGetHistory, getGetHistoryQueryKey } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Play, Music, ListMusic, Clock, Plus, BookOpen } from "lucide-react";
+import { Play, Music, ListMusic, Clock, Plus, BookOpen, Heart } from "lucide-react";
+import { usePlayer } from "@/lib/player";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,6 +9,7 @@ import { useAuth } from "@/lib/auth";
 
 export default function Library() {
   const { user } = useAuth();
+  const { play } = usePlayer();
   
   const { data: favoriteSongs, isLoading: loadingFavs } = useGetFavoriteSongs({
     query: { enabled: !!user, queryKey: getGetFavoriteSongsQueryKey() }
@@ -65,22 +67,24 @@ export default function Library() {
           ) : favoriteSongs?.length ? (
             <div className="space-y-2">
               {favoriteSongs.map((song, idx) => (
-                <Link key={song.id} href={`/songs/${song.id}`}>
-                  <div className="flex items-center gap-4 p-3 rounded-md hover:bg-secondary/50 group cursor-pointer transition-colors">
-                    <span className="w-6 text-center text-muted-foreground text-sm group-hover:hidden">{idx + 1}</span>
-                    <Play className="w-4 h-4 fill-current text-primary hidden group-hover:block ml-1 mr-1" />
-                    <div className="w-12 h-12 rounded bg-secondary overflow-hidden">
-                      {song.coverUrl && <img src={song.coverUrl} alt={song.title} className="w-full h-full object-cover" />}
-                    </div>
-                    <div className="flex-1">
-                      <div className="font-semibold">{song.title}</div>
-                      <div className="text-sm text-muted-foreground">{song.artistName}</div>
-                    </div>
-                    <div className="text-muted-foreground text-sm w-16 text-right">
-                      {Math.floor(song.duration / 60)}:{(song.duration % 60).toString().padStart(2, '0')}
-                    </div>
+                <div
+                  key={song.id}
+                  className="flex items-center gap-4 p-3 rounded-md hover:bg-secondary/50 group cursor-pointer transition-colors"
+                  onClick={() => play({ id: song.id, title: song.title, artistName: song.artistName ?? "", coverUrl: song.coverUrl, streamUrl: song.streamUrl, duration: song.duration, isFavorited: true })}
+                >
+                  <span className="w-6 text-center text-muted-foreground text-sm group-hover:hidden">{idx + 1}</span>
+                  <Play className="w-4 h-4 fill-current text-primary hidden group-hover:block ml-1 mr-1" />
+                  <div className="w-12 h-12 rounded bg-secondary overflow-hidden flex-shrink-0">
+                    {song.coverUrl && <img src={song.coverUrl} alt={song.title} className="w-full h-full object-cover" />}
                   </div>
-                </Link>
+                  <div className="flex-1">
+                    <div className="font-semibold">{song.title}</div>
+                    <div className="text-sm text-muted-foreground">{song.artistName}</div>
+                  </div>
+                  <div className="text-muted-foreground text-sm w-16 text-right">
+                    {Math.floor(song.duration / 60)}:{(song.duration % 60).toString().padStart(2, '0')}
+                  </div>
+                </div>
               ))}
             </div>
           ) : (
@@ -165,7 +169,3 @@ export default function Library() {
   );
 }
 
-// Temporary Heart icon for the library page since we can't import it at the top level without causing a duplicate definition if we already imported it.
-function Heart(props: any) {
-  return <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>;
-}

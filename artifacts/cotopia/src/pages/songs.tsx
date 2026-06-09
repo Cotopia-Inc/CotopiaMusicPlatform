@@ -4,10 +4,12 @@ import { Play, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
+import { usePlayer } from "@/lib/player";
 
 export default function Songs() {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const { play } = usePlayer();
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 500);
@@ -45,26 +47,31 @@ export default function Songs() {
           ))
         ) : data?.items?.length ? (
           data.items.map((song) => (
-            <Link key={song.id} href={`/songs/${song.id}`}>
-              <div className="group cursor-pointer space-y-3">
+            <div key={song.id} className="group cursor-pointer space-y-3">
+              <Link href={`/songs/${song.id}`}>
                 <div className="aspect-square relative overflow-hidden rounded-md bg-secondary border border-border">
                   {song.coverUrl ? (
                     <img src={song.coverUrl} alt={song.title} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">No Cover</div>
+                    <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">No Cover</div>
                   )}
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <button className="bg-primary text-primary-foreground rounded-full p-3 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">
+                    <button
+                      className="bg-primary text-primary-foreground rounded-full p-3 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300"
+                      onClick={(e) => { e.preventDefault(); play({ id: song.id, title: song.title, artistName: song.artistName ?? "", coverUrl: song.coverUrl, streamUrl: song.streamUrl, duration: song.duration }); }}
+                    >
                       <Play className="w-6 h-6 fill-current ml-1" />
                     </button>
                   </div>
                 </div>
-                <div>
-                  <h4 className="font-semibold text-sm truncate">{song.title}</h4>
-                  <p className="text-xs text-muted-foreground truncate hover:underline">{song.artistName}</p>
-                </div>
+              </Link>
+              <div>
+                <Link href={`/songs/${song.id}`}>
+                  <h4 className="font-semibold text-sm truncate hover:text-primary transition-colors">{song.title}</h4>
+                </Link>
+                <p className="text-xs text-muted-foreground truncate">{song.artistName}</p>
               </div>
-            </Link>
+            </div>
           ))
         ) : (
           <div className="col-span-full text-muted-foreground py-12 text-center">No songs found matching your search.</div>

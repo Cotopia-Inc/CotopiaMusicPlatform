@@ -12,7 +12,7 @@ export default function CompanyHub() {
     <div className="space-y-12 pb-24 max-w-5xl mx-auto">
       <div className="space-y-4">
         <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">Company Hub</h1>
-        <p className="text-muted-foreground text-lg">Announcements, updates, and spotlights from Cotopia.</p>
+        <p className="text-muted-foreground text-lg">Announcements, updates, and spotlights from Everyday Radio.</p>
       </div>
 
       <div className="space-y-12">

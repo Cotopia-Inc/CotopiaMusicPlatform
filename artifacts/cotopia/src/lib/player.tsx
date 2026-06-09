@@ -7,6 +7,7 @@ export interface Track {
   coverUrl?: string | null;
   streamUrl?: string | null;
   duration?: number;
+  isFavorited?: boolean;
 }
 
 interface PlayerState {
@@ -15,6 +16,7 @@ interface PlayerState {
   currentTime: number;
   duration: number;
   volume: number;
+  trackFavorited: boolean;
 }
 
 interface PlayerContextValue extends PlayerState {
@@ -22,6 +24,7 @@ interface PlayerContextValue extends PlayerState {
   togglePlay: () => void;
   seek: (time: number) => void;
   setVolume: (v: number) => void;
+  setTrackFavorited: (v: boolean) => void;
   audioRef: React.RefObject<HTMLAudioElement | null>;
 }
 
@@ -33,6 +36,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolumeState] = useState(0.75);
+  const [trackFavorited, setTrackFavorited] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -45,6 +49,8 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     audio.addEventListener("ended", () => setIsPlaying(false));
     audio.addEventListener("play", () => setIsPlaying(true));
     audio.addEventListener("pause", () => setIsPlaying(false));
+    // Suppress "no supported sources" errors from null stream URLs
+    audio.addEventListener("error", () => { setIsPlaying(false); });
 
     return () => { audio.pause(); audio.src = ""; };
   }, []);
@@ -52,23 +58,35 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const play = (newTrack: Track) => {
     const audio = audioRef.current;
     if (!audio) return;
+
     if (track?.id === newTrack.id) {
-      if (isPlaying) { audio.pause(); } else { audio.play(); }
+      // Same track — toggle play/pause only if there's an actual src
+      if (audio.src && audio.src !== window.location.href) {
+        if (isPlaying) { audio.pause(); } else { audio.play().catch(() => {}); }
+      }
       return;
     }
+
+    // New track
     setTrack(newTrack);
+    setTrackFavorited(newTrack.isFavorited ?? false);
     setCurrentTime(0);
-    audio.src = newTrack.streamUrl ?? "";
-    audio.load();
+    setDuration(newTrack.duration ?? 0);
+
     if (newTrack.streamUrl) {
+      audio.src = newTrack.streamUrl;
+      audio.load();
       audio.play().catch(() => {});
     }
+    // If no streamUrl, just show track info in bar without touching audio element
   };
 
   const togglePlay = () => {
     const audio = audioRef.current;
     if (!audio || !track) return;
-    if (isPlaying) { audio.pause(); } else { audio.play().catch(() => {}); }
+    if (audio.src && audio.src !== window.location.href) {
+      if (isPlaying) { audio.pause(); } else { audio.play().catch(() => {}); }
+    }
   };
 
   const seek = (time: number) => {
@@ -84,7 +102,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <PlayerContext.Provider value={{ track, isPlaying, currentTime, duration, volume, play, togglePlay, seek, setVolume, audioRef }}>
+    <PlayerContext.Provider value={{ track, isPlaying, currentTime, duration, volume, trackFavorited, play, togglePlay, seek, setVolume, setTrackFavorited, audioRef }}>
       {children}
     </PlayerContext.Provider>
   );

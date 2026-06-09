@@ -3,8 +3,10 @@ import { Play, Radio, BadgeCheck, TrendingUp } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "wouter";
 import { Badge } from "@/components/ui/badge";
+import { usePlayer } from "@/lib/player";
 
 export default function Home() {
+  const { play } = usePlayer();
   const { data: feed, isLoading } = useGetHomeFeed({
     query: { queryKey: getGetHomeFeedQueryKey() }
   });
@@ -62,8 +64,8 @@ export default function Home() {
             ))
           ) : feed?.featuredSongs?.length ? (
             feed.featuredSongs.map((song) => (
-              <Link key={song.id} href={`/songs/${song.id}`}>
-                <div className="group cursor-pointer space-y-3">
+              <div key={song.id} className="group cursor-pointer space-y-3">
+                <Link href={`/songs/${song.id}`}>
                   <div className="aspect-square relative overflow-hidden rounded-xl bg-secondary border border-border/50 shadow-md">
                     {song.coverUrl ? (
                       <img src={song.coverUrl} alt={song.title} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
@@ -73,9 +75,12 @@ export default function Home() {
                       </div>
                     )}
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <div className="bg-primary text-primary-foreground rounded-full p-3 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 shadow-lg">
+                      <button
+                        className="bg-primary text-primary-foreground rounded-full p-3 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 shadow-lg"
+                        onClick={(e) => { e.preventDefault(); play({ id: song.id, title: song.title, artistName: song.artistName ?? "", coverUrl: song.coverUrl, streamUrl: song.streamUrl, duration: song.duration }); }}
+                      >
                         <Play className="w-5 h-5 fill-current ml-0.5" />
-                      </div>
+                      </button>
                     </div>
                     {song.status === "published" && (
                       <div className="absolute top-2 left-2">
@@ -83,12 +88,14 @@ export default function Home() {
                       </div>
                     )}
                   </div>
-                  <div>
-                    <h4 className="font-semibold text-sm truncate leading-tight">{song.title}</h4>
-                    <p className="text-xs text-muted-foreground truncate mt-0.5">{song.artistName}</p>
-                  </div>
+                </Link>
+                <div>
+                  <Link href={`/songs/${song.id}`}>
+                    <h4 className="font-semibold text-sm truncate leading-tight hover:text-primary transition-colors">{song.title}</h4>
+                  </Link>
+                  <p className="text-xs text-muted-foreground truncate mt-0.5">{song.artistName}</p>
                 </div>
-              </Link>
+              </div>
             ))
           ) : (
             <div className="col-span-full text-muted-foreground py-8 text-sm">No featured tracks yet.</div>

@@ -3,10 +3,12 @@ import { useGetPlaylist, getGetPlaylistQueryKey } from "@workspace/api-client-re
 import { Skeleton } from "@/components/ui/skeleton";
 import { Play, ListMusic, MoreVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { usePlayer } from "@/lib/player";
 
 export default function PlaylistDetail() {
   const { id } = useParams();
   const playlistId = Number(id);
+  const { play } = usePlayer();
 
   const { data: playlist, isLoading } = useGetPlaylist(playlistId, {
     query: { enabled: !!playlistId, queryKey: getGetPlaylistQueryKey(playlistId) }
@@ -54,7 +56,7 @@ export default function PlaylistDetail() {
 
       {/* Actions */}
       <div className="flex items-center gap-6">
-        <Button size="icon" className="w-14 h-14 rounded-full bg-primary text-primary-foreground hover:scale-105 transition-transform">
+        <Button size="icon" className="w-14 h-14 rounded-full bg-primary text-primary-foreground hover:scale-105 transition-transform" onClick={() => { if (playlist.songs?.[0]) play({ id: playlist.songs[0].id, title: playlist.songs[0].title, artistName: playlist.songs[0].artistName ?? "", coverUrl: playlist.songs[0].coverUrl, streamUrl: playlist.songs[0].streamUrl, duration: playlist.songs[0].duration }); }}>
           <Play className="w-6 h-6 ml-1 fill-current" />
         </Button>
         <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
@@ -72,24 +74,26 @@ export default function PlaylistDetail() {
               <span className="w-32 text-right">Duration</span>
             </div>
             {playlist.songs.map((song, idx) => (
-              <Link key={song.id} href={`/songs/${song.id}`}>
-                <div className="flex items-center gap-4 p-3 rounded-md hover:bg-secondary/50 group cursor-pointer transition-colors">
-                  <span className="w-8 text-center text-muted-foreground text-sm group-hover:hidden">{idx + 1}</span>
-                  <div className="w-8 flex justify-center hidden group-hover:flex">
-                    <Play className="w-4 h-4 fill-current text-primary" />
-                  </div>
-                  <div className="w-10 h-10 rounded bg-secondary overflow-hidden flex-shrink-0">
-                    {song.coverUrl && <img src={song.coverUrl} alt={song.title} className="w-full h-full object-cover" />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium truncate">{song.title}</div>
-                    <div className="text-sm text-muted-foreground truncate">{song.artistName}</div>
-                  </div>
-                  <div className="text-muted-foreground text-sm w-32 text-right">
-                    {Math.floor(song.duration / 60)}:{(song.duration % 60).toString().padStart(2, '0')}
-                  </div>
+              <div
+                key={song.id}
+                className="flex items-center gap-4 p-3 rounded-md hover:bg-secondary/50 group cursor-pointer transition-colors"
+                onClick={() => play({ id: song.id, title: song.title, artistName: song.artistName ?? "", coverUrl: song.coverUrl, streamUrl: song.streamUrl, duration: song.duration })}
+              >
+                <span className="w-8 text-center text-muted-foreground text-sm group-hover:hidden">{idx + 1}</span>
+                <div className="w-8 flex justify-center hidden group-hover:flex">
+                  <Play className="w-4 h-4 fill-current text-primary" />
                 </div>
-              </Link>
+                <div className="w-10 h-10 rounded bg-secondary overflow-hidden flex-shrink-0">
+                  {song.coverUrl && <img src={song.coverUrl} alt={song.title} className="w-full h-full object-cover" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium truncate">{song.title}</div>
+                  <div className="text-sm text-muted-foreground truncate">{song.artistName}</div>
+                </div>
+                <div className="text-muted-foreground text-sm w-32 text-right">
+                  {Math.floor(song.duration / 60)}:{(song.duration % 60).toString().padStart(2, '0')}
+                </div>
+              </div>
             ))}
           </>
         ) : (

@@ -4,6 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Play, Users, Music } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
+import { usePlayer } from "@/lib/player";
 import { useQueryClient } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -12,6 +13,7 @@ export default function ArtistDetail() {
   const artistId = Number(id);
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { play } = usePlayer();
 
   const { data: artist, isLoading } = useGetArtist(artistId, {
     query: { enabled: !!artistId, queryKey: getGetArtistQueryKey(artistId) }
@@ -82,7 +84,7 @@ export default function ArtistDetail() {
             </div>
           </div>
           <div className="flex gap-3">
-            <Button size="lg" className="rounded-full px-8 font-bold">
+            <Button size="lg" className="rounded-full px-8 font-bold" onClick={() => { if (artist.songs?.[0]) play({ id: artist.songs[0].id, title: artist.songs[0].title, artistName: artist.songs[0].artistName ?? "", coverUrl: artist.songs[0].coverUrl, streamUrl: artist.songs[0].streamUrl, duration: artist.songs[0].duration }); }}>
               <Play className="w-5 h-5 mr-2 fill-current" /> Play
             </Button>
             {user && (
@@ -112,18 +114,22 @@ export default function ArtistDetail() {
             {artist.songs && artist.songs.length > 0 ? (
               <div className="space-y-2">
                 {artist.songs.map((song, idx) => (
-                  <Link key={song.id} href={`/songs/${song.id}`}>
-                    <div className="flex items-center gap-4 p-3 rounded-md hover:bg-secondary/50 group cursor-pointer transition-colors">
-                      <span className="w-6 text-center text-muted-foreground text-sm group-hover:hidden">{idx + 1}</span>
-                      <Play className="w-4 h-4 fill-current text-primary hidden group-hover:block ml-1 mr-1" />
-                      <div className="w-10 h-10 rounded bg-secondary overflow-hidden">
-                        {song.coverUrl && <img src={song.coverUrl} alt={song.title} className="w-full h-full object-cover" />}
-                      </div>
-                      <div className="flex-1 font-medium">{song.title}</div>
-                      <div className="text-muted-foreground text-sm w-32">{song.playCount?.toLocaleString() || 0} plays</div>
-                      <div className="text-muted-foreground text-sm w-16 text-right">{Math.floor(song.duration / 60)}:{(song.duration % 60).toString().padStart(2, '0')}</div>
+                  <div
+                    key={song.id}
+                    className="flex items-center gap-4 p-3 rounded-md hover:bg-secondary/50 group cursor-pointer transition-colors"
+                    onClick={() => play({ id: song.id, title: song.title, artistName: song.artistName ?? "", coverUrl: song.coverUrl, streamUrl: song.streamUrl, duration: song.duration })}
+                  >
+                    <span className="w-6 text-center text-muted-foreground text-sm group-hover:hidden">{idx + 1}</span>
+                    <Play className="w-4 h-4 fill-current text-primary hidden group-hover:block ml-1 mr-1" />
+                    <div className="w-10 h-10 rounded bg-secondary overflow-hidden flex-shrink-0">
+                      {song.coverUrl && <img src={song.coverUrl} alt={song.title} className="w-full h-full object-cover" />}
                     </div>
-                  </Link>
+                    <div className="flex-1 font-medium">{song.title}</div>
+                    <div className="text-muted-foreground text-sm w-32">{song.playCount?.toLocaleString() || 0} plays</div>
+                    <Link href={`/songs/${song.id}`} onClick={(e) => e.stopPropagation()} className="text-muted-foreground text-sm w-16 text-right hover:text-primary">
+                      {Math.floor(song.duration / 60)}:{(song.duration % 60).toString().padStart(2, '0')}
+                    </Link>
+                  </div>
                 ))}
               </div>
             ) : (

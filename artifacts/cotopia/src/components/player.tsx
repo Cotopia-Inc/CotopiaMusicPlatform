@@ -2,11 +2,41 @@ import { Play, Pause, SkipBack, SkipForward, Volume2, ListMusic, Radio, Heart } 
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { usePlayer, formatDuration } from "@/lib/player";
+import { useAuth } from "@/lib/auth";
+import { useFavoriteSong, useUnfavoriteSong, getGetSongQueryKey } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
 export function Player() {
-  const { track, isPlaying, currentTime, duration, volume, togglePlay, seek, setVolume } = usePlayer();
+  const { track, isPlaying, currentTime, duration, volume, trackFavorited, setTrackFavorited, togglePlay, seek, setVolume } = usePlayer();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const favoriteMutation = useFavoriteSong();
+  const unfavoriteMutation = useUnfavoriteSong();
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+
+  const handleHeartClick = () => {
+    if (!track) return;
+    if (!user) {
+      toast({ title: "Sign in to favorite", description: "Create an account to save your favorite tracks." });
+      return;
+    }
+    const next = !trackFavorited;
+    setTrackFavorited(next);
+    if (next) {
+      favoriteMutation.mutate({ id: track.id }, {
+        onError: () => { setTrackFavorited(!next); toast({ variant: "destructive", title: "Failed to favorite" }); },
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetSongQueryKey(track.id) }),
+      });
+    } else {
+      unfavoriteMutation.mutate({ id: track.id }, {
+        onError: () => { setTrackFavorited(!next); toast({ variant: "destructive", title: "Failed to unfavorite" }); },
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetSongQueryKey(track.id) }),
+      });
+    }
+  };
 
   return (
     <div className="h-20 bg-card/95 backdrop-blur border-t border-border/50 w-full flex items-center justify-between px-4 z-50 flex-shrink-0">
@@ -29,8 +59,14 @@ export function Player() {
             {track ? track.artistName : "Everyday Radio"}
           </p>
         </div>
-        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary flex-shrink-0 w-8 h-8">
-          <Heart className="w-4 h-4" />
+        <Button
+          variant="ghost"
+          size="icon"
+          className={`flex-shrink-0 w-8 h-8 transition-colors ${track ? (trackFavorited ? "text-red-500 hover:text-red-400" : "text-muted-foreground hover:text-red-400") : "text-muted-foreground/30"}`}
+          onClick={handleHeartClick}
+          disabled={!track}
+        >
+          <Heart className={`w-4 h-4 transition-all ${trackFavorited ? "fill-current" : ""}`} />
         </Button>
       </div>
 
@@ -43,7 +79,8 @@ export function Player() {
           <Button
             size="icon"
             onClick={togglePlay}
-            className="w-9 h-9 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105 transition-transform shadow-lg shadow-primary/25"
+            disabled={!track}
+            className="w-9 h-9 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105 transition-transform shadow-lg shadow-primary/25 disabled:opacity-50"
           >
             {isPlaying
               ? <Pause className="w-4 h-4 fill-current" />

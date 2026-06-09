@@ -173,7 +173,7 @@ export default function SongDetail() {
           <Button
             size="icon"
             className="w-14 h-14 rounded-full bg-primary text-primary-foreground hover:scale-105 transition-transform shadow-lg shadow-primary/30"
-            onClick={() => song && playerPlay({ id: song.id, title: song.title, artistName: song.artistName ?? "", coverUrl: song.coverUrl, streamUrl: song.streamUrl, duration: song.duration })}
+            onClick={() => song && playerPlay({ id: song.id, title: song.title, artistName: song.artistName ?? "", coverUrl: song.coverUrl, streamUrl: song.streamUrl, duration: song.duration, isFavorited })}
           >
             {isThisSongPlaying
               ? <Pause className="w-6 h-6 fill-current" />

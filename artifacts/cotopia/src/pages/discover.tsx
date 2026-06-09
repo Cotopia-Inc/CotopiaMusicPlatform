@@ -2,8 +2,10 @@ import { useGetDiscover, getGetDiscoverQueryKey } from "@workspace/api-client-re
 import { Skeleton } from "@/components/ui/skeleton";
 import { Play } from "lucide-react";
 import { Link } from "wouter";
+import { usePlayer } from "@/lib/player";
 
 export default function Discover() {
+  const { play } = usePlayer();
   const { data: discover, isLoading } = useGetDiscover({
     query: { queryKey: getGetDiscoverQueryKey() }
   });
@@ -12,7 +14,7 @@ export default function Discover() {
     <div className="space-y-12 pb-24">
       <div>
         <h1 className="text-4xl font-extrabold tracking-tight mb-2">Discover</h1>
-        <p className="text-muted-foreground text-lg">Find your next favorite sound.</p>
+        <p className="text-muted-foreground text-lg">Find your next favorite sound on Everyday Radio.</p>
       </div>
 
       <section>
@@ -28,26 +30,31 @@ export default function Discover() {
             ))
           ) : discover?.trendingSongs?.length ? (
             discover.trendingSongs.map((song) => (
-              <Link key={song.id} href={`/songs/${song.id}`}>
-                <div className="group cursor-pointer space-y-3">
+              <div key={song.id} className="group cursor-pointer space-y-3">
+                <Link href={`/songs/${song.id}`}>
                   <div className="aspect-square relative overflow-hidden rounded-md bg-secondary border border-border">
                     {song.coverUrl ? (
                       <img src={song.coverUrl} alt={song.title} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-muted-foreground">No Cover</div>
+                      <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">No Cover</div>
                     )}
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <button className="bg-primary text-primary-foreground rounded-full p-3 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">
+                      <button
+                        className="bg-primary text-primary-foreground rounded-full p-3 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300"
+                        onClick={(e) => { e.preventDefault(); play({ id: song.id, title: song.title, artistName: song.artistName ?? "", coverUrl: song.coverUrl, streamUrl: song.streamUrl, duration: song.duration }); }}
+                      >
                         <Play className="w-6 h-6 fill-current ml-1" />
                       </button>
                     </div>
                   </div>
-                  <div>
-                    <h4 className="font-semibold text-sm truncate">{song.title}</h4>
-                    <p className="text-xs text-muted-foreground truncate hover:underline">{song.artistName}</p>
-                  </div>
+                </Link>
+                <div>
+                  <Link href={`/songs/${song.id}`}>
+                    <h4 className="font-semibold text-sm truncate hover:text-primary transition-colors">{song.title}</h4>
+                  </Link>
+                  <p className="text-xs text-muted-foreground truncate">{song.artistName}</p>
                 </div>
-              </Link>
+              </div>
             ))
           ) : (
             <div className="col-span-full text-muted-foreground py-8">No trending tracks found.</div>
@@ -68,21 +75,31 @@ export default function Discover() {
             ))
           ) : discover?.topRatedSongs?.length ? (
             discover.topRatedSongs.map((song) => (
-              <Link key={song.id} href={`/songs/${song.id}`}>
-                <div className="group cursor-pointer space-y-3">
+              <div key={song.id} className="group cursor-pointer space-y-3">
+                <Link href={`/songs/${song.id}`}>
                   <div className="aspect-square relative overflow-hidden rounded-md bg-secondary border border-border">
                     {song.coverUrl ? (
                       <img src={song.coverUrl} alt={song.title} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-muted-foreground">No Cover</div>
+                      <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">No Cover</div>
                     )}
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <button
+                        className="bg-primary text-primary-foreground rounded-full p-3 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300"
+                        onClick={(e) => { e.preventDefault(); play({ id: song.id, title: song.title, artistName: song.artistName ?? "", coverUrl: song.coverUrl, streamUrl: song.streamUrl, duration: song.duration }); }}
+                      >
+                        <Play className="w-6 h-6 fill-current ml-1" />
+                      </button>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-semibold text-sm truncate">{song.title}</h4>
-                    <p className="text-xs text-muted-foreground truncate hover:underline">{song.artistName}</p>
-                  </div>
+                </Link>
+                <div>
+                  <Link href={`/songs/${song.id}`}>
+                    <h4 className="font-semibold text-sm truncate hover:text-primary transition-colors">{song.title}</h4>
+                  </Link>
+                  <p className="text-xs text-muted-foreground truncate">{song.artistName}</p>
                 </div>
-              </Link>
+              </div>
             ))
           ) : (
             <div className="col-span-full text-muted-foreground py-8">No top rated tracks found.</div>
