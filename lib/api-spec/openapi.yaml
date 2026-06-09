@@ -2119,6 +2119,10 @@ components:
           enum: [unpaid, paid, refunded]
         adminNotes:
           type: ["string", "null"]
+        mediaUrl:
+          type: ["string", "null"]
+        coverUrl:
+          type: ["string", "null"]
         createdAt:
           type: string
         updatedAt:

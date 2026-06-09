@@ -72,16 +72,22 @@ router.get("/admin/submissions", requireAuth, requireRole("admin"), async (req: 
   const enriched = await Promise.all(submissions.map(async (s) => {
     const [user] = await db.select({ username: usersTable.username }).from(usersTable).where(eq(usersTable.id, s.userId)).limit(1);
     let title = "";
+    let mediaUrl: string | null = null;
+    let coverUrl: string | null = null;
     if (s.contentId) {
       if (s.type === "song") {
-        const [song] = await db.select({ title: songsTable.title }).from(songsTable).where(eq(songsTable.id, s.contentId)).limit(1);
+        const [song] = await db.select({ title: songsTable.title, streamUrl: songsTable.streamUrl, coverUrl: songsTable.coverUrl }).from(songsTable).where(eq(songsTable.id, s.contentId)).limit(1);
         title = song?.title ?? "";
+        mediaUrl = song?.streamUrl ?? null;
+        coverUrl = song?.coverUrl ?? null;
       } else {
-        const [video] = await db.select({ title: videosTable.title }).from(videosTable).where(eq(videosTable.id, s.contentId)).limit(1);
+        const [video] = await db.select({ title: videosTable.title, videoUrl: videosTable.videoUrl, thumbnailUrl: videosTable.thumbnailUrl }).from(videosTable).where(eq(videosTable.id, s.contentId)).limit(1);
         title = video?.title ?? "";
+        mediaUrl = video?.videoUrl ?? null;
+        coverUrl = video?.thumbnailUrl ?? null;
       }
     }
-    return { ...s, submitterName: user?.username ?? "", title };
+    return { ...s, submitterName: user?.username ?? "", title, mediaUrl, coverUrl };
   }));
 
   res.json(enriched);

@@ -1057,6 +1057,8 @@ export const ListSubmissionsResponseItem = zod.object({
   "status": zod.enum(['draft', 'pending_review', 'approved', 'rejected', 'published']),
   "paymentStatus": zod.enum(['unpaid', 'paid', 'refunded']).optional(),
   "adminNotes": zod.string().nullish(),
+  "mediaUrl": zod.string().nullish(),
+  "coverUrl": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string().optional()
 })
@@ -1101,6 +1103,8 @@ export const GetSubmissionResponse = zod.object({
   "status": zod.enum(['draft', 'pending_review', 'approved', 'rejected', 'published']),
   "paymentStatus": zod.enum(['unpaid', 'paid', 'refunded']).optional(),
   "adminNotes": zod.string().nullish(),
+  "mediaUrl": zod.string().nullish(),
+  "coverUrl": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string().optional()
 })
@@ -1128,6 +1132,8 @@ export const UpdateSubmissionResponse = zod.object({
   "status": zod.enum(['draft', 'pending_review', 'approved', 'rejected', 'published']),
   "paymentStatus": zod.enum(['unpaid', 'paid', 'refunded']).optional(),
   "adminNotes": zod.string().nullish(),
+  "mediaUrl": zod.string().nullish(),
+  "coverUrl": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string().optional()
 })
@@ -1511,6 +1517,8 @@ export const AdminListSubmissionsResponseItem = zod.object({
   "status": zod.enum(['draft', 'pending_review', 'approved', 'rejected', 'published']),
   "paymentStatus": zod.enum(['unpaid', 'paid', 'refunded']).optional(),
   "adminNotes": zod.string().nullish(),
+  "mediaUrl": zod.string().nullish(),
+  "coverUrl": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string().optional()
 })
@@ -1689,6 +1697,8 @@ export const CapturePaymentResponse = zod.object({
   "status": zod.enum(['draft', 'pending_review', 'approved', 'rejected', 'published']),
   "paymentStatus": zod.enum(['unpaid', 'paid', 'refunded']).optional(),
   "adminNotes": zod.string().nullish(),
+  "mediaUrl": zod.string().nullish(),
+  "coverUrl": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string().optional()
 })

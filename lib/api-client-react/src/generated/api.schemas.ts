@@ -396,6 +396,10 @@ export interface Submission {
   paymentStatus?: SubmissionPaymentStatus;
   /** @nullable */
   adminNotes?: string | null;
+  /** @nullable */
+  mediaUrl?: string | null;
+  /** @nullable */
+  coverUrl?: string | null;
   createdAt: string;
   updatedAt?: string;
 }
