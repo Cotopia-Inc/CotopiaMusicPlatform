@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, integer, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer, boolean, date } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { artistsTable } from "./artists";
@@ -15,6 +15,7 @@ export const videosTable = pgTable("videos", {
   viewCount: integer("view_count").notNull().default(0),
   status: text("status").notNull().default("draft"),
   isFeatured: boolean("is_featured").notNull().default(false),
+  releaseDate: date("release_date"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

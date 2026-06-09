@@ -6,6 +6,7 @@ import {
   UpdateSubmissionParams, UpdateSubmissionBody,
 } from "@workspace/api-zod";
 import { requireAuth, type AuthRequest } from "../lib/auth";
+import { publishContent } from "../lib/publisher";
 
 const router = Router();
 
@@ -79,6 +80,7 @@ router.post("/submissions", requireAuth, async (req: AuthRequest, res): Promise<
       streamUrl: d.fileUrl ?? null,
       status: "draft",
       duration: 0,
+      releaseDate: d.releaseDate ?? null,
     }).returning();
     contentId = song.id;
   } else {
@@ -91,6 +93,7 @@ router.post("/submissions", requireAuth, async (req: AuthRequest, res): Promise<
       videoUrl: d.fileUrl ?? null,
       status: "draft",
       duration: 0,
+      releaseDate: d.releaseDate ?? null,
     }).returning();
     contentId = video.id;
   }
@@ -143,32 +146,75 @@ router.patch("/submissions/:id", requireAuth, async (req: AuthRequest, res): Pro
     .where(eq(submissionsTable.id, params.data.id))
     .returning();
 
-  if (parsed.data.status === "published" && submission.contentId) {
-    if (submission.type === "song") {
-      await db.update(songsTable).set({ status: "published" }).where(eq(songsTable.id, submission.contentId));
+  // ── Approval flow ────────────────────────────────────────────────────────
+  if (parsed.data.status === "approved" && submission.contentId) {
+    const enriched = await enrichSubmission(submission);
+
+    // Parse releaseDate from submitterNotes JSON
+    let releaseDate: string | null = null;
+    try {
+      const meta = JSON.parse(submission.submitterNotes ?? "{}");
+      if (meta.releaseDate) releaseDate = meta.releaseDate as string;
+    } catch { /* ignore */ }
+
+    const today = new Date().toISOString().slice(0, 10);
+    const hasFutureDate = releaseDate && releaseDate > today;
+
+    if (hasFutureDate) {
+      // Store releaseDate on the content row and leave it as "approved" (not published yet)
+      if (submission.type === "song") {
+        await db.update(songsTable).set({ status: "approved", releaseDate }).where(eq(songsTable.id, submission.contentId));
+      } else {
+        await db.update(videosTable).set({ status: "approved", releaseDate }).where(eq(videosTable.id, submission.contentId));
+      }
+
+      // Notify the submitter of the scheduled release date
+      await db.insert(notificationsTable).values({
+        userId: submission.userId,
+        type: "submission_approved",
+        title: `"${enriched.title}" approved — scheduled for ${releaseDate}`,
+        message: parsed.data.adminNotes
+          ? `Admin note: ${parsed.data.adminNotes}. Your content will go live on ${releaseDate}.`
+          : `Your content is approved and will be published automatically on ${releaseDate}. Stay tuned!`,
+        submissionId: submission.id,
+        isRead: false,
+      });
     } else {
-      await db.update(videosTable).set({ status: "published" }).where(eq(videosTable.id, submission.contentId));
+      // No future date — publish immediately
+      await publishContent(submission.type as "song" | "video", submission.contentId, { submissionId: submission.id });
+
+      // Notify submitter
+      await db.insert(notificationsTable).values({
+        userId: submission.userId,
+        type: "submission_approved",
+        title: `"${enriched.title}" is now live!`,
+        message: parsed.data.adminNotes
+          ? `Admin note: ${parsed.data.adminNotes}`
+          : "Your submission has been approved and published. Thanks for your contribution!",
+        submissionId: submission.id,
+        isRead: false,
+      });
     }
   }
 
-  // Fire a notification when admin approves or rejects
-  if (parsed.data.status === "approved" || parsed.data.status === "rejected") {
+  // ── Rejection flow ───────────────────────────────────────────────────────
+  if (parsed.data.status === "rejected") {
     const enriched = await enrichSubmission(submission);
-    const approved = parsed.data.status === "approved";
     await db.insert(notificationsTable).values({
       userId: submission.userId,
-      type: approved ? "submission_approved" : "submission_rejected",
-      title: approved
-        ? `"${enriched.title}" has been approved!`
-        : `"${enriched.title}" was not approved`,
+      type: "submission_rejected",
+      title: `"${enriched.title}" was not approved`,
       message: parsed.data.adminNotes
         ? `Admin note: ${parsed.data.adminNotes}`
-        : approved
-          ? "Your submission has been approved and will be published shortly. Thanks for your contribution!"
-          : "Your submission did not meet our current requirements. You're welcome to revise and resubmit.",
+        : "Your submission did not meet our current requirements. You're welcome to revise and resubmit.",
       submissionId: submission.id,
       isRead: false,
     });
+  }
+
+  // ── Manual publish (legacy path) ─────────────────────────────────────────
+  if (parsed.data.status === "published" && submission.contentId) {
+    await publishContent(submission.type as "song" | "video", submission.contentId, { submissionId: submission.id });
   }
 
   const enriched = await enrichSubmission(submission);

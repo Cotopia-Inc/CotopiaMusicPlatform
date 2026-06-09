@@ -6,7 +6,7 @@ import { usersTable } from "./users";
 export const notificationsTable = pgTable("notifications", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
-  type: text("type").notNull(), // submission_approved | submission_rejected | general
+  type: text("type").notNull(), // submission_approved | submission_rejected | new_release | general
   title: text("title").notNull(),
   message: text("message").notNull(),
   isRead: boolean("is_read").notNull().default(false),

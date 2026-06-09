@@ -1649,7 +1649,7 @@ export const ListNotificationsQueryParams = zod.object({
 export const ListNotificationsResponseItem = zod.object({
   "id": zod.number(),
   "userId": zod.number(),
-  "type": zod.enum(['submission_approved', 'submission_rejected', 'general']),
+  "type": zod.enum(['submission_approved', 'submission_rejected', 'new_release', 'general']),
   "title": zod.string(),
   "message": zod.string(),
   "isRead": zod.boolean(),
@@ -1685,7 +1685,7 @@ export const MarkNotificationReadParams = zod.object({
 export const MarkNotificationReadResponse = zod.object({
   "id": zod.number(),
   "userId": zod.number(),
-  "type": zod.enum(['submission_approved', 'submission_rejected', 'general']),
+  "type": zod.enum(['submission_approved', 'submission_rejected', 'new_release', 'general']),
   "title": zod.string(),
   "message": zod.string(),
   "isRead": zod.boolean(),

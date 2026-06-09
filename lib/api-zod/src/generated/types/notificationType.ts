@@ -12,5 +12,6 @@ export type NotificationType = typeof NotificationType[keyof typeof Notification
 export const NotificationType = {
   submission_approved: 'submission_approved',
   submission_rejected: 'submission_rejected',
+  new_release: 'new_release',
   general: 'general',
 } as const;

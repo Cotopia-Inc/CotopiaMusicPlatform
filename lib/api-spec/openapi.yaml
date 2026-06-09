@@ -2501,7 +2501,7 @@ components:
           type: integer
         type:
           type: string
-          enum: [submission_approved, submission_rejected, general]
+          enum: [submission_approved, submission_rejected, new_release, general]
         title:
           type: string
         message:
