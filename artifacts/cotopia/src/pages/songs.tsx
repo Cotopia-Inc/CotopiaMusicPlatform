@@ -1,6 +1,6 @@
 import { useListSongs, getListSongsQueryKey } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Play, Search } from "lucide-react";
+import { Play, Search, BadgeCheck } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
@@ -70,7 +70,12 @@ export default function Songs() {
                 <Link href={`/songs/${song.id}`}>
                   <h4 className="font-semibold text-sm truncate hover:text-primary transition-colors">{song.title}</h4>
                 </Link>
-                <p className="text-xs text-muted-foreground truncate">{song.artistName}</p>
+                <Link href={`/artists/${song.artistId}`} onClick={(e) => e.stopPropagation()}>
+                  <span className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-0.5 truncate">
+                    {song.artistName}
+                    <BadgeCheck className="w-3 h-3 text-primary/70 flex-shrink-0" />
+                  </span>
+                </Link>
               </div>
             </div>
           ))

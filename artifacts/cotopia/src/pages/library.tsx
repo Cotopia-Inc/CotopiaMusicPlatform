@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useGetFavoriteSongs, getGetFavoriteSongsQueryKey, useListPlaylists, getListPlaylistsQueryKey, useGetHistory, getGetHistoryQueryKey, useCreatePlaylist } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Play, Music, ListMusic, Clock, Plus, BookOpen, Heart, X } from "lucide-react";
+import { Play, Music, ListMusic, Clock, Plus, BookOpen, Heart, X, BadgeCheck } from "lucide-react";
 import { usePlayer } from "@/lib/player";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -130,9 +130,14 @@ export default function Library() {
                   <div className="w-12 h-12 rounded bg-secondary overflow-hidden flex-shrink-0">
                     {song.coverUrl && <img src={song.coverUrl} alt={song.title} className="w-full h-full object-cover" />}
                   </div>
-                  <div className="flex-1">
-                    <div className="font-semibold">{song.title}</div>
-                    <div className="text-sm text-muted-foreground">{song.artistName}</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold truncate">{song.title}</div>
+                    <Link href={`/artists/${song.artistId}`} onClick={(e) => e.stopPropagation()}>
+                      <span className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-0.5">
+                        {song.artistName}
+                        <BadgeCheck className="w-3 h-3 text-primary/70 flex-shrink-0" />
+                      </span>
+                    </Link>
                   </div>
                   <div className="text-muted-foreground text-sm w-16 text-right">
                     {Math.floor(song.duration / 60)}:{(song.duration % 60).toString().padStart(2, '0')}

@@ -94,7 +94,12 @@ export default function Home() {
                   <Link href={`/songs/${song.id}`}>
                     <h4 className="font-semibold text-sm truncate leading-tight hover:text-primary transition-colors">{song.title}</h4>
                   </Link>
-                  <p className="text-xs text-muted-foreground truncate mt-0.5">{song.artistName}</p>
+                  <Link href={`/artists/${song.artistId}`} onClick={(e) => e.stopPropagation()}>
+                    <span className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-0.5 truncate mt-0.5">
+                      {song.artistName}
+                      <BadgeCheck className="w-3 h-3 text-primary/70 flex-shrink-0" />
+                    </span>
+                  </Link>
                 </div>
               </div>
             ))
@@ -156,7 +161,12 @@ export default function Home() {
                   <Link href={`/videos/${video.id}`}>
                     <h4 className="font-semibold text-sm truncate hover:text-primary transition-colors">{video.title}</h4>
                   </Link>
-                  <p className="text-xs text-muted-foreground">{video.artistName}</p>
+                  <Link href={`/artists/${video.artistId}`} onClick={(e) => e.stopPropagation()}>
+                    <span className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-0.5">
+                      {video.artistName}
+                      <BadgeCheck className="w-3 h-3 text-primary/70 flex-shrink-0" />
+                    </span>
+                  </Link>
                 </div>
               </div>
             ))}
