@@ -100,7 +100,7 @@ export default function AdminUploadVideo() {
     <div className="p-8 max-w-2xl mx-auto space-y-6">
       <div className="flex items-center gap-3">
         <Link href="/admin">
-          <Button variant="ghost" size="icon" className="rounded-full">
+          <Button variant="ghost" size="icon" className="rounded-full" title="Back to admin">
             <ArrowLeft className="w-4 h-4" />
           </Button>
         </Link>

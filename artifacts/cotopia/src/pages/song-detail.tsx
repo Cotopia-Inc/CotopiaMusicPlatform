@@ -173,6 +173,7 @@ export default function SongDetail() {
           <Button
             size="icon"
             className="w-14 h-14 rounded-full bg-primary text-primary-foreground hover:scale-105 transition-transform shadow-lg shadow-primary/30"
+            title={isThisSongPlaying ? `Pause ${song.title}` : `Play ${song.title}`}
             onClick={() => song && playerPlay({ id: song.id, title: song.title, artistName: song.artistName ?? "", coverUrl: song.coverUrl, streamUrl: song.streamUrl, duration: song.duration, isFavorited })}
           >
             {isThisSongPlaying
@@ -314,7 +315,7 @@ export default function SongDetail() {
                 className="bg-secondary/50 border-secondary text-xs h-9 flex-1"
                 maxLength={500}
               />
-              <Button type="submit" size="icon" className="h-9 w-9 flex-shrink-0" disabled={postChatMutation.isPending || !chatInput.trim()}>
+              <Button type="submit" size="icon" className="h-9 w-9 flex-shrink-0" title="Send message" disabled={postChatMutation.isPending || !chatInput.trim()}>
                 <Send className="w-3.5 h-3.5" />
               </Button>
             </form>

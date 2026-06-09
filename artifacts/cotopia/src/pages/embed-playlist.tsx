@@ -56,7 +56,7 @@ export default function EmbedPlaylist() {
           </div>
 
           {/* Play */}
-          <Button size="icon" className="rounded-full w-10 h-10 bg-primary text-primary-foreground flex-shrink-0">
+          <Button size="icon" className="rounded-full w-10 h-10 bg-primary text-primary-foreground flex-shrink-0" title={`Play ${playlist.name}`}>
             <Play className="w-4 h-4 ml-0.5 fill-current" />
           </Button>
         </div>

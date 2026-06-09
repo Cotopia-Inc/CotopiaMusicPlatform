@@ -271,7 +271,7 @@ export default function VideoDetail() {
                   className="bg-white/10 border-white/10 text-white placeholder:text-white/30 text-xs h-8 flex-1 focus-visible:ring-primary/50"
                   maxLength={500}
                 />
-                <Button type="submit" size="icon" className="h-8 w-8 flex-shrink-0 bg-primary/80 hover:bg-primary" disabled={postChatMutation.isPending || !chatInput.trim()}>
+                <Button type="submit" size="icon" className="h-8 w-8 flex-shrink-0 bg-primary/80 hover:bg-primary" title="Send message" disabled={postChatMutation.isPending || !chatInput.trim()}>
                   <Send className="w-3 h-3" />
                 </Button>
               </form>

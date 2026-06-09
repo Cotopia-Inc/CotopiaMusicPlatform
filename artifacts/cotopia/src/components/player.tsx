@@ -1,4 +1,4 @@
-import { Play, Pause, SkipBack, SkipForward, Volume2, ListMusic, Radio, Heart } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, ListMusic, Radio, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { usePlayer, formatDuration } from "@/lib/player";
@@ -53,6 +53,24 @@ export function Player() {
     }
   };
 
+  const handleSkipBack = () => {
+    if (!track) return;
+    // If past 3 seconds, restart the track; otherwise toast no-previous
+    if (currentTime > 3) {
+      seek(0);
+    } else {
+      toast({ title: "No previous track", description: "This is the first track in your session." });
+    }
+  };
+
+  const handleSkipForward = () => {
+    toast({ title: "No next track", description: "Add songs to a queue to continue playback." });
+  };
+
+  const handleVolumeClick = () => {
+    setVolume(volume > 0 ? 0 : 0.75);
+  };
+
   return (
     <div className="h-20 bg-card/95 backdrop-blur border-t border-border/50 w-full flex items-center justify-between px-4 z-50 flex-shrink-0">
       {/* Track Info */}
@@ -80,6 +98,7 @@ export function Player() {
           className={`flex-shrink-0 w-8 h-8 transition-colors ${track ? (trackFavorited ? "text-red-500 hover:text-red-400" : "text-muted-foreground hover:text-red-400") : "text-muted-foreground/30"}`}
           onClick={handleHeartClick}
           disabled={!track}
+          title={track ? (trackFavorited ? "Remove from favorites" : "Add to favorites") : "No track loaded"}
         >
           <Heart className={`w-4 h-4 transition-all ${trackFavorited ? "fill-current" : ""}`} />
         </Button>
@@ -88,7 +107,14 @@ export function Player() {
       {/* Playback Controls */}
       <div className="flex flex-col items-center gap-1.5 w-[40%] max-w-lg">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground w-8 h-8">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-muted-foreground hover:text-foreground w-8 h-8 disabled:opacity-30"
+            onClick={handleSkipBack}
+            disabled={!track}
+            title={track ? (currentTime > 3 ? "Restart track" : "Previous track") : "No track loaded"}
+          >
             <SkipBack className="w-4 h-4" />
           </Button>
           <Button
@@ -96,12 +122,20 @@ export function Player() {
             onClick={togglePlay}
             disabled={!track}
             className="w-9 h-9 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105 transition-transform shadow-lg shadow-primary/25 disabled:opacity-50"
+            title={!track ? "Select a track to start playing" : isPlaying ? "Pause" : "Play"}
           >
             {isPlaying
               ? <Pause className="w-4 h-4 fill-current" />
               : <Play className="w-4 h-4 ml-0.5 fill-current" />}
           </Button>
-          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground w-8 h-8">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-muted-foreground hover:text-foreground w-8 h-8 disabled:opacity-30"
+            onClick={handleSkipForward}
+            disabled={!track}
+            title="Next track"
+          >
             <SkipForward className="w-4 h-4" />
           </Button>
         </div>
@@ -115,6 +149,7 @@ export function Player() {
             step={0.1}
             className="flex-1 h-1"
             onValueChange={([v]) => seek((v / 100) * duration)}
+            title={track ? `Seek — ${formatDuration(currentTime)} / ${formatDuration(duration)}` : "No track loaded"}
           />
           <span className="text-[10px] text-muted-foreground w-8 tabular-nums">
             {track ? formatDuration(duration || track.duration || 0) : "0:00"}
@@ -124,16 +159,30 @@ export function Player() {
 
       {/* Volume + Queue */}
       <div className="flex items-center justify-end gap-2 w-[30%]">
-        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground w-8 h-8">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-muted-foreground hover:text-foreground w-8 h-8"
+          title="Queue (coming soon)"
+        >
           <ListMusic className="w-4 h-4" />
         </Button>
-        <Volume2 className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+        <button
+          onClick={handleVolumeClick}
+          className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+          title={volume === 0 ? "Unmute" : "Mute"}
+        >
+          {volume === 0
+            ? <VolumeX className="w-4 h-4" />
+            : <Volume2 className="w-4 h-4" />}
+        </button>
         <Slider
           value={[volume * 100]}
           max={100}
           step={1}
           className="w-20 h-1"
           onValueChange={([v]) => setVolume(v / 100)}
+          title={`Volume: ${Math.round(volume * 100)}%`}
         />
       </div>
     </div>

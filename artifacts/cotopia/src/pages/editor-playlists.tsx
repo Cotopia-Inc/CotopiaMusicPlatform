@@ -208,6 +208,7 @@ export default function EditorPlaylists() {
                     variant="outline"
                     size="icon"
                     className="h-8 w-8"
+                    title="Edit playlist"
                     onClick={() => {
                       setSelectedPlaylist(p);
                       setEditForm({ name: p.name, description: p.description ?? "", playlistType: p.playlistType, isPublic: p.isPublic });
@@ -220,6 +221,7 @@ export default function EditorPlaylists() {
                     variant="outline"
                     size="icon"
                     className="h-8 w-8 text-red-400 hover:text-red-300 hover:border-red-400/50"
+                    title="Delete playlist"
                     onClick={() => handleDelete(p.id)}
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -338,7 +340,7 @@ export default function EditorPlaylists() {
                         <p className="text-xs font-medium truncate">{song.title}</p>
                         <p className="text-[10px] text-muted-foreground truncate">{song.artistName}</p>
                       </div>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-red-400 hover:text-red-300" onClick={() => handleRemoveSong(song.id)}>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-red-400 hover:text-red-300" title="Remove from playlist" onClick={() => handleRemoveSong(song.id)}>
                         <X className="w-3.5 h-3.5" />
                       </Button>
                     </div>

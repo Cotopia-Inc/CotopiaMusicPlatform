@@ -77,7 +77,7 @@ export default function Library() {
           <div className="bg-card border border-border rounded-xl p-6 w-full max-w-sm shadow-2xl space-y-4" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-bold">New Playlist</h2>
-              <button onClick={() => setShowNewPlaylist(false)} className="text-muted-foreground hover:text-foreground transition-colors">
+              <button onClick={() => setShowNewPlaylist(false)} className="text-muted-foreground hover:text-foreground transition-colors" title="Close">
                 <X className="w-4 h-4" />
               </button>
             </div>
