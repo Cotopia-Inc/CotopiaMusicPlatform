@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MessageSquare, Search, Music, Video, Trash2 } from "lucide-react";
+import { MessageSquare, Search, Music, Video, Trash2, BadgeCheck } from "lucide-react";
 import { Link } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -125,7 +125,7 @@ export default function AdminComments() {
                           ? <img src={msg.avatarUrl} alt={msg.username} className="w-full h-full object-cover" />
                           : msg.username[0].toUpperCase()}
                       </div>
-                      <span className="text-sm font-medium">{msg.username}</span>
+                      <span className="text-sm font-medium flex items-center gap-1">{msg.username}{msg.isVerified && <BadgeCheck className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />}</span>
                     </div>
                   </TableCell>
                   <TableCell className="max-w-xs">

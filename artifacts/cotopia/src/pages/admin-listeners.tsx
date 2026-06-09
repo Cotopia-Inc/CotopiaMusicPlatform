@@ -3,7 +3,7 @@ import { useAdminListListeners } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
 import { useLocation } from "wouter";
 import { useEffect } from "react";
-import { Eye, Search, Heart, MessageSquare, UserCheck, Ban } from "lucide-react";
+import { Eye, Search, Heart, MessageSquare, UserCheck, Ban, BadgeCheck } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -87,9 +87,7 @@ export default function AdminListeners() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-medium truncate">{u.username}</p>
-                        {(u as any).isVerified && (
-                          <span className="text-[9px] font-bold text-green-400 bg-green-500/10 px-1.5 py-0.5 rounded uppercase">Verified</span>
-                        )}
+                        {(u as any).isVerified && <BadgeCheck className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />}
                         {(u as any).isSuspended && (
                           <span className="text-[9px] font-bold text-red-400 bg-red-500/10 px-1.5 py-0.5 rounded uppercase">Suspended</span>
                         )}

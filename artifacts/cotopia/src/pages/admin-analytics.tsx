@@ -2,7 +2,7 @@ import { useGetAdminAnalytics } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
 import { useLocation } from "wouter";
 import { useEffect } from "react";
-import { BarChart3, Music, Video, Users, Play, Eye, MessageSquare, Clock, TrendingUp, Star } from "lucide-react";
+import { BarChart3, Music, Video, Users, Play, Eye, MessageSquare, Clock, TrendingUp, Star, BadgeCheck } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
@@ -118,7 +118,7 @@ export default function AdminAnalytics() {
                     : <div className="w-8 h-8 rounded bg-muted flex-shrink-0" />}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{song.title}</p>
-                    <p className="text-xs text-muted-foreground truncate">{song.artistName}</p>
+                    <p className="text-xs text-muted-foreground flex items-center gap-0.5"><span className="truncate">{song.artistName}</span><BadgeCheck className="w-3 h-3 text-green-500 flex-shrink-0" /></p>
                   </div>
                   <div className="text-right flex-shrink-0">
                     <p className="text-xs font-bold">{(song.playCount ?? 0).toLocaleString()}</p>
@@ -151,7 +151,7 @@ export default function AdminAnalytics() {
                     : <div className="w-8 h-8 rounded bg-muted flex-shrink-0" />}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{video.title}</p>
-                    <p className="text-xs text-muted-foreground truncate">{video.artistName}</p>
+                    <p className="text-xs text-muted-foreground flex items-center gap-0.5"><span className="truncate">{video.artistName}</span><BadgeCheck className="w-3 h-3 text-green-500 flex-shrink-0" /></p>
                   </div>
                   <div className="text-right flex-shrink-0">
                     <p className="text-xs font-bold">{(video.viewCount ?? 0).toLocaleString()}</p>

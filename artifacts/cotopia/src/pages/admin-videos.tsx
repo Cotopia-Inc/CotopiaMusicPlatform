@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Search, Star, Sparkles } from "lucide-react";
+import { Search, Star, Sparkles, BadgeCheck } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 
@@ -91,7 +91,7 @@ export default function AdminVideos() {
                       <p className="font-semibold text-sm">{video.title}</p>
                     </div>
                   </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{video.artistName}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground"><span className="flex items-center gap-1">{video.artistName}<BadgeCheck className="w-3.5 h-3.5 text-green-500 flex-shrink-0" /></span></TableCell>
                   <TableCell>
                     <Badge variant="secondary" className="text-xs capitalize">{video.genre || "—"}</Badge>
                   </TableCell>

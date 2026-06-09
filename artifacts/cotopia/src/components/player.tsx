@@ -1,4 +1,4 @@
-import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, ListMusic, Radio, Heart, X, ChevronDown } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, ListMusic, Radio, Heart, X, ChevronDown, BadgeCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { usePlayer, formatDuration } from "@/lib/player";
@@ -117,7 +117,7 @@ export function Player() {
             {/* Track info */}
             <div className="text-center space-y-0.5">
               <p className="font-bold text-base leading-tight truncate">{track?.title ?? "—"}</p>
-              <p className="text-sm text-muted-foreground truncate">{track?.artistName ?? ""}</p>
+              <p className="text-sm text-muted-foreground flex items-center gap-0.5">{track ? <><span className="truncate">{track.artistName}</span><BadgeCheck className="w-3.5 h-3.5 text-green-500 flex-shrink-0" /></> : ""}</p>
             </div>
 
             {/* Progress bar */}
@@ -209,8 +209,8 @@ export function Player() {
             <p className="text-sm font-semibold truncate leading-tight">
               {track ? track.title : "Select a track"}
             </p>
-            <p className="text-xs text-muted-foreground truncate leading-tight mt-0.5">
-              {track ? track.artistName : "Everyday Radio"}
+            <p className="text-xs text-muted-foreground flex items-center justify-center gap-0.5 leading-tight mt-0.5">
+              {track ? <><span className="truncate">{track.artistName}</span><BadgeCheck className="w-3 h-3 text-green-500 flex-shrink-0" /></> : "Everyday Radio"}
             </p>
           </div>
           <Button

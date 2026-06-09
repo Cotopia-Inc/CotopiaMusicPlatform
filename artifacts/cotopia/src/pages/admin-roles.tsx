@@ -3,7 +3,7 @@ import { useAdminListUsers, useAdminChangeUserRole } from "@workspace/api-client
 import { useAuth } from "@/lib/auth";
 import { useLocation } from "wouter";
 import { useEffect } from "react";
-import { Shield, Search, ChevronDown, CheckCircle, XCircle, Ban, UserCheck } from "lucide-react";
+import { Shield, Search, ChevronDown, XCircle, Ban, UserCheck, BadgeCheck } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -160,7 +160,7 @@ export default function AdminRoles() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <p className="text-sm font-medium truncate">{u.username}</p>
-                      {(u as any).isVerified && <CheckCircle className="w-3 h-3 text-green-400 flex-shrink-0" />}
+                      {(u as any).isVerified && <BadgeCheck className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />}
                       {(u as any).isSuspended && <Ban className="w-3 h-3 text-red-400 flex-shrink-0" />}
                     </div>
                     <p className="text-xs text-muted-foreground truncate">{u.email}</p>
@@ -206,7 +206,7 @@ export default function AdminRoles() {
                               <Ban className="w-3.5 h-3.5 mr-2" />Suspend
                             </DropdownMenuItem>
                           : <DropdownMenuItem onClick={() => handleSuspend(u.id, false)}>
-                              <CheckCircle className="w-3.5 h-3.5 mr-2" />Unsuspend
+                              <UserCheck className="w-3.5 h-3.5 mr-2" />Unsuspend
                             </DropdownMenuItem>
                         }
                       </DropdownMenuContent>

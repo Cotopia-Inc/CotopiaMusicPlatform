@@ -208,7 +208,7 @@ export default function Library() {
                     </div>
                     <div className="flex-1">
                       <div className="font-semibold">{item.contentTitle}</div>
-                      <div className="text-sm text-muted-foreground">{item.artistName} • <span className="uppercase text-[10px] tracking-wider text-primary">{item.type}</span></div>
+                      <div className="text-sm text-muted-foreground flex items-center gap-0.5"><span className="truncate">{item.artistName}</span><BadgeCheck className="w-3 h-3 text-green-500 flex-shrink-0" /> <span>•</span> <span className="uppercase text-[10px] tracking-wider text-primary">{item.type}</span></div>
                     </div>
                     <div className="text-muted-foreground text-xs text-right">
                       {new Date(item.playedAt).toLocaleDateString()}
