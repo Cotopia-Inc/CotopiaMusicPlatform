@@ -3,7 +3,7 @@ import {
   Home, Compass, Music, Video, Users, Mic2, Library, Building2,
   LayoutDashboard, LogIn, LogOut, Settings, Send, Radio, Bell,
   BarChart3, Upload, ListMusic, Shield, UserCheck, Layers,
-  MessageSquare, FileText, CreditCard, Eye, BookOpen,
+  MessageSquare, FileText, CreditCard, Eye, BookOpen, BadgeCheck,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
@@ -266,17 +266,22 @@ export function Sidebar() {
       <div className="border-t border-border/50 p-4 space-y-2">
         {user ? (
           <>
-            <div className="flex items-center gap-3 px-2 py-1">
-              <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xs font-bold flex-shrink-0 overflow-hidden">
-                {user.avatarUrl
-                  ? <img src={user.avatarUrl} alt={user.username} className="w-full h-full object-cover" />
-                  : user.username[0].toUpperCase()}
+            <Link href="/profile">
+              <div className="flex items-center gap-3 px-2 py-1 rounded-md hover:bg-secondary/60 transition-colors cursor-pointer">
+                <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xs font-bold flex-shrink-0 overflow-hidden">
+                  {user.avatarUrl
+                    ? <img src={user.avatarUrl} alt={user.username} className="w-full h-full object-cover" />
+                    : user.username[0].toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold truncate flex items-center gap-0.5">
+                    {user.username}
+                    {user.isVerified && <BadgeCheck className="w-3 h-3 text-green-500 flex-shrink-0" />}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground capitalize">{user.role.replace("_", " ")}</p>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold truncate">{user.username}</p>
-                <p className="text-[10px] text-muted-foreground capitalize">{user.role.replace("_", " ")}</p>
-              </div>
-            </div>
+            </Link>
             <Button variant="outline" size="sm" className="w-full justify-start gap-2 text-xs" onClick={() => logout()}>
               <LogOut className="w-3.5 h-3.5" />
               Sign out

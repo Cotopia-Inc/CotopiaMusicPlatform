@@ -13,7 +13,7 @@ export function UserLink({ username, artistId, isVerified, className = "", onCli
   const inner = (
     <span className={`inline-flex items-center gap-0.5 ${className}`}>
       {username}
-      {isVerified && <BadgeCheck className="w-3 h-3 text-primary flex-shrink-0" />}
+      {isVerified && <BadgeCheck className="w-3 h-3 text-green-500 flex-shrink-0" />}
     </span>
   );
 
@@ -29,7 +29,7 @@ export function UserLink({ username, artistId, isVerified, className = "", onCli
     >
       <span className={`inline-flex items-center gap-0.5 hover:text-primary transition-colors ${className}`}>
         {username}
-        {isVerified && <BadgeCheck className="w-3 h-3 text-primary flex-shrink-0" />}
+        {isVerified && <BadgeCheck className="w-3 h-3 text-green-500 flex-shrink-0" />}
       </span>
     </Link>
   );
