@@ -22,6 +22,7 @@ async function getSongWithArtist(id: number, userId?: number) {
       title: songsTable.title,
       artistId: songsTable.artistId,
       artistName: artistsTable.stageName,
+      artistIsVerified: usersTable.isVerified,
       albumId: songsTable.albumId,
       albumName: albumsTable.title,
       genre: songsTable.genre,
@@ -35,6 +36,7 @@ async function getSongWithArtist(id: number, userId?: number) {
     })
     .from(songsTable)
     .leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id))
+    .leftJoin(usersTable, eq(artistsTable.userId, usersTable.id))
     .leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id))
     .where(eq(songsTable.id, id))
     .limit(1);
@@ -90,6 +92,7 @@ router.get("/songs", optionalAuth, async (req: AuthRequest, res): Promise<void> 
       title: songsTable.title,
       artistId: songsTable.artistId,
       artistName: artistsTable.stageName,
+      artistIsVerified: usersTable.isVerified,
       albumId: songsTable.albumId,
       albumName: albumsTable.title,
       genre: songsTable.genre,
@@ -103,6 +106,7 @@ router.get("/songs", optionalAuth, async (req: AuthRequest, res): Promise<void> 
     })
     .from(songsTable)
     .leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id))
+    .leftJoin(usersTable, eq(artistsTable.userId, usersTable.id))
     .leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id))
     .where(and(...conditions))
     .orderBy(desc(songsTable.createdAt))
@@ -149,6 +153,7 @@ router.get("/songs/featured", async (_req, res): Promise<void> => {
       title: songsTable.title,
       artistId: songsTable.artistId,
       artistName: artistsTable.stageName,
+      artistIsVerified: usersTable.isVerified,
       albumId: songsTable.albumId,
       albumName: albumsTable.title,
       genre: songsTable.genre,
@@ -161,6 +166,7 @@ router.get("/songs/featured", async (_req, res): Promise<void> => {
     })
     .from(songsTable)
     .leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id))
+    .leftJoin(usersTable, eq(artistsTable.userId, usersTable.id))
     .leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id))
     .where(and(eq(songsTable.isFeatured, true), eq(songsTable.status, "published")))
     .orderBy(desc(songsTable.createdAt))
@@ -183,6 +189,7 @@ router.get("/songs/trending", async (req, res): Promise<void> => {
       title: songsTable.title,
       artistId: songsTable.artistId,
       artistName: artistsTable.stageName,
+      artistIsVerified: usersTable.isVerified,
       albumId: songsTable.albumId,
       albumName: albumsTable.title,
       genre: songsTable.genre,
@@ -195,6 +202,7 @@ router.get("/songs/trending", async (req, res): Promise<void> => {
     })
     .from(songsTable)
     .leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id))
+    .leftJoin(usersTable, eq(artistsTable.userId, usersTable.id))
     .leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id))
     .where(eq(songsTable.status, "published"))
     .orderBy(desc(songsTable.playCount))

@@ -2187,6 +2187,8 @@ components:
           type: integer
         artistName:
           type: string
+        artistIsVerified:
+          type: boolean
         albumId:
           type: ["integer", "null"]
         albumName:
@@ -2288,6 +2290,8 @@ components:
           type: integer
         artistName:
           type: string
+        artistIsVerified:
+          type: boolean
         genre:
           type: ["string", "null"]
         duration:

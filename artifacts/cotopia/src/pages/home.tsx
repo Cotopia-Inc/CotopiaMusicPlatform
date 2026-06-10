@@ -80,7 +80,7 @@ export default function Home() {
                       <button
                         className="bg-primary text-primary-foreground rounded-full p-3 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 shadow-lg"
                         title={`Play ${song.title}`}
-                        onClick={(e) => { e.preventDefault(); play({ id: song.id, title: song.title, artistName: song.artistName ?? "", coverUrl: song.coverUrl, streamUrl: song.streamUrl, duration: song.duration }); }}
+                        onClick={(e) => { e.preventDefault(); play({ id: song.id, title: song.title, artistName: song.artistName ?? "", artistId: song.artistId, artistIsVerified: song.artistIsVerified ?? false, coverUrl: song.coverUrl, streamUrl: song.streamUrl, duration: song.duration }); }}
                       >
                         <Play className="w-5 h-5 fill-current ml-0.5" />
                       </button>
@@ -147,7 +147,7 @@ export default function Home() {
                       <button
                         className="bg-primary text-primary-foreground rounded-full p-4 shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-all duration-300"
                         title={`Play ${video.title}`}
-                        onClick={(e) => { e.preventDefault(); play({ id: video.id, title: video.title, artistName: video.artistName ?? "", coverUrl: video.thumbnailUrl, videoUrl: video.videoUrl, duration: video.duration }); }}
+                        onClick={(e) => { e.preventDefault(); play({ id: video.id, title: video.title, artistName: video.artistName ?? "", artistId: video.artistId, artistIsVerified: video.artistIsVerified ?? false, coverUrl: video.thumbnailUrl, videoUrl: video.videoUrl, duration: video.duration }); }}
                       >
                         <Play className="w-6 h-6 fill-current ml-0.5" />
                       </button>

@@ -61,7 +61,7 @@ export default function Videos() {
                     <button
                       className="bg-primary text-primary-foreground rounded-full p-4 transform scale-90 group-hover:scale-100 transition-all duration-300 shadow-lg"
                       title={`Play ${video.title}`}
-                      onClick={(e) => { e.preventDefault(); play({ id: video.id, title: video.title, artistName: video.artistName ?? "", coverUrl: video.thumbnailUrl, videoUrl: video.videoUrl, duration: video.duration }); }}
+                      onClick={(e) => { e.preventDefault(); play({ id: video.id, title: video.title, artistName: video.artistName ?? "", artistId: video.artistId, artistIsVerified: video.artistIsVerified ?? false, coverUrl: video.thumbnailUrl, videoUrl: video.videoUrl, duration: video.duration }); }}
                     >
                       <Play className="w-8 h-8 fill-current ml-1" />
                     </button>

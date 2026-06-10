@@ -1,17 +1,19 @@
 import {
   Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Volume1,
   Radio, Heart, ChevronDown, Shuffle, Repeat, Repeat1, Square, Music2, StopCircle,
+  ListMusic, X, Music,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { usePlayer, formatDuration } from "@/lib/player";
 import { useAuth } from "@/lib/auth";
+import { UserLink } from "@/components/user-link";
 import {
   useFavoriteSong, useUnfavoriteSong, getGetSongQueryKey, useTrackAnalyticsEvent,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -29,9 +31,11 @@ export function Player() {
     trackFavorited, nowPlayingOpen, isVideoTrack,
     queue, queueIndex, shuffle, repeat,
     setTrackFavorited, togglePlay, seek, stop, skipNext, skipPrev,
-    toggleShuffle, cycleRepeat,
+    toggleShuffle, cycleRepeat, playAt,
     setVolume, setNowPlayingOpen, registerVideoElement,
   } = usePlayer();
+
+  const [queueOpen, setQueueOpen] = useState(false);
 
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -138,7 +142,19 @@ export function Player() {
             <div className="flex items-center justify-between gap-2 mt-1">
               <div className="min-w-0">
                 <p className="font-bold text-base leading-tight truncate">{track?.title ?? "—"}</p>
-                <p className="text-sm text-muted-foreground truncate mt-0.5">{track?.artistName ?? ""}</p>
+                <div className="text-sm text-muted-foreground mt-0.5">
+                  {track ? (
+                    <UserLink
+                      username={track.artistName}
+                      artistId={track.artistId}
+                      role="artist"
+                      isVerified={track.artistIsVerified}
+                      className="text-sm text-muted-foreground"
+                      badgeSize="sm"
+                      onClick={() => setNowPlayingOpen(false)}
+                    />
+                  ) : null}
+                </div>
               </div>
               <button
                 onClick={handleHeartClick}
@@ -279,9 +295,20 @@ export function Player() {
             <p className="text-sm font-semibold truncate leading-tight">
               {track ? track.title : "Select a track"}
             </p>
-            <p className="text-xs text-muted-foreground truncate leading-tight mt-0.5">
-              {track ? track.artistName : "Everyday Radio"}
-            </p>
+            <div className="text-xs text-muted-foreground leading-tight mt-0.5">
+              {track ? (
+                <UserLink
+                  username={track.artistName}
+                  artistId={track.artistId}
+                  role="artist"
+                  isVerified={track.artistIsVerified}
+                  className="text-xs text-muted-foreground"
+                  badgeSize="sm"
+                />
+              ) : (
+                <span>Everyday Radio</span>
+              )}
+            </div>
           </div>
           <Button
             variant="ghost" size="icon"
@@ -385,13 +412,25 @@ export function Player() {
           </div>
         </div>
 
-        {/* Right: volume */}
+        {/* Right: queue + volume */}
         <div className="flex items-center justify-end gap-2 w-[30%]">
-          {queue.length > 1 && (
-            <span className="text-[10px] text-muted-foreground tabular-nums hidden sm:block">
-              {queueIndex + 1}/{queue.length}
-            </span>
-          )}
+          {/* Queue toggle */}
+          <button
+            onClick={() => setQueueOpen(v => !v)}
+            disabled={!track}
+            className={`relative flex-shrink-0 transition-colors disabled:opacity-30 ${
+              queueOpen ? "text-primary" : "text-muted-foreground hover:text-foreground"
+            }`}
+            title="Queue"
+          >
+            <ListMusic className="w-4 h-4" />
+            {queue.length > 1 && (
+              <span className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 rounded-full bg-primary text-primary-foreground text-[8px] font-bold flex items-center justify-center leading-none">
+                {queue.length}
+              </span>
+            )}
+          </button>
+
           <button
             onClick={handleVolumeClick}
             className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
@@ -404,6 +443,75 @@ export function Player() {
             onValueChange={([v]) => setVolume(v / 100)}
             title={`Volume: ${Math.round(volume * 100)}%`}
           />
+        </div>
+      </div>
+
+      {/* ── Queue Panel ─────────────────────────────────────────────────────────── */}
+      <div
+        className={`fixed inset-x-0 bottom-20 z-30 transition-all duration-300 ease-in-out ${
+          queueOpen
+            ? "translate-y-0 opacity-100 pointer-events-auto"
+            : "translate-y-full opacity-0 pointer-events-none"
+        }`}
+      >
+        <div className="max-w-lg mx-auto bg-card border border-border/60 rounded-t-2xl shadow-2xl overflow-hidden">
+          <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-border/40">
+            <div className="flex items-center gap-2">
+              <ListMusic className="w-4 h-4 text-primary" />
+              <span className="text-sm font-semibold">Queue</span>
+              <span className="text-xs text-muted-foreground">({queue.length} tracks)</span>
+            </div>
+            <button
+              onClick={() => setQueueOpen(false)}
+              className="text-muted-foreground hover:text-foreground transition-colors"
+              title="Close"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="overflow-y-auto max-h-72 py-1">
+            {queue.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-10 gap-2 text-muted-foreground">
+                <Music className="w-8 h-8 opacity-30" />
+                <p className="text-sm">Nothing in the queue yet</p>
+              </div>
+            ) : (
+              queue.map((t, idx) => {
+                const isActive = idx === queueIndex;
+                return (
+                  <button
+                    key={`${t.id}-${idx}`}
+                    onClick={() => { playAt(idx); setQueueOpen(false); }}
+                    className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-left ${
+                      isActive
+                        ? "bg-primary/10 text-primary"
+                        : "hover:bg-secondary/60 text-foreground"
+                    }`}
+                  >
+                    <div className="w-5 text-center flex-shrink-0">
+                      {isActive
+                        ? <span className="inline-block w-2 h-2 rounded-full bg-primary animate-pulse" />
+                        : <span className="text-xs text-muted-foreground">{idx + 1}</span>
+                      }
+                    </div>
+                    <div className="w-9 h-9 rounded bg-secondary overflow-hidden flex-shrink-0 border border-border/40">
+                      {t.coverUrl
+                        ? <img src={t.coverUrl} alt={t.title} className="w-full h-full object-cover" />
+                        : <div className="w-full h-full flex items-center justify-center"><Music2 className="w-4 h-4 text-muted-foreground/40" /></div>
+                      }
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm font-medium truncate ${isActive ? "text-primary" : ""}`}>{t.title}</p>
+                      <p className="text-xs text-muted-foreground truncate">{t.artistName}</p>
+                    </div>
+                    <span className="text-xs text-muted-foreground tabular-nums flex-shrink-0">
+                      {formatDuration(t.duration ?? 0)}
+                    </span>
+                  </button>
+                );
+              })
+            )}
+          </div>
         </div>
       </div>
     </>

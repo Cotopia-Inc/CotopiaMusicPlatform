@@ -57,7 +57,7 @@ export default function PlaylistDetail() {
 
       {/* Actions */}
       <div className="flex items-center gap-6">
-        <Button size="icon" className="w-14 h-14 rounded-full bg-primary text-primary-foreground hover:scale-105 transition-transform" title={`Play ${playlist.name}`} onClick={() => { if (playlist.songs?.[0]) play({ id: playlist.songs[0].id, title: playlist.songs[0].title, artistName: playlist.songs[0].artistName ?? "", coverUrl: playlist.songs[0].coverUrl, streamUrl: playlist.songs[0].streamUrl, duration: playlist.songs[0].duration }); }}>
+        <Button size="icon" className="w-14 h-14 rounded-full bg-primary text-primary-foreground hover:scale-105 transition-transform" title={`Play ${playlist.name}`} onClick={() => { if (playlist.songs?.[0]) play({ id: playlist.songs[0].id, title: playlist.songs[0].title, artistName: playlist.songs[0].artistName ?? "", artistId: playlist.songs[0].artistId, artistIsVerified: (playlist.songs[0] as any).artistIsVerified ?? false, coverUrl: playlist.songs[0].coverUrl, streamUrl: playlist.songs[0].streamUrl, duration: playlist.songs[0].duration }); }}>
           <Play className="w-6 h-6 ml-1 fill-current" />
         </Button>
         <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground" title="More options">
@@ -78,7 +78,7 @@ export default function PlaylistDetail() {
               <div
                 key={song.id}
                 className="flex items-center gap-4 p-3 rounded-md hover:bg-secondary/50 group cursor-pointer transition-colors"
-                onClick={() => play({ id: song.id, title: song.title, artistName: song.artistName ?? "", coverUrl: song.coverUrl, streamUrl: song.streamUrl, duration: song.duration })}
+                onClick={() => play({ id: song.id, title: song.title, artistName: song.artistName ?? "", artistId: song.artistId, artistIsVerified: (song as any).artistIsVerified ?? false, coverUrl: song.coverUrl, streamUrl: song.streamUrl, duration: song.duration })}
               >
                 <span className="w-8 text-center text-muted-foreground text-sm group-hover:hidden">{idx + 1}</span>
                 <div className="w-8 flex justify-center hidden group-hover:flex">

@@ -12,6 +12,7 @@ export interface Video {
   title: string;
   artistId: number;
   artistName: string;
+  artistIsVerified?: boolean;
   /** @nullable */
   genre?: string | null;
   duration: number;

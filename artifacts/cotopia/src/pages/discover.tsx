@@ -43,7 +43,7 @@ export default function Discover() {
                       <button
                         className="bg-primary text-primary-foreground rounded-full p-3 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300"
                         title={`Play ${song.title}`}
-                        onClick={(e) => { e.preventDefault(); play({ id: song.id, title: song.title, artistName: song.artistName ?? "", coverUrl: song.coverUrl, streamUrl: song.streamUrl, duration: song.duration }); }}
+                        onClick={(e) => { e.preventDefault(); play({ id: song.id, title: song.title, artistName: song.artistName ?? "", artistId: song.artistId, artistIsVerified: song.artistIsVerified ?? false, coverUrl: song.coverUrl, streamUrl: song.streamUrl, duration: song.duration }); }}
                       >
                         <Play className="w-6 h-6 fill-current ml-1" />
                       </button>
@@ -54,7 +54,7 @@ export default function Discover() {
                   <Link href={`/songs/${song.id}`}>
                     <h4 className="font-semibold text-sm truncate hover:text-primary transition-colors">{song.title}</h4>
                   </Link>
-                  <UserLink username={song.artistName} artistId={(song as any).artistId} role="artist" className="text-xs text-muted-foreground" />
+                  <UserLink username={song.artistName} artistId={song.artistId} role="artist" className="text-xs text-muted-foreground" />
                 </div>
               </div>
             ))
@@ -89,7 +89,7 @@ export default function Discover() {
                       <button
                         className="bg-primary text-primary-foreground rounded-full p-3 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300"
                         title={`Play ${song.title}`}
-                        onClick={(e) => { e.preventDefault(); play({ id: song.id, title: song.title, artistName: song.artistName ?? "", coverUrl: song.coverUrl, streamUrl: song.streamUrl, duration: song.duration }); }}
+                        onClick={(e) => { e.preventDefault(); play({ id: song.id, title: song.title, artistName: song.artistName ?? "", artistId: song.artistId, artistIsVerified: song.artistIsVerified ?? false, coverUrl: song.coverUrl, streamUrl: song.streamUrl, duration: song.duration }); }}
                       >
                         <Play className="w-6 h-6 fill-current ml-1" />
                       </button>
@@ -100,7 +100,7 @@ export default function Discover() {
                   <Link href={`/songs/${song.id}`}>
                     <h4 className="font-semibold text-sm truncate hover:text-primary transition-colors">{song.title}</h4>
                   </Link>
-                  <UserLink username={song.artistName} artistId={(song as any).artistId} role="artist" className="text-xs text-muted-foreground" />
+                  <UserLink username={song.artistName} artistId={song.artistId} role="artist" className="text-xs text-muted-foreground" />
                 </div>
               </div>
             ))

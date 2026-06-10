@@ -21,6 +21,7 @@ async function getVideoWithArtist(id: number, userId?: number) {
       title: videosTable.title,
       artistId: videosTable.artistId,
       artistName: artistsTable.stageName,
+      artistIsVerified: usersTable.isVerified,
       genre: videosTable.genre,
       duration: videosTable.duration,
       thumbnailUrl: videosTable.thumbnailUrl,
@@ -33,6 +34,7 @@ async function getVideoWithArtist(id: number, userId?: number) {
     })
     .from(videosTable)
     .leftJoin(artistsTable, eq(videosTable.artistId, artistsTable.id))
+    .leftJoin(usersTable, eq(artistsTable.userId, usersTable.id))
     .where(eq(videosTable.id, id))
     .limit(1);
 
@@ -84,6 +86,7 @@ router.get("/videos", optionalAuth, async (req: AuthRequest, res): Promise<void>
       title: videosTable.title,
       artistId: videosTable.artistId,
       artistName: artistsTable.stageName,
+      artistIsVerified: usersTable.isVerified,
       genre: videosTable.genre,
       duration: videosTable.duration,
       thumbnailUrl: videosTable.thumbnailUrl,
@@ -95,6 +98,7 @@ router.get("/videos", optionalAuth, async (req: AuthRequest, res): Promise<void>
     })
     .from(videosTable)
     .leftJoin(artistsTable, eq(videosTable.artistId, artistsTable.id))
+    .leftJoin(usersTable, eq(artistsTable.userId, usersTable.id))
     .where(and(...conditions))
     .orderBy(desc(videosTable.createdAt))
     .limit(limit)
@@ -118,6 +122,7 @@ router.get("/videos/featured", async (_req, res): Promise<void> => {
       title: videosTable.title,
       artistId: videosTable.artistId,
       artistName: artistsTable.stageName,
+      artistIsVerified: usersTable.isVerified,
       genre: videosTable.genre,
       duration: videosTable.duration,
       thumbnailUrl: videosTable.thumbnailUrl,
@@ -128,6 +133,7 @@ router.get("/videos/featured", async (_req, res): Promise<void> => {
     })
     .from(videosTable)
     .leftJoin(artistsTable, eq(videosTable.artistId, artistsTable.id))
+    .leftJoin(usersTable, eq(artistsTable.userId, usersTable.id))
     .where(and(eq(videosTable.isFeatured, true), eq(videosTable.status, "published")))
     .orderBy(desc(videosTable.createdAt))
     .limit(6);
@@ -149,6 +155,7 @@ router.get("/videos/trending", async (req, res): Promise<void> => {
       title: videosTable.title,
       artistId: videosTable.artistId,
       artistName: artistsTable.stageName,
+      artistIsVerified: usersTable.isVerified,
       genre: videosTable.genre,
       duration: videosTable.duration,
       thumbnailUrl: videosTable.thumbnailUrl,
@@ -159,6 +166,7 @@ router.get("/videos/trending", async (req, res): Promise<void> => {
     })
     .from(videosTable)
     .leftJoin(artistsTable, eq(videosTable.artistId, artistsTable.id))
+    .leftJoin(usersTable, eq(artistsTable.userId, usersTable.id))
     .where(eq(videosTable.status, "published"))
     .orderBy(desc(videosTable.viewCount))
     .limit(limit);

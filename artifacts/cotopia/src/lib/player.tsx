@@ -4,6 +4,8 @@ export interface Track {
   id: number;
   title: string;
   artistName: string;
+  artistId?: number | null;
+  artistIsVerified?: boolean;
   coverUrl?: string | null;
   streamUrl?: string | null;
   videoUrl?: string | null;
@@ -27,6 +29,7 @@ interface PlayerContextValue {
   shuffle: boolean;
   repeat: RepeatMode;
   play: (track: Track) => void;
+  playAt: (index: number) => void;
   togglePlay: () => void;
   seek: (time: number) => void;
   stop: () => void;
@@ -255,6 +258,13 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     setRepeatState(next);
   };
 
+  const playAt = useCallback((idx: number) => {
+    const q = queueRef.current;
+    const t = q[idx];
+    if (!t) return;
+    loadAndPlay(t, idx);
+  }, [loadAndPlay]);
+
   const addToQueue = (tracks: Track[]) => {
     const q = queueRef.current;
     const existing = new Set(q.map(t => t.id));
@@ -268,7 +278,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       trackFavorited, nowPlayingOpen,
       isVideoTrack: !!trackRef.current?.videoUrl,
       queue, queueIndex, shuffle, repeat,
-      play, togglePlay, seek, stop, skipNext, skipPrev,
+      play, playAt, togglePlay, seek, stop, skipNext, skipPrev,
       toggleShuffle, cycleRepeat, addToQueue,
       setVolume, setTrackFavorited, setNowPlayingOpen,
       registerVideoElement, audioRef,

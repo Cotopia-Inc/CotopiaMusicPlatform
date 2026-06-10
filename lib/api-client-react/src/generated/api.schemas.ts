@@ -115,6 +115,7 @@ export interface Song {
   title: string;
   artistId: number;
   artistName: string;
+  artistIsVerified?: boolean;
   /** @nullable */
   albumId?: number | null;
   /** @nullable */
@@ -192,6 +193,7 @@ export interface Video {
   title: string;
   artistId: number;
   artistName: string;
+  artistIsVerified?: boolean;
   /** @nullable */
   genre?: string | null;
   duration: number;
