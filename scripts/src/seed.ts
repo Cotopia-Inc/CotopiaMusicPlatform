@@ -87,7 +87,9 @@ async function seed() {
     displayName: "Nova Sounds",
     avatarUrl: "https://api.dicebear.com/7.x/personas/svg?seed=nova",
     role: "artist",
+    isVerified: true,
   }).onConflictDoNothing().returning();
+  await db.update(usersTable).set({ isVerified: true }).where(eq(usersTable.email, "nova@example.com"));
 
   const [artist2User] = await db.insert(usersTable).values({
     email: "midnight@example.com",
@@ -96,7 +98,9 @@ async function seed() {
     displayName: "Midnight Echo",
     avatarUrl: "https://api.dicebear.com/7.x/personas/svg?seed=midnight",
     role: "artist",
+    isVerified: true,
   }).onConflictDoNothing().returning();
+  await db.update(usersTable).set({ isVerified: true }).where(eq(usersTable.email, "midnight@example.com"));
 
   const [artist3User] = await db.insert(usersTable).values({
     email: "lyra@example.com",
@@ -105,7 +109,9 @@ async function seed() {
     displayName: "Lyra Wave",
     avatarUrl: "https://api.dicebear.com/7.x/personas/svg?seed=lyra",
     role: "artist",
+    isVerified: true,
   }).onConflictDoNothing().returning();
+  await db.update(usersTable).set({ isVerified: true }).where(eq(usersTable.email, "lyra@example.com"));
 
   const [label1User] = await db.insert(usersTable).values({
     email: "deepwave@example.com",
@@ -113,7 +119,9 @@ async function seed() {
     username: "deepwave_records",
     displayName: "Deep Wave Records",
     role: "label",
+    isVerified: true,
   }).onConflictDoNothing().returning();
+  await db.update(usersTable).set({ isVerified: true }).where(eq(usersTable.email, "deepwave@example.com"));
 
   const [label2User] = await db.insert(usersTable).values({
     email: "neon@example.com",
@@ -121,7 +129,9 @@ async function seed() {
     username: "neon_collective",
     displayName: "Neon Collective",
     role: "label",
+    isVerified: true,
   }).onConflictDoNothing().returning();
+  await db.update(usersTable).set({ isVerified: true }).where(eq(usersTable.email, "neon@example.com"));
 
   console.log("✓ Users created");
 

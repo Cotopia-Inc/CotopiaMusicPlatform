@@ -177,7 +177,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     if (trackRef.current?.id === newTrack.id) {
       const media = getMedia();
       if (!media) return;
-      if (isPlaying) { media.pause(); } else { media.play().catch(() => {}); }
+      if (!media.paused) { media.pause(); } else { media.play().catch(() => {}); }
       return;
     }
 
@@ -194,7 +194,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const togglePlay = () => {
     const media = getMedia();
     if (!media || !trackRef.current) return;
-    if (isPlaying) { media.pause(); } else { media.play().catch(() => {}); }
+    if (!media.paused) { media.pause(); } else { media.play().catch(() => {}); }
   };
 
   const stop = () => {

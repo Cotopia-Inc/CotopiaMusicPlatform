@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { eq, desc, and, avg, count, sql } from "drizzle-orm";
-import { db, songsTable, videosTable, artistsTable, labelsTable, albumsTable, ratingsTable, commentsTable, followsTable } from "@workspace/db";
+import { db, songsTable, videosTable, artistsTable, labelsTable, albumsTable, ratingsTable, commentsTable, followsTable, usersTable } from "@workspace/db";
 
 const router = Router();
 
@@ -11,6 +11,7 @@ router.get("/discover", async (_req, res): Promise<void> => {
     albumName: albumsTable.title, genre: songsTable.genre, duration: songsTable.duration,
     coverUrl: songsTable.coverUrl, streamUrl: songsTable.streamUrl,
     playCount: songsTable.playCount, status: songsTable.status, createdAt: songsTable.createdAt,
+    artistIsVerified: usersTable.isVerified,
   };
 
   const videoSelect = {
@@ -18,21 +19,22 @@ router.get("/discover", async (_req, res): Promise<void> => {
     artistName: artistsTable.stageName, genre: videosTable.genre, duration: videosTable.duration,
     thumbnailUrl: videosTable.thumbnailUrl, videoUrl: videosTable.videoUrl,
     viewCount: videosTable.viewCount, status: videosTable.status, createdAt: videosTable.createdAt,
+    artistIsVerified: usersTable.isVerified,
   };
 
   const [trendingSongs, trendingVideos] = await Promise.all([
-    db.select(songSelect).from(songsTable).leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id)).leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id)).where(eq(songsTable.status, "published")).orderBy(desc(songsTable.playCount)).limit(8),
-    db.select(videoSelect).from(videosTable).leftJoin(artistsTable, eq(videosTable.artistId, artistsTable.id)).where(eq(videosTable.status, "published")).orderBy(desc(videosTable.viewCount)).limit(6),
+    db.select(songSelect).from(songsTable).leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id)).leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id)).leftJoin(usersTable, eq(artistsTable.userId, usersTable.id)).where(eq(songsTable.status, "published")).orderBy(desc(songsTable.playCount)).limit(8),
+    db.select(videoSelect).from(videosTable).leftJoin(artistsTable, eq(videosTable.artistId, artistsTable.id)).leftJoin(usersTable, eq(artistsTable.userId, usersTable.id)).where(eq(videosTable.status, "published")).orderBy(desc(videosTable.viewCount)).limit(6),
   ]);
 
   // Top rated: songs with avg rating desc
-  const topRatedSongs = await db.select(songSelect).from(songsTable).leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id)).leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id)).where(eq(songsTable.status, "published")).orderBy(desc(songsTable.playCount)).limit(8);
+  const topRatedSongs = await db.select(songSelect).from(songsTable).leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id)).leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id)).leftJoin(usersTable, eq(artistsTable.userId, usersTable.id)).where(eq(songsTable.status, "published")).orderBy(desc(songsTable.playCount)).limit(8);
 
   // Most discussed: highest comment count
-  const mostDiscussed = await db.select(songSelect).from(songsTable).leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id)).leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id)).where(eq(songsTable.status, "published")).orderBy(desc(songsTable.createdAt)).limit(8);
+  const mostDiscussed = await db.select(songSelect).from(songsTable).leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id)).leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id)).leftJoin(usersTable, eq(artistsTable.userId, usersTable.id)).where(eq(songsTable.status, "published")).orderBy(desc(songsTable.createdAt)).limit(8);
 
   const [newArtistsRaw, newLabelsRaw] = await Promise.all([
-    db.select({ id: artistsTable.id, userId: artistsTable.userId, stageName: artistsTable.stageName, bio: artistsTable.bio, avatarUrl: artistsTable.avatarUrl, bannerUrl: artistsTable.bannerUrl, genre: artistsTable.genre, labelId: artistsTable.labelId, createdAt: artistsTable.createdAt }).from(artistsTable).orderBy(desc(artistsTable.createdAt)).limit(8),
+    db.select({ id: artistsTable.id, userId: artistsTable.userId, stageName: artistsTable.stageName, bio: artistsTable.bio, avatarUrl: artistsTable.avatarUrl, bannerUrl: artistsTable.bannerUrl, genre: artistsTable.genre, labelId: artistsTable.labelId, createdAt: artistsTable.createdAt, isVerified: usersTable.isVerified }).from(artistsTable).leftJoin(usersTable, eq(artistsTable.userId, usersTable.id)).orderBy(desc(artistsTable.createdAt)).limit(8),
     db.select().from(labelsTable).orderBy(desc(labelsTable.createdAt)).limit(6),
   ]);
 

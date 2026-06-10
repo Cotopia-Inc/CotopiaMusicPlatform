@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Search, Star, Sparkles, EyeOff, Eye, Loader2 } from "lucide-react";
-import { RoleTag } from "@/components/role-badges";
+import { UserLink } from "@/components/user-link";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 
@@ -121,11 +121,8 @@ export default function AdminSongs() {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        {song.artistName}
-                        <RoleTag role="artist" size="sm" />
-                      </span>
+                    <TableCell>
+                      <UserLink username={song.artistName ?? ""} artistId={song.artistId} role="artist" isVerified={song.artistIsVerified ?? false} className="text-sm text-muted-foreground" />
                     </TableCell>
                     <TableCell>
                       {song.genre

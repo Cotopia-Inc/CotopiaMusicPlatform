@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Search, Star, Sparkles, EyeOff, Eye, Loader2 } from "lucide-react";
-import { RoleTag } from "@/components/role-badges";
+import { UserLink } from "@/components/user-link";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 
@@ -118,11 +118,8 @@ export default function AdminVideos() {
                         <p className="font-semibold text-sm">{video.title}</p>
                       </div>
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        {video.artistName}
-                        <RoleTag role="artist" size="sm" />
-                      </span>
+                    <TableCell>
+                      <UserLink username={video.artistName ?? ""} artistId={video.artistId} role="artist" isVerified={video.artistIsVerified ?? false} className="text-sm text-muted-foreground" />
                     </TableCell>
                     <TableCell>
                       <Badge variant="secondary" className="text-xs capitalize">{video.genre || "—"}</Badge>
