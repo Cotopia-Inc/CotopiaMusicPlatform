@@ -61,7 +61,7 @@ export default function AdminUsers() {
               data.items.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell className="font-semibold">
-                    <UserLink username={user.username} userId={user.id} role={user.role as string} />
+                    <UserLink username={user.username} userId={user.id} role={user.role as string} isVerified={user.isVerified ?? false} />
                   </TableCell>
                   <TableCell className="text-muted-foreground">{user.email}</TableCell>
                   <TableCell>

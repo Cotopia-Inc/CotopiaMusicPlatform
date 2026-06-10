@@ -88,15 +88,15 @@ export default function Profile() {
               <span className="text-2xl font-bold text-muted-foreground">{profile.username[0].toUpperCase()}</span>
             )}
           </div>
-          {(profile.role === "admin" || profile.role === "master_admin" || profile.role === "editor") && (
+          {profile.isVerified && (
             <div className="absolute bottom-1 right-1 bg-background rounded-full p-0.5 shadow-lg">
-              <VerifiedBadge role={profile.role} size="lg" />
+              <VerifiedBadge role={profile.role} size="lg" isVerified={profile.isVerified} />
             </div>
           )}
         </div>
         <h1 className="text-3xl font-extrabold tracking-tight flex items-center justify-center gap-2 flex-wrap">
           {profile.username}
-          <RoleBadges role={profile.role} size="lg" />
+          <RoleBadges role={profile.role} isVerified={profile.isVerified} size="lg" />
         </h1>
         <p className="text-muted-foreground uppercase tracking-widest text-xs font-semibold">{profile.role?.replace("_", " ")}</p>
       </div>

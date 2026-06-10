@@ -297,6 +297,7 @@ export default function SongDetail() {
                         username={msg.username}
                         userId={msg.userId}
                         role={msg.role ?? undefined}
+                        isVerified={msg.isVerified}
                         artistId={msg.artistId}
                         className="text-[11px] font-semibold text-foreground"
                       />

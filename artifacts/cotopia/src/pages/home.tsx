@@ -1,6 +1,6 @@
 import { useGetHomeFeed, getGetHomeFeedQueryKey } from "@workspace/api-client-react";
 import { Play, Radio, TrendingUp, Video } from "lucide-react";
-import { RoleTag } from "@/components/role-badges";
+import { RoleBadges } from "@/components/role-badges";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "wouter";
 import { UserLink } from "@/components/user-link";
@@ -208,7 +208,7 @@ export default function Home() {
                   <div>
                     <h4 className="font-semibold text-xs truncate flex items-center justify-center gap-0.5">
                       {artist.stageName}
-                      <RoleTag role="artist" size="sm" />
+                      <RoleBadges role="artist" isVerified={artist.isVerified} size="sm" />
                     </h4>
                   </div>
                 </div>

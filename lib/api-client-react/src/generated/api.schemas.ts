@@ -264,6 +264,7 @@ export interface Artist {
   followerCount?: number;
   songCount?: number;
   isFollowed?: boolean;
+  isVerified?: boolean;
   createdAt: string;
 }
 

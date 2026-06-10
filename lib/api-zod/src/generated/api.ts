@@ -611,6 +611,7 @@ export const ListArtistsResponseItem = zod.object({
   "followerCount": zod.number().optional(),
   "songCount": zod.number().optional(),
   "isFollowed": zod.boolean().optional(),
+  "isVerified": zod.boolean().optional(),
   "createdAt": zod.string()
 })
 export const ListArtistsResponse = zod.array(ListArtistsResponseItem)
@@ -630,6 +631,7 @@ export const GetNewArtistsResponseItem = zod.object({
   "followerCount": zod.number().optional(),
   "songCount": zod.number().optional(),
   "isFollowed": zod.boolean().optional(),
+  "isVerified": zod.boolean().optional(),
   "createdAt": zod.string()
 })
 export const GetNewArtistsResponse = zod.array(GetNewArtistsResponseItem)
@@ -649,6 +651,7 @@ export const GetFeaturedArtistsResponseItem = zod.object({
   "followerCount": zod.number().optional(),
   "songCount": zod.number().optional(),
   "isFollowed": zod.boolean().optional(),
+  "isVerified": zod.boolean().optional(),
   "createdAt": zod.string()
 })
 export const GetFeaturedArtistsResponse = zod.array(GetFeaturedArtistsResponseItem)
@@ -672,6 +675,7 @@ export const GetArtistResponse = zod.object({
   "followerCount": zod.number().optional(),
   "songCount": zod.number().optional(),
   "isFollowed": zod.boolean().optional(),
+  "isVerified": zod.boolean().optional(),
   "createdAt": zod.string()
 }).and(zod.object({
   "songs": zod.array(zod.object({
@@ -738,6 +742,7 @@ export const UpdateArtistResponse = zod.object({
   "followerCount": zod.number().optional(),
   "songCount": zod.number().optional(),
   "isFollowed": zod.boolean().optional(),
+  "isVerified": zod.boolean().optional(),
   "createdAt": zod.string()
 })
 
@@ -831,6 +836,7 @@ export const GetLabelResponse = zod.object({
   "followerCount": zod.number().optional(),
   "songCount": zod.number().optional(),
   "isFollowed": zod.boolean().optional(),
+  "isVerified": zod.boolean().optional(),
   "createdAt": zod.string()
 })).optional(),
   "recentReleases": zod.array(zod.object({
@@ -1291,6 +1297,7 @@ export const GetHomeFeedResponse = zod.object({
   "followerCount": zod.number().optional(),
   "songCount": zod.number().optional(),
   "isFollowed": zod.boolean().optional(),
+  "isVerified": zod.boolean().optional(),
   "createdAt": zod.string()
 })),
   "featuredLabels": zod.array(zod.object({
@@ -1438,6 +1445,7 @@ export const GetDiscoverResponse = zod.object({
   "followerCount": zod.number().optional(),
   "songCount": zod.number().optional(),
   "isFollowed": zod.boolean().optional(),
+  "isVerified": zod.boolean().optional(),
   "createdAt": zod.string()
 })),
   "newLabels": zod.array(zod.object({

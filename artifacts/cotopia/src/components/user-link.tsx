@@ -5,19 +5,20 @@ interface UserLinkProps {
   username: string;
   userId?: number | null;
   role?: UserRole;
+  isVerified?: boolean;
   artistId?: number | null;
   className?: string;
   badgeSize?: "sm" | "md" | "lg";
   onClick?: (e: React.MouseEvent) => void;
 }
 
-export function UserLink({ username, userId, role, artistId, className = "", badgeSize = "sm", onClick }: UserLinkProps) {
+export function UserLink({ username, userId, role, isVerified, artistId, className = "", badgeSize = "sm", onClick }: UserLinkProps) {
   const href = artistId ? `/artists/${artistId}` : userId ? `/users/${userId}` : null;
 
   const content = (
     <>
       {username}
-      <RoleBadges role={role} size={badgeSize} />
+      <RoleBadges role={role} size={badgeSize} isVerified={isVerified} />
     </>
   );
 

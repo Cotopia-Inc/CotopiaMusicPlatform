@@ -91,6 +91,7 @@ export default function AdminListeners() {
                           username={u.username}
                           userId={u.id}
                           role={(u as any).role ?? undefined}
+                          isVerified={(u as any).isVerified}
                           className="text-sm font-medium"
                         />
                         {(u as any).isSuspended && (

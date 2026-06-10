@@ -160,7 +160,7 @@ export default function AdminRoles() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <UserLink username={u.username} userId={u.id} role={u.role} className="text-sm font-medium" />
+                      <UserLink username={u.username} userId={u.id} role={u.role} isVerified={(u as any).isVerified} className="text-sm font-medium" />
                       {(u as any).isSuspended && <Ban className="w-3 h-3 text-red-400 flex-shrink-0" />}
                     </div>
                     <p className="text-xs text-muted-foreground truncate">{u.email}</p>

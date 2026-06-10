@@ -1,7 +1,7 @@
 import { useListArtists, getListArtistsQueryKey } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Search } from "lucide-react";
-import { RoleTag } from "@/components/role-badges";
+import { RoleBadges } from "@/components/role-badges";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
@@ -57,7 +57,7 @@ export default function Artists() {
                   )}
                 </div>
                 <div>
-                  <h4 className="font-semibold text-base flex items-center justify-center gap-1"><span className="truncate">{artist.stageName}</span><RoleTag role="artist" size="sm" /></h4>
+                  <h4 className="font-semibold text-base flex items-center justify-center gap-1"><span className="truncate">{artist.stageName}</span><RoleBadges role="artist" isVerified={artist.isVerified} size="sm" /></h4>
                   <p className="text-xs text-muted-foreground mt-1">
                     {artist.followerCount?.toLocaleString()} followers
                   </p>

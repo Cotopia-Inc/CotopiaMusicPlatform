@@ -52,7 +52,7 @@ export default function UserProfile() {
         <div className="space-y-1">
           <h1 className="text-2xl font-extrabold tracking-tight flex items-center justify-center gap-1.5 flex-wrap">
             {user.displayName || user.username}
-            <RoleBadges role={user.role} size="md" />
+            <RoleBadges role={user.role} isVerified={user.isVerified} size="md" />
           </h1>
           {user.displayName && (
             <p className="text-sm text-muted-foreground">@{user.username}</p>

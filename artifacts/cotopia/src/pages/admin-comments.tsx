@@ -126,7 +126,7 @@ export default function AdminComments() {
                           ? <img src={msg.avatarUrl} alt={msg.username} className="w-full h-full object-cover" />
                           : msg.username[0].toUpperCase()}
                       </div>
-                      <span className="text-sm font-medium flex items-center gap-1">{msg.username}<RoleBadges role={msg.role ?? undefined} size="sm" /></span>
+                      <span className="text-sm font-medium flex items-center gap-1">{msg.username}<RoleBadges role={msg.role ?? undefined} isVerified={msg.isVerified} size="sm" /></span>
                     </div>
                   </TableCell>
                   <TableCell className="max-w-xs">

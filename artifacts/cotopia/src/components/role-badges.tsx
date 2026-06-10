@@ -15,9 +15,12 @@ export type UserRole =
 interface RoleBadgesProps {
   role: UserRole;
   size?: "sm" | "md" | "lg";
+  isVerified?: boolean;
 }
 
-export function VerifiedBadge({ role, size = "sm" }: RoleBadgesProps) {
+export function VerifiedBadge({ role, size = "sm", isVerified }: RoleBadgesProps) {
+  if (!isVerified) return null;
+
   const iconSize =
     size === "lg" ? "w-6 h-6" : size === "md" ? "w-4 h-4" : "w-3 h-3";
 
@@ -33,7 +36,10 @@ export function VerifiedBadge({ role, size = "sm" }: RoleBadgesProps) {
   if (role === "label") {
     return <BadgeCheck className={`${iconSize} text-sky-400 flex-shrink-0`} />;
   }
-  return null;
+  if (role === "moderator") {
+    return <BadgeCheck className={`${iconSize} text-violet-400 flex-shrink-0`} />;
+  }
+  return <BadgeCheck className={`${iconSize} text-emerald-400 flex-shrink-0`} />;
 }
 
 export function RoleTag({ role, size = "sm" }: RoleBadgesProps) {
@@ -85,8 +91,8 @@ export function RoleTag({ role, size = "sm" }: RoleBadgesProps) {
   return null;
 }
 
-export function RoleBadges({ role, size = "sm" }: RoleBadgesProps) {
-  const verified = <VerifiedBadge role={role} size={size} />;
+export function RoleBadges({ role, size = "sm", isVerified }: RoleBadgesProps) {
+  const verified = <VerifiedBadge role={role} size={size} isVerified={isVerified} />;
   const tag = <RoleTag role={role} size={size} />;
   if (!verified && !tag) return null;
   return (

@@ -256,6 +256,7 @@ export default function VideoDetail() {
                         username={msg.username}
                         userId={msg.userId}
                         role={msg.role ?? undefined}
+                        isVerified={msg.isVerified}
                         artistId={msg.artistId}
                         className="text-[10px] font-semibold text-primary mr-1.5"
                       />
