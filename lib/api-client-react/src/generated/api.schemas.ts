@@ -136,6 +136,15 @@ export interface SongInput {
   lyrics?: string;
 }
 
+export type SongUpdateStatus = typeof SongUpdateStatus[keyof typeof SongUpdateStatus];
+
+
+export const SongUpdateStatus = {
+  published: 'published',
+  unpublished: 'unpublished',
+  draft: 'draft',
+} as const;
+
 export interface SongUpdate {
   title?: string;
   genre?: string;
@@ -143,6 +152,7 @@ export interface SongUpdate {
   streamUrl?: string;
   lyrics?: string;
   isFeatured?: boolean;
+  status?: SongUpdateStatus;
 }
 
 export interface SongList {
@@ -744,7 +754,6 @@ export interface AdminBulkUploadSongsInput {
   coverUrl?: string;
   releaseDate?: string;
   isFeatured?: boolean;
-  /** @maxItems 20 */
   songs: AdminBulkUploadSongsInputSongsItem[];
 }
 

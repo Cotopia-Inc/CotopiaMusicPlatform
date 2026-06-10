@@ -298,7 +298,7 @@ export default function AdminUploadSong() {
       <Tabs defaultValue="bulk">
         <TabsList className="w-full">
           <TabsTrigger value="single" className="flex-1 gap-2"><Music className="w-3.5 h-3.5" />Single Song</TabsTrigger>
-          <TabsTrigger value="bulk" className="flex-1 gap-2"><ListMusic className="w-3.5 h-3.5" />Bulk Upload (up to 20)</TabsTrigger>
+          <TabsTrigger value="bulk" className="flex-1 gap-2"><ListMusic className="w-3.5 h-3.5" />Bulk Upload</TabsTrigger>
         </TabsList>
 
         {/* ── Single Song Tab ─────────────────────────────────────── */}
@@ -466,7 +466,7 @@ export default function AdminUploadSong() {
             {/* File selection */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <Label>Audio Files * <span className="text-muted-foreground font-normal">(max 20)</span></Label>
+                <Label>Audio Files *</Label>
                 {bulkFiles.length > 0 && (
                   <div className="flex items-center gap-2">
                     {getReleaseIcon(releaseType)}

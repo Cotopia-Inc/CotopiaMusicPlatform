@@ -5,6 +5,7 @@
  * Cotopia Streaming Platform API
  * OpenAPI spec version: 0.1.0
  */
+import type { SongUpdateStatus } from './songUpdateStatus';
 
 export interface SongUpdate {
   title?: string;
@@ -13,4 +14,5 @@ export interface SongUpdate {
   streamUrl?: string;
   lyrics?: string;
   isFeatured?: boolean;
+  status?: SongUpdateStatus;
 }

@@ -245,7 +245,8 @@ export const UpdateSongBody = zod.object({
   "coverUrl": zod.string().optional(),
   "streamUrl": zod.string().optional(),
   "lyrics": zod.string().optional(),
-  "isFeatured": zod.boolean().optional()
+  "isFeatured": zod.boolean().optional(),
+  "status": zod.enum(['published', 'unpublished', 'draft']).optional()
 })
 
 export const UpdateSongResponse = zod.object({
@@ -1722,10 +1723,6 @@ export const AdminUploadSongBody = zod.object({
 /**
  * @summary Upload up to 20 songs at once (auto-labels as single/EP/album)
  */
-export const adminBulkUploadSongsBodySongsMax = 20;
-
-
-
 export const AdminBulkUploadSongsBody = zod.object({
   "artistId": zod.number(),
   "releaseName": zod.string().optional(),
@@ -1739,7 +1736,7 @@ export const AdminBulkUploadSongsBody = zod.object({
   "streamUrl": zod.string(),
   "duration": zod.number().optional(),
   "coverUrl": zod.string().optional()
-})).max(adminBulkUploadSongsBodySongsMax)
+}))
 })
 
 

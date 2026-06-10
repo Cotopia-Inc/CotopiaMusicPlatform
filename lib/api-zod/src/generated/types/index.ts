@@ -98,6 +98,7 @@ export * from './songList';
 export * from './songReleaseType';
 export * from './songStatus';
 export * from './songUpdate';
+export * from './songUpdateStatus';
 export * from './submission';
 export * from './submissionInput';
 export * from './submissionInputPlan';

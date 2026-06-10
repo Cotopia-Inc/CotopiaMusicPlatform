@@ -16,6 +16,5 @@ export interface AdminBulkUploadSongsInput {
   coverUrl?: string;
   releaseDate?: string;
   isFeatured?: boolean;
-  /** @maxItems 20 */
   songs: AdminBulkUploadSongsInputSongsItem[];
 }
