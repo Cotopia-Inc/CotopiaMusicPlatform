@@ -39,7 +39,10 @@ router.get("/labels", optionalAuth, async (req: AuthRequest, res): Promise<void>
   const { q, limit = 20 } = params.data;
 
   const conditions = q ? [ilike(labelsTable.name, `%${q}%`)] : [];
-  const labels = await db.select().from(labelsTable)
+  const labels = await db
+    .select({ id: labelsTable.id, userId: labelsTable.userId, name: labelsTable.name, bio: labelsTable.bio, logoUrl: labelsTable.logoUrl, bannerUrl: labelsTable.bannerUrl, createdAt: labelsTable.createdAt, isVerified: usersTable.isVerified })
+    .from(labelsTable)
+    .innerJoin(usersTable, eq(labelsTable.userId, usersTable.id))
     .where(conditions.length ? and(...conditions) : undefined)
     .orderBy(desc(labelsTable.createdAt))
     .limit(limit);
@@ -59,7 +62,12 @@ router.get("/labels", optionalAuth, async (req: AuthRequest, res): Promise<void>
 });
 
 router.get("/labels/featured", async (_req, res): Promise<void> => {
-  const labels = await db.select().from(labelsTable).orderBy(desc(labelsTable.createdAt)).limit(6);
+  const labels = await db
+    .select({ id: labelsTable.id, userId: labelsTable.userId, name: labelsTable.name, bio: labelsTable.bio, logoUrl: labelsTable.logoUrl, bannerUrl: labelsTable.bannerUrl, createdAt: labelsTable.createdAt, isVerified: usersTable.isVerified })
+    .from(labelsTable)
+    .innerJoin(usersTable, eq(labelsTable.userId, usersTable.id))
+    .orderBy(desc(labelsTable.createdAt))
+    .limit(6);
 
   const withCounts = await Promise.all(labels.map(async (l) => {
     const [fc] = await db.select({ count: count() }).from(followsTable).where(and(eq(followsTable.targetType, "label"), eq(followsTable.targetId, l.id)));

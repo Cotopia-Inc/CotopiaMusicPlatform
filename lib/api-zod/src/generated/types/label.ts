@@ -19,5 +19,6 @@ export interface Label {
   followerCount?: number;
   artistCount?: number;
   isFollowed?: boolean;
+  isVerified?: boolean;
   createdAt: string;
 }

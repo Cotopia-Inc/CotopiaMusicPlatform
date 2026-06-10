@@ -2454,6 +2454,8 @@ components:
           type: integer
         isFollowed:
           type: boolean
+        isVerified:
+          type: boolean
         createdAt:
           type: string
 

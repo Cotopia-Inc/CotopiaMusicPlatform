@@ -19,7 +19,8 @@ interface RoleBadgesProps {
 }
 
 export function VerifiedBadge({ role, size = "sm", isVerified }: RoleBadgesProps) {
-  if (!isVerified) return null;
+  const isStaff = role === "master_admin" || role === "admin";
+  if (!isVerified && !isStaff) return null;
 
   const iconSize =
     size === "lg" ? "w-6 h-6" : size === "md" ? "w-4 h-4" : "w-3 h-3";
