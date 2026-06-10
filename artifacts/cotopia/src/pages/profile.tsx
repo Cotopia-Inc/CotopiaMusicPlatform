@@ -5,8 +5,9 @@ import { Input } from "@/components/ui/input";
 import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Upload, X, Loader2, BadgeCheck } from "lucide-react";
+import { Upload, X, Loader2 } from "lucide-react";
 import { useUpload } from "@workspace/object-storage-web";
+import { RoleBadges, VerifiedBadge } from "@/components/role-badges";
 
 export default function Profile() {
   const { user } = useAuth();
@@ -87,17 +88,17 @@ export default function Profile() {
               <span className="text-2xl font-bold text-muted-foreground">{profile.username[0].toUpperCase()}</span>
             )}
           </div>
-          {profile.isVerified && (
+          {(profile.role === "admin" || profile.role === "master_admin" || profile.role === "editor") && (
             <div className="absolute bottom-1 right-1 bg-background rounded-full p-0.5 shadow-lg">
-              <BadgeCheck className="w-6 h-6 text-green-500" />
+              <VerifiedBadge role={profile.role} size="lg" />
             </div>
           )}
         </div>
-        <h1 className="text-3xl font-extrabold tracking-tight flex items-center justify-center gap-2">
+        <h1 className="text-3xl font-extrabold tracking-tight flex items-center justify-center gap-2 flex-wrap">
           {profile.username}
-          {profile.isVerified && <BadgeCheck className="w-6 h-6 text-green-500 flex-shrink-0" />}
+          <RoleBadges role={profile.role} size="lg" />
         </h1>
-        <p className="text-muted-foreground uppercase tracking-widest text-xs font-semibold">{profile.role}</p>
+        <p className="text-muted-foreground uppercase tracking-widest text-xs font-semibold">{profile.role?.replace("_", " ")}</p>
       </div>
 
       <div className="space-y-6 bg-card p-8 rounded-xl border border-border">

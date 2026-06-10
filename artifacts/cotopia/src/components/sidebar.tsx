@@ -3,8 +3,9 @@ import {
   Home, Compass, Music, Video, Users, Mic2, Library, Building2,
   LayoutDashboard, LogIn, LogOut, Settings, Send, Radio, Bell,
   BarChart3, Upload, ListMusic, Shield, UserCheck, Layers,
-  MessageSquare, FileText, CreditCard, Eye, BookOpen, BadgeCheck,
+  MessageSquare, FileText, CreditCard, Eye, BookOpen,
 } from "lucide-react";
+import { RoleBadges } from "@/components/role-badges";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -274,9 +275,9 @@ export function Sidebar() {
                     : user.username[0].toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold truncate flex items-center gap-0.5">
+                  <p className="text-xs font-semibold truncate flex items-center gap-0.5 flex-wrap">
                     {user.username}
-                    {user.isVerified && <BadgeCheck className="w-3 h-3 text-green-500 flex-shrink-0" />}
+                    <RoleBadges role={user.role} size="sm" />
                   </p>
                   <p className="text-[10px] text-muted-foreground capitalize">{user.role.replace("_", " ")}</p>
                 </div>

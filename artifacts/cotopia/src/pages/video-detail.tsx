@@ -253,8 +253,8 @@ export default function VideoDetail() {
                     <div className="flex-1 min-w-0">
                       <UserLink
                         username={msg.username}
+                        role={msg.role ?? undefined}
                         artistId={msg.artistId}
-                        isVerified={msg.isVerified}
                         className="text-[10px] font-semibold text-primary mr-1.5"
                       />
                       <span className="text-[10px] text-white/80 break-words leading-relaxed">{msg.message}</span>

@@ -346,6 +346,8 @@ export interface ChatMessage {
   avatarUrl?: string | null;
   isVerified: boolean;
   /** @nullable */
+  role?: string | null;
+  /** @nullable */
   artistId?: number | null;
   contentType: ChatMessageContentType;
   contentId: number;
@@ -360,6 +362,8 @@ export interface AdminChatMessage {
   /** @nullable */
   avatarUrl?: string | null;
   isVerified: boolean;
+  /** @nullable */
+  role?: string | null;
   /** @nullable */
   artistId?: number | null;
   contentType: string;

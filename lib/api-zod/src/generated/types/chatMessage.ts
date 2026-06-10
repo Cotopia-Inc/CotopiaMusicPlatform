@@ -15,6 +15,8 @@ export interface ChatMessage {
   avatarUrl?: string | null;
   isVerified: boolean;
   /** @nullable */
+  role?: string | null;
+  /** @nullable */
   artistId?: number | null;
   contentType: ChatMessageContentType;
   contentId: number;

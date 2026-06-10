@@ -294,8 +294,8 @@ export default function SongDetail() {
                     <div className="flex items-baseline gap-2">
                       <UserLink
                         username={msg.username}
+                        role={msg.role ?? undefined}
                         artistId={msg.artistId}
-                        isVerified={msg.isVerified}
                         className="text-[11px] font-semibold text-foreground"
                       />
                       <span className="text-[10px] text-muted-foreground/60">{formatTime(msg.createdAt)}</span>

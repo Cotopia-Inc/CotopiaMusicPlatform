@@ -424,6 +424,7 @@ router.get("/admin/chat", requireAuth, requireRole(...ADMIN_ROLES, "moderator"),
     .select({
       id: chatMessagesTable.id, userId: chatMessagesTable.userId,
       username: usersTable.username, avatarUrl: usersTable.avatarUrl,
+      isVerified: usersTable.isVerified, role: usersTable.role,
       contentType: chatMessagesTable.contentType, contentId: chatMessagesTable.contentId,
       message: chatMessagesTable.message, createdAt: chatMessagesTable.createdAt,
     })

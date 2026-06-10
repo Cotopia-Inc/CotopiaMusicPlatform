@@ -2514,6 +2514,8 @@ components:
           type: ["string", "null"]
         isVerified:
           type: boolean
+        role:
+          type: ["string", "null"]
         artistId:
           type: ["integer", "null"]
         contentType:
@@ -2540,6 +2542,8 @@ components:
           type: ["string", "null"]
         isVerified:
           type: boolean
+        role:
+          type: ["string", "null"]
         artistId:
           type: ["integer", "null"]
         contentType:
