@@ -4,6 +4,7 @@ import { db, submissionsTable, usersTable, songsTable, videosTable, artistsTable
 import {
   CreateSubmissionBody, GetSubmissionParams,
   UpdateSubmissionParams, UpdateSubmissionBody,
+  CreateBulkSubmissionBody,
 } from "@workspace/api-zod";
 import { requireAuth, type AuthRequest } from "../lib/auth";
 import { publishContent } from "../lib/publisher";
@@ -110,6 +111,85 @@ router.post("/submissions", requireAuth, async (req: AuthRequest, res): Promise<
 
   const enriched = await enrichSubmission(submission);
   res.status(201).json(enriched);
+});
+
+router.post("/submissions/bulk", requireAuth, async (req: AuthRequest, res): Promise<void> => {
+  const parsed = CreateBulkSubmissionBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const d = parsed.data;
+
+  // Find or create artist profile for this user
+  let [artist] = await db.select().from(artistsTable).where(eq(artistsTable.userId, req.user!.userId)).limit(1);
+  if (!artist) {
+    const [user] = await db.select({ username: usersTable.username }).from(usersTable).where(eq(usersTable.id, req.user!.userId)).limit(1);
+    const stageName = d.artistName || user?.username || "Unknown Artist";
+    [artist] = await db.insert(artistsTable).values({
+      userId: req.user!.userId,
+      stageName,
+    }).returning();
+  }
+
+  const metaFields = {
+    labelName: d.labelName,
+    mood: d.mood,
+    description: d.description,
+    releaseDate: d.releaseDate,
+    isExplicit: d.isExplicit ?? false,
+    artistName: d.artistName,
+  };
+  const submitterNotes = JSON.stringify(metaFields);
+
+  const results: object[] = [];
+
+  for (const file of d.files) {
+    let contentId: number;
+
+    if (d.type === "song") {
+      const [song] = await db.insert(songsTable).values({
+        artistId: artist.id,
+        title: file.title,
+        genre: d.genre ?? null,
+        coverUrl: d.coverUrl ?? null,
+        streamUrl: file.fileUrl,
+        status: "draft",
+        duration: 0,
+        releaseDate: d.releaseDate ?? null,
+      }).returning();
+      contentId = song.id;
+    } else {
+      const [video] = await db.insert(videosTable).values({
+        artistId: artist.id,
+        title: file.title,
+        genre: d.genre ?? null,
+        description: d.description ?? null,
+        thumbnailUrl: d.coverUrl ?? null,
+        videoUrl: file.fileUrl,
+        status: "draft",
+        duration: 0,
+        releaseDate: d.releaseDate ?? null,
+      }).returning();
+      contentId = video.id;
+    }
+
+    const [submission] = await db.insert(submissionsTable).values({
+      userId: req.user!.userId,
+      type: d.type,
+      contentId,
+      plan: d.plan ?? "basic",
+      status: "draft",
+      paymentStatus: "unpaid",
+      submitterNotes,
+    }).returning();
+
+    const enriched = await enrichSubmission(submission);
+    results.push(enriched);
+  }
+
+  res.status(201).json(results);
 });
 
 router.get("/submissions/:id", requireAuth, async (req: AuthRequest, res): Promise<void> => {

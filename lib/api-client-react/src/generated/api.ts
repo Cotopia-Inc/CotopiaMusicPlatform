@@ -42,6 +42,7 @@ import type {
   ArtistProfile,
   ArtistUpdate,
   AuthResponse,
+  BulkSubmissionInput,
   ChatMessage,
   ChatMessageInput,
   Comment,
@@ -4343,6 +4344,77 @@ export const useCreateSubmission = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getCreateSubmissionMutationOptions(options));
+    }
+
+export const getCreateBulkSubmissionUrl = () => {
+
+
+
+
+  return `/api/submissions/bulk`
+}
+
+/**
+ * @summary Submit multiple files (songs or videos) in one batch with one payment
+ */
+export const createBulkSubmission = async (bulkSubmissionInput: BulkSubmissionInput, options?: RequestInit): Promise<Submission[]> => {
+
+  return customFetch<Submission[]>(getCreateBulkSubmissionUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      bulkSubmissionInput,)
+  }
+);}
+
+
+
+
+export const getCreateBulkSubmissionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBulkSubmission>>, TError,{data: BodyType<BulkSubmissionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createBulkSubmission>>, TError,{data: BodyType<BulkSubmissionInput>}, TContext> => {
+
+const mutationKey = ['createBulkSubmission'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createBulkSubmission>>, {data: BodyType<BulkSubmissionInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createBulkSubmission(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateBulkSubmissionMutationResult = NonNullable<Awaited<ReturnType<typeof createBulkSubmission>>>
+    export type CreateBulkSubmissionMutationBody = BodyType<BulkSubmissionInput>
+    export type CreateBulkSubmissionMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Submit multiple files (songs or videos) in one batch with one payment
+ */
+export const useCreateBulkSubmission = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBulkSubmission>>, TError,{data: BodyType<BulkSubmissionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createBulkSubmission>>,
+        TError,
+        {data: BodyType<BulkSubmissionInput>},
+        TContext
+      > => {
+      return useMutation(getCreateBulkSubmissionMutationOptions(options));
     }
 
 export const getGetSubmissionUrl = (id: number,) => {

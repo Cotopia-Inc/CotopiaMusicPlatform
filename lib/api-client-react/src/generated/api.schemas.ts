@@ -482,6 +482,42 @@ export interface SubmissionInput {
   isExplicit?: boolean;
 }
 
+export type BulkSubmissionInputType = typeof BulkSubmissionInputType[keyof typeof BulkSubmissionInputType];
+
+
+export const BulkSubmissionInputType = {
+  song: 'song',
+  video: 'video',
+} as const;
+
+export type BulkSubmissionInputPlan = typeof BulkSubmissionInputPlan[keyof typeof BulkSubmissionInputPlan];
+
+
+export const BulkSubmissionInputPlan = {
+  basic: 'basic',
+  premium: 'premium',
+} as const;
+
+export type BulkSubmissionInputFilesItem = {
+  title: string;
+  fileUrl: string;
+};
+
+export interface BulkSubmissionInput {
+  type: BulkSubmissionInputType;
+  plan: BulkSubmissionInputPlan;
+  artistName?: string;
+  labelName?: string;
+  genre?: string;
+  mood?: string;
+  description?: string;
+  coverUrl?: string;
+  releaseDate?: string;
+  isExplicit?: boolean;
+  /** @minItems 1 */
+  files: BulkSubmissionInputFilesItem[];
+}
+
 export type SubmissionUpdateStatus = typeof SubmissionUpdateStatus[keyof typeof SubmissionUpdateStatus];
 
 

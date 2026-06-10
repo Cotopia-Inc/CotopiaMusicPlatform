@@ -1122,6 +1122,29 @@ paths:
               schema:
                 $ref: "#/components/schemas/Submission"
 
+  /submissions/bulk:
+    post:
+      operationId: createBulkSubmission
+      tags: [submissions]
+      summary: Submit multiple files (songs or videos) in one batch with one payment
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BulkSubmissionInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Submission"
+
   /submissions/{id}:
     get:
       operationId: getSubmission
@@ -2653,6 +2676,46 @@ components:
           type: string
         isExplicit:
           type: boolean
+
+    BulkSubmissionInput:
+      type: object
+      required: [type, plan, files]
+      properties:
+        type:
+          type: string
+          enum: [song, video]
+        plan:
+          type: string
+          enum: [basic, premium]
+          default: basic
+        artistName:
+          type: string
+        labelName:
+          type: string
+        genre:
+          type: string
+        mood:
+          type: string
+        description:
+          type: string
+        coverUrl:
+          type: string
+        releaseDate:
+          type: string
+        isExplicit:
+          type: boolean
+          default: false
+        files:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [title, fileUrl]
+            properties:
+              title:
+                type: string
+              fileUrl:
+                type: string
 
     SubmissionUpdate:
       type: object

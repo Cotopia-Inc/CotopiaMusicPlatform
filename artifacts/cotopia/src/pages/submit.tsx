@@ -1,169 +1,275 @@
-import { useState, useRef } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import {
-  useCreateSubmission,
-  useInitiatePayment,
-  useCapturePayment,
-} from "@workspace/api-client-react";
+import { useState, useCallback } from "react";
+import { useCreateBulkSubmission, useInitiatePayment, useCapturePayment } from "@workspace/api-client-react";
+import { useUpload } from "@workspace/object-storage-web";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 import {
-  Music, Video, CheckCircle, CreditCard, FileText,
+  Music, Film, CheckCircle, CreditCard, FileText,
   ChevronRight, ChevronLeft, Radio, Star, Zap, Upload,
-  Calendar, AlertCircle, Loader2, ImageIcon, Film, Mic
+  Calendar, AlertCircle, Loader2, ImageIcon, ListMusic, ListVideo, X,
 } from "lucide-react";
-import { useUpload } from "@workspace/object-storage-web";
 
 const GENRES = ["Pop", "Hip-Hop", "R&B", "Electronic", "Rock", "Jazz", "Classical", "Country", "Reggae", "Latin", "Afrobeats", "Indie", "Alternative", "Metal", "Folk", "Soul", "Blues", "Other"];
 const MOODS = ["Energetic", "Chill", "Romantic", "Dark", "Happy", "Melancholic", "Motivational", "Party", "Peaceful", "Nostalgic", "Intense", "Dreamy"];
 
-const detailsSchema = z.object({
-  title: z.string().min(1, "Title is required").max(200),
-  artistName: z.string().optional(),
-  labelName: z.string().optional(),
-  genre: z.string().optional(),
-  mood: z.string().optional(),
-  description: z.string().max(1000).optional(),
-  fileUrl: z.string().optional(),
-  coverUrl: z.string().optional(),
-  releaseDate: z.string().optional(),
-  isExplicit: z.boolean().default(false),
-});
-
-const planSchema = z.object({
-  type: z.enum(["song", "video"]),
-  plan: z.enum(["basic", "premium"]),
-});
-
-type DetailsValues = z.infer<typeof detailsSchema>;
-type PlanValues = z.infer<typeof planSchema>;
-
 const PLAN_PRICES = {
-  song: { basic: 9.99, premium: 29.99 },
-  video: { basic: 14.99, premium: 44.99 },
+  song: { basic: 19.99, premium: 49.99 },
+  video: { basic: 29.99, premium: 79.99 },
 };
 
 const PLAN_FEATURES = {
-  basic: ["Review within 7 days", "Standard placement", "Artist profile listing"],
-  premium: ["Priority review within 48 hours", "Featured placement", "Social media spotlight", "Radio scheduling", "Analytics report"],
+  basic: ["Review within 7 days", "Standard placement", "Artist profile listing", "All tracks in batch covered"],
+  premium: ["Priority review within 48 hours", "Featured placement", "Social media spotlight", "Radio scheduling", "Analytics report", "All tracks in batch covered"],
 };
 
-const STEPS = ["Content Details", "Type & Plan", "Payment", "Complete"];
+const STEPS = ["Files & Details", "Plan", "Payment", "Complete"];
 
-// ── File upload field ──────────────────────────────────────────────────────
-interface FileUploadFieldProps {
-  label: string;
+// ── Per-row file upload component ─────────────────────────────────────────────
+function FileRow({
+  file,
+  title,
+  index,
+  accept,
+  onTitleChange,
+  onUrlSet,
+  onRemove,
+}: {
+  file: File;
+  title: string;
+  index: number;
   accept: string;
-  icon: React.ReactNode;
-  hint: string;
-  value: string;
-  onChange: (url: string, filename: string) => void;
-  urlPlaceholder: string;
-}
-
-function FileUploadField({ label, accept, icon, hint, value, onChange, urlPlaceholder }: FileUploadFieldProps) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [filename, setFilename] = useState<string>("");
-  const [urlMode, setUrlMode] = useState(false);
-
-  const { uploadFile, isUploading, progress } = useUpload({
-    onSuccess: (res) => {
-      onChange(`/api/storage${res.objectPath}`, filename);
-    },
+  onTitleChange: (i: number, t: string) => void;
+  onUrlSet: (i: number, url: string) => void;
+  onRemove: (i: number) => void;
+}) {
+  const [done, setDone] = useState(false);
+  const upload = useUpload({
+    onSuccess: (res) => { setDone(true); onUrlSet(index, `/api/storage${res.objectPath}`); },
   });
 
-  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setFilename(file.name);
-    await uploadFile(file);
-  };
-
   return (
-    <div className="space-y-2">
-      <p className="flex items-center gap-2 text-sm font-medium">
-        {icon}
-        {label}
-        <span className="text-muted-foreground text-xs font-normal">(optional)</span>
-      </p>
-
-      {!urlMode ? (
-        <div className="space-y-2">
-          <div
-            onClick={() => !isUploading && inputRef.current?.click()}
-            className={`flex items-center gap-3 p-4 rounded-lg border-2 border-dashed border-border/60 bg-secondary/20 hover:bg-secondary/40 hover:border-primary/40 transition-all group ${isUploading ? "cursor-wait opacity-70" : "cursor-pointer"}`}
-          >
-            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
-              {isUploading ? <Loader2 className="w-4 h-4 text-primary animate-spin" /> : <Upload className="w-4 h-4 text-primary" />}
-            </div>
-            <div className="flex-1 min-w-0">
-              {isUploading ? (
-                <div>
-                  <p className="text-sm font-medium text-foreground truncate">{filename}</p>
-                  <p className="text-xs text-primary mt-0.5">Uploading… {progress}%</p>
-                </div>
-              ) : filename && value ? (
-                <div>
-                  <p className="text-sm font-medium text-foreground truncate">{filename}</p>
-                  <p className="text-xs text-green-400 mt-0.5">Uploaded ✓</p>
-                </div>
-              ) : (
-                <div>
-                  <p className="text-sm font-medium">Click to upload from device</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{hint}</p>
-                </div>
-              )}
-            </div>
-            {filename && value && !isUploading && (
-              <button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); setFilename(""); onChange("", ""); if (inputRef.current) inputRef.current.value = ""; }}
-                className="text-muted-foreground hover:text-foreground text-xs px-2 py-1 rounded hover:bg-secondary transition-colors flex-shrink-0"
-              >
-                Remove
-              </button>
-            )}
+    <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/30 border border-border/50">
+      <span className="text-xs text-muted-foreground w-5 text-center font-bold flex-shrink-0">{index + 1}</span>
+      <Input
+        value={title}
+        onChange={e => onTitleChange(index, e.target.value)}
+        className="flex-1 h-8 text-sm bg-background/50"
+        placeholder="Track title"
+      />
+      <span className="text-xs text-muted-foreground truncate max-w-[120px] flex-shrink-0" title={file.name}>{file.name}</span>
+      {done ? (
+        <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+      ) : upload.isUploading ? (
+        <div className="flex items-center gap-2 flex-shrink-0 w-24">
+          <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+            <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${upload.progress}%` }} />
           </div>
-          <input ref={inputRef} type="file" accept={accept} onChange={handleFile} className="hidden" disabled={isUploading} />
-          <button
-            type="button"
-            onClick={() => setUrlMode(true)}
-            className="text-xs text-primary hover:underline"
-          >
-            Or paste a URL instead
-          </button>
+          <span className="text-xs text-muted-foreground w-8 text-right">{upload.progress}%</span>
         </div>
       ) : (
-        <div className="space-y-1.5">
-          <Input
-            value={value.startsWith("/api/storage") ? "" : value}
-            onChange={(e) => onChange(e.target.value, "")}
-            placeholder={urlPlaceholder}
-            className="bg-secondary/50 border-secondary"
-          />
-          <button
-            type="button"
-            onClick={() => setUrlMode(false)}
-            className="text-xs text-primary hover:underline"
-          >
-            ← Upload from device instead
-          </button>
+        <Button type="button" variant="outline" size="sm" className="h-7 text-xs flex-shrink-0" onClick={() => upload.uploadFile(file)}>
+          <Upload className="w-3 h-3 mr-1" />Upload
+        </Button>
+      )}
+      <button type="button" onClick={() => onRemove(index)} className="text-muted-foreground hover:text-destructive flex-shrink-0 transition-colors">
+        <X className="w-4 h-4" />
+      </button>
+    </div>
+  );
+}
+
+// ── Shared metadata form ───────────────────────────────────────────────────────
+interface SharedMeta {
+  artistName: string;
+  labelName: string;
+  genre: string;
+  mood: string;
+  description: string;
+  releaseDate: string;
+  isExplicit: boolean;
+  coverUrl: string;
+}
+
+function MetadataSection({ meta, onChange, type }: { meta: SharedMeta; onChange: (m: SharedMeta) => void; type: "song" | "video" }) {
+  const set = (patch: Partial<SharedMeta>) => onChange({ ...meta, ...patch });
+  const coverUpload = useUpload({ onSuccess: (res) => set({ coverUrl: `/api/storage${res.objectPath}` }) });
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Artist / Stage Name</Label>
+          <Input placeholder="Your artist name" value={meta.artistName} onChange={e => set({ artistName: e.target.value })} className="bg-secondary/50 border-secondary" />
+        </div>
+        <div className="space-y-2">
+          <Label>Label Name <span className="text-muted-foreground text-xs">(optional)</span></Label>
+          <Input placeholder="e.g. Neon Records" value={meta.labelName} onChange={e => set({ labelName: e.target.value })} className="bg-secondary/50 border-secondary" />
+        </div>
+        <div className="space-y-2">
+          <Label>Genre</Label>
+          <Select value={meta.genre} onValueChange={v => set({ genre: v })}>
+            <SelectTrigger className="bg-secondary/50 border-secondary"><SelectValue placeholder="Select genre" /></SelectTrigger>
+            <SelectContent>{GENRES.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}</SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label>Mood</Label>
+          <Select value={meta.mood} onValueChange={v => set({ mood: v })}>
+            <SelectTrigger className="bg-secondary/50 border-secondary"><SelectValue placeholder="Select mood" /></SelectTrigger>
+            <SelectContent>{MOODS.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Description <span className="text-muted-foreground text-xs">(optional, shared across all tracks)</span></Label>
+        <Textarea placeholder="Tell us about this release — the story, the inspiration, the vibe..." rows={2} value={meta.description} onChange={e => set({ description: e.target.value })} className="bg-secondary/50 border-secondary resize-none" />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label className="flex items-center gap-2"><Calendar className="w-3.5 h-3.5" />Release Date <span className="text-muted-foreground text-xs">(optional)</span></Label>
+          <Input type="date" value={meta.releaseDate} onChange={e => set({ releaseDate: e.target.value })} className="bg-secondary/50 border-secondary" />
+        </div>
+        <div className="flex items-end pb-0.5">
+          <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-secondary/20 w-full">
+            <div>
+              <p className="text-sm font-medium flex items-center gap-2">
+                Explicit Content
+                {meta.isExplicit && <Badge variant="destructive" className="text-[10px] px-1.5 py-0">E</Badge>}
+              </p>
+              <p className="text-xs text-muted-foreground">Mature language or themes</p>
+            </div>
+            <Switch checked={meta.isExplicit} onCheckedChange={v => set({ isExplicit: v })} className="ml-auto" />
+          </div>
+        </div>
+      </div>
+
+      {/* Cover / Thumbnail */}
+      <div className="space-y-2">
+        <Label className="flex items-center gap-2"><ImageIcon className="w-3.5 h-3.5" />{type === "song" ? "Cover Art" : "Thumbnail"} <span className="text-muted-foreground text-xs">(optional, shared)</span></Label>
+        {meta.coverUrl ? (
+          <div className="flex items-center gap-3 p-3 rounded-lg border border-green-500/30 bg-green-500/5">
+            <img src={meta.coverUrl} alt="Cover" className="w-10 h-10 rounded object-cover flex-shrink-0" />
+            <span className="text-sm text-green-400 font-medium">Uploaded ✓</span>
+            <Button type="button" variant="ghost" size="sm" className="ml-auto text-xs" onClick={() => set({ coverUrl: "" })}>Change</Button>
+          </div>
+        ) : (
+          <label className="flex items-center gap-3 p-4 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary/50 transition-colors">
+            <Upload className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+            <div>
+              <p className="text-sm font-medium">Click to upload {type === "song" ? "cover art" : "thumbnail"}</p>
+              <p className="text-xs text-muted-foreground">JPG, PNG, WebP</p>
+            </div>
+            {coverUpload.isUploading && (
+              <div className="ml-auto w-16 h-1.5 bg-muted rounded-full overflow-hidden">
+                <div className="h-full bg-primary transition-all rounded-full" style={{ width: `${coverUpload.progress}%` }} />
+              </div>
+            )}
+            <input type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) coverUpload.uploadFile(f); }} />
+          </label>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── File list section ─────────────────────────────────────────────────────────
+function FileList({
+  files,
+  titles,
+  urls,
+  accept,
+  icon: Icon,
+  label,
+  hint,
+  onFilesSelected,
+  onTitleChange,
+  onUrlSet,
+  onRemove,
+}: {
+  files: File[];
+  titles: string[];
+  urls: (string | null)[];
+  accept: string;
+  icon: React.ElementType;
+  label: string;
+  hint: string;
+  onFilesSelected: (files: File[]) => void;
+  onTitleChange: (i: number, t: string) => void;
+  onUrlSet: (i: number, url: string) => void;
+  onRemove: (i: number) => void;
+}) {
+  const uploaded = urls.filter(u => u !== null).length;
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <Label className="flex items-center gap-2">
+          <Icon className="w-3.5 h-3.5" />{label} <span className="text-destructive">*</span>
+        </Label>
+        {files.length > 0 && (
+          <span className="text-xs text-muted-foreground">{uploaded} / {files.length} uploaded</span>
+        )}
+      </div>
+
+      {files.length === 0 ? (
+        <label className="flex flex-col items-center gap-3 p-8 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary/50 transition-colors">
+          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+            <Icon className="w-6 h-6 text-primary" />
+          </div>
+          <div className="text-center">
+            <p className="text-sm font-medium">Click to select files</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{hint} · Select as many as you need</p>
+          </div>
+          <input type="file" accept={accept} multiple className="hidden"
+            onChange={e => { const fs = Array.from(e.target.files ?? []); if (fs.length) { onFilesSelected(fs); e.target.value = ""; } }} />
+        </label>
+      ) : (
+        <div className="space-y-2">
+          <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+            {files.map((file, i) => (
+              <FileRow
+                key={`${file.name}-${i}`}
+                file={file}
+                title={titles[i] ?? ""}
+                index={i}
+                accept={accept}
+                onTitleChange={onTitleChange}
+                onUrlSet={onUrlSet}
+                onRemove={onRemove}
+              />
+            ))}
+          </div>
+          <div className="flex items-center gap-2 pt-1">
+            <label className="cursor-pointer">
+              <Button type="button" variant="outline" size="sm" className="text-xs gap-1.5 pointer-events-none">
+                <Upload className="w-3 h-3" />Add more files
+              </Button>
+              <input type="file" accept={accept} multiple className="hidden"
+                onChange={e => { const fs = Array.from(e.target.files ?? []); if (fs.length) { onFilesSelected(fs); e.target.value = ""; } }} />
+            </label>
+            <Button type="button" variant="ghost" size="sm" className="text-xs gap-1.5 text-muted-foreground">
+              {uploaded} / {files.length} uploaded
+            </Button>
+          </div>
         </div>
       )}
     </div>
   );
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
+// ── Main component ─────────────────────────────────────────────────────────────
+const defaultMeta: SharedMeta = { artistName: "", labelName: "", genre: "", mood: "", description: "", releaseDate: "", isExplicit: false, coverUrl: "" };
 
 export default function Submit() {
   const { user } = useAuth();
@@ -171,84 +277,132 @@ export default function Submit() {
   const [, setLocation] = useLocation();
 
   const [step, setStep] = useState(0);
-  const [submissionId, setSubmissionId] = useState<number | null>(null);
+  const [tab, setTab] = useState<"song" | "video">("song");
+  const [plan, setPlan] = useState<"basic" | "premium">("basic");
+
+  // Bulk state — separate for songs and videos
+  const [songFiles, setSongFiles] = useState<File[]>([]);
+  const [songTitles, setSongTitles] = useState<string[]>([]);
+  const [songUrls, setSongUrls] = useState<(string | null)[]>([]);
+  const [songMeta, setSongMeta] = useState<SharedMeta>({ ...defaultMeta });
+
+  const [videoFiles, setVideoFiles] = useState<File[]>([]);
+  const [videoTitles, setVideoTitles] = useState<string[]>([]);
+  const [videoUrls, setVideoUrls] = useState<(string | null)[]>([]);
+  const [videoMeta, setVideoMeta] = useState<SharedMeta>({ ...defaultMeta });
+
   const [paypalOrderId, setPaypalOrderId] = useState<string | null>(null);
   const [paymentInitiated, setPaymentInitiated] = useState(false);
-  const [planValues, setPlanValues] = useState<PlanValues>({ type: "song", plan: "basic" });
+  const [submissionIds, setSubmissionIds] = useState<number[]>([]);
+  const [successTitles, setSuccessTitles] = useState<string[]>([]);
 
-  const createMutation = useCreateSubmission();
+  const bulkMutation = useCreateBulkSubmission();
   const initiateMutation = useInitiatePayment();
   const captureMutation = useCapturePayment();
 
-  const detailsForm = useForm<DetailsValues>({
-    resolver: zodResolver(detailsSchema),
-    defaultValues: {
-      title: "",
-      artistName: user?.username ?? "",
-      labelName: "",
-      genre: "",
-      mood: "",
-      description: "",
-      fileUrl: "",
-      coverUrl: "",
-      releaseDate: "",
-      isExplicit: false,
-    },
-  });
+  const activeFiles = tab === "song" ? songFiles : videoFiles;
+  const activeUrls = tab === "song" ? songUrls : videoUrls;
+  const allUploaded = activeFiles.length > 0 && activeUrls.every(u => u !== null);
+  const price = PLAN_PRICES[tab][plan];
 
-  const planForm = useForm<PlanValues>({
-    resolver: zodResolver(planSchema),
-    defaultValues: { type: "song", plan: "basic" },
-  });
+  // ── File management helpers ───────────────────────────────────────────────
+  function addFiles(newFiles: File[], type: "song" | "video") {
+    if (type === "song") {
+      setSongFiles(prev => {
+        const all = [...prev, ...newFiles];
+        setSongTitles(t => [...t, ...newFiles.map(f => f.name.replace(/\.[^.]+$/, "").replace(/[-_]/g, " "))]);
+        setSongUrls(u => [...u, ...new Array(newFiles.length).fill(null)]);
+        return all;
+      });
+    } else {
+      setVideoFiles(prev => {
+        const all = [...prev, ...newFiles];
+        setVideoTitles(t => [...t, ...newFiles.map(f => f.name.replace(/\.[^.]+$/, "").replace(/[-_]/g, " "))]);
+        setVideoUrls(u => [...u, ...new Array(newFiles.length).fill(null)]);
+        return all;
+      });
+    }
+  }
 
-  const watchType = planForm.watch("type");
-  const watchPlan = planForm.watch("plan");
-  const price = PLAN_PRICES[watchType]?.[watchPlan] ?? 9.99;
+  function removeFile(i: number, type: "song" | "video") {
+    if (type === "song") {
+      setSongFiles(p => p.filter((_, idx) => idx !== i));
+      setSongTitles(p => p.filter((_, idx) => idx !== i));
+      setSongUrls(p => p.filter((_, idx) => idx !== i));
+    } else {
+      setVideoFiles(p => p.filter((_, idx) => idx !== i));
+      setVideoTitles(p => p.filter((_, idx) => idx !== i));
+      setVideoUrls(p => p.filter((_, idx) => idx !== i));
+    }
+  }
 
-  const onDetailsNext = detailsForm.handleSubmit(() => setStep(1));
-  const onPlanNext = planForm.handleSubmit((values) => { setPlanValues(values); setStep(2); });
+  const handleSongTitleChange = useCallback((i: number, t: string) => setSongTitles(p => p.map((v, idx) => idx === i ? t : v)), []);
+  const handleVideoTitleChange = useCallback((i: number, t: string) => setVideoTitles(p => p.map((v, idx) => idx === i ? t : v)), []);
+  const handleSongUrlSet = useCallback((i: number, url: string) => setSongUrls(p => p.map((v, idx) => idx === i ? url : v)), []);
+  const handleVideoUrlSet = useCallback((i: number, url: string) => setVideoUrls(p => p.map((v, idx) => idx === i ? url : v)), []);
 
-  const handleCreateAndInitiate = () => {
-    const details = detailsForm.getValues();
-    const plan = planForm.getValues();
+  // ── Step navigation ───────────────────────────────────────────────────────
+  function handleStep0Next() {
+    if (activeFiles.length === 0) {
+      toast({ title: "No files selected", description: "Select at least one file to continue", variant: "destructive" });
+      return;
+    }
+    if (!allUploaded) {
+      toast({ title: "Upload files first", description: "All files must be uploaded before continuing", variant: "destructive" });
+      return;
+    }
+    setStep(1);
+  }
 
-    createMutation.mutate({
-      data: {
-        type: plan.type,
-        plan: plan.plan,
-        title: details.title,
-        artistName: details.artistName || undefined,
-        labelName: details.labelName || undefined,
-        genre: details.genre || undefined,
-        mood: details.mood || undefined,
-        description: details.description || undefined,
-        fileUrl: details.fileUrl || undefined,
-        coverUrl: details.coverUrl || undefined,
-        releaseDate: details.releaseDate || undefined,
-        isExplicit: details.isExplicit,
-      },
-    }, {
-      onSuccess: (submission) => {
-        setSubmissionId(submission.id);
-        initiateMutation.mutate({ data: { submissionId: submission.id } }, {
-          onSuccess: (payment) => { setPaypalOrderId(payment.paypalOrderId); setPaymentInitiated(true); },
-          onError: () => toast({ variant: "destructive", title: "Payment initiation failed" }),
-        });
-      },
-      onError: () => toast({ variant: "destructive", title: "Submission creation failed", description: "Check your details and try again." }),
-    });
-  };
+  // ── Payment flow ──────────────────────────────────────────────────────────
+  async function handleCreateAndInitiate() {
+    const meta = tab === "song" ? songMeta : videoMeta;
+    const files = tab === "song"
+      ? songTitles.map((title, i) => ({ title, fileUrl: songUrls[i]! }))
+      : videoTitles.map((title, i) => ({ title, fileUrl: videoUrls[i]! }));
 
-  const handleCapturePayment = () => {
-    if (!submissionId || !paypalOrderId) return;
-    captureMutation.mutate({ data: { submissionId, paypalOrderId } }, {
+    try {
+      const submissions = await bulkMutation.mutateAsync({
+        data: {
+          type: tab,
+          plan,
+          artistName: meta.artistName || undefined,
+          labelName: meta.labelName || undefined,
+          genre: meta.genre || undefined,
+          mood: meta.mood || undefined,
+          description: meta.description || undefined,
+          coverUrl: meta.coverUrl || undefined,
+          releaseDate: meta.releaseDate || undefined,
+          isExplicit: meta.isExplicit,
+          files,
+        },
+      });
+
+      const ids = (submissions as any[]).map((s: any) => s.id);
+      setSubmissionIds(ids);
+      setSuccessTitles((submissions as any[]).map((s: any) => s.title ?? ""));
+
+      // Initiate payment using the first submission id (represents the batch)
+      initiateMutation.mutate({ data: { submissionId: ids[0] } }, {
+        onSuccess: (payment: any) => { setPaypalOrderId(payment.paypalOrderId); setPaymentInitiated(true); },
+        onError: () => toast({ variant: "destructive", title: "Payment initiation failed" }),
+      });
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Submission failed", description: err.message ?? "Check your details and try again." });
+    }
+  }
+
+  function handleCapturePayment() {
+    if (!submissionIds[0] || !paypalOrderId) return;
+    captureMutation.mutate({ data: { submissionId: submissionIds[0], paypalOrderId } }, {
       onSuccess: () => setStep(3),
       onError: () => toast({ variant: "destructive", title: "Payment capture failed" }),
     });
-  };
+  }
 
-  const isLoading = createMutation.isPending || initiateMutation.isPending;
+  const isCreating = bulkMutation.isPending || initiateMutation.isPending;
 
+  // ── Auth guard ────────────────────────────────────────────────────────────
   if (!user) {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
@@ -265,11 +419,10 @@ export default function Submit() {
       {/* Header */}
       <div className="space-y-2">
         <div className="flex items-center gap-2 text-primary text-sm font-medium">
-          <Radio className="w-4 h-4" />
-          <span>EVERYDAY RADIO</span>
+          <Radio className="w-4 h-4" /><span>EVERYDAY RADIO</span>
         </div>
         <h1 className="text-4xl font-extrabold tracking-tight">Submit Your Content</h1>
-        <p className="text-muted-foreground">Get your music or video in front of our audience.</p>
+        <p className="text-muted-foreground">Get your music or video in front of our audience. One flat fee covers your entire batch.</p>
       </div>
 
       {/* Step indicator */}
@@ -293,7 +446,7 @@ export default function Submit() {
         ))}
       </div>
 
-      {/* ── Step 0: Content Details ── */}
+      {/* ── Step 0: Files & Details ── */}
       {step === 0 && (
         <div className="bg-card rounded-xl border border-border shadow-sm p-8 space-y-6">
           <div className="flex items-center gap-3">
@@ -301,179 +454,77 @@ export default function Submit() {
               <FileText className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h2 className="font-bold text-lg">Content Details</h2>
-              <p className="text-xs text-muted-foreground">Tell us about your track or video</p>
+              <h2 className="font-bold text-lg">Files & Details</h2>
+              <p className="text-xs text-muted-foreground">Upload your files and fill in shared metadata</p>
             </div>
           </div>
 
-          <Form {...detailsForm}>
-            <form onSubmit={onDetailsNext} className="space-y-5">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <FormField control={detailsForm.control} name="title" render={({ field }) => (
-                  <FormItem className="md:col-span-2">
-                    <FormLabel>Title <span className="text-destructive">*</span></FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g. Summer Nights" {...field} className="bg-secondary/50 border-secondary" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
+          <Tabs value={tab} onValueChange={v => setTab(v as "song" | "video")}>
+            <TabsList className="w-full">
+              <TabsTrigger value="song" className="flex-1 gap-2">
+                <ListMusic className="w-3.5 h-3.5" />Music
+                {songFiles.length > 0 && <Badge className="ml-1 h-5 px-1.5 text-[10px]">{songFiles.length}</Badge>}
+              </TabsTrigger>
+              <TabsTrigger value="video" className="flex-1 gap-2">
+                <ListVideo className="w-3.5 h-3.5" />Video
+                {videoFiles.length > 0 && <Badge className="ml-1 h-5 px-1.5 text-[10px]">{videoFiles.length}</Badge>}
+              </TabsTrigger>
+            </TabsList>
 
-                <FormField control={detailsForm.control} name="artistName" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Artist / Stage Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Your artist name" {...field} className="bg-secondary/50 border-secondary" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-
-                <FormField control={detailsForm.control} name="labelName" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Label Name <span className="text-muted-foreground text-xs">(optional)</span></FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g. Neon Records" {...field} className="bg-secondary/50 border-secondary" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-
-                <FormField control={detailsForm.control} name="genre" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Genre</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="bg-secondary/50 border-secondary">
-                          <SelectValue placeholder="Select genre" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {GENRES.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-
-                <FormField control={detailsForm.control} name="mood" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Mood</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="bg-secondary/50 border-secondary">
-                          <SelectValue placeholder="Select mood" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {MOODS.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-
-                <FormField control={detailsForm.control} name="description" render={({ field }) => (
-                  <FormItem className="md:col-span-2">
-                    <FormLabel>Description <span className="text-muted-foreground text-xs">(optional)</span></FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Tell us about this track — the story, the inspiration, the vibe..."
-                        rows={3}
-                        className="bg-secondary/50 border-secondary resize-none"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-
-                {/* Audio/video file upload */}
-                <div className="md:col-span-2">
-                  <FormField control={detailsForm.control} name="fileUrl" render={({ field }) => (
-                    <FormItem>
-                      <FileUploadField
-                        label="Audio / Video File"
-                        accept=".mp3,.wav,.m4a,.mp4,.mov,.webm,audio/*,video/*"
-                        icon={<Mic className="w-3.5 h-3.5" />}
-                        hint="MP3, WAV, M4A, MP4, MOV, WebM accepted"
-                        value={field.value ?? ""}
-                        onChange={(url) => field.onChange(url)}
-                        urlPlaceholder="https://drive.google.com/... or https://soundcloud.com/..."
-                      />
-                      <FormMessage />
-                    </FormItem>
-                  )} />
+            <TabsContent value="song" className="pt-5 space-y-6">
+              <FileList
+                files={songFiles}
+                titles={songTitles}
+                urls={songUrls}
+                accept=".mp3,.wav,.m4a,.flac,audio/*"
+                icon={Music}
+                label="Audio Files"
+                hint="MP3, WAV, M4A, FLAC"
+                onFilesSelected={fs => addFiles(fs, "song")}
+                onTitleChange={handleSongTitleChange}
+                onUrlSet={handleSongUrlSet}
+                onRemove={i => removeFile(i, "song")}
+              />
+              {songFiles.length > 0 && (
+                <div className="border-t border-border pt-5">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">Shared Metadata (applies to all tracks)</p>
+                  <MetadataSection meta={songMeta} onChange={setSongMeta} type="song" />
                 </div>
+              )}
+            </TabsContent>
 
-                {/* Cover image upload */}
-                <div className="md:col-span-2">
-                  <FormField control={detailsForm.control} name="coverUrl" render={({ field }) => (
-                    <FormItem>
-                      <FileUploadField
-                        label="Cover / Thumbnail Image"
-                        accept=".jpg,.jpeg,.png,.webp,image/*"
-                        icon={<ImageIcon className="w-3.5 h-3.5" />}
-                        hint="JPG, PNG, or WebP — minimum 500×500px recommended"
-                        value={field.value ?? ""}
-                        onChange={(url) => field.onChange(url)}
-                        urlPlaceholder="https://... (direct image URL)"
-                      />
-                      <FormMessage />
-                    </FormItem>
-                  )} />
+            <TabsContent value="video" className="pt-5 space-y-6">
+              <FileList
+                files={videoFiles}
+                titles={videoTitles}
+                urls={videoUrls}
+                accept=".mp4,.mov,.webm,video/*"
+                icon={Film}
+                label="Video Files"
+                hint="MP4, MOV, WebM"
+                onFilesSelected={fs => addFiles(fs, "video")}
+                onTitleChange={handleVideoTitleChange}
+                onUrlSet={handleVideoUrlSet}
+                onRemove={i => removeFile(i, "video")}
+              />
+              {videoFiles.length > 0 && (
+                <div className="border-t border-border pt-5">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">Shared Metadata (applies to all videos)</p>
+                  <MetadataSection meta={videoMeta} onChange={setVideoMeta} type="video" />
                 </div>
+              )}
+            </TabsContent>
+          </Tabs>
 
-                <FormField control={detailsForm.control} name="releaseDate" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="flex items-center gap-2">
-                      <Calendar className="w-3.5 h-3.5" />
-                      Release Date <span className="text-muted-foreground text-xs">(optional)</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} className="bg-secondary/50 border-secondary" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-
-                <FormField control={detailsForm.control} name="isExplicit" render={({ field }) => (
-                  <FormItem className="flex items-center">
-                    <div className="flex items-center gap-3 p-4 rounded-lg border border-border bg-secondary/20 w-full mt-5">
-                      <button
-                        type="button"
-                        role="checkbox"
-                        aria-checked={field.value}
-                        onClick={() => field.onChange(!field.value)}
-                        className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors flex-shrink-0 ${
-                          field.value ? "bg-primary border-primary" : "border-muted-foreground/50 bg-transparent"
-                        }`}
-                      >
-                        {field.value && <CheckCircle className="w-3 h-3 text-primary-foreground" />}
-                      </button>
-                      <div>
-                        <p className="text-sm font-medium flex items-center gap-2">
-                          Explicit Content
-                          {field.value && <Badge variant="destructive" className="text-[10px] px-1.5 py-0">E</Badge>}
-                        </p>
-                        <p className="text-xs text-muted-foreground">Contains explicit language or themes.</p>
-                      </div>
-                    </div>
-                  </FormItem>
-                )} />
-              </div>
-
-              <div className="flex justify-end pt-2">
-                <Button type="submit" className="gap-2 px-6">
-                  Next: Choose Plan <ChevronRight className="w-4 h-4" />
-                </Button>
-              </div>
-            </form>
-          </Form>
+          <div className="flex justify-end pt-2">
+            <Button onClick={handleStep0Next} className="gap-2 px-6" disabled={activeFiles.length === 0}>
+              Next: Choose Plan <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
       )}
 
-      {/* ── Step 1: Type & Plan ── */}
+      {/* ── Step 1: Plan ── */}
       {step === 1 && (
         <div className="bg-card rounded-xl border border-border shadow-sm p-8 space-y-6">
           <div className="flex items-center gap-3">
@@ -481,82 +532,51 @@ export default function Submit() {
               <Star className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h2 className="font-bold text-lg">Content Type & Submission Plan</h2>
-              <p className="text-xs text-muted-foreground">Choose content type and the level of exposure you want</p>
+              <h2 className="font-bold text-lg">Submission Plan</h2>
+              <p className="text-xs text-muted-foreground">One fee covers your entire batch of {activeFiles.length} {tab}{activeFiles.length !== 1 ? "s" : ""}</p>
             </div>
           </div>
 
-          <Form {...planForm}>
-            <form onSubmit={onPlanNext} className="space-y-6">
-              <div>
-                <p className="text-sm font-semibold mb-3">What are you submitting?</p>
-                <FormField control={planForm.control} name="type" render={({ field }) => (
-                  <FormItem>
-                    <div className="grid grid-cols-2 gap-3">
-                      {(["song", "video"] as const).map((t) => (
-                        <button key={t} type="button" onClick={() => field.onChange(t)}
-                          className={`relative p-5 rounded-xl border-2 transition-all text-left ${field.value === t ? "border-primary bg-primary/10" : "border-border bg-secondary/20 hover:border-border/80"}`}>
-                          {t === "song" ? <Music className="w-7 h-7 mb-2 text-primary" /> : <Film className="w-7 h-7 mb-2 text-primary" />}
-                          <p className="font-bold capitalize">{t}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">{t === "song" ? "Audio track or single" : "Music video or visual content"}</p>
-                          {field.value === t && (
-                            <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-                              <CheckCircle className="w-3.5 h-3.5 text-primary-foreground" />
-                            </div>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {(["basic", "premium"] as const).map(p => (
+              <button key={p} type="button" onClick={() => setPlan(p)}
+                className={`relative p-5 rounded-xl border-2 transition-all text-left ${plan === p ? "border-primary bg-primary/10" : "border-border bg-secondary/20 hover:border-border/80"}`}>
+                {p === "premium" && (
+                  <Badge className="absolute top-3 right-3 text-[10px] bg-amber-500/20 text-amber-400 border-amber-500/30">⭐ Popular</Badge>
+                )}
+                <div className="flex items-center gap-2 mb-3">
+                  {p === "basic" ? <Radio className="w-5 h-5 text-primary" /> : <Zap className="w-5 h-5 text-amber-400" />}
+                  <span className="font-bold capitalize">{p}</span>
+                </div>
+                <p className="text-2xl font-extrabold mb-1">
+                  ${PLAN_PRICES[tab][p].toFixed(2)}
+                  <span className="text-sm font-normal text-muted-foreground ml-1">/ batch</span>
+                </p>
+                <p className="text-xs text-muted-foreground mb-3">Covers all {activeFiles.length} {tab}{activeFiles.length !== 1 ? "s" : ""}</p>
+                <ul className="space-y-1.5">
+                  {PLAN_FEATURES[p].map(f => (
+                    <li key={f} className="flex items-start gap-2 text-xs text-muted-foreground">
+                      <CheckCircle className="w-3.5 h-3.5 text-primary flex-shrink-0 mt-0.5" />{f}
+                    </li>
+                  ))}
+                </ul>
+                {plan === p && (
+                  <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                    <CheckCircle className="w-3.5 h-3.5 text-primary-foreground" />
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
 
-              <div>
-                <p className="text-sm font-semibold mb-3">Choose your plan</p>
-                <FormField control={planForm.control} name="plan" render={({ field }) => (
-                  <FormItem>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {(["basic", "premium"] as const).map((p) => (
-                        <button key={p} type="button" onClick={() => field.onChange(p)}
-                          className={`relative p-5 rounded-xl border-2 transition-all text-left ${field.value === p ? "border-primary bg-primary/10" : "border-border bg-secondary/20 hover:border-border/80"}`}>
-                          {p === "premium" && (
-                            <Badge className="absolute top-3 right-3 text-[10px] bg-amber-500/20 text-amber-400 border-amber-500/30">⭐ Popular</Badge>
-                          )}
-                          <div className="flex items-center gap-2 mb-3">
-                            {p === "basic" ? <Radio className="w-5 h-5 text-primary" /> : <Zap className="w-5 h-5 text-amber-400" />}
-                            <span className="font-bold capitalize">{p}</span>
-                          </div>
-                          <p className="text-2xl font-extrabold mb-3">
-                            ${PLAN_PRICES[watchType][p].toFixed(2)}
-                            <span className="text-sm font-normal text-muted-foreground ml-1">/ submission</span>
-                          </p>
-                          <ul className="space-y-1.5">
-                            {PLAN_FEATURES[p].map((f) => (
-                              <li key={f} className="flex items-start gap-2 text-xs text-muted-foreground">
-                                <CheckCircle className="w-3.5 h-3.5 text-primary flex-shrink-0 mt-0.5" />
-                                {f}
-                              </li>
-                            ))}
-                          </ul>
-                        </button>
-                      ))}
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-              </div>
-
-              <div className="flex justify-between pt-2">
-                <Button type="button" variant="outline" onClick={() => setStep(0)} className="gap-2">
-                  <ChevronLeft className="w-4 h-4" /> Back
-                </Button>
-                <Button type="submit" className="gap-2 px-6">
-                  Next: Payment <ChevronRight className="w-4 h-4" />
-                </Button>
-              </div>
-            </form>
-          </Form>
+          <div className="flex justify-between pt-2">
+            <Button type="button" variant="outline" onClick={() => setStep(0)} className="gap-2">
+              <ChevronLeft className="w-4 h-4" />Back
+            </Button>
+            <Button onClick={() => setStep(2)} className="gap-2 px-6">
+              Next: Payment <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
       )}
 
@@ -576,23 +596,32 @@ export default function Submit() {
 
             <div className="space-y-2 text-sm">
               <div className="flex justify-between py-2 border-b border-border/50">
-                <span className="text-muted-foreground">Title</span>
-                <span className="font-medium">{detailsForm.getValues("title")}</span>
+                <span className="text-muted-foreground">Content Type</span>
+                <span className="font-medium capitalize">{tab}</span>
               </div>
               <div className="flex justify-between py-2 border-b border-border/50">
-                <span className="text-muted-foreground">Content Type</span>
-                <span className="font-medium capitalize">{planValues.type}</span>
+                <span className="text-muted-foreground">Files in batch</span>
+                <span className="font-medium">{activeFiles.length} {tab}{activeFiles.length !== 1 ? "s" : ""}</span>
               </div>
               <div className="flex justify-between py-2 border-b border-border/50">
                 <span className="text-muted-foreground">Plan</span>
-                <span className="font-medium capitalize">{planValues.plan}</span>
+                <span className="font-medium capitalize">{plan}</span>
               </div>
-              {detailsForm.getValues("genre") && (
+              {(tab === "song" ? songMeta : videoMeta).genre && (
                 <div className="flex justify-between py-2 border-b border-border/50">
                   <span className="text-muted-foreground">Genre</span>
-                  <span className="font-medium">{detailsForm.getValues("genre")}</span>
+                  <span className="font-medium">{(tab === "song" ? songMeta : videoMeta).genre}</span>
                 </div>
               )}
+              <div className="space-y-1 py-2 border-b border-border/50">
+                <span className="text-muted-foreground text-xs">Tracks</span>
+                {(tab === "song" ? songTitles : videoTitles).map((t, i) => (
+                  <div key={i} className="flex items-center gap-2 text-xs pl-2">
+                    <span className="text-muted-foreground">{i + 1}.</span>
+                    <span className="truncate">{t || "(untitled)"}</span>
+                  </div>
+                ))}
+              </div>
               <div className="flex justify-between py-3 text-base">
                 <span className="font-bold">Total</span>
                 <span className="font-extrabold text-primary text-xl">${price.toFixed(2)}</span>
@@ -607,8 +636,8 @@ export default function Submit() {
             </div>
 
             {!paymentInitiated ? (
-              <Button className="w-full h-12 text-base gap-3 bg-[#0070ba] hover:bg-[#005ea6] text-white" onClick={handleCreateAndInitiate} disabled={isLoading}>
-                {isLoading ? <><Loader2 className="w-4 h-4 animate-spin" /> Processing…</> : <><CreditCard className="w-5 h-5" /> Pay ${price.toFixed(2)} with PayPal</>}
+              <Button className="w-full h-12 text-base gap-3 bg-[#0070ba] hover:bg-[#005ea6] text-white" onClick={handleCreateAndInitiate} disabled={isCreating}>
+                {isCreating ? <><Loader2 className="w-4 h-4 animate-spin" />Processing…</> : <><CreditCard className="w-5 h-5" />Pay ${price.toFixed(2)} with PayPal</>}
               </Button>
             ) : (
               <div className="space-y-3">
@@ -620,7 +649,7 @@ export default function Submit() {
                   </div>
                 </div>
                 <Button className="w-full h-12 text-base gap-3" onClick={handleCapturePayment} disabled={captureMutation.isPending}>
-                  {captureMutation.isPending ? <><Loader2 className="w-4 h-4 animate-spin" /> Confirming…</> : <><CheckCircle className="w-5 h-5" /> Confirm Payment — Complete Submission</>}
+                  {captureMutation.isPending ? <><Loader2 className="w-4 h-4 animate-spin" />Confirming…</> : <><CheckCircle className="w-5 h-5" />Confirm Payment — Complete Submission</>}
                 </Button>
               </div>
             )}
@@ -628,7 +657,7 @@ export default function Submit() {
 
           <div className="flex justify-start">
             <Button type="button" variant="outline" onClick={() => { setStep(1); setPaymentInitiated(false); setPaypalOrderId(null); }} className="gap-2">
-              <ChevronLeft className="w-4 h-4" /> Back
+              <ChevronLeft className="w-4 h-4" />Back
             </Button>
           </div>
         </div>
@@ -641,21 +670,35 @@ export default function Submit() {
             <CheckCircle className="w-10 h-10 text-green-400" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-2xl font-extrabold">Submission Received!</h2>
+            <h2 className="text-2xl font-extrabold">Batch Submitted!</h2>
             <p className="text-muted-foreground max-w-md mx-auto">
-              <strong className="text-foreground">{detailsForm.getValues("title")}</strong> has been submitted for review.
+              {successTitles.length} {tab}{successTitles.length !== 1 ? "s" : ""} submitted for review.
             </p>
           </div>
+          {successTitles.length > 1 && (
+            <div className="text-left max-w-xs mx-auto space-y-1">
+              {successTitles.map((t, i) => (
+                <div key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <CheckCircle className="w-3.5 h-3.5 text-green-400 flex-shrink-0" />
+                  <span className="truncate">{t || "(untitled)"}</span>
+                </div>
+              ))}
+            </div>
+          )}
           <div className="flex items-center justify-center gap-2 p-4 rounded-lg bg-primary/10 border border-primary/20 max-w-xs mx-auto">
             <Radio className="w-4 h-4 text-primary" />
             <p className="text-sm font-medium">Status: <span className="text-primary">Pending Review</span></p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
             <Button onClick={() => setLocation("/submissions")} className="gap-2">
-              <FileText className="w-4 h-4" /> View My Submissions
+              <FileText className="w-4 h-4" />View My Submissions
             </Button>
-            <Button variant="outline" onClick={() => { setStep(0); setSubmissionId(null); setPaypalOrderId(null); setPaymentInitiated(false); detailsForm.reset(); planForm.reset(); }}>
-              Submit Another
+            <Button variant="outline" onClick={() => {
+              setStep(0); setPaypalOrderId(null); setPaymentInitiated(false); setSubmissionIds([]); setSuccessTitles([]);
+              setSongFiles([]); setSongTitles([]); setSongUrls([]); setSongMeta({ ...defaultMeta });
+              setVideoFiles([]); setVideoTitles([]); setVideoUrls([]); setVideoMeta({ ...defaultMeta });
+            }}>
+              Submit More
             </Button>
           </div>
         </div>

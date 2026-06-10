@@ -1125,6 +1125,31 @@ export const CreateSubmissionBody = zod.object({
 
 
 /**
+ * @summary Submit multiple files (songs or videos) in one batch with one payment
+ */
+export const createBulkSubmissionBodyPlanDefault = `basic`;
+export const createBulkSubmissionBodyIsExplicitDefault = false;
+
+
+export const CreateBulkSubmissionBody = zod.object({
+  "type": zod.enum(['song', 'video']),
+  "plan": zod.enum(['basic', 'premium']).default(createBulkSubmissionBodyPlanDefault),
+  "artistName": zod.string().optional(),
+  "labelName": zod.string().optional(),
+  "genre": zod.string().optional(),
+  "mood": zod.string().optional(),
+  "description": zod.string().optional(),
+  "coverUrl": zod.string().optional(),
+  "releaseDate": zod.string().optional(),
+  "isExplicit": zod.boolean().default(createBulkSubmissionBodyIsExplicitDefault),
+  "files": zod.array(zod.object({
+  "title": zod.string(),
+  "fileUrl": zod.string()
+})).min(1)
+})
+
+
+/**
  * @summary Get a submission
  */
 export const GetSubmissionParams = zod.object({
