@@ -1,6 +1,7 @@
 import { useListCompanyPosts, getListCompanyPostsQueryKey, useGetCeoMessage, useSetCeoMessage } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Megaphone, Quote, Crown, Save, Edit2, X } from "lucide-react";
+import { RoleBadges } from "@/components/role-badges";
 import { useAuth } from "@/lib/auth";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -59,7 +60,7 @@ export default function CompanyHub() {
             <div className="flex items-center gap-2">
               <Crown className="w-4 h-4 text-amber-400" />
               <h2 className="font-semibold text-sm">Word from the CEO</h2>
-              <span className="text-[9px] font-bold text-amber-400 bg-amber-400/10 border border-amber-400/20 px-1.5 py-px rounded-full uppercase tracking-wider">master admin</span>
+              <RoleBadges role="master_admin" isVerified={true} />
             </div>
             {!editing ? (
               <Button variant="ghost" size="sm" className="gap-1.5 text-xs" onClick={startEdit}>

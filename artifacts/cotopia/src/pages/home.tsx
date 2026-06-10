@@ -107,7 +107,15 @@ export default function Home() {
                       <Link href={href}>
                         <h4 className="font-semibold text-sm truncate hover:text-primary transition-colors leading-tight">{title}</h4>
                       </Link>
-                      {sub && <p className="text-xs text-muted-foreground truncate mt-0.5">{sub}</p>}
+                      {isSong && pick.song?.artistName && (
+                        <UserLink username={pick.song.artistName} artistId={pick.song.artistId} role="artist" isVerified={(pick.song as any).artistIsVerified ?? false} className="text-xs text-muted-foreground mt-0.5" />
+                      )}
+                      {isVideo && pick.video?.artistName && (
+                        <UserLink username={pick.video.artistName} artistId={pick.video.artistId} role="artist" isVerified={(pick.video as any).artistIsVerified ?? false} className="text-xs text-muted-foreground mt-0.5" />
+                      )}
+                      {isArtist && (pick.artist as any)?.genre && (
+                        <p className="text-xs text-muted-foreground truncate mt-0.5">{(pick.artist as any).genre}</p>
+                      )}
                       {pick.note && (
                         <p className="text-[10px] text-amber-400/70 italic truncate mt-1">"{pick.note}"</p>
                       )}

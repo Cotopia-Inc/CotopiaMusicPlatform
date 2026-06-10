@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { RoleBadges } from "@/components/role-badges";
+import { UserLink } from "@/components/user-link";
 
 const EDITOR_ROLES = ["editor", "admin", "master_admin"];
 type ContentType = "song" | "video" | "artist";
@@ -116,9 +118,7 @@ export default function EditorPicksPage() {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-2xl font-bold">Editor's Picks</h1>
-              <span className="text-[9px] font-bold text-amber-400 bg-amber-400/10 border border-amber-400/20 px-1.5 py-px rounded-full uppercase tracking-wider">
-                {user?.role === "master_admin" ? "master admin" : user?.role === "admin" ? "admin" : "editor"}
-              </span>
+              <RoleBadges role={user?.role} isVerified={true} />
             </div>
             <p className="text-sm text-muted-foreground">Curate recommendations shown on the Home page</p>
           </div>
@@ -287,8 +287,14 @@ export default function EditorPicksPage() {
                       </span>
                       <p className="text-sm font-semibold truncate">{contentLabel(pick)}</p>
                     </div>
-                    {contentSub(pick) && (
-                      <p className="text-xs text-muted-foreground truncate mt-0.5">{contentSub(pick)}</p>
+                    {pick.contentType === "song" && pick.song?.artistName && (
+                      <UserLink username={pick.song.artistName} artistId={pick.song.artistId} role="artist" isVerified={(pick.song as any).artistIsVerified ?? false} className="text-xs text-muted-foreground mt-0.5" />
+                    )}
+                    {pick.contentType === "video" && pick.video?.artistName && (
+                      <UserLink username={pick.video.artistName} artistId={pick.video.artistId} role="artist" isVerified={(pick.video as any).artistIsVerified ?? false} className="text-xs text-muted-foreground mt-0.5" />
+                    )}
+                    {pick.contentType === "artist" && (pick.artist as any)?.genre && (
+                      <p className="text-xs text-muted-foreground truncate mt-0.5">{(pick.artist as any).genre}</p>
                     )}
                     {pick.note && (
                       <p className="text-xs text-primary/80 italic truncate mt-0.5">"{pick.note}"</p>

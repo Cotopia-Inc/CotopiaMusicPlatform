@@ -1,10 +1,11 @@
 import { useListVideos, getListVideosQueryKey } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Play, Search, Video as VideoIcon, BadgeCheck } from "lucide-react";
+import { Play, Search, Video as VideoIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { usePlayer } from "@/lib/player";
+import { UserLink } from "@/components/user-link";
 
 export default function Videos() {
   const [search, setSearch] = useState("");
@@ -72,7 +73,7 @@ export default function Videos() {
                 <Link href={`/videos/${video.id}`}>
                   <h4 className="font-semibold text-sm truncate hover:text-primary transition-colors">{video.title}</h4>
                 </Link>
-                <p className="text-xs text-muted-foreground flex items-center gap-0.5"><span className="truncate">{video.artistName}</span><BadgeCheck className="w-3 h-3 text-green-500 flex-shrink-0" /></p>
+                <UserLink username={video.artistName ?? ""} artistId={video.artistId} role="artist" isVerified={video.artistIsVerified ?? false} className="text-xs text-muted-foreground" />
               </div>
             </div>
           ))
