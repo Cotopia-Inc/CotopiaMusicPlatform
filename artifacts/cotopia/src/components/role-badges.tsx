@@ -28,7 +28,7 @@ export function VerifiedBadge({ role, size = "sm" }: RoleBadgesProps) {
     return <BadgeCheck className={`${iconSize} text-blue-500 flex-shrink-0`} />;
   }
   if (role === "artist") {
-    return <BadgeCheck className={`${iconSize} text-blue-400 flex-shrink-0`} />;
+    return <BadgeCheck className={`${iconSize} text-yellow-400 flex-shrink-0`} />;
   }
   if (role === "label") {
     return <BadgeCheck className={`${iconSize} text-sky-400 flex-shrink-0`} />;
