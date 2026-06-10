@@ -229,10 +229,10 @@ export function Player() {
               <button
                 onClick={stop}
                 disabled={!track}
-                className="text-muted-foreground hover:text-foreground transition-colors disabled:opacity-30 flex-shrink-0"
+                className="w-7 h-7 rounded-full bg-red-600 hover:bg-red-500 text-white flex items-center justify-center transition-colors disabled:opacity-30 flex-shrink-0"
                 title="Stop"
               >
-                <Square className="w-4 h-4 fill-current" />
+                <Square className="w-3.5 h-3.5 fill-current" />
               </button>
               <button
                 onClick={handleVolumeClick}
@@ -348,7 +348,7 @@ export function Player() {
             {/* Stop */}
             <Button
               variant="ghost" size="icon"
-              className="w-8 h-8 text-muted-foreground hover:text-foreground disabled:opacity-30"
+              className="w-8 h-8 text-white bg-red-600 hover:bg-red-500 disabled:opacity-30 rounded-full"
               onClick={stop} disabled={!track}
               title="Stop"
             >
