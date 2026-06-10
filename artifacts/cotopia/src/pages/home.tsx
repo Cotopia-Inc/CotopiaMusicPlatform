@@ -98,7 +98,6 @@ export default function Home() {
                   <UserLink
                     username={song.artistName}
                     artistId={song.artistId}
-                    isVerified={true}
                     className="text-xs text-muted-foreground mt-0.5"
                   />
                 </div>
@@ -165,7 +164,6 @@ export default function Home() {
                   <UserLink
                     username={video.artistName}
                     artistId={video.artistId}
-                    isVerified={true}
                     className="text-xs text-muted-foreground"
                   />
                 </div>

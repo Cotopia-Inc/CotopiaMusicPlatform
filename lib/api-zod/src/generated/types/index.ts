@@ -94,6 +94,7 @@ export * from './playlistDetail';
 export * from './playlistInput';
 export * from './playlistSongInput';
 export * from './playlistUpdate';
+export * from './publicUser';
 export * from './ratingInput';
 export * from './ratingResult';
 export * from './registerInput';

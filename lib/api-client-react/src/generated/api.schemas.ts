@@ -68,6 +68,22 @@ export interface AuthResponse {
   token: string;
 }
 
+export interface PublicUser {
+  id: number;
+  username: string;
+  /** @nullable */
+  displayName?: string | null;
+  /** @nullable */
+  avatarUrl?: string | null;
+  /** @nullable */
+  bio?: string | null;
+  role: string;
+  isVerified: boolean;
+  createdAt: string;
+  /** @nullable */
+  artistId?: number | null;
+}
+
 export interface UserUpdate {
   displayName?: string;
   avatarUrl?: string;

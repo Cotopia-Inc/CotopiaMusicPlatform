@@ -136,7 +136,6 @@ export default function Library() {
                     <UserLink
                       username={song.artistName}
                       artistId={song.artistId}
-                      isVerified={true}
                       className="text-sm text-muted-foreground"
                     />
                   </div>

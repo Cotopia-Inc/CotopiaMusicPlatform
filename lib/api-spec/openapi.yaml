@@ -150,6 +150,27 @@ paths:
               schema:
                 $ref: "#/components/schemas/User"
 
+  /users/{id}:
+    get:
+      operationId: getPublicUser
+      tags: [auth]
+      summary: Get public profile for any user
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicUser"
+        "404":
+          description: User not found
+
   # ── Songs ─────────────────────────────────────────────────────────────────
   /songs:
     get:
@@ -2119,6 +2140,29 @@ components:
           type: boolean
         createdAt:
           type: string
+
+    PublicUser:
+      type: object
+      required: [id, username, role, isVerified, createdAt]
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        displayName:
+          type: ["string", "null"]
+        avatarUrl:
+          type: ["string", "null"]
+        bio:
+          type: ["string", "null"]
+        role:
+          type: string
+        isVerified:
+          type: boolean
+        createdAt:
+          type: string
+        artistId:
+          type: ["integer", "null"]
 
     UserUpdate:
       type: object

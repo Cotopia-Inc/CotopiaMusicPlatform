@@ -74,7 +74,6 @@ export default function Songs() {
                 <UserLink
                   username={song.artistName}
                   artistId={song.artistId}
-                  isVerified={true}
                   className="text-xs text-muted-foreground truncate"
                 />
               </div>

@@ -3,35 +3,38 @@ import { RoleBadges, type UserRole } from "./role-badges";
 
 interface UserLinkProps {
   username: string;
+  userId?: number | null;
   role?: UserRole;
   artistId?: number | null;
-  isVerified?: boolean;
   className?: string;
   badgeSize?: "sm" | "md" | "lg";
   onClick?: (e: React.MouseEvent) => void;
 }
 
-export function UserLink({ username, role, artistId, className = "", badgeSize = "sm", onClick }: UserLinkProps) {
-  const inner = (
-    <span className={`inline-flex items-center gap-0.5 ${className}`}>
+export function UserLink({ username, userId, role, artistId, className = "", badgeSize = "sm", onClick }: UserLinkProps) {
+  const href = artistId ? `/artists/${artistId}` : userId ? `/users/${userId}` : null;
+
+  const content = (
+    <>
       {username}
       <RoleBadges role={role} size={badgeSize} />
-    </span>
+    </>
   );
 
-  if (!artistId) return inner;
+  if (!href) {
+    return <span className={`inline-flex items-center gap-0.5 ${className}`}>{content}</span>;
+  }
 
   return (
     <Link
-      href={`/artists/${artistId}`}
+      href={href}
       onClick={(e) => {
         e.stopPropagation();
         onClick?.(e);
       }}
     >
-      <span className={`inline-flex items-center gap-0.5 hover:text-primary transition-colors ${className}`}>
-        {username}
-        <RoleBadges role={role} size={badgeSize} />
+      <span className={`inline-flex items-center gap-0.5 hover:text-primary transition-colors cursor-pointer ${className}`}>
+        {content}
       </span>
     </Link>
   );

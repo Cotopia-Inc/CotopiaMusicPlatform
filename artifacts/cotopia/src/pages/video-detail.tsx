@@ -253,6 +253,7 @@ export default function VideoDetail() {
                     <div className="flex-1 min-w-0">
                       <UserLink
                         username={msg.username}
+                        userId={msg.userId}
                         role={msg.role ?? undefined}
                         artistId={msg.artistId}
                         className="text-[10px] font-semibold text-primary mr-1.5"

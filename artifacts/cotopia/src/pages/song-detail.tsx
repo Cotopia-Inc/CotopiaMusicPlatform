@@ -294,6 +294,7 @@ export default function SongDetail() {
                     <div className="flex items-baseline gap-2">
                       <UserLink
                         username={msg.username}
+                        userId={msg.userId}
                         role={msg.role ?? undefined}
                         artistId={msg.artistId}
                         className="text-[11px] font-semibold text-foreground"

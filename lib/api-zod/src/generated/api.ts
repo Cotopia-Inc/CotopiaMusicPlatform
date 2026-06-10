@@ -97,6 +97,26 @@ export const UpdateMeResponse = zod.object({
 
 
 /**
+ * @summary Get public profile for any user
+ */
+export const GetPublicUserParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetPublicUserResponse = zod.object({
+  "id": zod.number(),
+  "username": zod.string(),
+  "displayName": zod.string().nullish(),
+  "avatarUrl": zod.string().nullish(),
+  "bio": zod.string().nullish(),
+  "role": zod.string(),
+  "isVerified": zod.boolean(),
+  "createdAt": zod.string(),
+  "artistId": zod.number().nullish()
+})
+
+
+/**
  * @summary List songs
  */
 export const listSongsQueryLimitDefault = 20;

@@ -103,4 +103,29 @@ router.patch("/auth/me", requireAuth, async (req: AuthRequest, res): Promise<voi
   res.json(userOut);
 });
 
+router.get("/users/:id", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  if (!id) { res.status(400).json({ error: "Invalid id" }); return; }
+
+  const [row] = await db
+    .select({
+      id: usersTable.id,
+      username: usersTable.username,
+      displayName: usersTable.displayName,
+      avatarUrl: usersTable.avatarUrl,
+      bio: usersTable.bio,
+      role: usersTable.role,
+      isVerified: usersTable.isVerified,
+      createdAt: usersTable.createdAt,
+      artistId: artistsTable.id,
+    })
+    .from(usersTable)
+    .leftJoin(artistsTable, eq(artistsTable.userId, usersTable.id))
+    .where(eq(usersTable.id, id))
+    .limit(1);
+
+  if (!row) { res.status(404).json({ error: "User not found" }); return; }
+  res.json({ ...row, artistId: row.artistId ?? null });
+});
+
 export default router;

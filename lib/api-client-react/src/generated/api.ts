@@ -83,6 +83,7 @@ import type {
   PlaylistInput,
   PlaylistSongInput,
   PlaylistUpdate,
+  PublicUser,
   RatingInput,
   RatingResult,
   RegisterInput,
@@ -553,6 +554,83 @@ export const useUpdateMe = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getUpdateMeMutationOptions(options));
     }
+
+export const getGetPublicUserUrl = (id: number,) => {
+
+
+
+
+  return `/api/users/${id}`
+}
+
+/**
+ * @summary Get public profile for any user
+ */
+export const getPublicUser = async (id: number, options?: RequestInit): Promise<PublicUser> => {
+
+  return customFetch<PublicUser>(getGetPublicUserUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPublicUserQueryKey = (id: number,) => {
+    return [
+    `/api/users/${id}`
+    ] as const;
+    }
+
+
+export const getGetPublicUserQueryOptions = <TData = Awaited<ReturnType<typeof getPublicUser>>, TError = ErrorType<void>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPublicUser>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPublicUserQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPublicUser>>> = ({ signal }) => getPublicUser(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPublicUser>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPublicUserQueryResult = NonNullable<Awaited<ReturnType<typeof getPublicUser>>>
+export type GetPublicUserQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get public profile for any user
+ */
+
+export function useGetPublicUser<TData = Awaited<ReturnType<typeof getPublicUser>>, TError = ErrorType<void>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPublicUser>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPublicUserQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 
 export const getListSongsUrl = (params?: ListSongsParams,) => {
   const normalizedParams = new URLSearchParams();
