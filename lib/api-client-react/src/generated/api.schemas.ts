@@ -603,6 +603,32 @@ export interface CompanyPost {
   createdAt: string;
 }
 
+export type EditorPickExpandedContentType = typeof EditorPickExpandedContentType[keyof typeof EditorPickExpandedContentType];
+
+
+export const EditorPickExpandedContentType = {
+  song: 'song',
+  video: 'video',
+  artist: 'artist',
+} as const;
+
+export interface EditorPickExpanded {
+  id: number;
+  contentType: EditorPickExpandedContentType;
+  contentId: number;
+  /** @nullable */
+  editorId?: number | null;
+  /** @nullable */
+  editorUsername?: string | null;
+  /** @nullable */
+  note?: string | null;
+  displayOrder: number;
+  createdAt: string;
+  song?: Song | null;
+  video?: Video | null;
+  artist?: Artist | null;
+}
+
 export interface HomeFeed {
   featuredSongs: Song[];
   featuredVideos: Video[];
@@ -611,6 +637,7 @@ export interface HomeFeed {
   trendingSongs: Song[];
   newReleases: Song[];
   announcements: CompanyPost[];
+  editorPicks: EditorPickExpanded[];
 }
 
 export interface DiscoverFeed {
@@ -1007,6 +1034,49 @@ export interface EditorialPlaylistInput {
   coverUrl?: string;
   isPublic?: boolean;
   playlistType: EditorialPlaylistInputPlaylistType;
+}
+
+export type EditorPickInputContentType = typeof EditorPickInputContentType[keyof typeof EditorPickInputContentType];
+
+
+export const EditorPickInputContentType = {
+  song: 'song',
+  video: 'video',
+  artist: 'artist',
+} as const;
+
+export interface EditorPickInput {
+  contentType: EditorPickInputContentType;
+  contentId: number;
+  note?: string;
+  displayOrder?: number;
+}
+
+export interface EditorPickUpdateInput {
+  note?: string;
+  displayOrder?: number;
+}
+
+export interface EditorPickIdParams {
+  id: number;
+}
+
+export interface CeoMessage {
+  id: number;
+  content: string;
+  authorName: string;
+  authorTitle: string;
+  isVisible: boolean;
+  updatedAt: string;
+  /** @nullable */
+  updatedBy?: number | null;
+}
+
+export interface CeoMessageInput {
+  content: string;
+  authorName: string;
+  authorTitle: string;
+  isVisible: boolean;
 }
 
 export type ListSongsParams = {

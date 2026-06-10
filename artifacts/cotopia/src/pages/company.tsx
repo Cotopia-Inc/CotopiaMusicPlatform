@@ -1,12 +1,49 @@
-import { useListCompanyPosts, getListCompanyPostsQueryKey } from "@workspace/api-client-react";
+import { useListCompanyPosts, getListCompanyPostsQueryKey, useGetCeoMessage, useSetCeoMessage } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Megaphone } from "lucide-react";
+import { Megaphone, Quote, Crown, Save, Edit2, X } from "lucide-react";
+import { useAuth } from "@/lib/auth";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function CompanyHub() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const isMasterAdmin = user?.role === "master_admin";
+
   const { data, isLoading } = useListCompanyPosts(
     { limit: 50 },
     { query: { queryKey: getListCompanyPostsQueryKey({ limit: 50 }) } }
   );
+
+  const { data: ceoMsg, isLoading: ceoLoading } = useGetCeoMessage();
+
+  const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState({ content: "", authorName: "CEO", authorTitle: "Chief Executive Officer", isVisible: true });
+
+  function startEdit() {
+    setForm({
+      content: ceoMsg?.content ?? "",
+      authorName: ceoMsg?.authorName ?? "CEO",
+      authorTitle: ceoMsg?.authorTitle ?? "Chief Executive Officer",
+      isVisible: ceoMsg?.isVisible ?? true,
+    });
+    setEditing(true);
+  }
+
+  const saveMutation = useSetCeoMessage({
+    mutation: {
+      onSuccess: () => {
+        qc.invalidateQueries({ queryKey: ["getCeoMessage"] });
+        setEditing(false);
+        toast({ title: "CEO message saved" });
+      },
+    },
+  });
 
   return (
     <div className="space-y-12 pb-24 max-w-5xl mx-auto">
@@ -15,6 +52,113 @@ export default function CompanyHub() {
         <p className="text-muted-foreground text-lg">Announcements, updates, and spotlights from Everyday Radio.</p>
       </div>
 
+      {/* ── CEO Word ────────────────────────────────────────────────────────── */}
+      {isMasterAdmin && (
+        <div className="bg-card border border-amber-400/20 rounded-xl p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Crown className="w-4 h-4 text-amber-400" />
+              <h2 className="font-semibold text-sm">Word from the CEO</h2>
+              <span className="text-[9px] font-bold text-amber-400 bg-amber-400/10 border border-amber-400/20 px-1.5 py-px rounded-full uppercase tracking-wider">master admin</span>
+            </div>
+            {!editing ? (
+              <Button variant="ghost" size="sm" className="gap-1.5 text-xs" onClick={startEdit}>
+                <Edit2 className="w-3.5 h-3.5" /> Edit
+              </Button>
+            ) : (
+              <Button variant="ghost" size="sm" className="gap-1.5 text-xs text-muted-foreground" onClick={() => setEditing(false)}>
+                <X className="w-3.5 h-3.5" /> Cancel
+              </Button>
+            )}
+          </div>
+
+          {editing ? (
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Author name</label>
+                  <Input value={form.authorName} onChange={e => setForm(f => ({ ...f, authorName: e.target.value }))} className="h-8 text-sm" />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Title</label>
+                  <Input value={form.authorTitle} onChange={e => setForm(f => ({ ...f, authorTitle: e.target.value }))} className="h-8 text-sm" />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">Message</label>
+                <Textarea
+                  value={form.content}
+                  onChange={e => setForm(f => ({ ...f, content: e.target.value }))}
+                  placeholder="Write your message to the community…"
+                  className="resize-none text-sm min-h-[120px]"
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={form.isVisible}
+                    onChange={e => setForm(f => ({ ...f, isVisible: e.target.checked }))}
+                    className="rounded"
+                  />
+                  <span className="text-xs text-muted-foreground">Show to visitors</span>
+                </label>
+                <Button
+                  size="sm"
+                  className="gap-1.5 text-xs"
+                  disabled={saveMutation.isPending || !form.content.trim()}
+                  onClick={() => saveMutation.mutate({ data: form })}
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  {saveMutation.isPending ? "Saving…" : "Save"}
+                </Button>
+              </div>
+            </div>
+          ) : ceoLoading ? (
+            <Skeleton className="h-20 w-full rounded-lg" />
+          ) : ceoMsg?.content ? (
+            <div className="text-sm text-muted-foreground">
+              <p className="italic">"{ceoMsg.content}"</p>
+              <p className="mt-2 font-semibold text-foreground not-italic">{ceoMsg.authorName}</p>
+              <p className="text-xs">{ceoMsg.authorTitle}</p>
+              {!ceoMsg.isVisible && (
+                <p className="text-[10px] text-amber-400 mt-1.5 font-medium">⚠ Hidden from visitors</p>
+              )}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">No message set yet. Click Edit to add one.</p>
+          )}
+        </div>
+      )}
+
+      {/* CEO message visible to everyone when set */}
+      {!isMasterAdmin && ceoMsg?.isVisible && ceoMsg.content && (
+        <div className="relative bg-gradient-to-br from-amber-400/5 to-card border border-amber-400/20 rounded-2xl p-8 overflow-hidden">
+          <div className="absolute top-4 right-6 text-amber-400/10">
+            <Quote className="w-16 h-16 rotate-180" />
+          </div>
+          <div className="relative space-y-4">
+            <div className="flex items-center gap-2">
+              <Crown className="w-4 h-4 text-amber-400" />
+              <span className="text-xs font-bold uppercase tracking-wider text-amber-400">A Word from Our CEO</span>
+            </div>
+            <blockquote className="text-lg md:text-xl font-medium leading-relaxed text-foreground">
+              "{ceoMsg.content}"
+            </blockquote>
+            <div className="flex items-center gap-3 pt-2">
+              <div className="w-8 h-8 rounded-full bg-amber-400/20 flex items-center justify-center text-amber-400 font-bold text-sm">
+                {ceoMsg.authorName.charAt(0)}
+              </div>
+              <div>
+                <p className="font-semibold text-sm">{ceoMsg.authorName}</p>
+                <p className="text-xs text-muted-foreground">{ceoMsg.authorTitle}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Posts */}
       <div className="space-y-12">
         {isLoading ? (
           Array(3).fill(0).map((_, i) => (

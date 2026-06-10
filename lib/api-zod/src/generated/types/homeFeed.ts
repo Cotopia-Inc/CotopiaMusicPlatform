@@ -7,6 +7,7 @@
  */
 import type { Artist } from './artist';
 import type { CompanyPost } from './companyPost';
+import type { EditorPickExpanded } from './editorPickExpanded';
 import type { Label } from './label';
 import type { Song } from './song';
 import type { Video } from './video';
@@ -19,4 +20,5 @@ export interface HomeFeed {
   trendingSongs: Song[];
   newReleases: Song[];
   announcements: CompanyPost[];
+  editorPicks: EditorPickExpanded[];
 }

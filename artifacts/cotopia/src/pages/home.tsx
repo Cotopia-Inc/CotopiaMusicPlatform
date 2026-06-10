@@ -1,5 +1,5 @@
 import { useGetHomeFeed, getGetHomeFeedQueryKey } from "@workspace/api-client-react";
-import { Play, Radio, TrendingUp, Video } from "lucide-react";
+import { Play, Radio, TrendingUp, Video, Sparkles, Compass, Music2 } from "lucide-react";
 import { RoleBadges } from "@/components/role-badges";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "wouter";
@@ -12,6 +12,8 @@ export default function Home() {
   const { data: feed, isLoading } = useGetHomeFeed({
     query: { queryKey: getGetHomeFeedQueryKey() }
   });
+
+  const editorPicks = feed?.editorPicks ?? [];
 
   return (
     <div className="space-y-14 pb-24">
@@ -46,6 +48,100 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Editor's Picks */}
+      {(isLoading || editorPicks.length > 0) && (
+        <section>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-amber-400" />
+              <h3 className="text-xl font-bold tracking-tight">Editor's Picks</h3>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400 bg-amber-400/10 border border-amber-400/20 px-2 py-0.5 rounded-full">Curated</span>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {isLoading ? (
+              Array(3).fill(0).map((_, i) => (
+                <div key={i} className="flex gap-3 p-3 rounded-xl border border-border bg-card">
+                  <Skeleton className="w-14 h-14 rounded-lg flex-shrink-0" />
+                  <div className="flex-1 space-y-2 py-1">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-1/2" />
+                  </div>
+                </div>
+              ))
+            ) : editorPicks.map((pick) => {
+              const isSong = pick.contentType === "song";
+              const isVideo = pick.contentType === "video";
+              const isArtist = pick.contentType === "artist";
+              const art = isSong ? pick.song?.coverUrl : isVideo ? pick.video?.thumbnailUrl : (pick.artist as any)?.avatarUrl;
+              const title = isSong ? pick.song?.title : isVideo ? pick.video?.title : (pick.artist as any)?.stageName;
+              const sub = isSong ? pick.song?.artistName : isVideo ? pick.video?.artistName : (pick.artist as any)?.genre;
+              const href = isSong ? `/songs/${pick.contentId}` : isVideo ? `/videos/${pick.contentId}` : `/artists/${pick.contentId}`;
+
+              return (
+                <div key={pick.id} className="group relative bg-card border border-border/60 hover:border-amber-400/30 rounded-xl overflow-hidden transition-all duration-200 hover:shadow-lg hover:shadow-amber-400/5">
+                  <div className="flex items-center gap-3 p-3">
+                    {/* Art */}
+                    <Link href={href}>
+                      <div className={`w-14 h-14 overflow-hidden bg-secondary flex-shrink-0 ${isArtist ? "rounded-full border-2 border-border" : "rounded-lg"}`}>
+                        {art
+                          ? <img src={art} alt={title ?? ""} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                          : <div className="w-full h-full flex items-center justify-center text-muted-foreground/30">
+                              {isSong ? <Music2 className="w-5 h-5" /> : isVideo ? <Video className="w-5 h-5" /> : <Radio className="w-5 h-5" />}
+                            </div>
+                        }
+                      </div>
+                    </Link>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <span className={`text-[9px] font-bold uppercase tracking-wider px-1 py-px rounded ${
+                          isSong ? "text-purple-400 bg-purple-400/10" :
+                          isVideo ? "text-blue-400 bg-blue-400/10" :
+                          "text-amber-400 bg-amber-400/10"
+                        }`}>
+                          {pick.contentType}
+                        </span>
+                      </div>
+                      <Link href={href}>
+                        <h4 className="font-semibold text-sm truncate hover:text-primary transition-colors leading-tight">{title}</h4>
+                      </Link>
+                      {sub && <p className="text-xs text-muted-foreground truncate mt-0.5">{sub}</p>}
+                      {pick.note && (
+                        <p className="text-[10px] text-amber-400/70 italic truncate mt-1">"{pick.note}"</p>
+                      )}
+                    </div>
+
+                    {/* Play button for song/video */}
+                    {(isSong && pick.song) && (
+                      <button
+                        onClick={() => play({ id: pick.song!.id, title: pick.song!.title, artistName: pick.song!.artistName ?? "", artistId: pick.song!.artistId, artistIsVerified: (pick.song as any).artistIsVerified ?? false, coverUrl: pick.song!.coverUrl, streamUrl: pick.song!.streamUrl, duration: pick.song!.duration })}
+                        className="flex-shrink-0 w-9 h-9 rounded-full bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground transition-all flex items-center justify-center opacity-0 group-hover:opacity-100"
+                        title={`Play ${pick.song.title}`}
+                      >
+                        <Play className="w-4 h-4 fill-current ml-0.5" />
+                      </button>
+                    )}
+                    {(isVideo && pick.video) && (
+                      <button
+                        onClick={() => play({ id: pick.video!.id, title: pick.video!.title, artistName: pick.video!.artistName ?? "", artistId: pick.video!.artistId, artistIsVerified: (pick.video as any).artistIsVerified ?? false, coverUrl: pick.video!.thumbnailUrl, videoUrl: pick.video!.videoUrl, duration: pick.video!.duration })}
+                        className="flex-shrink-0 w-9 h-9 rounded-full bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground transition-all flex items-center justify-center opacity-0 group-hover:opacity-100"
+                        title={`Play ${pick.video.title}`}
+                      >
+                        <Play className="w-4 h-4 fill-current ml-0.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Bottom amber accent line */}
+                  <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-400/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* Featured Songs */}
       <section>
@@ -221,6 +317,70 @@ export default function Home() {
           )}
         </div>
       </section>
+
+      {/* Discover section */}
+      {(isLoading || (feed?.newReleases?.length ?? 0) > 0) && (
+        <section>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <Compass className="w-4 h-4 text-primary" />
+              <h3 className="text-xl font-bold tracking-tight">Discover Something New</h3>
+            </div>
+            <Link href="/discover">
+              <span className="text-sm text-muted-foreground hover:text-primary transition-colors cursor-pointer">Full Discover →</span>
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            {isLoading ? (
+              Array(6).fill(0).map((_, i) => (
+                <div key={i} className="space-y-2">
+                  <Skeleton className="aspect-square rounded-lg" />
+                  <Skeleton className="h-3 w-3/4" />
+                  <Skeleton className="h-3 w-1/2" />
+                </div>
+              ))
+            ) : (feed?.newReleases ?? []).slice(0, 6).map((song) => (
+              <div key={song.id} className="group cursor-pointer space-y-2">
+                <Link href={`/songs/${song.id}`}>
+                  <div className="aspect-square relative overflow-hidden rounded-lg bg-secondary border border-border/50">
+                    {song.coverUrl ? (
+                      <img src={song.coverUrl} alt={song.title} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary">
+                        <Radio className="w-6 h-6 text-primary/20" />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <button
+                        className="bg-primary text-primary-foreground rounded-full p-2.5 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300"
+                        title={`Play ${song.title}`}
+                        onClick={(e) => { e.preventDefault(); play({ id: song.id, title: song.title, artistName: song.artistName ?? "", artistId: song.artistId, artistIsVerified: song.artistIsVerified ?? false, coverUrl: song.coverUrl, streamUrl: song.streamUrl, duration: song.duration }); }}
+                      >
+                        <Play className="w-4 h-4 fill-current ml-0.5" />
+                      </button>
+                    </div>
+                    <div className="absolute top-1.5 right-1.5">
+                      <Badge variant="secondary" className="text-[8px] px-1 py-px opacity-80">New</Badge>
+                    </div>
+                  </div>
+                </Link>
+                <div>
+                  <Link href={`/songs/${song.id}`}>
+                    <p className="text-xs font-semibold truncate hover:text-primary transition-colors">{song.title}</p>
+                  </Link>
+                  <UserLink
+                    username={song.artistName}
+                    artistId={song.artistId}
+                    role="artist"
+                    isVerified={song.artistIsVerified ?? false}
+                    className="text-[10px] text-muted-foreground"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Powered by Cotopia footer */}
       <div className="flex items-center justify-center gap-2 py-4 opacity-40">

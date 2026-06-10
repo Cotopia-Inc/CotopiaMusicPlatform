@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { eq, desc, and, avg } from "drizzle-orm";
-import { db, songsTable, videosTable, artistsTable, labelsTable, albumsTable, companyPostsTable, followsTable, ratingsTable } from "@workspace/db";
+import { db, songsTable, videosTable, artistsTable, labelsTable, albumsTable, companyPostsTable, followsTable, ratingsTable, editorPicksTable, usersTable } from "@workspace/db";
 import { count } from "drizzle-orm";
 
 const router = Router();
@@ -55,6 +55,66 @@ router.get("/home", async (_req, res): Promise<void> => {
     return { ...l, followerCount: fc?.count ?? 0, artistCount: ac?.count ?? 0, isFollowed: false };
   }));
 
+  const rawPicks = await db
+    .select({
+      id: editorPicksTable.id,
+      contentType: editorPicksTable.contentType,
+      contentId: editorPicksTable.contentId,
+      editorId: editorPicksTable.editorId,
+      editorUsername: usersTable.username,
+      note: editorPicksTable.note,
+      displayOrder: editorPicksTable.displayOrder,
+      createdAt: editorPicksTable.createdAt,
+    })
+    .from(editorPicksTable)
+    .leftJoin(usersTable, eq(editorPicksTable.editorId, usersTable.id))
+    .orderBy(editorPicksTable.displayOrder, desc(editorPicksTable.createdAt))
+    .limit(12);
+
+  const editorPicks = await Promise.all(rawPicks.map(async (p) => {
+    let song = null, video = null, artist = null;
+    if (p.contentType === "song") {
+      const rows = await db.select({
+        id: songsTable.id, title: songsTable.title, artistId: songsTable.artistId,
+        artistName: artistsTable.stageName, albumId: songsTable.albumId,
+        albumName: albumsTable.title, genre: songsTable.genre, duration: songsTable.duration,
+        coverUrl: songsTable.coverUrl, streamUrl: songsTable.streamUrl,
+        playCount: songsTable.playCount, status: songsTable.status,
+        isFeatured: songsTable.isFeatured, createdAt: songsTable.createdAt,
+        artistIsVerified: usersTable.isVerified,
+      }).from(songsTable)
+        .leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id))
+        .leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id))
+        .leftJoin(usersTable, eq(artistsTable.userId, usersTable.id))
+        .where(and(eq(songsTable.id, p.contentId), eq(songsTable.status, "published"))).limit(1);
+      song = rows[0] ?? null;
+    } else if (p.contentType === "video") {
+      const rows = await db.select({
+        id: videosTable.id, title: videosTable.title, artistId: videosTable.artistId,
+        artistName: artistsTable.stageName, genre: videosTable.genre, duration: videosTable.duration,
+        thumbnailUrl: videosTable.thumbnailUrl, videoUrl: videosTable.videoUrl,
+        viewCount: videosTable.viewCount, status: videosTable.status,
+        isFeatured: videosTable.isFeatured, createdAt: videosTable.createdAt,
+        artistIsVerified: usersTable.isVerified,
+      }).from(videosTable)
+        .leftJoin(artistsTable, eq(videosTable.artistId, artistsTable.id))
+        .leftJoin(usersTable, eq(artistsTable.userId, usersTable.id))
+        .where(and(eq(videosTable.id, p.contentId), eq(videosTable.status, "published"))).limit(1);
+      video = rows[0] ?? null;
+    } else if (p.contentType === "artist") {
+      const rows = await db.select({
+        id: artistsTable.id, userId: artistsTable.userId, stageName: artistsTable.stageName,
+        bio: artistsTable.bio, avatarUrl: artistsTable.avatarUrl, bannerUrl: artistsTable.bannerUrl,
+        genre: artistsTable.genre, labelId: artistsTable.labelId, createdAt: artistsTable.createdAt,
+        isVerified: usersTable.isVerified,
+      }).from(artistsTable)
+        .leftJoin(usersTable, eq(artistsTable.userId, usersTable.id))
+        .where(eq(artistsTable.id, p.contentId)).limit(1);
+      artist = rows[0] ?? null;
+    }
+    return { ...p, song, video, artist };
+  }));
+
   res.json({
     featuredSongs: await Promise.all(featuredSongs.map(addRatingToSong)),
     featuredVideos: await Promise.all(featuredVideos.map(addRatingToVideo)),
@@ -63,6 +123,7 @@ router.get("/home", async (_req, res): Promise<void> => {
     trendingSongs: await Promise.all(trendingSongs.map(addRatingToSong)),
     newReleases: await Promise.all(newReleases.map(addRatingToSong)),
     announcements,
+    editorPicks: editorPicks.filter(p => p.song || p.video || p.artist),
   });
 });
 

@@ -43,3 +43,13 @@ Uses `targetType` and `targetId` (not `followeeType`/`followeeId`):
 eq(followsTable.targetType, "artist"), eq(followsTable.targetId, artistId)
 ```
 **Why:** DB schema defines the columns as `target_type` / `target_id`.
+
+## api-server zod import
+`api-server` does not have `zod` in its package.json by default — use `catalog:` to add it if a new route needs inline `z` schemas. Use `from "zod"` (not `"zod/v4"`).
+**Why:** api-server only pulls in zod transitively via `@workspace/api-zod`; `"zod/v4"` is the subpath export for the Zod v4 API but TypeScript can't resolve it without an explicit dep.
+
+## JwtPayload shape
+`req.user` only has `{ userId: number; role: string }` — no `username`. Look up the username from DB if needed:
+```ts
+const row = await db.select({ username: usersTable.username }).from(usersTable).where(eq(usersTable.id, req.user!.userId)).limit(1);
+```

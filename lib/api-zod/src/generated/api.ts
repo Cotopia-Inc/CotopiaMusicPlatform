@@ -1382,6 +1382,65 @@ export const GetHomeFeedResponse = zod.object({
   "videoUrl": zod.string().nullish(),
   "isPinned": zod.boolean(),
   "createdAt": zod.string()
+})),
+  "editorPicks": zod.array(zod.object({
+  "id": zod.number(),
+  "contentType": zod.enum(['song', 'video', 'artist']),
+  "contentId": zod.number(),
+  "editorId": zod.number().nullish(),
+  "editorUsername": zod.string().nullish(),
+  "note": zod.string().nullish(),
+  "displayOrder": zod.number(),
+  "createdAt": zod.string(),
+  "song": zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "artistId": zod.number(),
+  "artistName": zod.string(),
+  "artistIsVerified": zod.boolean().optional(),
+  "albumId": zod.number().nullish(),
+  "albumName": zod.string().nullish(),
+  "genre": zod.string().nullish(),
+  "duration": zod.number(),
+  "coverUrl": zod.string().nullish(),
+  "streamUrl": zod.string().nullish(),
+  "playCount": zod.number().optional(),
+  "avgRating": zod.number().nullish(),
+  "status": zod.enum(['draft', 'pending_review', 'approved', 'rejected', 'published']),
+  "releaseType": zod.enum(['single', 'ep', 'album']).optional(),
+  "isFeatured": zod.boolean().optional(),
+  "createdAt": zod.string()
+}).nullish(),
+  "video": zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "artistId": zod.number(),
+  "artistName": zod.string(),
+  "artistIsVerified": zod.boolean().optional(),
+  "genre": zod.string().nullish(),
+  "duration": zod.number(),
+  "thumbnailUrl": zod.string().nullish(),
+  "videoUrl": zod.string().nullish(),
+  "viewCount": zod.number().optional(),
+  "avgRating": zod.number().nullish(),
+  "status": zod.enum(['draft', 'pending_review', 'approved', 'rejected', 'published']),
+  "isFeatured": zod.boolean().optional(),
+  "createdAt": zod.string()
+}).nullish(),
+  "artist": zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "stageName": zod.string(),
+  "bio": zod.string().nullish(),
+  "avatarUrl": zod.string().nullish(),
+  "bannerUrl": zod.string().nullish(),
+  "genre": zod.string().nullish(),
+  "followerCount": zod.number().optional(),
+  "songCount": zod.number().optional(),
+  "isFollowed": zod.boolean().optional(),
+  "isVerified": zod.boolean().optional(),
+  "createdAt": zod.string()
+}).nullish()
 }))
 })
 
@@ -1581,6 +1640,198 @@ export const UpdateCompanyPostResponse = zod.object({
  */
 export const DeleteCompanyPostParams = zod.object({
   "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary List all editor picks (expanded with content)
+ */
+export const ListEditorPicksResponseItem = zod.object({
+  "id": zod.number(),
+  "contentType": zod.enum(['song', 'video', 'artist']),
+  "contentId": zod.number(),
+  "editorId": zod.number().nullish(),
+  "editorUsername": zod.string().nullish(),
+  "note": zod.string().nullish(),
+  "displayOrder": zod.number(),
+  "createdAt": zod.string(),
+  "song": zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "artistId": zod.number(),
+  "artistName": zod.string(),
+  "artistIsVerified": zod.boolean().optional(),
+  "albumId": zod.number().nullish(),
+  "albumName": zod.string().nullish(),
+  "genre": zod.string().nullish(),
+  "duration": zod.number(),
+  "coverUrl": zod.string().nullish(),
+  "streamUrl": zod.string().nullish(),
+  "playCount": zod.number().optional(),
+  "avgRating": zod.number().nullish(),
+  "status": zod.enum(['draft', 'pending_review', 'approved', 'rejected', 'published']),
+  "releaseType": zod.enum(['single', 'ep', 'album']).optional(),
+  "isFeatured": zod.boolean().optional(),
+  "createdAt": zod.string()
+}).nullish(),
+  "video": zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "artistId": zod.number(),
+  "artistName": zod.string(),
+  "artistIsVerified": zod.boolean().optional(),
+  "genre": zod.string().nullish(),
+  "duration": zod.number(),
+  "thumbnailUrl": zod.string().nullish(),
+  "videoUrl": zod.string().nullish(),
+  "viewCount": zod.number().optional(),
+  "avgRating": zod.number().nullish(),
+  "status": zod.enum(['draft', 'pending_review', 'approved', 'rejected', 'published']),
+  "isFeatured": zod.boolean().optional(),
+  "createdAt": zod.string()
+}).nullish(),
+  "artist": zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "stageName": zod.string(),
+  "bio": zod.string().nullish(),
+  "avatarUrl": zod.string().nullish(),
+  "bannerUrl": zod.string().nullish(),
+  "genre": zod.string().nullish(),
+  "followerCount": zod.number().optional(),
+  "songCount": zod.number().optional(),
+  "isFollowed": zod.boolean().optional(),
+  "isVerified": zod.boolean().optional(),
+  "createdAt": zod.string()
+}).nullish()
+})
+export const ListEditorPicksResponse = zod.array(ListEditorPicksResponseItem)
+
+
+/**
+ * @summary Add an editor pick (editor/admin only)
+ */
+export const AddEditorPickBody = zod.object({
+  "contentType": zod.enum(['song', 'video', 'artist']),
+  "contentId": zod.number(),
+  "note": zod.string().optional(),
+  "displayOrder": zod.number().optional()
+})
+
+
+/**
+ * @summary Update editor pick note/order
+ */
+export const UpdateEditorPickParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateEditorPickBody = zod.object({
+  "note": zod.string().optional(),
+  "displayOrder": zod.number().optional()
+})
+
+export const UpdateEditorPickResponse = zod.object({
+  "id": zod.number(),
+  "contentType": zod.enum(['song', 'video', 'artist']),
+  "contentId": zod.number(),
+  "editorId": zod.number().nullish(),
+  "editorUsername": zod.string().nullish(),
+  "note": zod.string().nullish(),
+  "displayOrder": zod.number(),
+  "createdAt": zod.string(),
+  "song": zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "artistId": zod.number(),
+  "artistName": zod.string(),
+  "artistIsVerified": zod.boolean().optional(),
+  "albumId": zod.number().nullish(),
+  "albumName": zod.string().nullish(),
+  "genre": zod.string().nullish(),
+  "duration": zod.number(),
+  "coverUrl": zod.string().nullish(),
+  "streamUrl": zod.string().nullish(),
+  "playCount": zod.number().optional(),
+  "avgRating": zod.number().nullish(),
+  "status": zod.enum(['draft', 'pending_review', 'approved', 'rejected', 'published']),
+  "releaseType": zod.enum(['single', 'ep', 'album']).optional(),
+  "isFeatured": zod.boolean().optional(),
+  "createdAt": zod.string()
+}).nullish(),
+  "video": zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "artistId": zod.number(),
+  "artistName": zod.string(),
+  "artistIsVerified": zod.boolean().optional(),
+  "genre": zod.string().nullish(),
+  "duration": zod.number(),
+  "thumbnailUrl": zod.string().nullish(),
+  "videoUrl": zod.string().nullish(),
+  "viewCount": zod.number().optional(),
+  "avgRating": zod.number().nullish(),
+  "status": zod.enum(['draft', 'pending_review', 'approved', 'rejected', 'published']),
+  "isFeatured": zod.boolean().optional(),
+  "createdAt": zod.string()
+}).nullish(),
+  "artist": zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "stageName": zod.string(),
+  "bio": zod.string().nullish(),
+  "avatarUrl": zod.string().nullish(),
+  "bannerUrl": zod.string().nullish(),
+  "genre": zod.string().nullish(),
+  "followerCount": zod.number().optional(),
+  "songCount": zod.number().optional(),
+  "isFollowed": zod.boolean().optional(),
+  "isVerified": zod.boolean().optional(),
+  "createdAt": zod.string()
+}).nullish()
+})
+
+
+/**
+ * @summary Remove an editor pick
+ */
+export const DeleteEditorPickParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary Get the active CEO message
+ */
+export const GetCeoMessageResponse = zod.object({
+  "id": zod.number(),
+  "content": zod.string(),
+  "authorName": zod.string(),
+  "authorTitle": zod.string(),
+  "isVisible": zod.boolean(),
+  "updatedAt": zod.string(),
+  "updatedBy": zod.number().nullish()
+})
+
+
+/**
+ * @summary Set the CEO message (master_admin only)
+ */
+export const SetCeoMessageBody = zod.object({
+  "content": zod.string(),
+  "authorName": zod.string(),
+  "authorTitle": zod.string(),
+  "isVisible": zod.boolean()
+})
+
+export const SetCeoMessageResponse = zod.object({
+  "id": zod.number(),
+  "content": zod.string(),
+  "authorName": zod.string(),
+  "authorTitle": zod.string(),
+  "isVisible": zod.boolean(),
+  "updatedAt": zod.string(),
+  "updatedBy": zod.number().nullish()
 })
 
 

@@ -1,8 +1,8 @@
-import { useListEditorialPlaylists, useAdminListSubmissions } from "@workspace/api-client-react";
+import { useListEditorialPlaylists, useAdminListSubmissions, useListEditorPicks, getListEditorPicksQueryKey } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
 import { useLocation, Link } from "wouter";
 import { useEffect } from "react";
-import { BookOpen, ListMusic, FileText, Music, Video, Plus, ArrowRight } from "lucide-react";
+import { BookOpen, ListMusic, FileText, Music, Video, Plus, ArrowRight, Sparkles } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +30,7 @@ export default function EditorDashboard() {
 
   const { data: playlists, isLoading: playlistsLoading } = useListEditorialPlaylists();
   const { data: pendingSubmissions } = useAdminListSubmissions({ status: "pending_review" });
+  const { data: picks } = useListEditorPicks({ query: { queryKey: getListEditorPicksQueryKey() } });
 
   const recentPlaylists = (playlists ?? []).slice(0, 5);
   const pendingCount = Array.isArray(pendingSubmissions) ? pendingSubmissions.length : 0;
@@ -84,6 +85,17 @@ export default function EditorDashboard() {
             </div>
           </CardContent>
         </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Editor's Picks</p>
+                <p className="text-2xl font-bold mt-1">{picks?.length ?? 0}</p>
+              </div>
+              <Sparkles className="w-8 h-8 text-amber-400/40" />
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Quick actions */}
@@ -96,6 +108,15 @@ export default function EditorDashboard() {
                 <ListMusic className="w-5 h-5 text-primary mb-2" />
                 <p className="text-sm font-semibold">Manage Playlists</p>
                 <p className="text-xs text-muted-foreground mt-0.5">Create and curate editorial playlists</p>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link href="/editor/picks">
+            <Card className="hover:border-amber-400/40 cursor-pointer transition-colors h-full">
+              <CardContent className="pt-5 pb-5">
+                <Sparkles className="w-5 h-5 text-amber-400 mb-2" />
+                <p className="text-sm font-semibold">Editor's Picks</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Recommend songs, videos & artists</p>
               </CardContent>
             </Card>
           </Link>

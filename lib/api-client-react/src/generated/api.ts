@@ -43,6 +43,8 @@ import type {
   ArtistUpdate,
   AuthResponse,
   BulkSubmissionInput,
+  CeoMessage,
+  CeoMessageInput,
   ChatMessage,
   ChatMessageInput,
   Comment,
@@ -51,6 +53,9 @@ import type {
   CompanyPostInput,
   CompanyPostUpdate,
   DiscoverFeed,
+  EditorPickExpanded,
+  EditorPickInput,
+  EditorPickUpdateInput,
   EditorialPlaylist,
   EditorialPlaylistDetail,
   EditorialPlaylistInput,
@@ -5254,6 +5259,444 @@ export const useDeleteCompanyPost = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getDeleteCompanyPostMutationOptions(options));
+    }
+
+export const getListEditorPicksUrl = () => {
+
+
+
+
+  return `/api/editor-picks`
+}
+
+/**
+ * @summary List all editor picks (expanded with content)
+ */
+export const listEditorPicks = async ( options?: RequestInit): Promise<EditorPickExpanded[]> => {
+
+  return customFetch<EditorPickExpanded[]>(getListEditorPicksUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListEditorPicksQueryKey = () => {
+    return [
+    `/api/editor-picks`
+    ] as const;
+    }
+
+
+export const getListEditorPicksQueryOptions = <TData = Awaited<ReturnType<typeof listEditorPicks>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listEditorPicks>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListEditorPicksQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listEditorPicks>>> = ({ signal }) => listEditorPicks({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listEditorPicks>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListEditorPicksQueryResult = NonNullable<Awaited<ReturnType<typeof listEditorPicks>>>
+export type ListEditorPicksQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List all editor picks (expanded with content)
+ */
+
+export function useListEditorPicks<TData = Awaited<ReturnType<typeof listEditorPicks>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listEditorPicks>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListEditorPicksQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getAddEditorPickUrl = () => {
+
+
+
+
+  return `/api/editor-picks`
+}
+
+/**
+ * @summary Add an editor pick (editor/admin only)
+ */
+export const addEditorPick = async (editorPickInput: EditorPickInput, options?: RequestInit): Promise<EditorPickExpanded> => {
+
+  return customFetch<EditorPickExpanded>(getAddEditorPickUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      editorPickInput,)
+  }
+);}
+
+
+
+
+export const getAddEditorPickMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addEditorPick>>, TError,{data: BodyType<EditorPickInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof addEditorPick>>, TError,{data: BodyType<EditorPickInput>}, TContext> => {
+
+const mutationKey = ['addEditorPick'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof addEditorPick>>, {data: BodyType<EditorPickInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  addEditorPick(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AddEditorPickMutationResult = NonNullable<Awaited<ReturnType<typeof addEditorPick>>>
+    export type AddEditorPickMutationBody = BodyType<EditorPickInput>
+    export type AddEditorPickMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Add an editor pick (editor/admin only)
+ */
+export const useAddEditorPick = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addEditorPick>>, TError,{data: BodyType<EditorPickInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof addEditorPick>>,
+        TError,
+        {data: BodyType<EditorPickInput>},
+        TContext
+      > => {
+      return useMutation(getAddEditorPickMutationOptions(options));
+    }
+
+export const getUpdateEditorPickUrl = (id: number,) => {
+
+
+
+
+  return `/api/editor-picks/${id}`
+}
+
+/**
+ * @summary Update editor pick note/order
+ */
+export const updateEditorPick = async (id: number,
+    editorPickUpdateInput: EditorPickUpdateInput, options?: RequestInit): Promise<EditorPickExpanded> => {
+
+  return customFetch<EditorPickExpanded>(getUpdateEditorPickUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      editorPickUpdateInput,)
+  }
+);}
+
+
+
+
+export const getUpdateEditorPickMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateEditorPick>>, TError,{id: number;data: BodyType<EditorPickUpdateInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateEditorPick>>, TError,{id: number;data: BodyType<EditorPickUpdateInput>}, TContext> => {
+
+const mutationKey = ['updateEditorPick'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateEditorPick>>, {id: number;data: BodyType<EditorPickUpdateInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateEditorPick(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateEditorPickMutationResult = NonNullable<Awaited<ReturnType<typeof updateEditorPick>>>
+    export type UpdateEditorPickMutationBody = BodyType<EditorPickUpdateInput>
+    export type UpdateEditorPickMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update editor pick note/order
+ */
+export const useUpdateEditorPick = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateEditorPick>>, TError,{id: number;data: BodyType<EditorPickUpdateInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateEditorPick>>,
+        TError,
+        {id: number;data: BodyType<EditorPickUpdateInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateEditorPickMutationOptions(options));
+    }
+
+export const getDeleteEditorPickUrl = (id: number,) => {
+
+
+
+
+  return `/api/editor-picks/${id}`
+}
+
+/**
+ * @summary Remove an editor pick
+ */
+export const deleteEditorPick = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteEditorPickUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteEditorPickMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteEditorPick>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteEditorPick>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteEditorPick'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteEditorPick>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteEditorPick(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteEditorPickMutationResult = NonNullable<Awaited<ReturnType<typeof deleteEditorPick>>>
+
+    export type DeleteEditorPickMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Remove an editor pick
+ */
+export const useDeleteEditorPick = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteEditorPick>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteEditorPick>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteEditorPickMutationOptions(options));
+    }
+
+export const getGetCeoMessageUrl = () => {
+
+
+
+
+  return `/api/ceo-message`
+}
+
+/**
+ * @summary Get the active CEO message
+ */
+export const getCeoMessage = async ( options?: RequestInit): Promise<CeoMessage> => {
+
+  return customFetch<CeoMessage>(getGetCeoMessageUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCeoMessageQueryKey = () => {
+    return [
+    `/api/ceo-message`
+    ] as const;
+    }
+
+
+export const getGetCeoMessageQueryOptions = <TData = Awaited<ReturnType<typeof getCeoMessage>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCeoMessage>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCeoMessageQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCeoMessage>>> = ({ signal }) => getCeoMessage({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCeoMessage>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCeoMessageQueryResult = NonNullable<Awaited<ReturnType<typeof getCeoMessage>>>
+export type GetCeoMessageQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get the active CEO message
+ */
+
+export function useGetCeoMessage<TData = Awaited<ReturnType<typeof getCeoMessage>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCeoMessage>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCeoMessageQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getSetCeoMessageUrl = () => {
+
+
+
+
+  return `/api/ceo-message`
+}
+
+/**
+ * @summary Set the CEO message (master_admin only)
+ */
+export const setCeoMessage = async (ceoMessageInput: CeoMessageInput, options?: RequestInit): Promise<CeoMessage> => {
+
+  return customFetch<CeoMessage>(getSetCeoMessageUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      ceoMessageInput,)
+  }
+);}
+
+
+
+
+export const getSetCeoMessageMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setCeoMessage>>, TError,{data: BodyType<CeoMessageInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof setCeoMessage>>, TError,{data: BodyType<CeoMessageInput>}, TContext> => {
+
+const mutationKey = ['setCeoMessage'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setCeoMessage>>, {data: BodyType<CeoMessageInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  setCeoMessage(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetCeoMessageMutationResult = NonNullable<Awaited<ReturnType<typeof setCeoMessage>>>
+    export type SetCeoMessageMutationBody = BodyType<CeoMessageInput>
+    export type SetCeoMessageMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Set the CEO message (master_admin only)
+ */
+export const useSetCeoMessage = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setCeoMessage>>, TError,{data: BodyType<CeoMessageInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof setCeoMessage>>,
+        TError,
+        {data: BodyType<CeoMessageInput>},
+        TContext
+      > => {
+      return useMutation(getSetCeoMessageMutationOptions(options));
     }
 
 export const getAdminListUsersUrl = (params?: AdminListUsersParams,) => {

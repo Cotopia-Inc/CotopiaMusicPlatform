@@ -42,6 +42,7 @@ import AdminUploadVideo from "@/pages/admin-upload-video";
 import AdminListeners from "@/pages/admin-listeners";
 import EditorDashboard from "@/pages/editor-dashboard";
 import EditorPlaylists from "@/pages/editor-playlists";
+import EditorPicks from "@/pages/editor-picks";
 import ArtistAnalytics from "@/pages/artist-analytics";
 
 import NotificationsPage from "@/pages/notifications";
@@ -172,6 +173,9 @@ function Router() {
       </Route>
       <Route path="/editor/playlists">
         <Layout><EditorPlaylists /></Layout>
+      </Route>
+      <Route path="/editor/picks">
+        <Layout><EditorPicks /></Layout>
       </Route>
 
       {/* Artist routes */}

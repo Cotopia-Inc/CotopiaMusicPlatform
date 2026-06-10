@@ -21,6 +21,7 @@ import storageRouter from "./storage";
 import analyticsRouter from "./analytics";
 import artistAnalyticsRouter from "./artist-analytics";
 import editorialPlaylistsRouter from "./editorial-playlists";
+import editorPicksRouter from "./editor-picks";
 
 const router: IRouter = Router();
 
@@ -46,5 +47,6 @@ router.use(storageRouter);
 router.use(analyticsRouter);
 router.use(artistAnalyticsRouter);
 router.use(editorialPlaylistsRouter);
+router.use(editorPicksRouter);
 
 export default router;

@@ -1357,6 +1357,112 @@ paths:
         "204":
           description: No content
 
+  # ── Editor Picks ──────────────────────────────────────────────────────────
+  /editor-picks:
+    get:
+      operationId: listEditorPicks
+      tags: [editorial]
+      summary: List all editor picks (expanded with content)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EditorPickExpanded"
+    post:
+      operationId: addEditorPick
+      tags: [editorial]
+      summary: Add an editor pick (editor/admin only)
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EditorPickInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EditorPickExpanded"
+
+  /editor-picks/{id}:
+    patch:
+      operationId: updateEditorPick
+      tags: [editorial]
+      summary: Update editor pick note/order
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EditorPickUpdateInput"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EditorPickExpanded"
+    delete:
+      operationId: deleteEditorPick
+      tags: [editorial]
+      summary: Remove an editor pick
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: No content
+
+  # ── CEO Message ────────────────────────────────────────────────────────────
+  /ceo-message:
+    get:
+      operationId: getCeoMessage
+      tags: [company]
+      summary: Get the active CEO message
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CeoMessage"
+    put:
+      operationId: setCeoMessage
+      tags: [company]
+      summary: Set the CEO message (master_admin only)
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CeoMessageInput"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CeoMessage"
+
   # ── Admin ─────────────────────────────────────────────────────────────────
   /admin/users:
     get:
@@ -2806,7 +2912,7 @@ components:
     # ── Home Feed ─────────────────────────────────────────────────────────────
     HomeFeed:
       type: object
-      required: [featuredSongs, featuredVideos, featuredArtists, featuredLabels, trendingSongs, newReleases, announcements]
+      required: [featuredSongs, featuredVideos, featuredArtists, featuredLabels, trendingSongs, newReleases, announcements, editorPicks]
       properties:
         featuredSongs:
           type: array
@@ -2836,6 +2942,10 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/CompanyPost"
+        editorPicks:
+          type: array
+          items:
+            $ref: "#/components/schemas/EditorPickExpanded"
 
     # ── Discover ──────────────────────────────────────────────────────────────
     DiscoverFeed:
@@ -3382,3 +3492,100 @@ components:
         playlistType:
           type: string
           enum: [featured, mood, genre, new_artist, cotopia_picks, radio_picks]
+
+    # ── Editor Picks ───────────────────────────────────────────────────────
+    EditorPickExpanded:
+      type: object
+      required: [id, contentType, contentId, displayOrder, createdAt]
+      properties:
+        id:
+          type: integer
+        contentType:
+          type: string
+          enum: [song, video, artist]
+        contentId:
+          type: integer
+        editorId:
+          type: ["integer", "null"]
+        editorUsername:
+          type: ["string", "null"]
+        note:
+          type: ["string", "null"]
+        displayOrder:
+          type: integer
+        createdAt:
+          type: string
+        song:
+          allOf:
+            - $ref: "#/components/schemas/Song"
+          nullable: true
+        video:
+          allOf:
+            - $ref: "#/components/schemas/Video"
+          nullable: true
+        artist:
+          allOf:
+            - $ref: "#/components/schemas/Artist"
+          nullable: true
+
+    EditorPickInput:
+      type: object
+      required: [contentType, contentId]
+      properties:
+        contentType:
+          type: string
+          enum: [song, video, artist]
+        contentId:
+          type: integer
+        note:
+          type: string
+        displayOrder:
+          type: integer
+
+    EditorPickUpdateInput:
+      type: object
+      properties:
+        note:
+          type: string
+        displayOrder:
+          type: integer
+
+    EditorPickIdParams:
+      type: object
+      required: [id]
+      properties:
+        id:
+          type: integer
+
+    # ── CEO Message ────────────────────────────────────────────────────────
+    CeoMessage:
+      type: object
+      required: [id, content, authorName, authorTitle, isVisible, updatedAt]
+      properties:
+        id:
+          type: integer
+        content:
+          type: string
+        authorName:
+          type: string
+        authorTitle:
+          type: string
+        isVisible:
+          type: boolean
+        updatedAt:
+          type: string
+        updatedBy:
+          type: ["integer", "null"]
+
+    CeoMessageInput:
+      type: object
+      required: [content, authorName, authorTitle, isVisible]
+      properties:
+        content:
+          type: string
+        authorName:
+          type: string
+        authorTitle:
+          type: string
+        isVisible:
+          type: boolean
