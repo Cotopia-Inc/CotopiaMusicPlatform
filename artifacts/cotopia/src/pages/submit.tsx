@@ -21,6 +21,9 @@ import {
 const GENRES = ["Pop", "Hip-Hop", "R&B", "Electronic", "Rock", "Jazz", "Classical", "Country", "Reggae", "Latin", "Afrobeats", "Indie", "Alternative", "Metal", "Folk", "Soul", "Blues", "Other"];
 const MOODS = ["Energetic", "Chill", "Romantic", "Dark", "Happy", "Melancholic", "Motivational", "Party", "Peaceful", "Nostalgic", "Intense", "Dreamy"];
 
+const MAX_FILES_PER_TYPE = 20;
+const MAX_FILES_TOTAL = 20;
+
 const PLAN_PRICES = {
   song: { basic: 19.99, premium: 49.99 },
   video: { basic: 29.99, premium: 79.99 },
@@ -192,6 +195,7 @@ function FileList({
   icon: Icon,
   label,
   hint,
+  remaining,
   onFilesSelected,
   onTitleChange,
   onUrlSet,
@@ -204,35 +208,44 @@ function FileList({
   icon: React.ElementType;
   label: string;
   hint: string;
+  remaining: number;
   onFilesSelected: (files: File[]) => void;
   onTitleChange: (i: number, t: string) => void;
   onUrlSet: (i: number, url: string) => void;
   onRemove: (i: number) => void;
 }) {
   const uploaded = urls.filter(u => u !== null).length;
+  const isBulk = files.length >= 2;
+  const atLimit = remaining <= 0;
 
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <Label className="flex items-center gap-2">
           <Icon className="w-3.5 h-3.5" />{label} <span className="text-destructive">*</span>
+          {files.length > 0 && (
+            <Badge className={`text-[10px] px-1.5 py-0 ${isBulk ? "bg-primary/20 text-primary border-primary/30" : "bg-muted text-muted-foreground"}`}>
+              {isBulk ? "Bulk" : "Single"}
+            </Badge>
+          )}
         </Label>
-        {files.length > 0 && (
-          <span className="text-xs text-muted-foreground">{uploaded} / {files.length} uploaded</span>
-        )}
+        <div className="flex items-center gap-2">
+          {files.length > 0 && <span className="text-xs text-muted-foreground">{uploaded}/{files.length} uploaded</span>}
+          <span className="text-xs text-muted-foreground">{remaining} slot{remaining !== 1 ? "s" : ""} left</span>
+        </div>
       </div>
 
       {files.length === 0 ? (
-        <label className="flex flex-col items-center gap-3 p-8 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary/50 transition-colors">
+        <label className={`flex flex-col items-center gap-3 p-8 border-2 border-dashed rounded-lg transition-colors ${atLimit ? "border-border/30 opacity-50 cursor-not-allowed" : "border-border cursor-pointer hover:border-primary/50"}`}>
           <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
             <Icon className="w-6 h-6 text-primary" />
           </div>
           <div className="text-center">
-            <p className="text-sm font-medium">Click to select files</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{hint} · Select as many as you need</p>
+            <p className="text-sm font-medium">{atLimit ? "Limit reached" : "Click to select files"}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{hint} · Max {MAX_FILES_PER_TYPE} files</p>
           </div>
-          <input type="file" accept={accept} multiple className="hidden"
-            onChange={e => { const fs = Array.from(e.target.files ?? []); if (fs.length) { onFilesSelected(fs); e.target.value = ""; } }} />
+          {!atLimit && <input type="file" accept={accept} multiple className="hidden"
+            onChange={e => { const fs = Array.from(e.target.files ?? []); if (fs.length) { onFilesSelected(fs); e.target.value = ""; } }} />}
         </label>
       ) : (
         <div className="space-y-2">
@@ -251,16 +264,16 @@ function FileList({
             ))}
           </div>
           <div className="flex items-center gap-2 pt-1">
-            <label className="cursor-pointer">
-              <Button type="button" variant="outline" size="sm" className="text-xs gap-1.5 pointer-events-none">
-                <Upload className="w-3 h-3" />Add more files
-              </Button>
-              <input type="file" accept={accept} multiple className="hidden"
-                onChange={e => { const fs = Array.from(e.target.files ?? []); if (fs.length) { onFilesSelected(fs); e.target.value = ""; } }} />
-            </label>
-            <Button type="button" variant="ghost" size="sm" className="text-xs gap-1.5 text-muted-foreground">
-              {uploaded} / {files.length} uploaded
-            </Button>
+            {!atLimit && (
+              <label className="cursor-pointer">
+                <Button type="button" variant="outline" size="sm" className="text-xs gap-1.5 pointer-events-none">
+                  <Upload className="w-3 h-3" />Add more files
+                </Button>
+                <input type="file" accept={accept} multiple className="hidden"
+                  onChange={e => { const fs = Array.from(e.target.files ?? []); if (fs.length) { onFilesSelected(fs); e.target.value = ""; } }} />
+              </label>
+            )}
+            {atLimit && <span className="text-xs text-amber-400 font-medium">Maximum {MAX_FILES_PER_TYPE} files reached</span>}
           </div>
         </div>
       )}
@@ -307,18 +320,38 @@ export default function Submit() {
 
   // ── File management helpers ───────────────────────────────────────────────
   function addFiles(newFiles: File[], type: "song" | "video") {
+    const currentSong = songFiles.length;
+    const currentVideo = videoFiles.length;
+    const currentTotal = currentSong + currentVideo;
+    const currentType = type === "song" ? currentSong : currentVideo;
+
+    const remainingByType = MAX_FILES_PER_TYPE - currentType;
+    const remainingByTotal = MAX_FILES_TOTAL - currentTotal;
+    const canAdd = Math.min(remainingByType, remainingByTotal);
+
+    if (canAdd <= 0) {
+      toast({ title: "File limit reached", description: `Maximum ${MAX_FILES_TOTAL} files total across music and video.`, variant: "destructive" });
+      return;
+    }
+
+    const allowed = newFiles.slice(0, canAdd);
+    const skipped = newFiles.length - allowed.length;
+    if (skipped > 0) {
+      toast({ title: `${skipped} file${skipped !== 1 ? "s" : ""} not added`, description: `Limit is ${MAX_FILES_PER_TYPE} per type and ${MAX_FILES_TOTAL} total. ${allowed.length} file${allowed.length !== 1 ? "s" : ""} added.`, variant: "destructive" });
+    }
+
     if (type === "song") {
       setSongFiles(prev => {
-        const all = [...prev, ...newFiles];
-        setSongTitles(t => [...t, ...newFiles.map(f => f.name.replace(/\.[^.]+$/, "").replace(/[-_]/g, " "))]);
-        setSongUrls(u => [...u, ...new Array(newFiles.length).fill(null)]);
+        const all = [...prev, ...allowed];
+        setSongTitles(t => [...t, ...allowed.map(f => f.name.replace(/\.[^.]+$/, "").replace(/[-_]/g, " "))]);
+        setSongUrls(u => [...u, ...new Array(allowed.length).fill(null)]);
         return all;
       });
     } else {
       setVideoFiles(prev => {
-        const all = [...prev, ...newFiles];
-        setVideoTitles(t => [...t, ...newFiles.map(f => f.name.replace(/\.[^.]+$/, "").replace(/[-_]/g, " "))]);
-        setVideoUrls(u => [...u, ...new Array(newFiles.length).fill(null)]);
+        const all = [...prev, ...allowed];
+        setVideoTitles(t => [...t, ...allowed.map(f => f.name.replace(/\.[^.]+$/, "").replace(/[-_]/g, " "))]);
+        setVideoUrls(u => [...u, ...new Array(allowed.length).fill(null)]);
         return all;
       });
     }
@@ -480,6 +513,7 @@ export default function Submit() {
                 icon={Music}
                 label="Audio Files"
                 hint="MP3, WAV, M4A, FLAC"
+                remaining={Math.min(MAX_FILES_PER_TYPE - songFiles.length, MAX_FILES_TOTAL - songFiles.length - videoFiles.length)}
                 onFilesSelected={fs => addFiles(fs, "song")}
                 onTitleChange={handleSongTitleChange}
                 onUrlSet={handleSongUrlSet}
@@ -502,6 +536,7 @@ export default function Submit() {
                 icon={Film}
                 label="Video Files"
                 hint="MP4, MOV, WebM"
+                remaining={Math.min(MAX_FILES_PER_TYPE - videoFiles.length, MAX_FILES_TOTAL - songFiles.length - videoFiles.length)}
                 onFilesSelected={fs => addFiles(fs, "video")}
                 onTitleChange={handleVideoTitleChange}
                 onUrlSet={handleVideoUrlSet}
