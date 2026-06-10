@@ -1,6 +1,7 @@
 import { useParams } from "wouter";
 import { useGetSong, getGetSongQueryKey } from "@workspace/api-client-react";
 import { Play, Radio } from "lucide-react";
+import { RoleTag } from "@/components/role-badges";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Slider } from "@/components/ui/slider";
@@ -47,7 +48,7 @@ export default function EmbedSong() {
           {/* Info */}
           <div className="flex-1 min-w-0">
             <p className="font-bold text-sm truncate">{song.title}</p>
-            <p className="text-xs text-muted-foreground truncate">{song.artistName}</p>
+            <p className="text-xs text-muted-foreground truncate flex items-center gap-1">{song.artistName}<RoleTag role="artist" size="sm" /></p>
           </div>
 
           {/* Play */}

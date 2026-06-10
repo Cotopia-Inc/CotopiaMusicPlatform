@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
+import { UserLink } from "@/components/user-link";
 
 export default function AdminUsers() {
   const { data, isLoading } = useAdminListUsers({ limit: 50 }, {
@@ -59,7 +60,9 @@ export default function AdminUsers() {
             ) : data?.items?.length ? (
               data.items.map((user) => (
                 <TableRow key={user.id}>
-                  <TableCell className="font-semibold">{user.username}</TableCell>
+                  <TableCell className="font-semibold">
+                    <UserLink username={user.username} userId={user.id} role={user.role as string} />
+                  </TableCell>
                   <TableCell className="text-muted-foreground">{user.email}</TableCell>
                   <TableCell>
                     <Badge variant="outline" className="uppercase text-[10px] tracking-widest">{user.role}</Badge>

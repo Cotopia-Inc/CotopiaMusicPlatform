@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useGetFavoriteSongs, getGetFavoriteSongsQueryKey, useListPlaylists, getListPlaylistsQueryKey, useGetHistory, getGetHistoryQueryKey, useCreatePlaylist } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Play, Music, ListMusic, Clock, Plus, BookOpen, Heart, X, BadgeCheck } from "lucide-react";
+import { Play, Music, ListMusic, Clock, Plus, BookOpen, Heart, X } from "lucide-react";
+import { RoleTag } from "@/components/role-badges";
 import { usePlayer } from "@/lib/player";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -136,6 +137,7 @@ export default function Library() {
                     <UserLink
                       username={song.artistName}
                       artistId={song.artistId}
+                      role="artist"
                       className="text-sm text-muted-foreground"
                     />
                   </div>
@@ -207,7 +209,7 @@ export default function Library() {
                     </div>
                     <div className="flex-1">
                       <div className="font-semibold">{item.contentTitle}</div>
-                      <div className="text-sm text-muted-foreground flex items-center gap-0.5"><span className="truncate">{item.artistName}</span><BadgeCheck className="w-3 h-3 text-green-500 flex-shrink-0" /> <span>•</span> <span className="uppercase text-[10px] tracking-wider text-primary">{item.type}</span></div>
+                      <div className="text-sm text-muted-foreground flex items-center gap-1"><span className="truncate">{item.artistName}</span><RoleTag role="artist" size="sm" /><span>•</span> <span className="uppercase text-[10px] tracking-wider text-primary">{item.type}</span></div>
                     </div>
                     <div className="text-muted-foreground text-xs text-right">
                       {new Date(item.playedAt).toLocaleDateString()}

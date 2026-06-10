@@ -1,6 +1,6 @@
 import { useListSongs, getListSongsQueryKey } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Play, Search, BadgeCheck } from "lucide-react";
+import { Play, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
@@ -74,6 +74,7 @@ export default function Songs() {
                 <UserLink
                   username={song.artistName}
                   artistId={song.artistId}
+                  role="artist"
                   className="text-xs text-muted-foreground truncate"
                 />
               </div>

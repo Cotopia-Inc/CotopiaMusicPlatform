@@ -3,7 +3,8 @@ import { useAdminListUsers, useAdminChangeUserRole } from "@workspace/api-client
 import { useAuth } from "@/lib/auth";
 import { useLocation } from "wouter";
 import { useEffect } from "react";
-import { Shield, Search, ChevronDown, XCircle, Ban, UserCheck, BadgeCheck } from "lucide-react";
+import { Shield, Search, ChevronDown, XCircle, Ban, UserCheck } from "lucide-react";
+import { UserLink } from "@/components/user-link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -159,8 +160,7 @@ export default function AdminRoles() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium truncate">{u.username}</p>
-                      {(u as any).isVerified && <BadgeCheck className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />}
+                      <UserLink username={u.username} userId={u.id} role={u.role} className="text-sm font-medium" />
                       {(u as any).isSuspended && <Ban className="w-3 h-3 text-red-400 flex-shrink-0" />}
                     </div>
                     <p className="text-xs text-muted-foreground truncate">{u.email}</p>

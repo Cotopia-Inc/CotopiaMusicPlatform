@@ -5,7 +5,8 @@ import {
   useRateSong, useFavoriteSong, useUnfavoriteSong,
 } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Play, Pause, Heart, Star, Send, Radio, Users, MessageCircle, BadgeCheck } from "lucide-react";
+import { Play, Pause, Heart, Star, Send, Radio, Users, MessageCircle } from "lucide-react";
+import { RoleTag } from "@/components/role-badges";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { usePlayer } from "@/lib/player";
@@ -160,12 +161,12 @@ export default function SongDetail() {
             </Badge>
             <h1 className="text-5xl md:text-6xl font-extrabold tracking-tighter leading-none">{song.title}</h1>
             <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
-              <Link href={`/artists/${song.artistId}`}>
-                <span className="font-semibold text-foreground hover:text-primary cursor-pointer transition-colors flex items-center gap-1">
-                  {song.artistName}
-                  <BadgeCheck className="w-3.5 h-3.5 text-primary" />
-                </span>
-              </Link>
+              <UserLink
+                username={song.artistName}
+                artistId={song.artistId}
+                role="artist"
+                className="font-semibold text-foreground"
+              />
               {song.albumName && <><span>•</span><span>{song.albumName}</span></>}
               <span>•</span>
               <span>{Math.floor(song.duration / 60)}:{(song.duration % 60).toString().padStart(2, '0')}</span>
@@ -259,12 +260,12 @@ export default function SongDetail() {
             </div>
             <div className="min-w-0">
               <p className="text-xs font-semibold truncate leading-tight">{song.title}</p>
-              <Link href={`/artists/${song.artistId}`}>
-                <span className="text-[10px] text-muted-foreground hover:text-primary transition-colors truncate leading-tight flex items-center gap-0.5">
-                  {song.artistName}
-                  <BadgeCheck className="w-2.5 h-2.5 text-green-500 flex-shrink-0" />
-                </span>
-              </Link>
+              <UserLink
+                username={song.artistName}
+                artistId={song.artistId}
+                role="artist"
+                className="text-[10px] text-muted-foreground"
+              />
             </div>
           </div>
         )}

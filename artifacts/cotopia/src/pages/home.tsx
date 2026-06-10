@@ -1,5 +1,6 @@
 import { useGetHomeFeed, getGetHomeFeedQueryKey } from "@workspace/api-client-react";
-import { Play, Radio, BadgeCheck, TrendingUp, Video } from "lucide-react";
+import { Play, Radio, TrendingUp, Video } from "lucide-react";
+import { RoleTag } from "@/components/role-badges";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "wouter";
 import { UserLink } from "@/components/user-link";
@@ -98,6 +99,7 @@ export default function Home() {
                   <UserLink
                     username={song.artistName}
                     artistId={song.artistId}
+                    role="artist"
                     className="text-xs text-muted-foreground mt-0.5"
                   />
                 </div>
@@ -164,6 +166,7 @@ export default function Home() {
                   <UserLink
                     username={video.artistName}
                     artistId={video.artistId}
+                    role="artist"
                     className="text-xs text-muted-foreground"
                   />
                 </div>
@@ -205,7 +208,7 @@ export default function Home() {
                   <div>
                     <h4 className="font-semibold text-xs truncate flex items-center justify-center gap-0.5">
                       {artist.stageName}
-                      <BadgeCheck className="w-3 h-3 text-primary flex-shrink-0" />
+                      <RoleTag role="artist" size="sm" />
                     </h4>
                   </div>
                 </div>

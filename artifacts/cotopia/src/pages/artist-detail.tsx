@@ -1,7 +1,8 @@
 import { useParams, Link } from "wouter";
 import { useGetArtist, getGetArtistQueryKey, useFollowArtist, useUnfollowArtist, useTrackAnalyticsEvent } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Play, Users, Music, BadgeCheck } from "lucide-react";
+import { Play, Users, Music } from "lucide-react";
+import { RoleBadges, RoleTag } from "@/components/role-badges";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { usePlayer } from "@/lib/player";
@@ -78,15 +79,15 @@ export default function ArtistDetail() {
               </div>
             )}
           </div>
-          <div className="absolute bottom-2 right-2 bg-background rounded-full p-0.5 shadow-lg">
-            <BadgeCheck className="w-7 h-7 text-green-500" />
+          <div className="absolute bottom-2 right-2 bg-background rounded-full p-1 shadow-lg">
+            <RoleTag role="artist" size="md" />
           </div>
         </div>
         <div className="pt-4 md:pt-16 flex-1 flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="space-y-2">
             <h1 className="text-5xl font-extrabold tracking-tighter flex items-center gap-3">
               {artist.stageName}
-              <BadgeCheck className="w-8 h-8 text-green-500 flex-shrink-0" />
+              <RoleBadges role="artist" size="lg" />
             </h1>
             <div className="flex items-center gap-4 text-muted-foreground font-medium">
               <span className="flex items-center gap-1"><Users className="w-4 h-4" /> {artist.followerCount?.toLocaleString() || 0} followers</span>

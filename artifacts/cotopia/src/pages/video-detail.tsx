@@ -5,7 +5,8 @@ import {
   useRateVideo, useFavoriteVideo, useUnfavoriteVideo, useTrackAnalyticsEvent,
 } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Play, Heart, Star, Send, Radio, Users, BadgeCheck, MessageCircle, Maximize2 } from "lucide-react";
+import { Play, Heart, Star, Send, Radio, Users, MessageCircle, Maximize2 } from "lucide-react";
+import { RoleTag } from "@/components/role-badges";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { useState, useEffect, useRef, useCallback } from "react";
@@ -220,12 +221,12 @@ export default function VideoDetail() {
             </div>
             <div className="min-w-0">
               <p className="text-[11px] font-semibold truncate leading-tight text-white">{video.title}</p>
-              <Link href={`/artists/${video.artistId}`}>
-                <span className="text-[9px] text-white/50 hover:text-white/80 transition-colors truncate leading-tight flex items-center gap-0.5">
-                  {video.artistName}
-                  <BadgeCheck className="w-2.5 h-2.5 text-green-500 flex-shrink-0" />
-                </span>
-              </Link>
+              <UserLink
+                username={video.artistName}
+                artistId={video.artistId}
+                role="artist"
+                className="text-[9px] text-white/50"
+              />
             </div>
           </div>
 
@@ -304,12 +305,12 @@ export default function VideoDetail() {
         <div className="space-y-1.5">
           <h1 className="text-3xl font-extrabold tracking-tight leading-tight">{video.title}</h1>
           <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
-            <Link href={`/artists/${video.artistId}`}>
-              <span className="font-semibold text-foreground hover:text-primary cursor-pointer flex items-center gap-1">
-                {video.artistName}
-                <BadgeCheck className="w-3.5 h-3.5 text-primary" />
-              </span>
-            </Link>
+            <UserLink
+              username={video.artistName}
+              artistId={video.artistId}
+              role="artist"
+              className="font-semibold text-foreground"
+            />
             <span>•</span>
             <span>{video.viewCount?.toLocaleString() || 0} views</span>
             <span>•</span>

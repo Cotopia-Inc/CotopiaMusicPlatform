@@ -2,6 +2,7 @@ import { useParams, Link } from "wouter";
 import { useGetLabel, getGetLabelQueryKey, useFollowLabel, useUnfollowLabel } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Users, Music, Play } from "lucide-react";
+import { UserLink } from "@/components/user-link";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { useQueryClient } from "@tanstack/react-query";
@@ -112,7 +113,12 @@ export default function LabelDetail() {
                       </div>
                       <div>
                         <h4 className="font-semibold text-sm truncate">{song.title}</h4>
-                        <p className="text-xs text-muted-foreground truncate hover:underline">{song.artistName}</p>
+                        <UserLink
+                          username={song.artistName}
+                          artistId={song.artistId}
+                          role="artist"
+                          className="text-xs text-muted-foreground"
+                        />
                       </div>
                     </div>
                   </Link>

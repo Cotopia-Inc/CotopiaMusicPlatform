@@ -2,7 +2,7 @@ import { useParams, Link } from "wouter";
 import { UserLink } from "@/components/user-link";
 import { useGetPlaylist, getGetPlaylistQueryKey } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Play, ListMusic, MoreVertical, BadgeCheck } from "lucide-react";
+import { Play, ListMusic, MoreVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePlayer } from "@/lib/player";
 
@@ -92,6 +92,7 @@ export default function PlaylistDetail() {
                   <UserLink
                     username={song.artistName}
                     artistId={song.artistId}
+                    role="artist"
                     className="text-sm text-muted-foreground truncate"
                   />
                 </div>
