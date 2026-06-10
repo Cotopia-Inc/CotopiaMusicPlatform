@@ -1,6 +1,6 @@
 import {
   Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Volume1,
-  Radio, Heart, ChevronDown, Shuffle, Repeat, Repeat1, Square, Music2,
+  Radio, Heart, ChevronDown, Shuffle, Repeat, Repeat1, Square, Music2, StopCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -343,6 +343,16 @@ export function Player() {
               title="Next"
             >
               <SkipForward className="w-4 h-4 fill-current" />
+            </Button>
+
+            {/* Stop */}
+            <Button
+              variant="ghost" size="icon"
+              className="w-8 h-8 text-muted-foreground hover:text-foreground disabled:opacity-30"
+              onClick={stop} disabled={!track}
+              title="Stop"
+            >
+              <StopCircle className="w-4 h-4" />
             </Button>
 
             {/* Repeat */}

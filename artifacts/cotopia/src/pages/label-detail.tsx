@@ -3,7 +3,7 @@ import { useGetLabel, getGetLabelQueryKey, useFollowLabel, useUnfollowLabel } fr
 import { Skeleton } from "@/components/ui/skeleton";
 import { Users, Music, Play } from "lucide-react";
 import { UserLink } from "@/components/user-link";
-import { RoleBadges, RoleTag } from "@/components/role-badges";
+import { RoleBadges } from "@/components/role-badges";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { useQueryClient } from "@tanstack/react-query";
@@ -70,7 +70,7 @@ export default function LabelDetail() {
         </div>
         <div className="flex-1 flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2">
           <div className="space-y-1">
-            <h1 className="text-4xl font-extrabold tracking-tight flex items-center gap-2">{label.name}<RoleTag role="label" size="md" /></h1>
+            <h1 className="text-4xl font-extrabold tracking-tight flex items-center gap-2">{label.name}<RoleBadges role="label" isVerified={label.isVerified ?? false} size="md" /></h1>
             <div className="flex items-center gap-4 text-muted-foreground font-medium text-sm">
               <span className="flex items-center gap-1"><Users className="w-4 h-4" /> {label.followerCount?.toLocaleString() || 0} followers</span>
               <span className="flex items-center gap-1"><Music className="w-4 h-4" /> {label.artistCount || 0} artists</span>
