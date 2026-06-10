@@ -5,7 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Search, Star, Sparkles, BadgeCheck, EyeOff, Eye, Loader2 } from "lucide-react";
+import { Search, Star, Sparkles, EyeOff, Eye, Loader2 } from "lucide-react";
+import { RoleTag } from "@/components/role-badges";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 
@@ -120,7 +121,7 @@ export default function AdminVideos() {
                     <TableCell className="text-sm text-muted-foreground">
                       <span className="flex items-center gap-1">
                         {video.artistName}
-                        <BadgeCheck className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
+                        <RoleTag role="artist" size="sm" />
                       </span>
                     </TableCell>
                     <TableCell>

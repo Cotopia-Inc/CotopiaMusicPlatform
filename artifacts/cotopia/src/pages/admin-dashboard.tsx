@@ -1,7 +1,8 @@
 import { useGetAdminAnalytics, getGetAdminAnalyticsQueryKey } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, Music, Video, PlayCircle, Eye, MessageSquare, AlertCircle, Mic2, Building2, DollarSign, Radio, ChevronRight, BadgeCheck, Megaphone } from "lucide-react";
+import { Users, Music, Video, PlayCircle, Eye, MessageSquare, AlertCircle, Mic2, Building2, DollarSign, Radio, ChevronRight, Megaphone } from "lucide-react";
+import { RoleTag } from "@/components/role-badges";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 
@@ -122,7 +123,7 @@ export default function AdminDashboard() {
                     <span className="font-bold text-muted-foreground text-sm w-5 text-center">{i + 1}</span>
                     <div>
                       <p className="font-semibold text-sm">{song.title}</p>
-                      <p className="text-xs text-muted-foreground flex items-center gap-0.5"><span className="truncate">{song.artistName}</span><BadgeCheck className="w-3 h-3 text-green-500 flex-shrink-0" /></p>
+                      <p className="text-xs text-muted-foreground flex items-center gap-0.5"><span className="truncate">{song.artistName}</span><RoleTag role="artist" size="sm" /></p>
                     </div>
                   </div>
                   <span className="text-xs text-muted-foreground">{song.playCount?.toLocaleString()} plays</span>
@@ -151,7 +152,7 @@ export default function AdminDashboard() {
                     <span className="font-bold text-muted-foreground text-sm w-5 text-center">{i + 1}</span>
                     <div>
                       <p className="font-semibold text-sm">{video.title}</p>
-                      <p className="text-xs text-muted-foreground flex items-center gap-0.5"><span className="truncate">{video.artistName}</span><BadgeCheck className="w-3 h-3 text-green-500 flex-shrink-0" /></p>
+                      <p className="text-xs text-muted-foreground flex items-center gap-0.5"><span className="truncate">{video.artistName}</span><RoleTag role="artist" size="sm" /></p>
                     </div>
                   </div>
                   <span className="text-xs text-muted-foreground">{video.viewCount?.toLocaleString()} views</span>

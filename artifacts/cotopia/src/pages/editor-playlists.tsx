@@ -8,7 +8,8 @@ import {
 import { useAuth } from "@/lib/auth";
 import { useLocation } from "wouter";
 import { useEffect } from "react";
-import { ListMusic, Plus, Trash2, Edit3, Music, X, Search, Check, BadgeCheck } from "lucide-react";
+import { ListMusic, Plus, Trash2, Edit3, Music, X, Search, Check } from "lucide-react";
+import { RoleTag } from "@/components/role-badges";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -338,7 +339,7 @@ export default function EditorPlaylists() {
                         : <div className="w-8 h-8 rounded bg-muted flex-shrink-0" />}
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-medium truncate">{song.title}</p>
-                        <p className="text-[10px] text-muted-foreground flex items-center gap-0.5"><span className="truncate">{song.artistName}</span><BadgeCheck className="w-2.5 h-2.5 text-green-500 flex-shrink-0" /></p>
+                        <p className="text-[10px] text-muted-foreground flex items-center gap-0.5"><span className="truncate">{song.artistName}</span><RoleTag role="artist" size="sm" /></p>
                       </div>
                       <Button variant="ghost" size="icon" className="h-7 w-7 text-red-400 hover:text-red-300" title="Remove from playlist" onClick={() => handleRemoveSong(song.id)}>
                         <X className="w-3.5 h-3.5" />
@@ -367,7 +368,7 @@ export default function EditorPlaylists() {
                         : <div className="w-8 h-8 rounded bg-muted flex-shrink-0" />}
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-medium truncate">{song.title}</p>
-                        <p className="text-[10px] text-muted-foreground flex items-center gap-0.5"><span className="truncate">{song.artistName}</span><BadgeCheck className="w-2.5 h-2.5 text-green-500 flex-shrink-0" /></p>
+                        <p className="text-[10px] text-muted-foreground flex items-center gap-0.5"><span className="truncate">{song.artistName}</span><RoleTag role="artist" size="sm" /></p>
                       </div>
                       {inPlaylist
                         ? <Check className="w-4 h-4 text-green-400 flex-shrink-0" />

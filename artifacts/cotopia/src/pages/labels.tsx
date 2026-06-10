@@ -1,6 +1,7 @@
 import { useListLabels, getListLabelsQueryKey } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Search } from "lucide-react";
+import { RoleTag } from "@/components/role-badges";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
@@ -54,7 +55,7 @@ export default function Labels() {
                   )}
                 </div>
                 <div>
-                  <h4 className="font-bold text-lg truncate">{label.name}</h4>
+                  <h4 className="font-bold text-lg flex items-center gap-1.5"><span className="truncate">{label.name}</span><RoleTag role="label" size="sm" /></h4>
                   <div className="flex items-center gap-4 text-xs text-muted-foreground mt-2">
                     <span>{label.artistCount || 0} Artists</span>
                     <span>{label.followerCount?.toLocaleString() || 0} Followers</span>

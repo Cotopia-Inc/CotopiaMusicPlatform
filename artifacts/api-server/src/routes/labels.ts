@@ -2,7 +2,7 @@ import { Router } from "express";
 import { eq, desc, ilike, and, count, avg } from "drizzle-orm";
 import {
   db, labelsTable, artistsTable, songsTable, videosTable,
-  followsTable, ratingsTable, albumsTable,
+  followsTable, ratingsTable, albumsTable, usersTable,
 } from "@workspace/db";
 import {
   ListLabelsQueryParams, GetLabelParams, UpdateLabelParams, UpdateLabelBody,
@@ -84,8 +84,9 @@ router.get("/labels/:id", optionalAuth, async (req: AuthRequest, res): Promise<v
   }
 
   const artists = await db
-    .select({ id: artistsTable.id, userId: artistsTable.userId, stageName: artistsTable.stageName, bio: artistsTable.bio, avatarUrl: artistsTable.avatarUrl, bannerUrl: artistsTable.bannerUrl, genre: artistsTable.genre, labelId: artistsTable.labelId, createdAt: artistsTable.createdAt })
+    .select({ id: artistsTable.id, userId: artistsTable.userId, stageName: artistsTable.stageName, bio: artistsTable.bio, avatarUrl: artistsTable.avatarUrl, bannerUrl: artistsTable.bannerUrl, genre: artistsTable.genre, labelId: artistsTable.labelId, createdAt: artistsTable.createdAt, isVerified: usersTable.isVerified })
     .from(artistsTable)
+    .innerJoin(usersTable, eq(artistsTable.userId, usersTable.id))
     .where(eq(artistsTable.labelId, params.data.id))
     .limit(20);
 

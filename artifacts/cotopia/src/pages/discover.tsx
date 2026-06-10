@@ -1,8 +1,9 @@
 import { useGetDiscover, getGetDiscoverQueryKey } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Play, BadgeCheck } from "lucide-react";
+import { Play } from "lucide-react";
 import { Link } from "wouter";
 import { usePlayer } from "@/lib/player";
+import { UserLink } from "@/components/user-link";
 
 export default function Discover() {
   const { play } = usePlayer();
@@ -53,7 +54,7 @@ export default function Discover() {
                   <Link href={`/songs/${song.id}`}>
                     <h4 className="font-semibold text-sm truncate hover:text-primary transition-colors">{song.title}</h4>
                   </Link>
-                  <p className="text-xs text-muted-foreground flex items-center gap-0.5"><span className="truncate">{song.artistName}</span><BadgeCheck className="w-3 h-3 text-green-500 flex-shrink-0" /></p>
+                  <UserLink username={song.artistName} artistId={(song as any).artistId} role="artist" className="text-xs text-muted-foreground" />
                 </div>
               </div>
             ))
@@ -99,7 +100,7 @@ export default function Discover() {
                   <Link href={`/songs/${song.id}`}>
                     <h4 className="font-semibold text-sm truncate hover:text-primary transition-colors">{song.title}</h4>
                   </Link>
-                  <p className="text-xs text-muted-foreground flex items-center gap-0.5"><span className="truncate">{song.artistName}</span><BadgeCheck className="w-3 h-3 text-green-500 flex-shrink-0" /></p>
+                  <UserLink username={song.artistName} artistId={(song as any).artistId} role="artist" className="text-xs text-muted-foreground" />
                 </div>
               </div>
             ))
