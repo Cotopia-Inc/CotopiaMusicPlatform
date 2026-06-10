@@ -56,6 +56,7 @@ export * from './companyPostInput';
 export * from './companyPostInputType';
 export * from './companyPostType';
 export * from './companyPostUpdate';
+export * from './companyPostUpdateType';
 export * from './discoverFeed';
 export * from './editorialPlaylist';
 export * from './editorialPlaylistDetail';

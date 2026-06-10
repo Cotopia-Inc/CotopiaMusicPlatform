@@ -1,7 +1,7 @@
 import { useGetAdminAnalytics, getGetAdminAnalyticsQueryKey } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, Music, Video, PlayCircle, Eye, MessageSquare, AlertCircle, Mic2, Building2, DollarSign, Radio, ChevronRight, BadgeCheck } from "lucide-react";
+import { Users, Music, Video, PlayCircle, Eye, MessageSquare, AlertCircle, Mic2, Building2, DollarSign, Radio, ChevronRight, BadgeCheck, Megaphone } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 
@@ -28,6 +28,7 @@ export default function AdminDashboard() {
     { href: "/admin/submissions", label: "Submissions", desc: "Review pending content submissions", icon: AlertCircle },
     { href: "/admin/songs", label: "Songs", desc: "Feature, approve, and manage songs", icon: Music },
     { href: "/admin/videos", label: "Videos", desc: "Feature, approve, and manage videos", icon: Video },
+    { href: "/admin/company", label: "Company Hub", desc: "Create and manage announcements and articles", icon: Megaphone },
     { href: "/admin/comments", label: "Comments", desc: "Moderate and delete comments", icon: MessageSquare },
     { href: "/admin/settings", label: "App Settings", desc: "Platform name, branding, and settings", icon: Radio },
   ];

@@ -619,8 +619,21 @@ export interface CompanyPostInput {
   isPinned?: boolean;
 }
 
+export type CompanyPostUpdateType = typeof CompanyPostUpdateType[keyof typeof CompanyPostUpdateType];
+
+
+export const CompanyPostUpdateType = {
+  announcement: 'announcement',
+  video: 'video',
+  product_update: 'product_update',
+  artist_spotlight: 'artist_spotlight',
+  label_spotlight: 'label_spotlight',
+  campaign: 'campaign',
+} as const;
+
 export interface CompanyPostUpdate {
   title?: string;
+  type?: CompanyPostUpdateType;
   content?: string;
   imageUrl?: string;
   videoUrl?: string;

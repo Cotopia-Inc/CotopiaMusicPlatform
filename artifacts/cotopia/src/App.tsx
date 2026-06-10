@@ -32,6 +32,7 @@ import AdminSubmissions from "@/pages/admin-submissions";
 import AdminSettings from "@/pages/admin-settings";
 import AdminSongs from "@/pages/admin-songs";
 import AdminVideos from "@/pages/admin-videos";
+import AdminCompany from "@/pages/admin-company";
 import AdminComments from "@/pages/admin-comments";
 import AdminAnalytics from "@/pages/admin-analytics";
 import AdminRoles from "@/pages/admin-roles";
@@ -150,6 +151,9 @@ function Router() {
       </Route>
       <Route path="/admin/videos">
         <Layout><AdminVideos /></Layout>
+      </Route>
+      <Route path="/admin/company">
+        <Layout><AdminCompany /></Layout>
       </Route>
       <Route path="/admin/comments">
         <Layout><AdminComments /></Layout>

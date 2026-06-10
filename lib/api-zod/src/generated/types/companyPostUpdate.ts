@@ -5,9 +5,11 @@
  * Cotopia Streaming Platform API
  * OpenAPI spec version: 0.1.0
  */
+import type { CompanyPostUpdateType } from './companyPostUpdateType';
 
 export interface CompanyPostUpdate {
   title?: string;
+  type?: CompanyPostUpdateType;
   content?: string;
   imageUrl?: string;
   videoUrl?: string;

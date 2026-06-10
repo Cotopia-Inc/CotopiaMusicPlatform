@@ -2857,6 +2857,9 @@ components:
       properties:
         title:
           type: string
+        type:
+          type: string
+          enum: [announcement, video, product_update, artist_spotlight, label_spotlight, campaign]
         content:
           type: string
         imageUrl:

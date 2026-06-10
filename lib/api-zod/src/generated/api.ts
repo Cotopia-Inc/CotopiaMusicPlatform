@@ -1499,6 +1499,7 @@ export const UpdateCompanyPostParams = zod.object({
 
 export const UpdateCompanyPostBody = zod.object({
   "title": zod.string().optional(),
+  "type": zod.enum(['announcement', 'video', 'product_update', 'artist_spotlight', 'label_spotlight', 'campaign']).optional(),
   "content": zod.string().optional(),
   "imageUrl": zod.string().optional(),
   "videoUrl": zod.string().optional(),

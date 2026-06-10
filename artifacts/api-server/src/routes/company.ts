@@ -26,7 +26,7 @@ router.get("/company/posts", async (req, res): Promise<void> => {
   res.json(posts);
 });
 
-router.post("/company/posts", requireAuth, requireRole("admin"), async (req: AuthRequest, res): Promise<void> => {
+router.post("/company/posts", requireAuth, requireRole("admin", "master_admin", "editor"), async (req: AuthRequest, res): Promise<void> => {
   const parsed = CreateCompanyPostBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -50,7 +50,7 @@ router.get("/company/posts/:id", async (req, res): Promise<void> => {
   res.json(post);
 });
 
-router.patch("/company/posts/:id", requireAuth, requireRole("admin"), async (req: AuthRequest, res): Promise<void> => {
+router.patch("/company/posts/:id", requireAuth, requireRole("admin", "master_admin", "editor"), async (req: AuthRequest, res): Promise<void> => {
   const params = UpdateCompanyPostParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -65,7 +65,7 @@ router.patch("/company/posts/:id", requireAuth, requireRole("admin"), async (req
   res.json(post);
 });
 
-router.delete("/company/posts/:id", requireAuth, requireRole("admin"), async (req: AuthRequest, res): Promise<void> => {
+router.delete("/company/posts/:id", requireAuth, requireRole("admin", "master_admin", "editor"), async (req: AuthRequest, res): Promise<void> => {
   const params = DeleteCompanyPostParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
