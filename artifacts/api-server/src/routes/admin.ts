@@ -10,7 +10,7 @@ import {
   AdminListUsersQueryParams, AdminUpdateUserBody,
   AdminListSubmissionsQueryParams, UpdateAppSettingsBody,
   AdminUploadSongBody, AdminUploadVideoBody, AdminChangeUserRoleBody,
-  AdminBulkUploadSongsBody,
+  AdminBulkUploadSongsBody, AdminBulkUploadVideosBody,
 } from "@workspace/api-zod";
 import { requireAuth, requireRole, type AuthRequest } from "../lib/auth";
 
@@ -357,6 +357,38 @@ router.post("/admin/upload-video", requireAuth, requireRole(...ADMIN_ROLES, "edi
     ...video,
     artistName: artist.stageName,
   });
+});
+
+router.post("/admin/bulk-upload-videos", requireAuth, requireRole(...ADMIN_ROLES, "editor"), async (req: AuthRequest, res): Promise<void> => {
+  const parsed = AdminBulkUploadVideosBody.safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+
+  const { artistId, genre, description, thumbnailUrl, releaseDate, isFeatured, videos } = parsed.data;
+
+  const [artist] = await db.select({ id: artistsTable.id, stageName: artistsTable.stageName })
+    .from(artistsTable).where(eq(artistsTable.id, artistId)).limit(1);
+  if (!artist) { res.status(400).json({ error: "Artist not found" }); return; }
+
+  const inserted = await db.insert(videosTable).values(
+    videos.map((v: { title: string; videoUrl: string; duration?: number; thumbnailUrl?: string }) => ({
+      title: v.title,
+      artistId,
+      genre: genre ?? null,
+      description: description ?? null,
+      duration: v.duration ?? 0,
+      videoUrl: v.videoUrl,
+      thumbnailUrl: v.thumbnailUrl ?? thumbnailUrl ?? null,
+      status: "published" as const,
+      isFeatured: isFeatured ?? false,
+      releaseDate: releaseDate ?? null,
+      viewCount: 0,
+    }))
+  ).returning();
+
+  res.status(201).json(inserted.map(video => ({
+    ...video,
+    artistName: artist.stageName,
+  })));
 });
 
 // ── App Settings ─────────────────────────────────────────────────────────

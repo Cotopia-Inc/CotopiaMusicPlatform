@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Search, Star, Sparkles, BadgeCheck } from "lucide-react";
+import { Search, Star, Sparkles, BadgeCheck, EyeOff, Eye, Loader2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 
@@ -13,23 +13,46 @@ export default function AdminVideos() {
   const [search, setSearch] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [pendingId, setPendingId] = useState<number | null>(null);
 
   const { data, isLoading } = useListVideos(
-    { q: search, limit: 50 },
-    { query: { queryKey: getListVideosQueryKey({ q: search, limit: 50 }) } }
+    { q: search, limit: 100 },
+    { query: { queryKey: getListVideosQueryKey({ q: search, limit: 100 }) } }
   );
 
   const updateVideo = useUpdateVideo();
 
+  const invalidate = () =>
+    queryClient.invalidateQueries({ queryKey: getListVideosQueryKey({ q: search, limit: 100 }) });
+
   const handleToggleFeature = (id: number, currentFeatured: boolean | null | undefined) => {
+    setPendingId(id);
     updateVideo.mutate(
       { id, data: { isFeatured: !currentFeatured } },
       {
         onSuccess: () => {
-          toast({ title: currentFeatured ? "Video removed from featured" : "Video featured!" });
-          queryClient.invalidateQueries({ queryKey: getListVideosQueryKey({ q: search, limit: 50 }) });
+          toast({ title: currentFeatured ? "Removed from featured" : "Video featured!" });
+          invalidate();
         },
         onError: () => toast({ variant: "destructive", title: "Failed to update video" }),
+        onSettled: () => setPendingId(null),
+      }
+    );
+  };
+
+  const handleTogglePublish = (id: number, currentStatus: string | null | undefined) => {
+    const isPublished = currentStatus === "published";
+    const newStatus = isPublished ? "unpublished" : "published";
+    setPendingId(id);
+    updateVideo.mutate(
+      { id, data: { status: newStatus } },
+      {
+        onSuccess: () => {
+          toast({ title: isPublished ? "Video unpublished" : "Video published!" });
+          invalidate();
+        },
+        onError: () => toast({ variant: "destructive", title: "Failed to update video" }),
+        onSettled: () => setPendingId(null),
       }
     );
   };
@@ -39,7 +62,7 @@ export default function AdminVideos() {
       <div>
         <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Admin</p>
         <h1 className="text-4xl font-extrabold tracking-tight mb-2">Video Management</h1>
-        <p className="text-muted-foreground">Feature, review, and manage all videos on the platform.</p>
+        <p className="text-muted-foreground">Feature, publish, and manage all videos on the platform.</p>
       </div>
 
       <div className="flex items-center gap-4">
@@ -77,55 +100,96 @@ export default function AdminVideos() {
                 </TableRow>
               ))
             ) : data?.items?.length ? (
-              data.items.map((video) => (
-                <TableRow key={video.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <div className="w-14 h-9 rounded bg-secondary overflow-hidden flex-shrink-0">
-                        {video.thumbnailUrl ? (
-                          <img src={video.thumbnailUrl} alt={video.title} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full bg-primary/10" />
+              data.items.map((video) => {
+                const isPublished = video.status === "published";
+                const isBusy = pendingId === video.id && updateVideo.isPending;
+                return (
+                  <TableRow key={video.id} className={!isPublished ? "opacity-60" : ""}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className="w-14 h-9 rounded bg-secondary overflow-hidden flex-shrink-0">
+                          {video.thumbnailUrl ? (
+                            <img src={video.thumbnailUrl} alt={video.title} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full bg-primary/10" />
+                          )}
+                        </div>
+                        <p className="font-semibold text-sm">{video.title}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        {video.artistName}
+                        <BadgeCheck className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className="text-xs capitalize">{video.genre || "—"}</Badge>
+                    </TableCell>
+                    <TableCell className="text-sm">{video.viewCount?.toLocaleString() || 0}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <Star className="w-3 h-3 fill-primary text-primary" />
+                        <span className="text-xs">{video.avgRating ? video.avgRating.toFixed(1) : '—'}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <Badge
+                          variant="outline"
+                          className={`text-xs capitalize ${
+                            isPublished
+                              ? "text-green-400 border-green-500/40 bg-green-500/5"
+                              : "text-muted-foreground border-border"
+                          }`}
+                        >
+                          {isPublished ? "Published" : video.status || "Unpublished"}
+                        </Badge>
+                        {video.isFeatured && (
+                          <Badge className="text-[9px] bg-amber-500/20 text-amber-400 border-amber-500/30 border px-1.5">
+                            <Sparkles className="w-2.5 h-2.5 mr-0.5" />Featured
+                          </Badge>
                         )}
                       </div>
-                      <p className="font-semibold text-sm">{video.title}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground"><span className="flex items-center gap-1">{video.artistName}<BadgeCheck className="w-3.5 h-3.5 text-green-500 flex-shrink-0" /></span></TableCell>
-                  <TableCell>
-                    <Badge variant="secondary" className="text-xs capitalize">{video.genre || "—"}</Badge>
-                  </TableCell>
-                  <TableCell className="text-sm">{video.viewCount?.toLocaleString() || 0}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1">
-                      <Star className="w-3 h-3 fill-primary text-primary" />
-                      <span className="text-xs">{video.avgRating ? video.avgRating.toFixed(1) : '—'}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1.5">
-                      <Badge variant="outline" className="text-xs text-muted-foreground capitalize">{video.status}</Badge>
-                      {video.isFeatured && (
-                        <Badge className="text-[9px] bg-amber-500/20 text-amber-400 border-amber-500/30 border px-1.5">
-                          <Sparkles className="w-2.5 h-2.5 mr-0.5" />Featured
-                        </Badge>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant={video.isFeatured ? "default" : "outline"}
-                      size="sm"
-                      className={`text-xs gap-1.5 ${video.isFeatured ? "bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border-amber-500/30 border" : ""}`}
-                      onClick={() => handleToggleFeature(video.id, video.isFeatured)}
-                      disabled={updateVideo.isPending}
-                    >
-                      <Sparkles className="w-3 h-3" />
-                      {video.isFeatured ? "Unfeature" : "Feature"}
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className={`text-xs gap-1.5 ${
+                            isPublished
+                              ? "text-muted-foreground hover:text-red-400 hover:border-red-400/40"
+                              : "text-green-400 border-green-500/40 hover:bg-green-500/10"
+                          }`}
+                          onClick={() => handleTogglePublish(video.id, video.status)}
+                          disabled={isBusy}
+                        >
+                          {isBusy ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : isPublished ? (
+                            <EyeOff className="w-3 h-3" />
+                          ) : (
+                            <Eye className="w-3 h-3" />
+                          )}
+                          {isPublished ? "Unpublish" : "Publish"}
+                        </Button>
+
+                        <Button
+                          variant={video.isFeatured ? "default" : "outline"}
+                          size="sm"
+                          className={`text-xs gap-1.5 ${video.isFeatured ? "bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border-amber-500/30 border" : ""}`}
+                          onClick={() => handleToggleFeature(video.id, video.isFeatured)}
+                          disabled={isBusy}
+                        >
+                          <Sparkles className="w-3 h-3" />
+                          {video.isFeatured ? "Unfeature" : "Feature"}
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             ) : (
               <TableRow>
                 <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">

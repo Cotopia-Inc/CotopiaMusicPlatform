@@ -209,6 +209,15 @@ export interface VideoInput {
   description?: string;
 }
 
+export type VideoUpdateStatus = typeof VideoUpdateStatus[keyof typeof VideoUpdateStatus];
+
+
+export const VideoUpdateStatus = {
+  published: 'published',
+  unpublished: 'unpublished',
+  draft: 'draft',
+} as const;
+
 export interface VideoUpdate {
   title?: string;
   genre?: string;
@@ -216,6 +225,7 @@ export interface VideoUpdate {
   videoUrl?: string;
   description?: string;
   isFeatured?: boolean;
+  status?: VideoUpdateStatus;
 }
 
 export interface VideoList {
@@ -767,6 +777,23 @@ export interface AdminUploadVideoInput {
   thumbnailUrl?: string;
   releaseDate?: string;
   isFeatured?: boolean;
+}
+
+export type AdminBulkUploadVideosInputVideosItem = {
+  title: string;
+  videoUrl: string;
+  duration?: number;
+  thumbnailUrl?: string;
+};
+
+export interface AdminBulkUploadVideosInput {
+  artistId: number;
+  genre?: string;
+  description?: string;
+  thumbnailUrl?: string;
+  releaseDate?: string;
+  isFeatured?: boolean;
+  videos: AdminBulkUploadVideosInputVideosItem[];
 }
 
 export type AdminRoleChangeInputRole = typeof AdminRoleChangeInputRole[keyof typeof AdminRoleChangeInputRole];

@@ -476,7 +476,8 @@ export const UpdateVideoBody = zod.object({
   "thumbnailUrl": zod.string().optional(),
   "videoUrl": zod.string().optional(),
   "description": zod.string().optional(),
-  "isFeatured": zod.boolean().optional()
+  "isFeatured": zod.boolean().optional(),
+  "status": zod.enum(['published', 'unpublished', 'draft']).optional()
 })
 
 export const UpdateVideoResponse = zod.object({
@@ -1721,7 +1722,7 @@ export const AdminUploadSongBody = zod.object({
 
 
 /**
- * @summary Upload up to 20 songs at once (auto-labels as single/EP/album)
+ * @summary Bulk upload songs (auto-labels as single/EP/album)
  */
 export const AdminBulkUploadSongsBody = zod.object({
   "artistId": zod.number(),
@@ -1736,6 +1737,25 @@ export const AdminBulkUploadSongsBody = zod.object({
   "streamUrl": zod.string(),
   "duration": zod.number().optional(),
   "coverUrl": zod.string().optional()
+}))
+})
+
+
+/**
+ * @summary Bulk upload videos (direct publish, no limit)
+ */
+export const AdminBulkUploadVideosBody = zod.object({
+  "artistId": zod.number(),
+  "genre": zod.string().optional(),
+  "description": zod.string().optional(),
+  "thumbnailUrl": zod.string().optional(),
+  "releaseDate": zod.string().optional(),
+  "isFeatured": zod.boolean().optional(),
+  "videos": zod.array(zod.object({
+  "title": zod.string(),
+  "videoUrl": zod.string(),
+  "duration": zod.number().optional(),
+  "thumbnailUrl": zod.string().optional()
 }))
 })
 

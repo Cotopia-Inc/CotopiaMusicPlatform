@@ -9,6 +9,8 @@
 export * from './adminBulkUploadSongsInput';
 export * from './adminBulkUploadSongsInputReleaseType';
 export * from './adminBulkUploadSongsInputSongsItem';
+export * from './adminBulkUploadVideosInput';
+export * from './adminBulkUploadVideosInputVideosItem';
 export * from './adminChatMessage';
 export * from './adminListChatMessagesContentType';
 export * from './adminListChatMessagesParams';
@@ -119,3 +121,4 @@ export * from './videoInput';
 export * from './videoList';
 export * from './videoStatus';
 export * from './videoUpdate';
+export * from './videoUpdateStatus';

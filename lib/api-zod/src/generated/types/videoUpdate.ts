@@ -5,6 +5,7 @@
  * Cotopia Streaming Platform API
  * OpenAPI spec version: 0.1.0
  */
+import type { VideoUpdateStatus } from './videoUpdateStatus';
 
 export interface VideoUpdate {
   title?: string;
@@ -13,4 +14,5 @@ export interface VideoUpdate {
   videoUrl?: string;
   description?: string;
   isFeatured?: boolean;
+  status?: VideoUpdateStatus;
 }

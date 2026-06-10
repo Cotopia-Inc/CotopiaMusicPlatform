@@ -1501,6 +1501,27 @@ paths:
                 items:
                   $ref: "#/components/schemas/Song"
 
+  /admin/bulk-upload-videos:
+    post:
+      operationId: adminBulkUploadVideos
+      tags: [admin]
+      summary: Bulk upload videos (direct publish, no limit)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminBulkUploadVideosInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Video"
+
   /admin/upload-video:
     post:
       operationId: adminUploadVideo
@@ -2266,6 +2287,9 @@ components:
           type: string
         isFeatured:
           type: boolean
+        status:
+          type: string
+          enum: [published, unpublished, draft]
 
     VideoList:
       type: object
@@ -3048,6 +3072,37 @@ components:
           type: string
         isFeatured:
           type: boolean
+
+    AdminBulkUploadVideosInput:
+      type: object
+      required: [artistId, videos]
+      properties:
+        artistId:
+          type: integer
+        genre:
+          type: string
+        description:
+          type: string
+        thumbnailUrl:
+          type: string
+        releaseDate:
+          type: string
+        isFeatured:
+          type: boolean
+        videos:
+          type: array
+          items:
+            type: object
+            required: [title, videoUrl]
+            properties:
+              title:
+                type: string
+              videoUrl:
+                type: string
+              duration:
+                type: integer
+              thumbnailUrl:
+                type: string
 
     AdminRoleChangeInput:
       type: object

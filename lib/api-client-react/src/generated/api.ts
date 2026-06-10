@@ -21,6 +21,7 @@ import type {
 
 import type {
   AdminBulkUploadSongsInput,
+  AdminBulkUploadVideosInput,
   AdminChatMessage,
   AdminListChatMessagesParams,
   AdminListListenersParams,
@@ -5734,7 +5735,7 @@ export const getAdminBulkUploadSongsUrl = () => {
 }
 
 /**
- * @summary Upload up to 20 songs at once (auto-labels as single/EP/album)
+ * @summary Bulk upload songs (auto-labels as single/EP/album)
  */
 export const adminBulkUploadSongs = async (adminBulkUploadSongsInput: AdminBulkUploadSongsInput, options?: RequestInit): Promise<Song[]> => {
 
@@ -5783,7 +5784,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AdminBulkUploadSongsMutationError = ErrorType<unknown>
 
     /**
- * @summary Upload up to 20 songs at once (auto-labels as single/EP/album)
+ * @summary Bulk upload songs (auto-labels as single/EP/album)
  */
 export const useAdminBulkUploadSongs = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminBulkUploadSongs>>, TError,{data: BodyType<AdminBulkUploadSongsInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
@@ -5794,6 +5795,77 @@ export const useAdminBulkUploadSongs = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getAdminBulkUploadSongsMutationOptions(options));
+    }
+
+export const getAdminBulkUploadVideosUrl = () => {
+
+
+
+
+  return `/api/admin/bulk-upload-videos`
+}
+
+/**
+ * @summary Bulk upload videos (direct publish, no limit)
+ */
+export const adminBulkUploadVideos = async (adminBulkUploadVideosInput: AdminBulkUploadVideosInput, options?: RequestInit): Promise<Video[]> => {
+
+  return customFetch<Video[]>(getAdminBulkUploadVideosUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      adminBulkUploadVideosInput,)
+  }
+);}
+
+
+
+
+export const getAdminBulkUploadVideosMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminBulkUploadVideos>>, TError,{data: BodyType<AdminBulkUploadVideosInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminBulkUploadVideos>>, TError,{data: BodyType<AdminBulkUploadVideosInput>}, TContext> => {
+
+const mutationKey = ['adminBulkUploadVideos'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminBulkUploadVideos>>, {data: BodyType<AdminBulkUploadVideosInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  adminBulkUploadVideos(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminBulkUploadVideosMutationResult = NonNullable<Awaited<ReturnType<typeof adminBulkUploadVideos>>>
+    export type AdminBulkUploadVideosMutationBody = BodyType<AdminBulkUploadVideosInput>
+    export type AdminBulkUploadVideosMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Bulk upload videos (direct publish, no limit)
+ */
+export const useAdminBulkUploadVideos = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminBulkUploadVideos>>, TError,{data: BodyType<AdminBulkUploadVideosInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof adminBulkUploadVideos>>,
+        TError,
+        {data: BodyType<AdminBulkUploadVideosInput>},
+        TContext
+      > => {
+      return useMutation(getAdminBulkUploadVideosMutationOptions(options));
     }
 
 export const getAdminUploadVideoUrl = () => {
