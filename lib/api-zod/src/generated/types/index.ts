@@ -6,6 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './adminBulkUploadSongsInput';
+export * from './adminBulkUploadSongsInputReleaseType';
+export * from './adminBulkUploadSongsInputSongsItem';
 export * from './adminChatMessage';
 export * from './adminListChatMessagesContentType';
 export * from './adminListChatMessagesParams';
@@ -18,6 +21,7 @@ export * from './adminListUsersParams';
 export * from './adminRoleChangeInput';
 export * from './adminRoleChangeInputRole';
 export * from './adminUploadSongInput';
+export * from './adminUploadSongInputReleaseType';
 export * from './adminUploadVideoInput';
 export * from './adminUserList';
 export * from './adminUserUpdate';
@@ -91,6 +95,7 @@ export * from './song';
 export * from './songDetail';
 export * from './songInput';
 export * from './songList';
+export * from './songReleaseType';
 export * from './songStatus';
 export * from './songUpdate';
 export * from './submission';

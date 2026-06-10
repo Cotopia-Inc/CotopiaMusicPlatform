@@ -1480,6 +1480,27 @@ paths:
               schema:
                 $ref: "#/components/schemas/Song"
 
+  /admin/bulk-upload-songs:
+    post:
+      operationId: adminBulkUploadSongs
+      tags: [admin]
+      summary: Upload up to 20 songs at once (auto-labels as single/EP/album)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminBulkUploadSongsInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Song"
+
   /admin/upload-video:
     post:
       operationId: adminUploadVideo
@@ -2097,6 +2118,9 @@ components:
         status:
           type: string
           enum: [draft, pending_review, approved, rejected, published]
+        releaseType:
+          type: string
+          enum: [single, ep, album]
         isFeatured:
           type: boolean
         createdAt:
@@ -2959,8 +2983,46 @@ components:
           type: string
         releaseDate:
           type: string
+        releaseType:
+          type: string
+          enum: [single, ep, album]
         isFeatured:
           type: boolean
+
+    AdminBulkUploadSongsInput:
+      type: object
+      required: [artistId, songs]
+      properties:
+        artistId:
+          type: integer
+        releaseName:
+          type: string
+        releaseType:
+          type: string
+          enum: [single, ep, album]
+        genre:
+          type: string
+        coverUrl:
+          type: string
+        releaseDate:
+          type: string
+        isFeatured:
+          type: boolean
+        songs:
+          type: array
+          maxItems: 20
+          items:
+            type: object
+            required: [title, streamUrl]
+            properties:
+              title:
+                type: string
+              streamUrl:
+                type: string
+              duration:
+                type: integer
+              coverUrl:
+                type: string
 
     AdminUploadVideoInput:
       type: object

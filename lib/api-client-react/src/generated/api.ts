@@ -20,6 +20,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AdminBulkUploadSongsInput,
   AdminChatMessage,
   AdminListChatMessagesParams,
   AdminListListenersParams,
@@ -5722,6 +5723,77 @@ export const useAdminUploadSong = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getAdminUploadSongMutationOptions(options));
+    }
+
+export const getAdminBulkUploadSongsUrl = () => {
+
+
+
+
+  return `/api/admin/bulk-upload-songs`
+}
+
+/**
+ * @summary Upload up to 20 songs at once (auto-labels as single/EP/album)
+ */
+export const adminBulkUploadSongs = async (adminBulkUploadSongsInput: AdminBulkUploadSongsInput, options?: RequestInit): Promise<Song[]> => {
+
+  return customFetch<Song[]>(getAdminBulkUploadSongsUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      adminBulkUploadSongsInput,)
+  }
+);}
+
+
+
+
+export const getAdminBulkUploadSongsMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminBulkUploadSongs>>, TError,{data: BodyType<AdminBulkUploadSongsInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminBulkUploadSongs>>, TError,{data: BodyType<AdminBulkUploadSongsInput>}, TContext> => {
+
+const mutationKey = ['adminBulkUploadSongs'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminBulkUploadSongs>>, {data: BodyType<AdminBulkUploadSongsInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  adminBulkUploadSongs(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminBulkUploadSongsMutationResult = NonNullable<Awaited<ReturnType<typeof adminBulkUploadSongs>>>
+    export type AdminBulkUploadSongsMutationBody = BodyType<AdminBulkUploadSongsInput>
+    export type AdminBulkUploadSongsMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Upload up to 20 songs at once (auto-labels as single/EP/album)
+ */
+export const useAdminBulkUploadSongs = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminBulkUploadSongs>>, TError,{data: BodyType<AdminBulkUploadSongsInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof adminBulkUploadSongs>>,
+        TError,
+        {data: BodyType<AdminBulkUploadSongsInput>},
+        TContext
+      > => {
+      return useMutation(getAdminBulkUploadSongsMutationOptions(options));
     }
 
 export const getAdminUploadVideoUrl = () => {

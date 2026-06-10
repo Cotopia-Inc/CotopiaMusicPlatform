@@ -85,6 +85,15 @@ export const SongStatus = {
   published: 'published',
 } as const;
 
+export type SongReleaseType = typeof SongReleaseType[keyof typeof SongReleaseType];
+
+
+export const SongReleaseType = {
+  single: 'single',
+  ep: 'ep',
+  album: 'album',
+} as const;
+
 export interface Song {
   id: number;
   title: string;
@@ -105,6 +114,7 @@ export interface Song {
   /** @nullable */
   avgRating?: number | null;
   status: SongStatus;
+  releaseType?: SongReleaseType;
   isFeatured?: boolean;
   createdAt: string;
 }
@@ -688,6 +698,15 @@ export interface ErrorEnvelope {
   error: string;
 }
 
+export type AdminUploadSongInputReleaseType = typeof AdminUploadSongInputReleaseType[keyof typeof AdminUploadSongInputReleaseType];
+
+
+export const AdminUploadSongInputReleaseType = {
+  single: 'single',
+  ep: 'ep',
+  album: 'album',
+} as const;
+
 export interface AdminUploadSongInput {
   title: string;
   artistId: number;
@@ -697,7 +716,36 @@ export interface AdminUploadSongInput {
   streamUrl: string;
   coverUrl?: string;
   releaseDate?: string;
+  releaseType?: AdminUploadSongInputReleaseType;
   isFeatured?: boolean;
+}
+
+export type AdminBulkUploadSongsInputReleaseType = typeof AdminBulkUploadSongsInputReleaseType[keyof typeof AdminBulkUploadSongsInputReleaseType];
+
+
+export const AdminBulkUploadSongsInputReleaseType = {
+  single: 'single',
+  ep: 'ep',
+  album: 'album',
+} as const;
+
+export type AdminBulkUploadSongsInputSongsItem = {
+  title: string;
+  streamUrl: string;
+  duration?: number;
+  coverUrl?: string;
+};
+
+export interface AdminBulkUploadSongsInput {
+  artistId: number;
+  releaseName?: string;
+  releaseType?: AdminBulkUploadSongsInputReleaseType;
+  genre?: string;
+  coverUrl?: string;
+  releaseDate?: string;
+  isFeatured?: boolean;
+  /** @maxItems 20 */
+  songs: AdminBulkUploadSongsInputSongsItem[];
 }
 
 export interface AdminUploadVideoInput {

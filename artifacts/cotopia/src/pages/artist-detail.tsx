@@ -137,7 +137,18 @@ export default function ArtistDetail() {
                     <div className="w-10 h-10 rounded bg-secondary overflow-hidden flex-shrink-0">
                       {song.coverUrl && <img src={song.coverUrl} alt={song.title} className="w-full h-full object-cover" />}
                     </div>
-                    <div className="flex-1 font-medium">{song.title}</div>
+                    <div className="flex-1 font-medium flex items-center gap-2">
+                      {song.title}
+                      {(song as any).releaseType && (song as any).releaseType !== "single" && (
+                        <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border ${
+                          (song as any).releaseType === "ep"
+                            ? "border-purple-500/40 text-purple-400 bg-purple-500/5"
+                            : "border-primary/40 text-primary bg-primary/5"
+                        }`}>
+                          {(song as any).releaseType === "ep" ? "EP" : "Album"}
+                        </span>
+                      )}
+                    </div>
                     <div className="text-muted-foreground text-sm w-32">{song.playCount?.toLocaleString() || 0} plays</div>
                     <Link href={`/songs/${song.id}`} onClick={(e) => e.stopPropagation()} className="text-muted-foreground text-sm w-16 text-right hover:text-primary">
                       {Math.floor(song.duration / 60)}:{(song.duration % 60).toString().padStart(2, '0')}

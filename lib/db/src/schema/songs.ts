@@ -15,6 +15,7 @@ export const songsTable = pgTable("songs", {
   streamUrl: text("stream_url"),
   lyrics: text("lyrics"),
   playCount: integer("play_count").notNull().default(0),
+  releaseType: text("release_type").notNull().default("single"), // single | ep | album
   status: text("status").notNull().default("draft"), // draft | pending_review | approved | rejected | published
   isFeatured: boolean("is_featured").notNull().default(false),
   releaseDate: date("release_date"),

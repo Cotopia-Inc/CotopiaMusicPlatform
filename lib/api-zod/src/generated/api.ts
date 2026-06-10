@@ -125,6 +125,7 @@ export const ListSongsResponse = zod.object({
   "playCount": zod.number().optional(),
   "avgRating": zod.number().nullish(),
   "status": zod.enum(['draft', 'pending_review', 'approved', 'rejected', 'published']),
+  "releaseType": zod.enum(['single', 'ep', 'album']).optional(),
   "isFeatured": zod.boolean().optional(),
   "createdAt": zod.string()
 })),
@@ -163,6 +164,7 @@ export const GetFeaturedSongsResponseItem = zod.object({
   "playCount": zod.number().optional(),
   "avgRating": zod.number().nullish(),
   "status": zod.enum(['draft', 'pending_review', 'approved', 'rejected', 'published']),
+  "releaseType": zod.enum(['single', 'ep', 'album']).optional(),
   "isFeatured": zod.boolean().optional(),
   "createdAt": zod.string()
 })
@@ -192,6 +194,7 @@ export const GetTrendingSongsResponseItem = zod.object({
   "playCount": zod.number().optional(),
   "avgRating": zod.number().nullish(),
   "status": zod.enum(['draft', 'pending_review', 'approved', 'rejected', 'published']),
+  "releaseType": zod.enum(['single', 'ep', 'album']).optional(),
   "isFeatured": zod.boolean().optional(),
   "createdAt": zod.string()
 })
@@ -219,6 +222,7 @@ export const GetSongResponse = zod.object({
   "playCount": zod.number().optional(),
   "avgRating": zod.number().nullish(),
   "status": zod.enum(['draft', 'pending_review', 'approved', 'rejected', 'published']),
+  "releaseType": zod.enum(['single', 'ep', 'album']).optional(),
   "isFeatured": zod.boolean().optional(),
   "createdAt": zod.string()
 }).and(zod.object({
@@ -258,6 +262,7 @@ export const UpdateSongResponse = zod.object({
   "playCount": zod.number().optional(),
   "avgRating": zod.number().nullish(),
   "status": zod.enum(['draft', 'pending_review', 'approved', 'rejected', 'published']),
+  "releaseType": zod.enum(['single', 'ep', 'album']).optional(),
   "isFeatured": zod.boolean().optional(),
   "createdAt": zod.string()
 })
@@ -661,6 +666,7 @@ export const GetArtistResponse = zod.object({
   "playCount": zod.number().optional(),
   "avgRating": zod.number().nullish(),
   "status": zod.enum(['draft', 'pending_review', 'approved', 'rejected', 'published']),
+  "releaseType": zod.enum(['single', 'ep', 'album']).optional(),
   "isFeatured": zod.boolean().optional(),
   "createdAt": zod.string()
 })).optional(),
@@ -819,6 +825,7 @@ export const GetLabelResponse = zod.object({
   "playCount": zod.number().optional(),
   "avgRating": zod.number().nullish(),
   "status": zod.enum(['draft', 'pending_review', 'approved', 'rejected', 'published']),
+  "releaseType": zod.enum(['single', 'ep', 'album']).optional(),
   "isFeatured": zod.boolean().optional(),
   "createdAt": zod.string()
 })).optional()
@@ -926,6 +933,7 @@ export const GetPlaylistResponse = zod.object({
   "playCount": zod.number().optional(),
   "avgRating": zod.number().nullish(),
   "status": zod.enum(['draft', 'pending_review', 'approved', 'rejected', 'published']),
+  "releaseType": zod.enum(['single', 'ep', 'album']).optional(),
   "isFeatured": zod.boolean().optional(),
   "createdAt": zod.string()
 })).optional()
@@ -1012,6 +1020,7 @@ export const GetFavoriteSongsResponseItem = zod.object({
   "playCount": zod.number().optional(),
   "avgRating": zod.number().nullish(),
   "status": zod.enum(['draft', 'pending_review', 'approved', 'rejected', 'published']),
+  "releaseType": zod.enum(['single', 'ep', 'album']).optional(),
   "isFeatured": zod.boolean().optional(),
   "createdAt": zod.string()
 })
@@ -1205,6 +1214,7 @@ export const GetHomeFeedResponse = zod.object({
   "playCount": zod.number().optional(),
   "avgRating": zod.number().nullish(),
   "status": zod.enum(['draft', 'pending_review', 'approved', 'rejected', 'published']),
+  "releaseType": zod.enum(['single', 'ep', 'album']).optional(),
   "isFeatured": zod.boolean().optional(),
   "createdAt": zod.string()
 })),
@@ -1262,6 +1272,7 @@ export const GetHomeFeedResponse = zod.object({
   "playCount": zod.number().optional(),
   "avgRating": zod.number().nullish(),
   "status": zod.enum(['draft', 'pending_review', 'approved', 'rejected', 'published']),
+  "releaseType": zod.enum(['single', 'ep', 'album']).optional(),
   "isFeatured": zod.boolean().optional(),
   "createdAt": zod.string()
 })),
@@ -1279,6 +1290,7 @@ export const GetHomeFeedResponse = zod.object({
   "playCount": zod.number().optional(),
   "avgRating": zod.number().nullish(),
   "status": zod.enum(['draft', 'pending_review', 'approved', 'rejected', 'published']),
+  "releaseType": zod.enum(['single', 'ep', 'album']).optional(),
   "isFeatured": zod.boolean().optional(),
   "createdAt": zod.string()
 })),
@@ -1313,6 +1325,7 @@ export const GetDiscoverResponse = zod.object({
   "playCount": zod.number().optional(),
   "avgRating": zod.number().nullish(),
   "status": zod.enum(['draft', 'pending_review', 'approved', 'rejected', 'published']),
+  "releaseType": zod.enum(['single', 'ep', 'album']).optional(),
   "isFeatured": zod.boolean().optional(),
   "createdAt": zod.string()
 })),
@@ -1345,6 +1358,7 @@ export const GetDiscoverResponse = zod.object({
   "playCount": zod.number().optional(),
   "avgRating": zod.number().nullish(),
   "status": zod.enum(['draft', 'pending_review', 'approved', 'rejected', 'published']),
+  "releaseType": zod.enum(['single', 'ep', 'album']).optional(),
   "isFeatured": zod.boolean().optional(),
   "createdAt": zod.string()
 })),
@@ -1362,6 +1376,7 @@ export const GetDiscoverResponse = zod.object({
   "playCount": zod.number().optional(),
   "avgRating": zod.number().nullish(),
   "status": zod.enum(['draft', 'pending_review', 'approved', 'rejected', 'published']),
+  "releaseType": zod.enum(['single', 'ep', 'album']).optional(),
   "isFeatured": zod.boolean().optional(),
   "createdAt": zod.string()
 })),
@@ -1594,6 +1609,7 @@ export const GetAdminAnalyticsResponse = zod.object({
   "playCount": zod.number().optional(),
   "avgRating": zod.number().nullish(),
   "status": zod.enum(['draft', 'pending_review', 'approved', 'rejected', 'published']),
+  "releaseType": zod.enum(['single', 'ep', 'album']).optional(),
   "isFeatured": zod.boolean().optional(),
   "createdAt": zod.string()
 })).optional(),
@@ -1698,7 +1714,32 @@ export const AdminUploadSongBody = zod.object({
   "streamUrl": zod.string(),
   "coverUrl": zod.string().optional(),
   "releaseDate": zod.string().optional(),
+  "releaseType": zod.enum(['single', 'ep', 'album']).optional(),
   "isFeatured": zod.boolean().optional()
+})
+
+
+/**
+ * @summary Upload up to 20 songs at once (auto-labels as single/EP/album)
+ */
+export const adminBulkUploadSongsBodySongsMax = 20;
+
+
+
+export const AdminBulkUploadSongsBody = zod.object({
+  "artistId": zod.number(),
+  "releaseName": zod.string().optional(),
+  "releaseType": zod.enum(['single', 'ep', 'album']).optional(),
+  "genre": zod.string().optional(),
+  "coverUrl": zod.string().optional(),
+  "releaseDate": zod.string().optional(),
+  "isFeatured": zod.boolean().optional(),
+  "songs": zod.array(zod.object({
+  "title": zod.string(),
+  "streamUrl": zod.string(),
+  "duration": zod.number().optional(),
+  "coverUrl": zod.string().optional()
+})).max(adminBulkUploadSongsBodySongsMax)
 })
 
 
@@ -1813,6 +1854,7 @@ export const GetArtistAnalyticsResponse = zod.object({
   "playCount": zod.number().optional(),
   "avgRating": zod.number().nullish(),
   "status": zod.enum(['draft', 'pending_review', 'approved', 'rejected', 'published']),
+  "releaseType": zod.enum(['single', 'ep', 'album']).optional(),
   "isFeatured": zod.boolean().optional(),
   "createdAt": zod.string()
 })),
@@ -1902,6 +1944,7 @@ export const GetEditorialPlaylistResponse = zod.object({
   "playCount": zod.number().optional(),
   "avgRating": zod.number().nullish(),
   "status": zod.enum(['draft', 'pending_review', 'approved', 'rejected', 'published']),
+  "releaseType": zod.enum(['single', 'ep', 'album']).optional(),
   "isFeatured": zod.boolean().optional(),
   "createdAt": zod.string()
 })).optional()

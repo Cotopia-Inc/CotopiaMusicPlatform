@@ -151,7 +151,13 @@ export default function SongDetail() {
             )}
           </div>
           <div className="flex-1 space-y-3">
-            <Badge variant="outline" className="text-[10px] uppercase tracking-widest border-primary/30 text-primary">Song</Badge>
+            <Badge variant="outline" className={`text-[10px] uppercase tracking-widest ${
+              song.releaseType === "ep" ? "border-purple-500/40 text-purple-400" :
+              song.releaseType === "album" ? "border-primary/40 text-primary" :
+              "border-blue-500/40 text-blue-400"
+            }`}>
+              {song.releaseType === "ep" ? "EP" : song.releaseType === "album" ? "Album" : "Single"}
+            </Badge>
             <h1 className="text-5xl md:text-6xl font-extrabold tracking-tighter leading-none">{song.title}</h1>
             <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
               <Link href={`/artists/${song.artistId}`}>

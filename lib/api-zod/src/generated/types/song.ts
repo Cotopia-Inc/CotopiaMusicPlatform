@@ -5,6 +5,7 @@
  * Cotopia Streaming Platform API
  * OpenAPI spec version: 0.1.0
  */
+import type { SongReleaseType } from './songReleaseType';
 import type { SongStatus } from './songStatus';
 
 export interface Song {
@@ -27,6 +28,7 @@ export interface Song {
   /** @nullable */
   avgRating?: number | null;
   status: SongStatus;
+  releaseType?: SongReleaseType;
   isFeatured?: boolean;
   createdAt: string;
 }

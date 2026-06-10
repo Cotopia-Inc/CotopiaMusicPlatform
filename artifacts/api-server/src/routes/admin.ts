@@ -10,6 +10,7 @@ import {
   AdminListUsersQueryParams, AdminUpdateUserBody,
   AdminListSubmissionsQueryParams, UpdateAppSettingsBody,
   AdminUploadSongBody, AdminUploadVideoBody, AdminChangeUserRoleBody,
+  AdminBulkUploadSongsBody,
 } from "@workspace/api-zod";
 import { requireAuth, requireRole, type AuthRequest } from "../lib/auth";
 
@@ -245,7 +246,7 @@ router.post("/admin/upload-song", requireAuth, requireRole(...ADMIN_ROLES, "edit
   const parsed = AdminUploadSongBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
 
-  const { title, artistId, albumId, genre, duration, streamUrl, coverUrl, releaseDate, isFeatured } = parsed.data;
+  const { title, artistId, albumId, genre, duration, streamUrl, coverUrl, releaseDate, releaseType, isFeatured } = parsed.data;
 
   // Verify artist exists
   const [artist] = await db.select({ id: artistsTable.id, stageName: artistsTable.stageName })
@@ -261,6 +262,7 @@ router.post("/admin/upload-song", requireAuth, requireRole(...ADMIN_ROLES, "edit
     streamUrl,
     coverUrl: coverUrl ?? null,
     status: "published",
+    releaseType: releaseType ?? "single",
     isFeatured: isFeatured ?? false,
     releaseDate: releaseDate ?? null,
     playCount: 0,
@@ -272,6 +274,59 @@ router.post("/admin/upload-song", requireAuth, requireRole(...ADMIN_ROLES, "edit
     albumName: null,
     avgRating: null,
   });
+});
+
+router.post("/admin/bulk-upload-songs", requireAuth, requireRole(...ADMIN_ROLES, "editor"), async (req: AuthRequest, res): Promise<void> => {
+  const parsed = AdminBulkUploadSongsBody.safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+
+  const { artistId, releaseName, releaseType: inputReleaseType, genre, coverUrl, releaseDate, isFeatured, songs } = parsed.data;
+
+  const [artist] = await db.select({ id: artistsTable.id, stageName: artistsTable.stageName })
+    .from(artistsTable).where(eq(artistsTable.id, artistId)).limit(1);
+  if (!artist) { res.status(400).json({ error: "Artist not found" }); return; }
+
+  // Auto-determine release type from count if not provided
+  const count = songs.length;
+  const releaseType = inputReleaseType ?? (count === 1 ? "single" : count <= 6 ? "ep" : "album");
+
+  // Create album record for EP/album releases
+  let albumId: number | null = null;
+  if (releaseType !== "single" && releaseName) {
+    const [album] = await db.insert(albumsTable).values({
+      artistId,
+      title: releaseName,
+      coverUrl: coverUrl ?? null,
+      genre: genre ?? null,
+      releaseDate: releaseDate ?? null,
+    }).returning();
+    albumId = album.id;
+  }
+
+  // Insert all songs
+  const inserted = await db.insert(songsTable).values(
+    songs.map(s => ({
+      title: s.title,
+      artistId,
+      albumId,
+      genre: genre ?? null,
+      duration: s.duration ?? 0,
+      streamUrl: s.streamUrl,
+      coverUrl: s.coverUrl ?? coverUrl ?? null,
+      status: "published" as const,
+      releaseType,
+      isFeatured: isFeatured ?? false,
+      releaseDate: releaseDate ?? null,
+      playCount: 0,
+    }))
+  ).returning();
+
+  res.status(201).json(inserted.map(song => ({
+    ...song,
+    artistName: artist.stageName,
+    albumName: releaseName ?? null,
+    avgRating: null,
+  })));
 });
 
 router.post("/admin/upload-video", requireAuth, requireRole(...ADMIN_ROLES, "editor"), async (req: AuthRequest, res): Promise<void> => {
