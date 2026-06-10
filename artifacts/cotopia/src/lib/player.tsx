@@ -11,6 +11,8 @@ export interface Track {
   isFavorited?: boolean;
 }
 
+export type RepeatMode = "none" | "one" | "all";
+
 interface PlayerContextValue {
   track: Track | null;
   isPlaying: boolean;
@@ -20,9 +22,19 @@ interface PlayerContextValue {
   trackFavorited: boolean;
   nowPlayingOpen: boolean;
   isVideoTrack: boolean;
+  queue: Track[];
+  queueIndex: number;
+  shuffle: boolean;
+  repeat: RepeatMode;
   play: (track: Track) => void;
   togglePlay: () => void;
   seek: (time: number) => void;
+  stop: () => void;
+  skipNext: () => void;
+  skipPrev: () => void;
+  toggleShuffle: () => void;
+  cycleRepeat: () => void;
+  addToQueue: (tracks: Track[]) => void;
   setVolume: (v: number) => void;
   setTrackFavorited: (v: boolean) => void;
   setNowPlayingOpen: (v: boolean) => void;
@@ -40,11 +52,87 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const [volume, setVolumeState] = useState(0.75);
   const [trackFavorited, setTrackFavorited] = useState(false);
   const [nowPlayingOpen, setNowPlayingOpen] = useState(false);
+  const [queue, setQueueState] = useState<Track[]>([]);
+  const [queueIndex, setQueueIndexState] = useState(-1);
+  const [shuffle, setShuffleState] = useState(false);
+  const [repeat, setRepeatState] = useState<RepeatMode>("none");
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const videoElRef = useRef<HTMLVideoElement | null>(null);
   const volumeRef = useRef(0.75);
   const videoHandlersRef = useRef<Record<string, EventListener>>({});
+
+  // Refs for stable access inside event handlers (no stale closures)
+  const trackRef = useRef<Track | null>(null);
+  const queueRef = useRef<Track[]>([]);
+  const queueIndexRef = useRef(-1);
+  const shuffleRef = useRef(false);
+  const repeatRef = useRef<RepeatMode>("none");
+
+  const setQueue = (q: Track[]) => { queueRef.current = q; setQueueState(q); };
+  const setQueueIndex = (i: number) => { queueIndexRef.current = i; setQueueIndexState(i); };
+
+  const getMedia = () =>
+    trackRef.current?.videoUrl ? videoElRef.current : audioRef.current;
+
+  const startPlayback = useCallback((t: Track) => {
+    const isVideo = !!t.videoUrl;
+    if (isVideo && videoElRef.current && t.videoUrl) {
+      if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = ""; }
+      videoElRef.current.src = t.videoUrl;
+      videoElRef.current.volume = volumeRef.current;
+      videoElRef.current.play().catch(() => {});
+      setNowPlayingOpen(true);
+    } else if (!isVideo && audioRef.current && t.streamUrl) {
+      if (videoElRef.current) { videoElRef.current.pause(); videoElRef.current.src = ""; }
+      audioRef.current.src = t.streamUrl;
+      audioRef.current.volume = volumeRef.current;
+      audioRef.current.play().catch(() => {});
+    }
+  }, []);
+
+  const loadAndPlay = useCallback((t: Track, newQueueIndex: number) => {
+    trackRef.current = t;
+    setTrack(t);
+    setQueueIndex(newQueueIndex);
+    setCurrentTime(0);
+    setDuration(t.duration ?? 0);
+    setTrackFavorited(t.isFavorited ?? false);
+    startPlayback(t);
+  }, [startPlayback]);
+
+  // Auto-advance — uses refs so it's always current without re-binding to audio element
+  const autoAdvanceRef = useRef<() => void>(() => {});
+  useEffect(() => {
+    autoAdvanceRef.current = () => {
+      const q = queueRef.current;
+      const idx = queueIndexRef.current;
+      const rep = repeatRef.current;
+      const shuf = shuffleRef.current;
+
+      if (rep === "one") {
+        const media = getMedia();
+        if (media) { media.currentTime = 0; media.play().catch(() => {}); }
+        return;
+      }
+
+      let nextIdx: number;
+      if (shuf && q.length > 1) {
+        const others = q.map((_, i) => i).filter(i => i !== idx);
+        nextIdx = others[Math.floor(Math.random() * others.length)];
+      } else {
+        nextIdx = idx + 1;
+        if (nextIdx >= q.length) {
+          if (rep === "all") nextIdx = 0;
+          else { setIsPlaying(false); return; }
+        }
+      }
+
+      const next = q[nextIdx];
+      if (!next) return;
+      loadAndPlay(next, nextIdx);
+    };
+  }, [loadAndPlay]);
 
   useEffect(() => {
     const audio = new Audio();
@@ -53,7 +141,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
     audio.addEventListener("timeupdate", () => setCurrentTime(audio.currentTime));
     audio.addEventListener("durationchange", () => setDuration(audio.duration || 0));
-    audio.addEventListener("ended", () => setIsPlaying(false));
+    audio.addEventListener("ended", () => { setIsPlaying(false); autoAdvanceRef.current(); });
     audio.addEventListener("play", () => setIsPlaying(true));
     audio.addEventListener("pause", () => setIsPlaying(false));
     audio.addEventListener("error", () => setIsPlaying(false));
@@ -67,16 +155,13 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       Object.entries(videoHandlersRef.current).forEach(([ev, fn]) => old.removeEventListener(ev, fn));
       old.pause();
     }
-
     videoElRef.current = el;
     videoHandlersRef.current = {};
-
     if (!el) return;
-
     const handlers: Record<string, EventListener> = {
       timeupdate: () => setCurrentTime(el.currentTime),
       durationchange: () => setDuration(el.duration || 0),
-      ended: () => setIsPlaying(false),
+      ended: () => { setIsPlaying(false); autoAdvanceRef.current(); },
       play: () => setIsPlaying(true),
       pause: () => setIsPlaying(false),
       error: () => setIsPlaying(false),
@@ -85,45 +170,61 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     Object.entries(handlers).forEach(([ev, fn]) => el.addEventListener(ev, fn));
   }, []);
 
-  const getMedia = () => track?.videoUrl ? videoElRef.current : audioRef.current;
-
   const play = (newTrack: Track) => {
-    const isVideo = !!newTrack.videoUrl;
-    const audio = audioRef.current;
-    const video = videoElRef.current;
-
-    if (track?.id === newTrack.id) {
+    if (trackRef.current?.id === newTrack.id) {
       const media = getMedia();
       if (!media) return;
       if (isPlaying) { media.pause(); } else { media.play().catch(() => {}); }
       return;
     }
 
-    setTrack(newTrack);
-    setTrackFavorited(newTrack.isFavorited ?? false);
-    setCurrentTime(0);
-    setDuration(newTrack.duration ?? 0);
-
-    if (isVideo && video && newTrack.videoUrl) {
-      if (audio) { audio.pause(); audio.src = ""; }
-      video.src = newTrack.videoUrl;
-      video.volume = volumeRef.current;
-      video.play().catch(() => {});
-      setNowPlayingOpen(true);
-    } else if (!isVideo && audio && newTrack.streamUrl) {
-      if (video) { video.pause(); video.src = ""; }
-      audio.src = newTrack.streamUrl;
-      audio.play().catch(() => {});
-    } else {
-      setTrack(newTrack);
+    let q = queueRef.current;
+    let idx = q.findIndex(t => t.id === newTrack.id);
+    if (idx === -1) {
+      q = [...q, newTrack];
+      setQueue(q);
+      idx = q.length - 1;
     }
+    loadAndPlay(newTrack, idx);
   };
 
   const togglePlay = () => {
     const media = getMedia();
-    if (!media || !track) return;
+    if (!media || !trackRef.current) return;
     if (isPlaying) { media.pause(); } else { media.play().catch(() => {}); }
   };
+
+  const stop = () => {
+    const media = getMedia();
+    if (!media) return;
+    media.pause();
+    media.currentTime = 0;
+    setCurrentTime(0);
+  };
+
+  const skipNext = useCallback(() => {
+    autoAdvanceRef.current();
+  }, []);
+
+  const skipPrev = useCallback(() => {
+    const media = getMedia();
+    if (!media) return;
+    if (media.currentTime > 3) {
+      media.currentTime = 0;
+      setCurrentTime(0);
+      return;
+    }
+    const q = queueRef.current;
+    const idx = queueIndexRef.current;
+    if (idx <= 0) {
+      media.currentTime = 0;
+      setCurrentTime(0);
+      return;
+    }
+    const prev = q[idx - 1];
+    if (!prev) return;
+    loadAndPlay(prev, idx - 1);
+  }, [loadAndPlay]);
 
   const seek = (time: number) => {
     const media = getMedia();
@@ -139,11 +240,37 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     if (videoElRef.current) videoElRef.current.volume = v;
   };
 
+  const toggleShuffle = () => {
+    const v = !shuffleRef.current;
+    shuffleRef.current = v;
+    setShuffleState(v);
+  };
+
+  const cycleRepeat = () => {
+    const next: RepeatMode =
+      repeatRef.current === "none" ? "one"
+      : repeatRef.current === "one" ? "all"
+      : "none";
+    repeatRef.current = next;
+    setRepeatState(next);
+  };
+
+  const addToQueue = (tracks: Track[]) => {
+    const q = queueRef.current;
+    const existing = new Set(q.map(t => t.id));
+    const fresh = tracks.filter(t => !existing.has(t.id));
+    setQueue([...q, ...fresh]);
+  };
+
   return (
     <PlayerContext.Provider value={{
-      track, isPlaying, currentTime, duration, volume, trackFavorited, nowPlayingOpen,
-      isVideoTrack: !!track?.videoUrl,
-      play, togglePlay, seek, setVolume, setTrackFavorited, setNowPlayingOpen,
+      track, isPlaying, currentTime, duration, volume,
+      trackFavorited, nowPlayingOpen,
+      isVideoTrack: !!trackRef.current?.videoUrl,
+      queue, queueIndex, shuffle, repeat,
+      play, togglePlay, seek, stop, skipNext, skipPrev,
+      toggleShuffle, cycleRepeat, addToQueue,
+      setVolume, setTrackFavorited, setNowPlayingOpen,
       registerVideoElement, audioRef,
     }}>
       {children}
