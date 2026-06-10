@@ -165,6 +165,7 @@ export default function SongDetail() {
                 username={song.artistName}
                 artistId={song.artistId}
                 role="artist"
+                isVerified={song.artistIsVerified ?? false}
                 className="font-semibold text-foreground"
               />
               {song.albumName && <><span>•</span><span>{song.albumName}</span></>}
@@ -264,6 +265,7 @@ export default function SongDetail() {
                 username={song.artistName}
                 artistId={song.artistId}
                 role="artist"
+                isVerified={song.artistIsVerified ?? false}
                 className="text-[10px] text-muted-foreground"
               />
             </div>

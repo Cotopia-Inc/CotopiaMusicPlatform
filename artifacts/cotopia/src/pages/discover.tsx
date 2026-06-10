@@ -54,7 +54,7 @@ export default function Discover() {
                   <Link href={`/songs/${song.id}`}>
                     <h4 className="font-semibold text-sm truncate hover:text-primary transition-colors">{song.title}</h4>
                   </Link>
-                  <UserLink username={song.artistName} artistId={song.artistId} role="artist" className="text-xs text-muted-foreground" />
+                  <UserLink username={song.artistName} artistId={song.artistId} role="artist" isVerified={song.artistIsVerified ?? false} className="text-xs text-muted-foreground" />
                 </div>
               </div>
             ))
@@ -100,7 +100,7 @@ export default function Discover() {
                   <Link href={`/songs/${song.id}`}>
                     <h4 className="font-semibold text-sm truncate hover:text-primary transition-colors">{song.title}</h4>
                   </Link>
-                  <UserLink username={song.artistName} artistId={song.artistId} role="artist" className="text-xs text-muted-foreground" />
+                  <UserLink username={song.artistName} artistId={song.artistId} role="artist" isVerified={song.artistIsVerified ?? false} className="text-xs text-muted-foreground" />
                 </div>
               </div>
             ))

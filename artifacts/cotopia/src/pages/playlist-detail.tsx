@@ -93,6 +93,7 @@ export default function PlaylistDetail() {
                     username={song.artistName}
                     artistId={song.artistId}
                     role="artist"
+                    isVerified={(song as any).artistIsVerified ?? false}
                     className="text-sm text-muted-foreground truncate"
                   />
                 </div>

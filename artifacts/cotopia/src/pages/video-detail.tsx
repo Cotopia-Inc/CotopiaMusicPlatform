@@ -225,6 +225,7 @@ export default function VideoDetail() {
                 username={video.artistName}
                 artistId={video.artistId}
                 role="artist"
+                isVerified={video.artistIsVerified ?? false}
                 className="text-[9px] text-white/50"
               />
             </div>
@@ -310,6 +311,7 @@ export default function VideoDetail() {
               username={video.artistName}
               artistId={video.artistId}
               role="artist"
+              isVerified={video.artistIsVerified ?? false}
               className="font-semibold text-foreground"
             />
             <span>•</span>

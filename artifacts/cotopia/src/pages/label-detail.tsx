@@ -118,6 +118,7 @@ export default function LabelDetail() {
                           username={song.artistName}
                           artistId={song.artistId}
                           role="artist"
+                          isVerified={(song as any).artistIsVerified ?? false}
                           className="text-xs text-muted-foreground"
                         />
                       </div>

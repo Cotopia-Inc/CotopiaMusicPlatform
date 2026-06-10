@@ -100,6 +100,7 @@ export default function Home() {
                     username={song.artistName}
                     artistId={song.artistId}
                     role="artist"
+                    isVerified={song.artistIsVerified ?? false}
                     className="text-xs text-muted-foreground mt-0.5"
                   />
                 </div>
@@ -167,6 +168,7 @@ export default function Home() {
                     username={video.artistName}
                     artistId={video.artistId}
                     role="artist"
+                    isVerified={video.artistIsVerified ?? false}
                     className="text-xs text-muted-foreground"
                   />
                 </div>

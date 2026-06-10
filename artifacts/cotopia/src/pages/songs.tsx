@@ -75,6 +75,7 @@ export default function Songs() {
                   username={song.artistName}
                   artistId={song.artistId}
                   role="artist"
+                  isVerified={song.artistIsVerified ?? false}
                   className="text-xs text-muted-foreground truncate"
                 />
               </div>

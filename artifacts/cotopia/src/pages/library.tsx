@@ -138,6 +138,7 @@ export default function Library() {
                       username={song.artistName}
                       artistId={song.artistId}
                       role="artist"
+                      isVerified={song.artistIsVerified ?? false}
                       className="text-sm text-muted-foreground"
                     />
                   </div>
