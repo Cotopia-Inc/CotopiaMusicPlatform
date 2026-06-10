@@ -112,9 +112,14 @@ export default function EditorPicksPage() {
     <div className="p-8 max-w-4xl mx-auto space-y-8">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Sparkles className="w-5 h-5 text-primary" />
+          <Sparkles className="w-5 h-5 text-amber-400" />
           <div>
-            <h1 className="text-2xl font-bold">Editor's Picks</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-bold">Editor's Picks</h1>
+              <span className="text-[9px] font-bold text-amber-400 bg-amber-400/10 border border-amber-400/20 px-1.5 py-px rounded-full uppercase tracking-wider">
+                {user?.role === "master_admin" ? "master admin" : user?.role === "admin" ? "admin" : "editor"}
+              </span>
+            </div>
             <p className="text-sm text-muted-foreground">Curate recommendations shown on the Home page</p>
           </div>
         </div>

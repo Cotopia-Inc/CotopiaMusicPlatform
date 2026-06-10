@@ -208,6 +208,70 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Discover section */}
+      {(isLoading || (feed?.newReleases?.length ?? 0) > 0) && (
+        <section>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <Compass className="w-4 h-4 text-primary" />
+              <h3 className="text-xl font-bold tracking-tight">Discover Something New</h3>
+            </div>
+            <Link href="/discover">
+              <span className="text-sm text-muted-foreground hover:text-primary transition-colors cursor-pointer">Full Discover →</span>
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            {isLoading ? (
+              Array(6).fill(0).map((_, i) => (
+                <div key={i} className="space-y-2">
+                  <Skeleton className="aspect-square rounded-lg" />
+                  <Skeleton className="h-3 w-3/4" />
+                  <Skeleton className="h-3 w-1/2" />
+                </div>
+              ))
+            ) : (feed?.newReleases ?? []).slice(0, 6).map((song) => (
+              <div key={song.id} className="group cursor-pointer space-y-2">
+                <Link href={`/songs/${song.id}`}>
+                  <div className="aspect-square relative overflow-hidden rounded-lg bg-secondary border border-border/50">
+                    {song.coverUrl ? (
+                      <img src={song.coverUrl} alt={song.title} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary">
+                        <Radio className="w-6 h-6 text-primary/20" />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <button
+                        className="bg-primary text-primary-foreground rounded-full p-2.5 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300"
+                        title={`Play ${song.title}`}
+                        onClick={(e) => { e.preventDefault(); play({ id: song.id, title: song.title, artistName: song.artistName ?? "", artistId: song.artistId, artistIsVerified: song.artistIsVerified ?? false, coverUrl: song.coverUrl, streamUrl: song.streamUrl, duration: song.duration }); }}
+                      >
+                        <Play className="w-4 h-4 fill-current ml-0.5" />
+                      </button>
+                    </div>
+                    <div className="absolute top-1.5 right-1.5">
+                      <Badge variant="secondary" className="text-[8px] px-1 py-px opacity-80">New</Badge>
+                    </div>
+                  </div>
+                </Link>
+                <div>
+                  <Link href={`/songs/${song.id}`}>
+                    <p className="text-xs font-semibold truncate hover:text-primary transition-colors">{song.title}</p>
+                  </Link>
+                  <UserLink
+                    username={song.artistName}
+                    artistId={song.artistId}
+                    role="artist"
+                    isVerified={song.artistIsVerified ?? false}
+                    className="text-[10px] text-muted-foreground"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Trending Videos */}
       {(feed?.featuredVideos?.length || isLoading) && (
         <section>
@@ -317,70 +381,6 @@ export default function Home() {
           )}
         </div>
       </section>
-
-      {/* Discover section */}
-      {(isLoading || (feed?.newReleases?.length ?? 0) > 0) && (
-        <section>
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2">
-              <Compass className="w-4 h-4 text-primary" />
-              <h3 className="text-xl font-bold tracking-tight">Discover Something New</h3>
-            </div>
-            <Link href="/discover">
-              <span className="text-sm text-muted-foreground hover:text-primary transition-colors cursor-pointer">Full Discover →</span>
-            </Link>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-            {isLoading ? (
-              Array(6).fill(0).map((_, i) => (
-                <div key={i} className="space-y-2">
-                  <Skeleton className="aspect-square rounded-lg" />
-                  <Skeleton className="h-3 w-3/4" />
-                  <Skeleton className="h-3 w-1/2" />
-                </div>
-              ))
-            ) : (feed?.newReleases ?? []).slice(0, 6).map((song) => (
-              <div key={song.id} className="group cursor-pointer space-y-2">
-                <Link href={`/songs/${song.id}`}>
-                  <div className="aspect-square relative overflow-hidden rounded-lg bg-secondary border border-border/50">
-                    {song.coverUrl ? (
-                      <img src={song.coverUrl} alt={song.title} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary">
-                        <Radio className="w-6 h-6 text-primary/20" />
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <button
-                        className="bg-primary text-primary-foreground rounded-full p-2.5 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300"
-                        title={`Play ${song.title}`}
-                        onClick={(e) => { e.preventDefault(); play({ id: song.id, title: song.title, artistName: song.artistName ?? "", artistId: song.artistId, artistIsVerified: song.artistIsVerified ?? false, coverUrl: song.coverUrl, streamUrl: song.streamUrl, duration: song.duration }); }}
-                      >
-                        <Play className="w-4 h-4 fill-current ml-0.5" />
-                      </button>
-                    </div>
-                    <div className="absolute top-1.5 right-1.5">
-                      <Badge variant="secondary" className="text-[8px] px-1 py-px opacity-80">New</Badge>
-                    </div>
-                  </div>
-                </Link>
-                <div>
-                  <Link href={`/songs/${song.id}`}>
-                    <p className="text-xs font-semibold truncate hover:text-primary transition-colors">{song.title}</p>
-                  </Link>
-                  <UserLink
-                    username={song.artistName}
-                    artistId={song.artistId}
-                    role="artist"
-                    isVerified={song.artistIsVerified ?? false}
-                    className="text-[10px] text-muted-foreground"
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
 
       {/* Powered by Cotopia footer */}
       <div className="flex items-center justify-center gap-2 py-4 opacity-40">
