@@ -209,17 +209,18 @@ async function seed() {
   const al2 = album2?.id ?? 2;
   const al3 = album3?.id ?? 3;
 
-  // Songs — use royalty-free/open audio from Pixabay / freesound (real stream URLs)
+  // Songs — royalty-free audio from SoundHelix (reliable, no hotlink protection)
+  const SH = (n: number) => `https://www.soundhelix.com/examples/mp3/SoundHelix-Song-${n}.mp3`;
   const songData = [
-    { artistId: a1, albumId: al1, title: "Pulse of the Cosmos", genre: "Electronic", duration: 214, playCount: 18420, isFeatured: true, streamUrl: "https://cdn.pixabay.com/audio/2024/11/20/audio_23166aecd9.mp3", coverUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&q=80" },
-    { artistId: a1, albumId: al1, title: "Neon Drift", genre: "Electronic", duration: 187, playCount: 12300, isFeatured: false, streamUrl: "https://cdn.pixabay.com/audio/2024/10/09/audio_05a2c8c0e1.mp3", coverUrl: "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=400&q=80" },
-    { artistId: a1, albumId: al1, title: "Starfield Resonance", genre: "Electronic", duration: 263, playCount: 9870, isFeatured: true, streamUrl: "https://cdn.pixabay.com/audio/2023/10/04/audio_8df71099ec.mp3", coverUrl: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400&q=80" },
-    { artistId: a2, albumId: al2, title: "Nocturne Protocol", genre: "Synthwave", duration: 198, playCount: 24100, isFeatured: true, streamUrl: "https://cdn.pixabay.com/audio/2024/02/07/audio_d38f8d0c9f.mp3", coverUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&q=80" },
-    { artistId: a2, albumId: al2, title: "Digital Ghost", genre: "Synthwave", duration: 221, playCount: 16700, isFeatured: false, streamUrl: "https://cdn.pixabay.com/audio/2024/04/09/audio_2ef5c5e09e.mp3", coverUrl: "https://images.unsplash.com/photo-1560094824-13b9bc472f86?w=400&q=80" },
-    { artistId: a2, albumId: al2, title: "After Midnight", genre: "Synthwave", duration: 244, playCount: 31200, isFeatured: true, streamUrl: "https://cdn.pixabay.com/audio/2024/01/12/audio_0b0d4abf96.mp3", coverUrl: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=80" },
-    { artistId: a3, albumId: al3, title: "Soft Rain", genre: "Indie Pop", duration: 176, playCount: 8920, isFeatured: true, streamUrl: "https://cdn.pixabay.com/audio/2024/07/04/audio_7b7b2c7e15.mp3", coverUrl: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=400&q=80" },
-    { artistId: a3, albumId: al3, title: "Glass Heart", genre: "Indie Pop", duration: 203, playCount: 14500, isFeatured: false, streamUrl: "https://cdn.pixabay.com/audio/2024/03/19/audio_2fe19db0d7.mp3", coverUrl: "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=400&q=80" },
-    { artistId: a3, albumId: al3, title: "Echoes of You", genre: "Indie Pop", duration: 192, playCount: 11300, isFeatured: true, streamUrl: "https://cdn.pixabay.com/audio/2024/02/15/audio_9e37b84fa1.mp3", coverUrl: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=400&q=80" },
+    { artistId: a1, albumId: al1, title: "Pulse of the Cosmos", genre: "Electronic", duration: 214, playCount: 18420, isFeatured: true, streamUrl: SH(1), coverUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&q=80" },
+    { artistId: a1, albumId: al1, title: "Neon Drift", genre: "Electronic", duration: 187, playCount: 12300, isFeatured: false, streamUrl: SH(2), coverUrl: "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=400&q=80" },
+    { artistId: a1, albumId: al1, title: "Starfield Resonance", genre: "Electronic", duration: 263, playCount: 9870, isFeatured: true, streamUrl: SH(3), coverUrl: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400&q=80" },
+    { artistId: a2, albumId: al2, title: "Nocturne Protocol", genre: "Synthwave", duration: 198, playCount: 24100, isFeatured: true, streamUrl: SH(4), coverUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&q=80" },
+    { artistId: a2, albumId: al2, title: "Digital Ghost", genre: "Synthwave", duration: 221, playCount: 16700, isFeatured: false, streamUrl: SH(5), coverUrl: "https://images.unsplash.com/photo-1560094824-13b9bc472f86?w=400&q=80" },
+    { artistId: a2, albumId: al2, title: "After Midnight", genre: "Synthwave", duration: 244, playCount: 31200, isFeatured: true, streamUrl: SH(6), coverUrl: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=80" },
+    { artistId: a3, albumId: al3, title: "Soft Rain", genre: "Indie Pop", duration: 176, playCount: 8920, isFeatured: true, streamUrl: SH(7), coverUrl: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=400&q=80" },
+    { artistId: a3, albumId: al3, title: "Glass Heart", genre: "Indie Pop", duration: 203, playCount: 14500, isFeatured: false, streamUrl: SH(8), coverUrl: "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=400&q=80" },
+    { artistId: a3, albumId: al3, title: "Echoes of You", genre: "Indie Pop", duration: 192, playCount: 11300, isFeatured: true, streamUrl: SH(9), coverUrl: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=400&q=80" },
   ];
 
   const insertedSongs = await Promise.all(songData.map(s =>
