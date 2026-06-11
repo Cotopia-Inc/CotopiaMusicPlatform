@@ -104,9 +104,18 @@ export default function Home() {
                           {pick.contentType}
                         </span>
                       </div>
-                      <Link href={href}>
-                        <h4 className="font-semibold text-sm truncate hover:text-primary transition-colors leading-tight">{title}</h4>
-                      </Link>
+                      {isArtist ? (
+                        <Link href={href}>
+                          <h4 className="font-semibold text-sm hover:text-primary transition-colors leading-tight flex items-center gap-1">
+                            <span className="truncate">{title}</span>
+                            <RoleBadges role="artist" isVerified={(pick.artist as any)?.isVerified ?? false} />
+                          </h4>
+                        </Link>
+                      ) : (
+                        <Link href={href}>
+                          <h4 className="font-semibold text-sm truncate hover:text-primary transition-colors leading-tight">{title}</h4>
+                        </Link>
+                      )}
                       {isSong && pick.song?.artistName && (
                         <UserLink username={pick.song.artistName} artistId={pick.song.artistId} role="artist" isVerified={(pick.song as any).artistIsVerified ?? false} className="text-xs text-muted-foreground mt-0.5" />
                       )}
