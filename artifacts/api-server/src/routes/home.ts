@@ -10,26 +10,28 @@ router.get("/home", async (_req, res): Promise<void> => {
     id: songsTable.id, title: songsTable.title, artistId: songsTable.artistId,
     artistName: artistsTable.stageName, albumId: songsTable.albumId,
     albumName: albumsTable.title, genre: songsTable.genre, duration: songsTable.duration,
-    coverUrl: songsTable.coverUrl, streamUrl: songsTable.streamUrl,
+    coverUrl: songsTable.coverUrl, streamUrl: songsTable.streamUrl, isFeatured: songsTable.isFeatured,
     playCount: songsTable.playCount, status: songsTable.status, createdAt: songsTable.createdAt,
+    artistIsVerified: usersTable.isVerified,
   };
 
   const videoSelect = {
     id: videosTable.id, title: videosTable.title, artistId: videosTable.artistId,
     artistName: artistsTable.stageName, genre: videosTable.genre, duration: videosTable.duration,
-    thumbnailUrl: videosTable.thumbnailUrl, videoUrl: videosTable.videoUrl,
+    thumbnailUrl: videosTable.thumbnailUrl, videoUrl: videosTable.videoUrl, isFeatured: videosTable.isFeatured,
     viewCount: videosTable.viewCount, status: videosTable.status, createdAt: videosTable.createdAt,
+    artistIsVerified: usersTable.isVerified,
   };
 
   const [featuredSongs, featuredVideos, trendingSongs, newReleases] = await Promise.all([
-    db.select(songSelect).from(songsTable).leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id)).leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id)).where(and(eq(songsTable.isFeatured, true), eq(songsTable.status, "published"))).orderBy(desc(songsTable.createdAt)).limit(6),
-    db.select(videoSelect).from(videosTable).leftJoin(artistsTable, eq(videosTable.artistId, artistsTable.id)).where(and(eq(videosTable.isFeatured, true), eq(videosTable.status, "published"))).orderBy(desc(videosTable.createdAt)).limit(4),
-    db.select(songSelect).from(songsTable).leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id)).leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id)).where(eq(songsTable.status, "published")).orderBy(desc(songsTable.playCount)).limit(10),
-    db.select(songSelect).from(songsTable).leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id)).leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id)).where(eq(songsTable.status, "published")).orderBy(desc(songsTable.createdAt)).limit(8),
+    db.select(songSelect).from(songsTable).leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id)).leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id)).leftJoin(usersTable, eq(artistsTable.userId, usersTable.id)).where(and(eq(songsTable.isFeatured, true), eq(songsTable.status, "published"))).orderBy(desc(songsTable.createdAt)).limit(6),
+    db.select(videoSelect).from(videosTable).leftJoin(artistsTable, eq(videosTable.artistId, artistsTable.id)).leftJoin(usersTable, eq(artistsTable.userId, usersTable.id)).where(and(eq(videosTable.isFeatured, true), eq(videosTable.status, "published"))).orderBy(desc(videosTable.createdAt)).limit(4),
+    db.select(songSelect).from(songsTable).leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id)).leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id)).leftJoin(usersTable, eq(artistsTable.userId, usersTable.id)).where(eq(songsTable.status, "published")).orderBy(desc(songsTable.playCount)).limit(10),
+    db.select(songSelect).from(songsTable).leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id)).leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id)).leftJoin(usersTable, eq(artistsTable.userId, usersTable.id)).where(eq(songsTable.status, "published")).orderBy(desc(songsTable.createdAt)).limit(8),
   ]);
 
   const [rawArtists, rawLabels, announcements] = await Promise.all([
-    db.select({ id: artistsTable.id, userId: artistsTable.userId, stageName: artistsTable.stageName, bio: artistsTable.bio, avatarUrl: artistsTable.avatarUrl, bannerUrl: artistsTable.bannerUrl, genre: artistsTable.genre, labelId: artistsTable.labelId, createdAt: artistsTable.createdAt }).from(artistsTable).orderBy(desc(artistsTable.createdAt)).limit(6),
+    db.select({ id: artistsTable.id, userId: artistsTable.userId, stageName: artistsTable.stageName, bio: artistsTable.bio, avatarUrl: artistsTable.avatarUrl, bannerUrl: artistsTable.bannerUrl, genre: artistsTable.genre, labelId: artistsTable.labelId, createdAt: artistsTable.createdAt, isVerified: usersTable.isVerified }).from(artistsTable).leftJoin(usersTable, eq(artistsTable.userId, usersTable.id)).orderBy(desc(artistsTable.createdAt)).limit(6),
     db.select().from(labelsTable).orderBy(desc(labelsTable.createdAt)).limit(4),
     db.select().from(companyPostsTable).orderBy(desc(companyPostsTable.isPinned), desc(companyPostsTable.createdAt)).limit(3),
   ]);
