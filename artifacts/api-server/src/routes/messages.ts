@@ -194,6 +194,39 @@ router.post("/messages", requireAuth, async (req: AuthRequest, res): Promise<voi
   res.status(201).json({ ...msg, conversationId: conv.id });
 });
 
+// PUT /messages/msg/:msgId — edit own message
+router.put("/messages/msg/:msgId", requireAuth, async (req: AuthRequest, res): Promise<void> => {
+  const userId = req.user!.userId;
+  const msgId = parseInt(String(req.params["msgId"] ?? "0"), 10);
+  const { body } = req.body as { body: string };
+
+  if (!body?.trim()) { res.status(400).json({ error: "body is required" }); return; }
+
+  const [msg] = await db.select().from(directMessagesTable).where(eq(directMessagesTable.id, msgId)).limit(1);
+  if (!msg) { res.status(404).json({ error: "Message not found" }); return; }
+  if (msg.senderId !== userId) { res.status(403).json({ error: "Not your message" }); return; }
+
+  const [updated] = await db.update(directMessagesTable)
+    .set({ body: body.trim(), isEdited: true, editedAt: new Date() })
+    .where(eq(directMessagesTable.id, msgId))
+    .returning();
+
+  res.json(updated);
+});
+
+// DELETE /messages/msg/:msgId — delete own message
+router.delete("/messages/msg/:msgId", requireAuth, async (req: AuthRequest, res): Promise<void> => {
+  const userId = req.user!.userId;
+  const msgId = parseInt(String(req.params["msgId"] ?? "0"), 10);
+
+  const [msg] = await db.select().from(directMessagesTable).where(eq(directMessagesTable.id, msgId)).limit(1);
+  if (!msg) { res.status(404).json({ error: "Not found" }); return; }
+  if (msg.senderId !== userId) { res.status(403).json({ error: "Not your message" }); return; }
+
+  await db.delete(directMessagesTable).where(eq(directMessagesTable.id, msgId));
+  res.json({ success: true });
+});
+
 // PUT /messages/:id/read — mark all messages in conversation as read
 router.put("/messages/:id/read", requireAuth, async (req: AuthRequest, res): Promise<void> => {
   const userId = req.user!.userId;

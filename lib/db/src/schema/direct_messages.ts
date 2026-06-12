@@ -8,5 +8,7 @@ export const directMessagesTable = pgTable("direct_messages", {
   senderId: integer("sender_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
   body: text("body").notNull(),
   isRead: boolean("is_read").notNull().default(false),
+  isEdited: boolean("is_edited").notNull().default(false),
+  editedAt: timestamp("edited_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });

@@ -37,6 +37,7 @@ import AdminVideos from "@/pages/admin-videos";
 import AdminCompany from "@/pages/admin-company";
 import UserProfile from "@/pages/user-profile";
 import AdminComments from "@/pages/admin-comments";
+import AdminMessages from "@/pages/admin-messages";
 import AdminAnalytics from "@/pages/admin-analytics";
 import AdminRoles from "@/pages/admin-roles";
 import AdminUploadSong from "@/pages/admin-upload-song";
@@ -213,6 +214,9 @@ function Router() {
       </Route>
       <Route path="/admin/comments">
         <ProtectedRoute><Layout><AdminComments /></Layout></ProtectedRoute>
+      </Route>
+      <Route path="/admin/messages">
+        <ProtectedRoute><Layout><AdminMessages /></Layout></ProtectedRoute>
       </Route>
       <Route path="/admin/settings">
         <ProtectedRoute><Layout><AdminSettings /></Layout></ProtectedRoute>

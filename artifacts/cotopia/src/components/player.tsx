@@ -1,6 +1,6 @@
 import {
   Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Volume1,
-  Radio, Heart, ChevronDown, Shuffle, Repeat, Repeat1, Square,
+  Radio, Heart, ChevronUp, ChevronDown, Shuffle, Repeat, Repeat1, Square,
   Music2, ListMusic, X, Music, GripHorizontal, Maximize2, Minimize2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -142,7 +142,7 @@ export function Player() {
 
   const overlayStyle: React.CSSProperties = overlayPos
     ? { position: "fixed", left: overlayPos.x, top: overlayPos.y, width: overlayWidth, zIndex: 40 }
-    : { position: "fixed", bottom: 84, left: 16, width: overlayWidth, zIndex: 40 };
+    : { position: "fixed", bottom: 84, right: 16, width: overlayWidth, zIndex: 40 };
 
   // ── Now Playing Floating Window ───────────────────────────────────────────
   return (
@@ -348,10 +348,10 @@ export function Player() {
         {/* Left: track info */}
         <div className="flex items-center gap-3 w-[30%] min-w-0">
           <button
-            className="w-12 h-12 rounded-md bg-secondary border border-border/50 flex-shrink-0 overflow-hidden shadow-md hover:ring-2 hover:ring-primary/40 transition-all cursor-pointer"
+            className="relative group w-12 h-12 rounded-md bg-secondary border border-border/50 flex-shrink-0 overflow-hidden shadow-md transition-all cursor-pointer"
             onClick={() => track && setNowPlayingOpen(!nowPlayingOpen)}
             disabled={!track}
-            title={track ? (nowPlayingOpen ? "Collapse" : "Expand") : undefined}
+            title={track ? (nowPlayingOpen ? "Collapse Now Playing" : "Open Now Playing") : undefined}
           >
             {track?.coverUrl
               ? <img src={track.coverUrl} alt={track.title} className="w-full h-full object-cover" />
@@ -360,8 +360,26 @@ export function Player() {
                   <Radio className="w-4 h-4 text-primary/60" />
                 </div>
               )}
+            {track && (
+              <div className="absolute inset-0 bg-black/65 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded-md">
+                {nowPlayingOpen
+                  ? <ChevronDown className="w-5 h-5 text-white" />
+                  : <ChevronUp className="w-5 h-5 text-white" />}
+              </div>
+            )}
           </button>
           <div className="min-w-0 flex-1">
+            {track && (
+              <button
+                onClick={() => setNowPlayingOpen(!nowPlayingOpen)}
+                className={`flex items-center gap-0.5 text-[10px] font-semibold mb-0.5 transition-colors ${
+                  nowPlayingOpen ? "text-primary" : "text-primary/50 hover:text-primary"
+                }`}
+              >
+                <ChevronUp className={`w-3 h-3 transition-transform duration-200 ${nowPlayingOpen ? "rotate-180" : ""}`} />
+                Now Playing
+              </button>
+            )}
             <p className="text-sm font-semibold truncate leading-tight">
               {track ? track.title : "Select a track"}
             </p>

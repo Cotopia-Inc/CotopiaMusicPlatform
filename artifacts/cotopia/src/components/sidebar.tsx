@@ -64,6 +64,7 @@ export function Sidebar() {
     { href: "/admin/songs", label: "Songs", icon: Music },
     { href: "/admin/videos", label: "Videos", icon: Video },
     { href: "/admin/comments", label: "Comments", icon: MessageSquare },
+    { href: "/admin/messages", label: "DM Feed", icon: MessageCircle },
     { href: "/admin/settings", label: "Settings", icon: Settings },
   ];
 

@@ -4,7 +4,7 @@ import {
   db, usersTable, submissionsTable, songsTable, videosTable, artistsTable,
   labelsTable, albumsTable, commentsTable, ratingsTable, analyticsEventsTable,
   appSettingsTable, followsTable, chatMessagesTable, favoritesTable,
-  playlistsTable, playlistItemsTable,
+  playlistsTable, playlistItemsTable, conversationsTable, directMessagesTable,
 } from "@workspace/db";
 import {
   AdminListUsersQueryParams, AdminUpdateUserBody,
@@ -435,6 +435,82 @@ router.get("/admin/chat", requireAuth, requireRole(...ADMIN_ROLES, "moderator"),
     .limit(limit);
 
   res.json(messages);
+});
+
+// ── Direct Message feed (admin / moderator moderation) ─────────────────────
+
+router.get("/admin/messages", requireAuth, requireRole(...ADMIN_ROLES, "moderator"), async (req: AuthRequest, res): Promise<void> => {
+  const q = String(req.query.q ?? "").trim().toLowerCase();
+  const limit = Math.min(Number(req.query.limit ?? 50), 100);
+  const offset = Number(req.query.offset ?? 0);
+
+  const allConvs = await db
+    .select({
+      id: conversationsTable.id,
+      participant1Id: conversationsTable.participant1Id,
+      participant2Id: conversationsTable.participant2Id,
+      lastMessageAt: conversationsTable.lastMessageAt,
+    })
+    .from(conversationsTable)
+    .orderBy(desc(conversationsTable.lastMessageAt))
+    .limit(200)
+    .offset(0);
+
+  const enriched = await Promise.all(allConvs.map(async (conv) => {
+    const [p1] = await db.select({ id: usersTable.id, username: usersTable.username, displayName: usersTable.displayName, avatarUrl: usersTable.avatarUrl, role: usersTable.role }).from(usersTable).where(eq(usersTable.id, conv.participant1Id)).limit(1);
+    const [p2] = await db.select({ id: usersTable.id, username: usersTable.username, displayName: usersTable.displayName, avatarUrl: usersTable.avatarUrl, role: usersTable.role }).from(usersTable).where(eq(usersTable.id, conv.participant2Id)).limit(1);
+    const [lastMsg] = await db.select({ id: directMessagesTable.id, body: directMessagesTable.body, senderId: directMessagesTable.senderId, createdAt: directMessagesTable.createdAt }).from(directMessagesTable).where(eq(directMessagesTable.conversationId, conv.id)).orderBy(desc(directMessagesTable.createdAt)).limit(1);
+    const [msgCount] = await db.select({ count: count() }).from(directMessagesTable).where(eq(directMessagesTable.conversationId, conv.id));
+    return { id: conv.id, participant1: p1 ?? null, participant2: p2 ?? null, lastMessage: lastMsg ?? null, messageCount: msgCount?.count ?? 0, lastMessageAt: conv.lastMessageAt };
+  }));
+
+  const filtered = q
+    ? enriched.filter(c =>
+        [c.participant1?.username, c.participant2?.username, c.participant1?.displayName, c.participant2?.displayName]
+          .some(s => s?.toLowerCase().includes(q))
+      )
+    : enriched;
+
+  res.json(filtered.slice(offset, offset + limit));
+});
+
+router.get("/admin/messages/:convId", requireAuth, requireRole(...ADMIN_ROLES, "moderator"), async (req: AuthRequest, res): Promise<void> => {
+  const convId = parseInt(String(req.params["convId"] ?? "0"), 10);
+  const [conv] = await db.select().from(conversationsTable).where(eq(conversationsTable.id, convId)).limit(1);
+  if (!conv) { res.status(404).json({ error: "Not found" }); return; }
+
+  const messages = await db
+    .select({
+      id: directMessagesTable.id, conversationId: directMessagesTable.conversationId,
+      senderId: directMessagesTable.senderId, body: directMessagesTable.body,
+      isRead: directMessagesTable.isRead, isEdited: directMessagesTable.isEdited,
+      editedAt: directMessagesTable.editedAt, createdAt: directMessagesTable.createdAt,
+      senderUsername: usersTable.username, senderDisplayName: usersTable.displayName,
+      senderAvatarUrl: usersTable.avatarUrl, senderRole: usersTable.role,
+    })
+    .from(directMessagesTable)
+    .leftJoin(usersTable, eq(directMessagesTable.senderId, usersTable.id))
+    .where(eq(directMessagesTable.conversationId, convId))
+    .orderBy(directMessagesTable.createdAt);
+
+  res.json(messages);
+});
+
+router.put("/admin/messages/msg/:msgId", requireAuth, requireRole(...ADMIN_ROLES, "moderator"), async (req: AuthRequest, res): Promise<void> => {
+  const msgId = parseInt(String(req.params["msgId"] ?? "0"), 10);
+  const { body } = req.body as { body: string };
+  if (!body?.trim()) { res.status(400).json({ error: "body required" }); return; }
+  const [updated] = await db.update(directMessagesTable).set({ body: body.trim(), isEdited: true, editedAt: new Date() }).where(eq(directMessagesTable.id, msgId)).returning();
+  if (!updated) { res.status(404).json({ error: "Not found" }); return; }
+  res.json(updated);
+});
+
+router.delete("/admin/messages/msg/:msgId", requireAuth, requireRole(...ADMIN_ROLES, "moderator"), async (req: AuthRequest, res): Promise<void> => {
+  const msgId = parseInt(String(req.params["msgId"] ?? "0"), 10);
+  const [msg] = await db.select({ id: directMessagesTable.id }).from(directMessagesTable).where(eq(directMessagesTable.id, msgId)).limit(1);
+  if (!msg) { res.status(404).json({ error: "Not found" }); return; }
+  await db.delete(directMessagesTable).where(eq(directMessagesTable.id, msgId));
+  res.json({ success: true });
 });
 
 export default router;
