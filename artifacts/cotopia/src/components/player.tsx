@@ -147,10 +147,9 @@ export function Player() {
   // ── Now Playing Floating Window ───────────────────────────────────────────
   return (
     <>
-      {nowPlayingOpen && (
-        <div
+      <div
           ref={overlayRef}
-          style={overlayStyle}
+          style={{ ...overlayStyle, display: nowPlayingOpen ? undefined : "none" }}
           className="bg-card/98 backdrop-blur-xl border border-border/70 rounded-2xl shadow-2xl overflow-hidden select-none"
         >
           {/* Drag handle header */}
@@ -340,7 +339,6 @@ export function Player() {
             <div className="w-2.5 h-2.5 border-r-2 border-b-2 border-muted-foreground/30 rounded-br-sm" />
           </div>
         </div>
-      )}
 
       {/* ── Player Bar ─────────────────────────────────────────────────────────── */}
       <div className="h-20 bg-card/95 backdrop-blur border-t border-border/50 w-full flex items-center justify-between px-4 z-50 flex-shrink-0 gap-2">
