@@ -43,10 +43,24 @@ import AdminRoles from "@/pages/admin-roles";
 import AdminUploadSong from "@/pages/admin-upload-song";
 import AdminUploadVideo from "@/pages/admin-upload-video";
 import AdminListeners from "@/pages/admin-listeners";
+import AdminDmca from "@/pages/admin-dmca";
+import AdminDmcaDetail from "@/pages/admin-dmca-detail";
+import AdminAuditLogs from "@/pages/admin-audit-logs";
+import AdminLegal from "@/pages/admin-legal";
 import EditorDashboard from "@/pages/editor-dashboard";
 import EditorPlaylists from "@/pages/editor-playlists";
 import EditorPicks from "@/pages/editor-picks";
 import ArtistAnalytics from "@/pages/artist-analytics";
+
+import LegalCenter from "@/pages/legal/index";
+import LegalTerms from "@/pages/legal/terms";
+import LegalPrivacy from "@/pages/legal/privacy";
+import LegalDmca from "@/pages/legal/dmca";
+import LegalCommunityGuidelines from "@/pages/legal/community-guidelines";
+import LegalAiPolicy from "@/pages/legal/ai-policy";
+import LegalRefundPolicy from "@/pages/legal/refund-policy";
+import LegalSubmissionAgreement from "@/pages/legal/submission-agreement";
+import LegalCopyrightComplaint from "@/pages/legal/copyright-complaint";
 
 import NotificationsPage from "@/pages/notifications";
 import EmbedSong from "@/pages/embed-song";
@@ -178,6 +192,17 @@ function Router() {
         <ProtectedRoute><Layout><Messages /></Layout></ProtectedRoute>
       </Route>
 
+      {/* Legal Center — public routes */}
+      <Route path="/legal" component={LegalCenter} />
+      <Route path="/legal/terms" component={LegalTerms} />
+      <Route path="/legal/privacy" component={LegalPrivacy} />
+      <Route path="/legal/dmca" component={LegalDmca} />
+      <Route path="/legal/community-guidelines" component={LegalCommunityGuidelines} />
+      <Route path="/legal/ai-policy" component={LegalAiPolicy} />
+      <Route path="/legal/refund-policy" component={LegalRefundPolicy} />
+      <Route path="/legal/submission-agreement" component={LegalSubmissionAgreement} />
+      <Route path="/legal/copyright-complaint" component={LegalCopyrightComplaint} />
+
       {/* Admin routes */}
       <Route path="/admin">
         <ProtectedRoute><Layout><AdminDashboard /></Layout></ProtectedRoute>
@@ -220,6 +245,18 @@ function Router() {
       </Route>
       <Route path="/admin/settings">
         <ProtectedRoute><Layout><AdminSettings /></Layout></ProtectedRoute>
+      </Route>
+      <Route path="/admin/dmca/:id">
+        <ProtectedRoute><Layout><AdminDmcaDetail /></Layout></ProtectedRoute>
+      </Route>
+      <Route path="/admin/dmca">
+        <ProtectedRoute><Layout><AdminDmca /></Layout></ProtectedRoute>
+      </Route>
+      <Route path="/admin/audit-logs">
+        <ProtectedRoute><Layout><AdminAuditLogs /></Layout></ProtectedRoute>
+      </Route>
+      <Route path="/admin/legal">
+        <ProtectedRoute><Layout><AdminLegal /></Layout></ProtectedRoute>
       </Route>
 
       {/* Editor routes */}

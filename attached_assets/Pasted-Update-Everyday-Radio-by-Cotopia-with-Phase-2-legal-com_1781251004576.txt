@@ -1,0 +1,316 @@
+Update Everyday Radio by Cotopia with Phase 2 legal, compliance, and platform protection features.
+
+PLATFORM BRANDING
+
+Official platform name:
+
+Everyday Radio by Cotopia
+
+Short display name:
+
+Everyday Radio
+
+Brand line:
+
+Powered by Cotopia
+
+Cotopia is the parent company and platform operator. Cotopia Music & Marketing is the record label division. Everyday Radio is a separate independent streaming, hosting, promotion, and community platform powered by Cotopia.
+
+BUSINESS MODEL
+
+Everyday Radio is not currently a royalty-paying streaming service.
+
+It is a platform license, content hosting, streaming, discovery, promotion, and community platform.
+
+Users keep ownership of their content. Users grant Cotopia a limited license to host, stream, display, promote, feature, recommend, and place their content into playlists.
+
+Cotopia does not currently pay streaming royalties, mechanical royalties, performance royalties, publishing royalties, or revenue sharing unless a separate written agreement exists.
+
+Cotopia may launch optional creator compensation, contests, sponsorships, revenue sharing, or partner programs later.
+
+LEGAL CENTER
+
+Create a public Legal Center at:
+
+/legal
+
+Add pages:
+
+/legal/terms
+/legal/privacy
+/legal/dmca
+/legal/community-guidelines
+/legal/ai-policy
+/legal/refund-policy
+/legal/submission-agreement
+/legal/copyright-complaint
+
+Add Legal Center link to footer and signup/login pages.
+
+SUBMISSION CHECKBOXES
+
+Before payment or final submission, users must check required legal boxes:
+
+1. I own or control all rights necessary to upload this content.
+2. I grant Cotopia a non-exclusive license to host, stream, display, promote, feature, recommend, and place this content in playlists.
+3. I understand Everyday Radio by Cotopia does not currently pay streaming royalties, mechanical royalties, performance royalties, publishing royalties, or revenue sharing unless covered by a separate written agreement.
+4. I understand submission and promotion fees are non-refundable once review begins.
+5. I understand Cotopia may remove content, suspend accounts, or reject submissions that violate platform rules.
+6. If AI was used, I confirm I have the rights necessary to upload and distribute the content.
+7. I agree to defend, indemnify, and hold harmless Cotopia and its related entities if my upload causes legal claims.
+
+Users cannot submit or pay until all required checkboxes are accepted.
+
+AGREEMENT ACCEPTANCE RECORDS
+
+Create table:
+
+agreement_acceptances
+
+Fields:
+
+id
+user_id
+agreement_type
+agreement_version
+ip_address
+user_agent
+accepted_at
+submission_id nullable
+payment_id nullable
+metadata JSON
+
+Track acceptance for:
+
+registration
+submission
+payment
+terms update
+
+AI POLICY
+
+Everyday Radio accepts AI-generated and AI-assisted music, videos, artwork, and creative content.
+
+Cotopia does not train AI systems using user-uploaded content.
+
+Users must have rights to upload AI-generated or AI-assisted content.
+
+Prohibit users from uploading AI content that copies, impersonates, or infringes another artist, label, voice, likeness, song, beat, or copyrighted work.
+
+DMCA SYSTEM
+
+Create DMCA takedown system.
+
+Create table:
+
+dmca_claims
+
+Fields:
+
+id
+claimant_name
+claimant_email
+claimant_company
+copyright_owner
+work_description
+infringing_url
+good_faith_statement
+accuracy_statement
+signature
+status
+admin_notes
+created_at
+updated_at
+
+Statuses:
+
+received
+under_review
+removed
+rejected
+counter_notice_received
+restored
+closed
+
+Admin pages:
+
+/admin/dmca
+/admin/dmca/:id
+
+Admin can:
+
+view claims
+update status
+remove content
+restore content
+add notes
+suspend repeat infringers
+
+REPEAT INFRINGER POLICY
+
+Create repeat infringement tracking.
+
+Create table:
+
+copyright_strikes
+
+Fields:
+
+id
+user_id
+content_type
+content_id
+dmca_claim_id
+strike_reason
+created_at
+resolved_at
+status
+
+If a user receives repeated copyright strikes, admin can suspend or terminate the account.
+
+CONTENT MODERATION
+
+Add platform rules for:
+
+copyright infringement
+impersonation
+fraud
+spam
+harassment
+hate content
+illegal content
+malware
+unauthorized samples
+unauthorized vocals
+unauthorized beats
+unauthorized videos
+unauthorized AI voice or likeness
+
+Admin/moderator can remove content and suspend users.
+
+REFUND / CHARGEBACK POLICY
+
+Add Refund Policy page.
+
+Rules:
+
+Submission fees are non-refundable once review begins.
+
+Promotion fees are non-refundable once campaign work begins.
+
+Fraudulent chargebacks may result in suspension, termination, content removal, and loss of platform access.
+
+CONTEST READY STRUCTURE
+
+Create placeholder contest system for future use.
+
+Tables:
+
+contests
+contest_entries
+
+Contests can be inactive for now.
+
+Contest fields:
+
+id
+title
+description
+rules
+prize_description
+start_date
+end_date
+status
+created_at
+
+Contest entries:
+
+id
+contest_id
+user_id
+content_id
+entry_status
+created_at
+
+Add note: contests require separate official rules before launch.
+
+ADMIN AUDIT LOGS
+
+Create audit log table:
+
+admin_audit_logs
+
+Fields:
+
+id
+admin_user_id
+action
+target_type
+target_id
+description
+metadata JSON
+created_at
+
+Track:
+
+role changes
+user suspensions
+content approvals
+content rejections
+content removals
+DMCA actions
+settings changes
+theme changes
+company posts
+payment status changes
+
+MASTER ADMIN CONTROL
+
+Only master_admin can:
+
+assign roles
+change roles
+remove admin/staff roles
+access legal settings
+access audit logs
+change platform legal text
+manage DMCA agent info
+delete major records
+
+LEGAL SETTINGS
+
+Create admin legal settings page:
+
+/admin/legal
+
+Master admin can edit:
+
+Terms version
+Privacy version
+Submission agreement version
+DMCA contact email
+Copyright agent information
+Refund policy text
+AI policy text
+Community rules text
+
+FOOTER
+
+Add footer text:
+
+Everyday Radio by Cotopia is an independent platform for music, video, discovery, promotion, and community. Users retain ownership of their content and grant Cotopia limited rights to host, stream, display, and promote submitted content. Powered by Cotopia.
+
+TESTING CHECKLIST
+
+After completion, provide a testing guide for:
+
+Legal Center
+Submission checkboxes
+Agreement acceptance records
+DMCA claim submission
+Admin DMCA review
+Copyright strike creation
+Admin audit log
+Refund policy page
+AI policy page
+Master admin legal controls

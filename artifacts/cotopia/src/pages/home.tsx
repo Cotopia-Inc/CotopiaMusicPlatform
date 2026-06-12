@@ -399,10 +399,26 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Powered by Cotopia footer */}
-      <div className="flex items-center justify-center gap-2 py-4 opacity-40">
-        <Radio className="w-3 h-3 text-muted-foreground" />
-        <span className="text-xs text-muted-foreground">Everyday Radio · Powered by Cotopia</span>
+      {/* Footer */}
+      <div className="py-8 border-t border-border/30 mt-4 space-y-3">
+        <div className="flex items-center justify-center gap-2 opacity-60">
+          <Radio className="w-3 h-3 text-muted-foreground" />
+          <span className="text-xs text-muted-foreground font-medium">Everyday Radio · Powered by Cotopia</span>
+        </div>
+        <p className="text-[10px] text-muted-foreground/50 text-center max-w-2xl mx-auto leading-relaxed px-4">
+          Everyday Radio by Cotopia is an independent platform for music, video, discovery, promotion, and community. Users retain ownership of their content and grant Cotopia limited rights to host, stream, display, and promote submitted content. Powered by Cotopia.
+        </p>
+        <div className="flex items-center justify-center gap-4 flex-wrap">
+          {[
+            { href: "/legal", label: "Legal Center" },
+            { href: "/legal/terms", label: "Terms" },
+            { href: "/legal/privacy", label: "Privacy" },
+            { href: "/legal/dmca", label: "DMCA" },
+            { href: "/legal/copyright-complaint", label: "Copyright Complaint" },
+          ].map(({ href, label }) => (
+            <a key={href} href={href} className="text-[10px] text-muted-foreground/50 hover:text-muted-foreground transition-colors">{label}</a>
+          ))}
+        </div>
       </div>
     </div>
   );

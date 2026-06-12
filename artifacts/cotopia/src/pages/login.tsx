@@ -113,6 +113,10 @@ export default function Login() {
             <span className="text-muted-foreground">Don't have an account? </span>
             <Link href="/register" className="text-primary hover:underline font-semibold">Create one</Link>
           </div>
+
+          <div className="text-center">
+            <Link href="/legal" className="text-[11px] text-muted-foreground/60 hover:text-muted-foreground underline transition-colors">Legal Center</Link>
+          </div>
         </div>
       </div>
     </div>

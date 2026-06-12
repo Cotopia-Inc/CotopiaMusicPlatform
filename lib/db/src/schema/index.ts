@@ -21,3 +21,8 @@ export * from "./editor_picks";
 export * from "./ceo_message";
 export * from "./conversations";
 export * from "./direct_messages";
+export * from "./agreement_acceptances";
+export * from "./dmca_claims";
+export * from "./copyright_strikes";
+export * from "./contests";
+export * from "./admin_audit_logs";

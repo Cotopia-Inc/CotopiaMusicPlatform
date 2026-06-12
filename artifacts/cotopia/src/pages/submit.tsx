@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 import {
@@ -308,6 +309,8 @@ export default function Submit() {
   const [paymentInitiated, setPaymentInitiated] = useState(false);
   const [submissionIds, setSubmissionIds] = useState<number[]>([]);
   const [successTitles, setSuccessTitles] = useState<string[]>([]);
+  const [legalChecks, setLegalChecks] = useState<boolean[]>(Array(7).fill(false));
+  const allLegalChecked = legalChecks.every(Boolean);
 
   const bulkMutation = useCreateBulkSubmission();
   const initiateMutation = useInitiatePayment();
@@ -664,6 +667,48 @@ export default function Submit() {
             </div>
           </div>
 
+          {/* ── Legal Agreements ── */}
+          <div className="bg-card rounded-xl border border-border shadow-sm p-6 space-y-4">
+            <div className="flex items-center gap-2">
+              <FileText className="w-4 h-4 text-primary" />
+              <h3 className="font-semibold text-sm">Required Agreements</h3>
+              <span className="text-xs text-muted-foreground ml-auto">{legalChecks.filter(Boolean).length}/7 checked</span>
+            </div>
+            {!allLegalChecked && (
+              <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                <AlertCircle className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+                <p className="text-xs text-amber-300">Please review and check all agreements to proceed.</p>
+              </div>
+            )}
+            <div className="space-y-3">
+              {[
+                "I own or control all rights necessary to upload this content.",
+                "I grant Cotopia a non-exclusive license to host, stream, display, promote, feature, recommend, and place this content in playlists.",
+                "I understand Everyday Radio by Cotopia does not currently pay streaming royalties, mechanical royalties, performance royalties, publishing royalties, or revenue sharing unless covered by a separate written agreement.",
+                "I understand submission and promotion fees are non-refundable once review begins.",
+                "I understand Cotopia may remove content, suspend accounts, or reject submissions that violate platform rules.",
+                "If AI was used in creating this content, I confirm I have the rights necessary to upload and distribute it.",
+                "I agree to defend, indemnify, and hold harmless Cotopia and its related entities if my upload causes legal claims.",
+              ].map((text, i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <Checkbox
+                    id={`legal-${i}`}
+                    checked={legalChecks[i]}
+                    onCheckedChange={v => {
+                      const next = [...legalChecks];
+                      next[i] = Boolean(v);
+                      setLegalChecks(next);
+                    }}
+                    className="mt-0.5"
+                  />
+                  <label htmlFor={`legal-${i}`} className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
+                    {text}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div className="bg-card rounded-xl border border-border shadow-sm p-6 space-y-4">
             <div className="flex items-center gap-2 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
               <AlertCircle className="w-4 h-4 text-blue-400 flex-shrink-0" />
@@ -671,7 +716,7 @@ export default function Submit() {
             </div>
 
             {!paymentInitiated ? (
-              <Button className="w-full h-12 text-base gap-3 bg-[#0070ba] hover:bg-[#005ea6] text-white" onClick={handleCreateAndInitiate} disabled={isCreating}>
+              <Button className="w-full h-12 text-base gap-3 bg-[#0070ba] hover:bg-[#005ea6] text-white" onClick={handleCreateAndInitiate} disabled={!allLegalChecked || isCreating}>
                 {isCreating ? <><Loader2 className="w-4 h-4 animate-spin" />Processing…</> : <><CreditCard className="w-5 h-5" />Pay ${price.toFixed(2)} with PayPal</>}
               </Button>
             ) : (

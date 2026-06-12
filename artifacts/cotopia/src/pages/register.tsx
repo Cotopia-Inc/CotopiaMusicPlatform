@@ -130,6 +130,16 @@ export default function Register() {
             <span className="text-muted-foreground">Already have an account? </span>
             <Link href="/login" className="text-primary hover:underline font-semibold">Sign in</Link>
           </div>
+
+          <div className="text-center">
+            <p className="text-[11px] text-muted-foreground/60 leading-relaxed">
+              By creating an account you agree to our{" "}
+              <Link href="/legal/terms" className="text-muted-foreground hover:text-primary underline">Terms of Service</Link>
+              {" "}and{" "}
+              <Link href="/legal/privacy" className="text-muted-foreground hover:text-primary underline">Privacy Policy</Link>.{" "}
+              <Link href="/legal" className="text-muted-foreground hover:text-primary underline">Legal Center</Link>
+            </p>
+          </div>
         </div>
       </div>
     </div>

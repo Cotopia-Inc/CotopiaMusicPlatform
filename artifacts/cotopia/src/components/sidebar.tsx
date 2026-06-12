@@ -4,6 +4,7 @@ import {
   LayoutDashboard, LogIn, LogOut, Settings, Send, Radio, Bell,
   BarChart3, Upload, ListMusic, Shield,
   MessageSquare, FileText, Eye, BookOpen, MessageCircle,
+  AlertOctagon, ScrollText, Scale,
 } from "lucide-react";
 import { RoleBadges } from "@/components/role-badges";
 import { useAuth } from "@/lib/auth";
@@ -65,6 +66,7 @@ export function Sidebar() {
     { href: "/admin/videos", label: "Videos", icon: Video },
     { href: "/admin/comments", label: "Comments", icon: MessageSquare },
     { href: "/admin/messages", label: "DM Feed", icon: MessageCircle },
+    { href: "/admin/dmca", label: "DMCA Claims", icon: AlertOctagon },
     { href: "/admin/settings", label: "Settings", icon: Settings },
   ];
 
@@ -290,6 +292,36 @@ export function Sidebar() {
                     >
                       <Shield className="w-4 h-4 flex-shrink-0" />
                       Role Management
+                    </Button>
+                  </Link>
+                )}
+                {/* Audit Logs — master_admin only */}
+                {isMasterAdmin && (
+                  <Link href="/admin/audit-logs">
+                    <Button
+                      variant={isAdminActive("/admin/audit-logs") ? "secondary" : "ghost"}
+                      className={cn(
+                        "w-full justify-start gap-3 text-sm h-9",
+                        isAdminActive("/admin/audit-logs") ? "font-semibold text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      <ScrollText className="w-4 h-4 flex-shrink-0" />
+                      Audit Logs
+                    </Button>
+                  </Link>
+                )}
+                {/* Legal Settings — master_admin only */}
+                {isMasterAdmin && (
+                  <Link href="/admin/legal">
+                    <Button
+                      variant={isAdminActive("/admin/legal") ? "secondary" : "ghost"}
+                      className={cn(
+                        "w-full justify-start gap-3 text-sm h-9",
+                        isAdminActive("/admin/legal") ? "font-semibold text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      <Scale className="w-4 h-4 flex-shrink-0" />
+                      Legal Settings
                     </Button>
                   </Link>
                 )}

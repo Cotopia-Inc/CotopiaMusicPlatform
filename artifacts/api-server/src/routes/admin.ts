@@ -5,6 +5,7 @@ import {
   labelsTable, albumsTable, commentsTable, ratingsTable, analyticsEventsTable,
   appSettingsTable, followsTable, chatMessagesTable, favoritesTable,
   playlistsTable, playlistItemsTable, conversationsTable, directMessagesTable,
+  dmcaClaimsTable, copyrightStrikesTable, adminAuditLogsTable,
 } from "@workspace/db";
 import {
   AdminListUsersQueryParams, AdminUpdateUserBody,
@@ -511,6 +512,165 @@ router.delete("/admin/messages/msg/:msgId", requireAuth, requireRole(...ADMIN_RO
   if (!msg) { res.status(404).json({ error: "Not found" }); return; }
   await db.delete(directMessagesTable).where(eq(directMessagesTable.id, msgId));
   res.json({ success: true });
+});
+
+// ── DMCA Claims ───────────────────────────────────────────────────────────────
+
+router.get("/admin/dmca", requireAuth, requireRole(...ADMIN_ROLES), async (req: AuthRequest, res): Promise<void> => {
+  const { status } = req.query as { status?: string };
+  const limit = Math.min(Number(req.query.limit ?? 50), 100);
+  const offset = Number(req.query.offset ?? 0);
+
+  const conditions = status ? [eq(dmcaClaimsTable.status, status)] : [];
+  const whereClause = conditions.length ? and(...conditions) : undefined;
+
+  const claims = await db
+    .select().from(dmcaClaimsTable)
+    .where(whereClause)
+    .orderBy(desc(dmcaClaimsTable.createdAt))
+    .limit(limit).offset(offset);
+
+  const [totalRow] = await db.select({ count: count() }).from(dmcaClaimsTable).where(whereClause);
+  res.json({ items: claims, total: totalRow?.count ?? 0 });
+});
+
+router.get("/admin/dmca/:claimId", requireAuth, requireRole(...ADMIN_ROLES), async (req: AuthRequest, res): Promise<void> => {
+  const id = parseInt(String(req.params["claimId"] ?? "0"), 10);
+  const [claim] = await db.select().from(dmcaClaimsTable).where(eq(dmcaClaimsTable.id, id)).limit(1);
+  if (!claim) { res.status(404).json({ error: "Not found" }); return; }
+  res.json(claim);
+});
+
+router.patch("/admin/dmca/:claimId", requireAuth, requireRole(...ADMIN_ROLES), async (req: AuthRequest, res): Promise<void> => {
+  const id = parseInt(String(req.params["claimId"] ?? "0"), 10);
+  const { status, adminNotes } = req.body as { status?: string; adminNotes?: string };
+
+  const validStatuses = ["received", "under_review", "removed", "rejected", "counter_notice_received", "restored", "closed"];
+  if (status && !validStatuses.includes(status)) { res.status(400).json({ error: "Invalid status" }); return; }
+
+  const updateData: Record<string, unknown> = { updatedAt: new Date() };
+  if (status) updateData.status = status;
+  if (adminNotes !== undefined) updateData.adminNotes = adminNotes;
+
+  const [updated] = await db.update(dmcaClaimsTable).set(updateData).where(eq(dmcaClaimsTable.id, id)).returning();
+  if (!updated) { res.status(404).json({ error: "Not found" }); return; }
+
+  await db.insert(adminAuditLogsTable).values({
+    adminUserId: req.user!.userId,
+    action: "dmca_status_update",
+    targetType: "dmca_claim",
+    targetId: id,
+    description: `DMCA claim #${id} status updated to "${status ?? "unchanged"}"`,
+    metadata: { status, adminNotes } as unknown,
+  });
+
+  res.json(updated);
+});
+
+router.post("/admin/dmca/:claimId/strike", requireAuth, requireRole(...ADMIN_ROLES), async (req: AuthRequest, res): Promise<void> => {
+  const claimId = parseInt(String(req.params["claimId"] ?? "0"), 10);
+  const { userId, contentType, contentId, strikeReason } = req.body as Record<string, unknown>;
+
+  if (!userId || !contentType || !contentId || !strikeReason) {
+    res.status(400).json({ error: "userId, contentType, contentId, and strikeReason are required" });
+    return;
+  }
+
+  const [strike] = await db.insert(copyrightStrikesTable).values({
+    userId: Number(userId),
+    contentType: String(contentType),
+    contentId: Number(contentId),
+    dmcaClaimId: claimId,
+    strikeReason: String(strikeReason),
+    status: "active",
+  }).returning();
+
+  await db.insert(adminAuditLogsTable).values({
+    adminUserId: req.user!.userId,
+    action: "copyright_strike_issued",
+    targetType: "user",
+    targetId: Number(userId),
+    description: `Copyright strike issued to user #${userId} for ${contentType} #${contentId}`,
+    metadata: { claimId, strikeReason } as unknown,
+  });
+
+  res.status(201).json(strike);
+});
+
+// ── Admin Audit Logs ──────────────────────────────────────────────────────────
+
+router.get("/admin/audit-logs", requireAuth, requireRole("master_admin"), async (req: AuthRequest, res): Promise<void> => {
+  const limit = Math.min(Number(req.query.limit ?? 50), 100);
+  const offset = Number(req.query.offset ?? 0);
+
+  const logs = await db
+    .select({
+      id: adminAuditLogsTable.id,
+      adminUserId: adminAuditLogsTable.adminUserId,
+      adminUsername: usersTable.username,
+      action: adminAuditLogsTable.action,
+      targetType: adminAuditLogsTable.targetType,
+      targetId: adminAuditLogsTable.targetId,
+      description: adminAuditLogsTable.description,
+      metadata: adminAuditLogsTable.metadata,
+      createdAt: adminAuditLogsTable.createdAt,
+    })
+    .from(adminAuditLogsTable)
+    .leftJoin(usersTable, eq(adminAuditLogsTable.adminUserId, usersTable.id))
+    .orderBy(desc(adminAuditLogsTable.createdAt))
+    .limit(limit).offset(offset);
+
+  const [totalRow] = await db.select({ count: count() }).from(adminAuditLogsTable);
+  res.json({ items: logs, total: totalRow?.count ?? 0 });
+});
+
+// ── Legal Settings (master_admin only) ───────────────────────────────────────
+
+router.get("/admin/legal-settings", requireAuth, requireRole("master_admin"), async (_req, res): Promise<void> => {
+  let [settings] = await db.select().from(appSettingsTable).limit(1);
+  if (!settings) [settings] = await db.insert(appSettingsTable).values({}).returning();
+  res.json({
+    termsVersion: settings.termsVersion,
+    privacyVersion: settings.privacyVersion,
+    submissionAgreementVersion: settings.submissionAgreementVersion,
+    dmcaContactEmail: settings.dmcaContactEmail,
+    copyrightAgentInfo: settings.copyrightAgentInfo,
+    refundPolicyText: settings.refundPolicyText,
+    aiPolicyText: settings.aiPolicyText,
+    communityRulesText: settings.communityRulesText,
+  });
+});
+
+router.patch("/admin/legal-settings", requireAuth, requireRole("master_admin"), async (req: AuthRequest, res): Promise<void> => {
+  const allowed = ["termsVersion", "privacyVersion", "submissionAgreementVersion", "dmcaContactEmail", "copyrightAgentInfo", "refundPolicyText", "aiPolicyText", "communityRulesText"];
+  const data: Record<string, unknown> = {};
+  for (const key of allowed) {
+    if (key in (req.body as Record<string, unknown>)) data[key] = (req.body as Record<string, unknown>)[key];
+  }
+
+  let [existing] = await db.select().from(appSettingsTable).limit(1);
+  if (!existing) [existing] = await db.insert(appSettingsTable).values({}).returning();
+  const [updated] = await db.update(appSettingsTable).set(data).where(eq(appSettingsTable.id, existing.id)).returning();
+
+  await db.insert(adminAuditLogsTable).values({
+    adminUserId: req.user!.userId,
+    action: "legal_settings_updated",
+    targetType: "app_settings",
+    targetId: existing.id,
+    description: `Legal settings updated (fields: ${Object.keys(data).join(", ")})`,
+    metadata: { updatedFields: Object.keys(data) } as unknown,
+  });
+
+  res.json({
+    termsVersion: updated.termsVersion,
+    privacyVersion: updated.privacyVersion,
+    submissionAgreementVersion: updated.submissionAgreementVersion,
+    dmcaContactEmail: updated.dmcaContactEmail,
+    copyrightAgentInfo: updated.copyrightAgentInfo,
+    refundPolicyText: updated.refundPolicyText,
+    aiPolicyText: updated.aiPolicyText,
+    communityRulesText: updated.communityRulesText,
+  });
 });
 
 export default router;
