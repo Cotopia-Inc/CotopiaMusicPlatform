@@ -1,13 +1,17 @@
-import { useParams, Link } from "wouter";
+import { useParams, Link, useLocation } from "wouter";
 import { useGetPublicUser } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RoleBadges } from "@/components/role-badges";
+import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
-import { ArrowLeft, CalendarDays, Music } from "lucide-react";
+import { ArrowLeft, CalendarDays, Music, MessageCircle } from "lucide-react";
+import { useAuth } from "@/lib/auth";
 
 export default function UserProfile() {
   const { id } = useParams<{ id: string }>();
   const { data: user, isLoading } = useGetPublicUser(Number(id));
+  const { user: me } = useAuth();
+  const [, navigate] = useLocation();
 
   if (isLoading) {
     return (
@@ -29,6 +33,8 @@ export default function UserProfile() {
       </div>
     );
   }
+
+  const isMe = me?.id === user.id;
 
   return (
     <div className="max-w-lg mx-auto py-12 px-6 space-y-8">
@@ -69,14 +75,27 @@ export default function UserProfile() {
           Joined {formatDistanceToNow(new Date(user.createdAt), { addSuffix: true })}
         </div>
 
-        {user.artistId && (
-          <Link href={`/artists/${user.artistId}`}>
-            <span className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline cursor-pointer font-medium">
-              <Music className="w-4 h-4" />
-              View Artist Profile
-            </span>
-          </Link>
-        )}
+        {/* Action buttons */}
+        <div className="flex items-center gap-3 flex-wrap justify-center">
+          {user.artistId && (
+            <Link href={`/artists/${user.artistId}`}>
+              <Button variant="outline" size="sm" className="gap-1.5">
+                <Music className="w-4 h-4" />
+                Artist Profile
+              </Button>
+            </Link>
+          )}
+          {me && !isMe && (
+            <Button
+              size="sm"
+              className="gap-1.5"
+              onClick={() => navigate(`/messages?new=${user.id}`)}
+            >
+              <MessageCircle className="w-4 h-4" />
+              Message
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

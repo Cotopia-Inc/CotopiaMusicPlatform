@@ -1,7 +1,7 @@
-import { useParams, Link } from "wouter";
+import { useParams, Link, useLocation } from "wouter";
 import { useGetArtist, getGetArtistQueryKey, useFollowArtist, useUnfollowArtist, useTrackAnalyticsEvent } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Play, Users, Music } from "lucide-react";
+import { Play, Users, Music, MessageCircle } from "lucide-react";
 import { RoleBadges } from "@/components/role-badges";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
@@ -15,6 +15,7 @@ export default function ArtistDetail() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { play } = usePlayer();
+  const [, navigate] = useLocation();
 
   const { data: artist, isLoading } = useGetArtist(artistId, {
     query: { enabled: !!artistId, queryKey: getGetArtistQueryKey(artistId) }
@@ -110,6 +111,17 @@ export default function ArtistDetail() {
                 disabled={followMutation.isPending || unfollowMutation.isPending}
               >
                 {artist.isFollowed ? "Following" : "Follow"}
+              </Button>
+            )}
+            {user && (artist as any).userId && user.id !== (artist as any).userId && (
+              <Button
+                variant="outline"
+                size="lg"
+                className="rounded-full px-6 gap-2"
+                onClick={() => navigate(`/messages?new=${(artist as any).userId}`)}
+              >
+                <MessageCircle className="w-4 h-4" />
+                Message
               </Button>
             )}
           </div>

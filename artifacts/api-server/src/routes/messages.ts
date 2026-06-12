@@ -1,12 +1,12 @@
 import { Router } from "express";
 import { eq, or, and, desc, ne } from "drizzle-orm";
-import { db, conversationsTable, directMessagesTable, usersTable, notificationsTable } from "@workspace/db";
+import { db, conversationsTable, directMessagesTable, usersTable, notificationsTable, artistsTable, followsTable } from "@workspace/db";
 import { requireAuth, type AuthRequest } from "../lib/auth";
 import { count } from "drizzle-orm";
 
 const router = Router();
 
-// GET /messages — list conversations for current user
+// GET /messages — list conversations for current user (followed artists first, then by lastMessageAt)
 router.get("/messages", requireAuth, async (req: AuthRequest, res): Promise<void> => {
   const userId = req.user!.userId;
 
@@ -47,6 +47,27 @@ router.get("/messages", requireAuth, async (req: AuthRequest, res): Promise<void
         ne(directMessagesTable.senderId, userId),
       ));
 
+    // Check if other user is an artist the current user follows (priority ordering)
+    let isFollowedByMe = false;
+    const [artistRow] = await db
+      .select({ id: artistsTable.id })
+      .from(artistsTable)
+      .where(eq(artistsTable.userId, otherId))
+      .limit(1);
+
+    if (artistRow) {
+      const [followRow] = await db
+        .select({ id: followsTable.id })
+        .from(followsTable)
+        .where(and(
+          eq(followsTable.followerId, userId),
+          eq(followsTable.targetType, "artist"),
+          eq(followsTable.targetId, artistRow.id),
+        ))
+        .limit(1);
+      isFollowedByMe = !!followRow;
+    }
+
     return {
       id: conv.id,
       otherUser: otherUser ?? null,
@@ -54,8 +75,16 @@ router.get("/messages", requireAuth, async (req: AuthRequest, res): Promise<void
       unreadCount: unreadResult?.count ?? 0,
       lastMessageAt: conv.lastMessageAt,
       createdAt: conv.createdAt,
+      isFollowedByMe,
     };
   }));
+
+  // Sort: followed first, then by lastMessageAt (already ordered by DB)
+  enriched.sort((a, b) => {
+    if (a.isFollowedByMe && !b.isFollowedByMe) return -1;
+    if (!a.isFollowedByMe && b.isFollowedByMe) return 1;
+    return 0;
+  });
 
   res.json(enriched);
 });

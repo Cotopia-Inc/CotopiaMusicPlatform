@@ -1,7 +1,7 @@
 import {
   Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Volume1,
-  Radio, Heart, ChevronDown, Shuffle, Repeat, Repeat1, Square, Music2, StopCircle,
-  ListMusic, X, Music,
+  Radio, Heart, ChevronDown, Shuffle, Repeat, Repeat1, Square,
+  Music2, ListMusic, X, Music, GripHorizontal, Maximize2, Minimize2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -13,17 +13,13 @@ import {
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { useEffect, useRef, useState } from "react";
-
-// ── helpers ──────────────────────────────────────────────────────────────────
+import { useEffect, useRef, useState, useCallback } from "react";
 
 function VolumeIcon({ v }: { v: number }) {
   if (v === 0) return <VolumeX className="w-4 h-4" />;
   if (v < 0.4) return <Volume1 className="w-4 h-4" />;
   return <Volume2 className="w-4 h-4" />;
 }
-
-// ── main component ────────────────────────────────────────────────────────────
 
 export function Player() {
   const {
@@ -36,6 +32,14 @@ export function Player() {
   } = usePlayer();
 
   const [queueOpen, setQueueOpen] = useState(false);
+  const [videoExpanded, setVideoExpanded] = useState(false);
+
+  // Draggable overlay state
+  const [overlayPos, setOverlayPos] = useState<{ x: number; y: number } | null>(null);
+  const [overlayWidth, setOverlayWidth] = useState(440);
+  const dragRef = useRef<{ startMx: number; startMy: number; startX: number; startY: number } | null>(null);
+  const resizeRef = useRef<{ startMx: number; startW: number } | null>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
 
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -57,11 +61,53 @@ export function Player() {
     }
   }, [track?.id]);
 
-  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+  // Global mouse events for drag + resize
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      if (dragRef.current) {
+        setOverlayPos({
+          x: dragRef.current.startX + (e.clientX - dragRef.current.startMx),
+          y: dragRef.current.startY + (e.clientY - dragRef.current.startMy),
+        });
+      }
+      if (resizeRef.current) {
+        const dx = e.clientX - resizeRef.current.startMx;
+        setOverlayWidth(Math.max(300, Math.min(700, resizeRef.current.startW + dx)));
+      }
+    };
+    const onUp = () => {
+      dragRef.current = null;
+      resizeRef.current = null;
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+  }, []);
 
+  const startDrag = useCallback((e: React.MouseEvent) => {
+    if (!overlayRef.current) return;
+    const rect = overlayRef.current.getBoundingClientRect();
+    dragRef.current = { startMx: e.clientX, startMy: e.clientY, startX: rect.left, startY: rect.top };
+    e.preventDefault();
+  }, []);
+
+  const startResize = useCallback((e: React.MouseEvent) => {
+    resizeRef.current = { startMx: e.clientX, startW: overlayWidth };
+    e.preventDefault();
+    e.stopPropagation();
+  }, [overlayWidth]);
+
+  // Reset position when closing
+  const handleClose = () => {
+    setNowPlayingOpen(false);
+  };
+
+  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
   const hasPrev = queueIndex > 0 || currentTime > 3;
-  const hasNext =
-    queueIndex < queue.length - 1 || repeat === "all" || shuffle;
+  const hasNext = queueIndex < queue.length - 1 || repeat === "all" || shuffle;
 
   const handleHeartClick = () => {
     if (!track) return;
@@ -94,40 +140,60 @@ export function Player() {
     repeat === "one"  ? "Repeat: one" :
                         "Repeat: all";
 
-  // ── Now Playing Overlay ──────────────────────────────────────────────────────
+  const overlayStyle: React.CSSProperties = overlayPos
+    ? { position: "fixed", left: overlayPos.x, top: overlayPos.y, width: overlayWidth, zIndex: 40 }
+    : { position: "fixed", bottom: 84, left: 16, width: overlayWidth, zIndex: 40 };
+
+  // ── Now Playing Floating Window ───────────────────────────────────────────
   return (
     <>
-      <div
-        className={`fixed inset-x-0 bottom-20 z-40 transition-all duration-300 ease-in-out ${
-          nowPlayingOpen
-            ? "translate-y-0 opacity-100 pointer-events-auto"
-            : "translate-y-full opacity-0 pointer-events-none"
-        }`}
-      >
-        <div className="max-w-lg mx-auto bg-card border border-border/60 rounded-t-2xl shadow-2xl overflow-hidden">
-          {/* header */}
-          <div className="flex items-center justify-between px-5 pt-4 pb-2">
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-              {isVideoTrack ? "Now Playing — Video" : "Now Playing"}
-            </span>
-            <button
-              onClick={() => setNowPlayingOpen(false)}
-              className="text-muted-foreground hover:text-foreground transition-colors"
-              title="Collapse"
-            >
-              <ChevronDown className="w-5 h-5" />
-            </button>
+      {nowPlayingOpen && (
+        <div
+          ref={overlayRef}
+          style={overlayStyle}
+          className="bg-card/98 backdrop-blur-xl border border-border/70 rounded-2xl shadow-2xl overflow-hidden select-none"
+        >
+          {/* Drag handle header */}
+          <div
+            onMouseDown={startDrag}
+            className="flex items-center justify-between px-4 pt-3 pb-2 border-b border-border/40 cursor-grab active:cursor-grabbing bg-black/20"
+          >
+            <div className="flex items-center gap-2">
+              <GripHorizontal className="w-3.5 h-3.5 text-muted-foreground/50" />
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                {isVideoTrack ? "Now Playing — Video" : "Now Playing"}
+              </span>
+            </div>
+            <div className="flex items-center gap-1">
+              {isVideoTrack && (
+                <button
+                  onClick={() => setVideoExpanded(v => !v)}
+                  className="text-muted-foreground hover:text-foreground transition-colors p-1"
+                  title={videoExpanded ? "Shrink video" : "Expand video"}
+                >
+                  {videoExpanded ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+                </button>
+              )}
+              <button
+                onClick={handleClose}
+                className="text-muted-foreground hover:text-foreground transition-colors p-1"
+                title="Minimize"
+              >
+                <ChevronDown className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
-          {/* video / cover art */}
-          <div className="px-5">
+          {/* Video / Cover art */}
+          <div className={isVideoTrack ? "bg-black" : "px-5 pt-4"}>
             <video
               ref={registerVideoElement}
               playsInline
-              className={`w-full rounded-xl bg-black ${isVideoTrack ? "block max-h-64 object-contain" : "hidden"}`}
+              className={`w-full bg-black ${isVideoTrack ? "block" : "hidden"}`}
+              style={isVideoTrack ? { maxHeight: videoExpanded ? 480 : 260, objectFit: "contain" } : {}}
             />
             {!isVideoTrack && (
-              <div className="flex justify-center pb-1">
+              <div className="flex justify-center">
                 <div className="w-52 h-52 rounded-xl overflow-hidden bg-secondary border border-border/50 shadow-xl flex items-center justify-center">
                   {track?.coverUrl
                     ? <img src={track.coverUrl} alt={track.title} className="w-full h-full object-cover" />
@@ -137,9 +203,9 @@ export function Player() {
             )}
           </div>
 
-          <div className="px-5 pb-5 space-y-3">
-            {/* track info */}
-            <div className="flex items-center justify-between gap-2 mt-1">
+          <div className="px-5 pb-4 pt-3 space-y-3">
+            {/* Track info */}
+            <div className="flex items-center justify-between gap-2">
               <div className="min-w-0">
                 <p className="font-bold text-base leading-tight truncate">{track?.title ?? "—"}</p>
                 <div className="text-sm text-muted-foreground mt-0.5">
@@ -168,7 +234,7 @@ export function Player() {
               </button>
             </div>
 
-            {/* progress */}
+            {/* Progress */}
             <div className="flex items-center gap-2">
               <span className="text-[11px] text-muted-foreground tabular-nums w-9 text-right">
                 {formatDuration(currentTime)}
@@ -183,9 +249,8 @@ export function Player() {
               </span>
             </div>
 
-            {/* main controls */}
+            {/* Main transport controls */}
             <div className="flex items-center justify-between px-2">
-              {/* Shuffle */}
               <button
                 onClick={toggleShuffle}
                 className={`transition-colors relative ${shuffle ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
@@ -195,7 +260,6 @@ export function Player() {
                 {shuffle && <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />}
               </button>
 
-              {/* Skip back */}
               <button
                 onClick={skipPrev}
                 disabled={!track}
@@ -205,7 +269,6 @@ export function Player() {
                 <SkipBack className="w-6 h-6 fill-current" />
               </button>
 
-              {/* Play / Pause */}
               <button
                 onClick={togglePlay}
                 disabled={!track}
@@ -217,7 +280,6 @@ export function Player() {
                   : <Play className="w-6 h-6 ml-0.5 fill-current" />}
               </button>
 
-              {/* Skip forward */}
               <button
                 onClick={skipNext}
                 disabled={!track || !hasNext}
@@ -227,7 +289,6 @@ export function Player() {
                 <SkipForward className="w-6 h-6 fill-current" />
               </button>
 
-              {/* Repeat */}
               <button
                 onClick={cycleRepeat}
                 className={`transition-colors relative ${repeat !== "none" ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
@@ -240,12 +301,12 @@ export function Player() {
               </button>
             </div>
 
-            {/* secondary controls: stop + volume */}
+            {/* Secondary controls: stop + volume */}
             <div className="flex items-center gap-3 px-1">
               <button
                 onClick={stop}
                 disabled={!track}
-                className="w-7 h-7 rounded-full bg-red-600 hover:bg-red-500 text-white flex items-center justify-center transition-colors disabled:opacity-30 flex-shrink-0"
+                className="w-7 h-7 rounded bg-red-600 hover:bg-red-500 text-white flex items-center justify-center transition-colors disabled:opacity-30 flex-shrink-0"
                 title="Stop"
               >
                 <Square className="w-3.5 h-3.5 fill-current" />
@@ -269,8 +330,17 @@ export function Player() {
               )}
             </div>
           </div>
+
+          {/* Resize grip */}
+          <div
+            onMouseDown={startResize}
+            className="absolute bottom-0 right-0 w-5 h-5 cursor-se-resize flex items-end justify-end p-1"
+            title="Resize"
+          >
+            <div className="w-2.5 h-2.5 border-r-2 border-b-2 border-muted-foreground/30 rounded-br-sm" />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ── Player Bar ─────────────────────────────────────────────────────────── */}
       <div className="h-20 bg-card/95 backdrop-blur border-t border-border/50 w-full flex items-center justify-between px-4 z-50 flex-shrink-0 gap-2">
@@ -330,7 +400,6 @@ export function Player() {
         {/* Centre: controls + progress */}
         <div className="flex flex-col items-center gap-1.5 flex-1 max-w-lg">
           <div className="flex items-center gap-1">
-            {/* Shuffle */}
             <Button
               variant="ghost" size="icon"
               className={`w-8 h-8 relative transition-colors ${shuffle ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
@@ -341,7 +410,6 @@ export function Player() {
               {shuffle && <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />}
             </Button>
 
-            {/* Skip back */}
             <Button
               variant="ghost" size="icon"
               className="w-8 h-8 text-muted-foreground hover:text-foreground disabled:opacity-30"
@@ -351,7 +419,6 @@ export function Player() {
               <SkipBack className="w-4 h-4 fill-current" />
             </Button>
 
-            {/* Play / Pause */}
             <Button
               size="icon" onClick={togglePlay} disabled={!track}
               className="w-10 h-10 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/25 disabled:opacity-50"
@@ -362,7 +429,6 @@ export function Player() {
                 : <Play className="w-4 h-4 ml-0.5 fill-current" />}
             </Button>
 
-            {/* Skip forward */}
             <Button
               variant="ghost" size="icon"
               className="w-8 h-8 text-muted-foreground hover:text-foreground disabled:opacity-30"
@@ -372,17 +438,16 @@ export function Player() {
               <SkipForward className="w-4 h-4 fill-current" />
             </Button>
 
-            {/* Stop */}
+            {/* Stop — square button, not circle */}
             <Button
               variant="ghost" size="icon"
-              className="w-8 h-8 text-white bg-red-600 hover:bg-red-500 disabled:opacity-30 rounded-full"
+              className="w-8 h-8 text-white bg-red-600 hover:bg-red-500 disabled:opacity-30 rounded"
               onClick={stop} disabled={!track}
               title="Stop"
             >
-              <StopCircle className="w-4 h-4" />
+              <Square className="w-3.5 h-3.5 fill-current" />
             </Button>
 
-            {/* Repeat */}
             <Button
               variant="ghost" size="icon"
               className={`w-8 h-8 relative transition-colors ${repeat !== "none" ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
@@ -414,7 +479,6 @@ export function Player() {
 
         {/* Right: queue + volume */}
         <div className="flex items-center justify-end gap-2 w-[30%]">
-          {/* Queue toggle */}
           <button
             onClick={() => setQueueOpen(v => !v)}
             disabled={!track}
@@ -447,73 +511,66 @@ export function Player() {
       </div>
 
       {/* ── Queue Panel ─────────────────────────────────────────────────────────── */}
-      <div
-        className={`fixed inset-x-0 bottom-20 z-30 transition-all duration-300 ease-in-out ${
-          queueOpen
-            ? "translate-y-0 opacity-100 pointer-events-auto"
-            : "translate-y-full opacity-0 pointer-events-none"
-        }`}
-      >
-        <div className="max-w-lg mx-auto bg-card border border-border/60 rounded-t-2xl shadow-2xl overflow-hidden">
-          <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-border/40">
-            <div className="flex items-center gap-2">
-              <ListMusic className="w-4 h-4 text-primary" />
-              <span className="text-sm font-semibold">Queue</span>
-              <span className="text-xs text-muted-foreground">({queue.length} tracks)</span>
-            </div>
-            <button
-              onClick={() => setQueueOpen(false)}
-              className="text-muted-foreground hover:text-foreground transition-colors"
-              title="Close"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-          <div className="overflow-y-auto max-h-72 py-1">
-            {queue.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-10 gap-2 text-muted-foreground">
-                <Music className="w-8 h-8 opacity-30" />
-                <p className="text-sm">Nothing in the queue yet</p>
+      {queueOpen && (
+        <div className="fixed bottom-20 right-4 z-30 w-80">
+          <div className="bg-card border border-border/60 rounded-2xl shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-border/40">
+              <div className="flex items-center gap-2">
+                <ListMusic className="w-4 h-4 text-primary" />
+                <span className="text-sm font-semibold">Queue</span>
+                <span className="text-xs text-muted-foreground">({queue.length} tracks)</span>
               </div>
-            ) : (
-              queue.map((t, idx) => {
-                const isActive = idx === queueIndex;
-                return (
-                  <button
-                    key={`${t.id}-${idx}`}
-                    onClick={() => { playAt(idx); setQueueOpen(false); }}
-                    className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-left ${
-                      isActive
-                        ? "bg-primary/10 text-primary"
-                        : "hover:bg-secondary/60 text-foreground"
-                    }`}
-                  >
-                    <div className="w-5 text-center flex-shrink-0">
-                      {isActive
-                        ? <span className="inline-block w-2 h-2 rounded-full bg-primary animate-pulse" />
-                        : <span className="text-xs text-muted-foreground">{idx + 1}</span>
-                      }
-                    </div>
-                    <div className="w-9 h-9 rounded bg-secondary overflow-hidden flex-shrink-0 border border-border/40">
-                      {t.coverUrl
-                        ? <img src={t.coverUrl} alt={t.title} className="w-full h-full object-cover" />
-                        : <div className="w-full h-full flex items-center justify-center"><Music2 className="w-4 h-4 text-muted-foreground/40" /></div>
-                      }
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-sm font-medium truncate ${isActive ? "text-primary" : ""}`}>{t.title}</p>
-                      <p className="text-xs text-muted-foreground truncate">{t.artistName}</p>
-                    </div>
-                    <span className="text-xs text-muted-foreground tabular-nums flex-shrink-0">
-                      {formatDuration(t.duration ?? 0)}
-                    </span>
-                  </button>
-                );
-              })
-            )}
+              <button
+                onClick={() => setQueueOpen(false)}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="overflow-y-auto max-h-72 py-1">
+              {queue.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-10 gap-2 text-muted-foreground">
+                  <Music className="w-8 h-8 opacity-30" />
+                  <p className="text-sm">Nothing in the queue yet</p>
+                </div>
+              ) : (
+                queue.map((t, idx) => {
+                  const isActive = idx === queueIndex;
+                  return (
+                    <button
+                      key={`${t.id}-${idx}`}
+                      onClick={() => { playAt(idx); setQueueOpen(false); }}
+                      className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-left ${
+                        isActive ? "bg-primary/10 text-primary" : "hover:bg-secondary/60 text-foreground"
+                      }`}
+                    >
+                      <div className="w-5 text-center flex-shrink-0">
+                        {isActive
+                          ? <span className="inline-block w-2 h-2 rounded-full bg-primary animate-pulse" />
+                          : <span className="text-xs text-muted-foreground">{idx + 1}</span>
+                        }
+                      </div>
+                      <div className="w-9 h-9 rounded bg-secondary overflow-hidden flex-shrink-0 border border-border/40">
+                        {t.coverUrl
+                          ? <img src={t.coverUrl} alt={t.title} className="w-full h-full object-cover" />
+                          : <div className="w-full h-full flex items-center justify-center"><Music2 className="w-4 h-4 text-muted-foreground/40" /></div>
+                        }
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm font-medium truncate ${isActive ? "text-primary" : ""}`}>{t.title}</p>
+                        <p className="text-xs text-muted-foreground truncate">{t.artistName}</p>
+                      </div>
+                      <span className="text-xs text-muted-foreground tabular-nums flex-shrink-0">
+                        {formatDuration(t.duration ?? 0)}
+                      </span>
+                    </button>
+                  );
+                })
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </>
   );
 }

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
-import { eq } from "drizzle-orm";
+import { eq, ilike, or } from "drizzle-orm";
 import { db, usersTable, artistsTable, labelsTable } from "@workspace/db";
 import { RegisterBody, LoginBody, UpdateMeBody } from "@workspace/api-zod";
 import { signToken, requireAuth, type AuthRequest } from "../lib/auth";
@@ -101,6 +101,23 @@ router.patch("/auth/me", requireAuth, async (req: AuthRequest, res): Promise<voi
   const [user] = await db.update(usersTable).set(parsed.data).where(eq(usersTable.id, req.user!.userId)).returning();
   const { passwordHash: _, ...userOut } = user;
   res.json(userOut);
+});
+
+router.get("/users/search", async (req, res): Promise<void> => {
+  const q = String(req.query.q ?? "").trim();
+  if (!q || q.length < 2) { res.json([]); return; }
+  const results = await db.select({
+    id: usersTable.id,
+    username: usersTable.username,
+    displayName: usersTable.displayName,
+    avatarUrl: usersTable.avatarUrl,
+    role: usersTable.role,
+    isVerified: usersTable.isVerified,
+  }).from(usersTable).where(or(
+    ilike(usersTable.username, `%${q}%`),
+    ilike(usersTable.displayName, `%${q}%`),
+  )).limit(20);
+  res.json(results);
 });
 
 router.get("/users/:id", async (req, res): Promise<void> => {
