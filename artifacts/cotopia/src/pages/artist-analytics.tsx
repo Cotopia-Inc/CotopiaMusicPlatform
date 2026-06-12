@@ -9,14 +9,14 @@ import { Link } from "wouter";
 function StatCard({ label, value, icon: Icon, color = "text-primary" }: { label: string; value: number; icon: React.ElementType; color?: string }) {
   return (
     <Card>
-      <CardContent className="pt-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-muted-foreground">{label}</p>
-            <p className="text-2xl font-bold mt-1">{value.toLocaleString()}</p>
+      <CardContent className="pt-5 pb-5">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <p className="text-xs text-muted-foreground leading-tight">{label}</p>
+            <p className="text-xl font-bold mt-1 tabular-nums break-all leading-tight">{value.toLocaleString()}</p>
           </div>
-          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-            <Icon className={`w-5 h-5 ${color}`} />
+          <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <Icon className={`w-4 h-4 ${color}`} />
           </div>
         </div>
       </CardContent>

@@ -52,6 +52,8 @@ import type {
   CompanyPost,
   CompanyPostInput,
   CompanyPostUpdate,
+  Conversation,
+  DirectMessage,
   DiscoverFeed,
   EditorPickExpanded,
   EditorPickInput,
@@ -64,6 +66,7 @@ import type {
   GetHistoryParams,
   GetTrendingSongsParams,
   GetTrendingVideosParams,
+  GetUnreadMessageCount200,
   GetUnreadNotificationCount200,
   HealthStatus,
   HistoryItem,
@@ -79,6 +82,7 @@ import type {
   ListVideosParams,
   LoginInput,
   MarkAllNotificationsRead200,
+  MarkConversationRead200,
   Notification,
   PaymentCaptureInput,
   PaymentInitiateInput,
@@ -92,6 +96,7 @@ import type {
   RatingInput,
   RatingResult,
   RegisterInput,
+  SendDirectMessageBody,
   Song,
   SongDetail,
   SongInput,
@@ -7646,6 +7651,378 @@ export const useMarkNotificationRead = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getMarkNotificationReadMutationOptions(options));
+    }
+
+export const getListConversationsUrl = () => {
+
+
+
+
+  return `/api/messages`
+}
+
+/**
+ * @summary List current user's DM conversations
+ */
+export const listConversations = async ( options?: RequestInit): Promise<Conversation[]> => {
+
+  return customFetch<Conversation[]>(getListConversationsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListConversationsQueryKey = () => {
+    return [
+    `/api/messages`
+    ] as const;
+    }
+
+
+export const getListConversationsQueryOptions = <TData = Awaited<ReturnType<typeof listConversations>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listConversations>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListConversationsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listConversations>>> = ({ signal }) => listConversations({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listConversations>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListConversationsQueryResult = NonNullable<Awaited<ReturnType<typeof listConversations>>>
+export type ListConversationsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List current user's DM conversations
+ */
+
+export function useListConversations<TData = Awaited<ReturnType<typeof listConversations>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listConversations>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListConversationsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getSendDirectMessageUrl = () => {
+
+
+
+
+  return `/api/messages`
+}
+
+/**
+ * @summary Send a direct message (creates conversation if needed)
+ */
+export const sendDirectMessage = async (sendDirectMessageBody: SendDirectMessageBody, options?: RequestInit): Promise<DirectMessage> => {
+
+  return customFetch<DirectMessage>(getSendDirectMessageUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      sendDirectMessageBody,)
+  }
+);}
+
+
+
+
+export const getSendDirectMessageMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendDirectMessage>>, TError,{data: BodyType<SendDirectMessageBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof sendDirectMessage>>, TError,{data: BodyType<SendDirectMessageBody>}, TContext> => {
+
+const mutationKey = ['sendDirectMessage'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sendDirectMessage>>, {data: BodyType<SendDirectMessageBody>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  sendDirectMessage(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SendDirectMessageMutationResult = NonNullable<Awaited<ReturnType<typeof sendDirectMessage>>>
+    export type SendDirectMessageMutationBody = BodyType<SendDirectMessageBody>
+    export type SendDirectMessageMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Send a direct message (creates conversation if needed)
+ */
+export const useSendDirectMessage = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendDirectMessage>>, TError,{data: BodyType<SendDirectMessageBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof sendDirectMessage>>,
+        TError,
+        {data: BodyType<SendDirectMessageBody>},
+        TContext
+      > => {
+      return useMutation(getSendDirectMessageMutationOptions(options));
+    }
+
+export const getGetUnreadMessageCountUrl = () => {
+
+
+
+
+  return `/api/messages/unread-count`
+}
+
+/**
+ * @summary Get count of unread direct messages
+ */
+export const getUnreadMessageCount = async ( options?: RequestInit): Promise<GetUnreadMessageCount200> => {
+
+  return customFetch<GetUnreadMessageCount200>(getGetUnreadMessageCountUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetUnreadMessageCountQueryKey = () => {
+    return [
+    `/api/messages/unread-count`
+    ] as const;
+    }
+
+
+export const getGetUnreadMessageCountQueryOptions = <TData = Awaited<ReturnType<typeof getUnreadMessageCount>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getUnreadMessageCount>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetUnreadMessageCountQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getUnreadMessageCount>>> = ({ signal }) => getUnreadMessageCount({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUnreadMessageCount>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetUnreadMessageCountQueryResult = NonNullable<Awaited<ReturnType<typeof getUnreadMessageCount>>>
+export type GetUnreadMessageCountQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get count of unread direct messages
+ */
+
+export function useGetUnreadMessageCount<TData = Awaited<ReturnType<typeof getUnreadMessageCount>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getUnreadMessageCount>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetUnreadMessageCountQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetConversationMessagesUrl = (id: number,) => {
+
+
+
+
+  return `/api/messages/${id}`
+}
+
+/**
+ * @summary Get messages in a conversation
+ */
+export const getConversationMessages = async (id: number, options?: RequestInit): Promise<DirectMessage[]> => {
+
+  return customFetch<DirectMessage[]>(getGetConversationMessagesUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetConversationMessagesQueryKey = (id: number,) => {
+    return [
+    `/api/messages/${id}`
+    ] as const;
+    }
+
+
+export const getGetConversationMessagesQueryOptions = <TData = Awaited<ReturnType<typeof getConversationMessages>>, TError = ErrorType<void>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getConversationMessages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetConversationMessagesQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getConversationMessages>>> = ({ signal }) => getConversationMessages(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getConversationMessages>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetConversationMessagesQueryResult = NonNullable<Awaited<ReturnType<typeof getConversationMessages>>>
+export type GetConversationMessagesQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get messages in a conversation
+ */
+
+export function useGetConversationMessages<TData = Awaited<ReturnType<typeof getConversationMessages>>, TError = ErrorType<void>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getConversationMessages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetConversationMessagesQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getMarkConversationReadUrl = (id: number,) => {
+
+
+
+
+  return `/api/messages/${id}/read`
+}
+
+/**
+ * @summary Mark all messages in a conversation as read
+ */
+export const markConversationRead = async (id: number, options?: RequestInit): Promise<MarkConversationRead200> => {
+
+  return customFetch<MarkConversationRead200>(getMarkConversationReadUrl(id),
+  {
+    ...options,
+    method: 'PUT'
+
+
+  }
+);}
+
+
+
+
+export const getMarkConversationReadMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof markConversationRead>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof markConversationRead>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['markConversationRead'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof markConversationRead>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  markConversationRead(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MarkConversationReadMutationResult = NonNullable<Awaited<ReturnType<typeof markConversationRead>>>
+
+    export type MarkConversationReadMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Mark all messages in a conversation as read
+ */
+export const useMarkConversationRead = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof markConversationRead>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof markConversationRead>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getMarkConversationReadMutationOptions(options));
     }
 
 export const getGetChatMessagesUrl = (contentType: 'song' | 'video',

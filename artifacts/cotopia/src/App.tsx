@@ -1,11 +1,12 @@
-import { Switch, Route, Router as WouterRouter } from "wouter";
+import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { AuthProvider } from "@/lib/auth";
+import { AuthProvider, useAuth } from "@/lib/auth";
 import { PlayerProvider } from "@/lib/player";
 import NotFound from "@/pages/not-found";
 import { Layout } from "@/components/layout";
+import { useEffect } from "react";
 
 import Home from "@/pages/home";
 import Login from "@/pages/login";
@@ -25,6 +26,7 @@ import CompanyHub from "@/pages/company";
 import Submit from "@/pages/submit";
 import Submissions from "@/pages/submissions";
 import Profile from "@/pages/profile";
+import Messages from "@/pages/messages";
 
 import AdminDashboard from "@/pages/admin-dashboard";
 import AdminUsers from "@/pages/admin-users";
@@ -59,128 +61,177 @@ const queryClient = new QueryClient({
   },
 });
 
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { user, isLoading } = useAuth();
+  const [, navigate] = useLocation();
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      navigate("/login");
+    }
+  }, [user, isLoading, navigate]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+  if (!user) return null;
+  return <>{children}</>;
+}
+
+function AuthRoute({ children }: { children: React.ReactNode }) {
+  const { user, isLoading } = useAuth();
+  const [, navigate] = useLocation();
+
+  useEffect(() => {
+    if (!isLoading && user) {
+      navigate("/");
+    }
+  }, [user, isLoading, navigate]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+  if (user) return null;
+  return <>{children}</>;
+}
+
 function Router() {
   return (
     <Switch>
-      <Route path="/login" component={Login} />
-      <Route path="/register" component={Register} />
+      <Route path="/login">
+        <AuthRoute><Login /></AuthRoute>
+      </Route>
+      <Route path="/register">
+        <AuthRoute><Register /></AuthRoute>
+      </Route>
 
-      {/* Embed routes (no layout) */}
+      {/* Embed routes (no auth needed) */}
       <Route path="/embed/song/:id" component={EmbedSong} />
       <Route path="/embed/video/:id" component={EmbedVideo} />
       <Route path="/embed/playlist/:id" component={EmbedPlaylist} />
 
-      {/* Main app routes */}
+      {/* Main app routes — all protected */}
       <Route path="/">
-        <Layout><Home /></Layout>
+        <ProtectedRoute><Layout><Home /></Layout></ProtectedRoute>
       </Route>
       <Route path="/discover">
-        <Layout><Discover /></Layout>
+        <ProtectedRoute><Layout><Discover /></Layout></ProtectedRoute>
       </Route>
       <Route path="/songs">
-        <Layout><Songs /></Layout>
+        <ProtectedRoute><Layout><Songs /></Layout></ProtectedRoute>
       </Route>
       <Route path="/songs/:id">
-        <Layout><SongDetail /></Layout>
+        <ProtectedRoute><Layout><SongDetail /></Layout></ProtectedRoute>
       </Route>
       <Route path="/videos">
-        <Layout><Videos /></Layout>
+        <ProtectedRoute><Layout><Videos /></Layout></ProtectedRoute>
       </Route>
       <Route path="/videos/:id">
-        <Layout><VideoDetail /></Layout>
+        <ProtectedRoute><Layout><VideoDetail /></Layout></ProtectedRoute>
       </Route>
       <Route path="/artists">
-        <Layout><Artists /></Layout>
+        <ProtectedRoute><Layout><Artists /></Layout></ProtectedRoute>
       </Route>
       <Route path="/artists/:id">
-        <Layout><ArtistDetail /></Layout>
+        <ProtectedRoute><Layout><ArtistDetail /></Layout></ProtectedRoute>
       </Route>
       <Route path="/labels">
-        <Layout><Labels /></Layout>
+        <ProtectedRoute><Layout><Labels /></Layout></ProtectedRoute>
       </Route>
       <Route path="/labels/:id">
-        <Layout><LabelDetail /></Layout>
+        <ProtectedRoute><Layout><LabelDetail /></Layout></ProtectedRoute>
       </Route>
       <Route path="/library">
-        <Layout><Library /></Layout>
+        <ProtectedRoute><Layout><Library /></Layout></ProtectedRoute>
       </Route>
       <Route path="/playlists/:id">
-        <Layout><PlaylistDetail /></Layout>
+        <ProtectedRoute><Layout><PlaylistDetail /></Layout></ProtectedRoute>
       </Route>
       <Route path="/company">
-        <Layout><CompanyHub /></Layout>
+        <ProtectedRoute><Layout><CompanyHub /></Layout></ProtectedRoute>
       </Route>
       <Route path="/submit">
-        <Layout><Submit /></Layout>
+        <ProtectedRoute><Layout><Submit /></Layout></ProtectedRoute>
       </Route>
       <Route path="/submissions">
-        <Layout><Submissions /></Layout>
+        <ProtectedRoute><Layout><Submissions /></Layout></ProtectedRoute>
       </Route>
       <Route path="/users/:id">
-        <Layout><UserProfile /></Layout>
+        <ProtectedRoute><Layout><UserProfile /></Layout></ProtectedRoute>
       </Route>
       <Route path="/profile">
-        <Layout><Profile /></Layout>
+        <ProtectedRoute><Layout><Profile /></Layout></ProtectedRoute>
       </Route>
       <Route path="/notifications">
-        <Layout><NotificationsPage /></Layout>
+        <ProtectedRoute><Layout><NotificationsPage /></Layout></ProtectedRoute>
+      </Route>
+      <Route path="/messages">
+        <ProtectedRoute><Layout><Messages /></Layout></ProtectedRoute>
       </Route>
 
       {/* Admin routes */}
       <Route path="/admin">
-        <Layout><AdminDashboard /></Layout>
+        <ProtectedRoute><Layout><AdminDashboard /></Layout></ProtectedRoute>
       </Route>
       <Route path="/admin/analytics">
-        <Layout><AdminAnalytics /></Layout>
+        <ProtectedRoute><Layout><AdminAnalytics /></Layout></ProtectedRoute>
       </Route>
       <Route path="/admin/users">
-        <Layout><AdminUsers /></Layout>
+        <ProtectedRoute><Layout><AdminUsers /></Layout></ProtectedRoute>
       </Route>
       <Route path="/admin/roles">
-        <Layout><AdminRoles /></Layout>
+        <ProtectedRoute><Layout><AdminRoles /></Layout></ProtectedRoute>
       </Route>
       <Route path="/admin/listeners">
-        <Layout><AdminListeners /></Layout>
+        <ProtectedRoute><Layout><AdminListeners /></Layout></ProtectedRoute>
       </Route>
       <Route path="/admin/upload-song">
-        <Layout><AdminUploadSong /></Layout>
+        <ProtectedRoute><Layout><AdminUploadSong /></Layout></ProtectedRoute>
       </Route>
       <Route path="/admin/upload-video">
-        <Layout><AdminUploadVideo /></Layout>
+        <ProtectedRoute><Layout><AdminUploadVideo /></Layout></ProtectedRoute>
       </Route>
       <Route path="/admin/submissions">
-        <Layout><AdminSubmissions /></Layout>
+        <ProtectedRoute><Layout><AdminSubmissions /></Layout></ProtectedRoute>
       </Route>
       <Route path="/admin/songs">
-        <Layout><AdminSongs /></Layout>
+        <ProtectedRoute><Layout><AdminSongs /></Layout></ProtectedRoute>
       </Route>
       <Route path="/admin/videos">
-        <Layout><AdminVideos /></Layout>
+        <ProtectedRoute><Layout><AdminVideos /></Layout></ProtectedRoute>
       </Route>
       <Route path="/admin/company">
-        <Layout><AdminCompany /></Layout>
+        <ProtectedRoute><Layout><AdminCompany /></Layout></ProtectedRoute>
       </Route>
       <Route path="/admin/comments">
-        <Layout><AdminComments /></Layout>
+        <ProtectedRoute><Layout><AdminComments /></Layout></ProtectedRoute>
       </Route>
       <Route path="/admin/settings">
-        <Layout><AdminSettings /></Layout>
+        <ProtectedRoute><Layout><AdminSettings /></Layout></ProtectedRoute>
       </Route>
 
       {/* Editor routes */}
       <Route path="/editor">
-        <Layout><EditorDashboard /></Layout>
+        <ProtectedRoute><Layout><EditorDashboard /></Layout></ProtectedRoute>
       </Route>
       <Route path="/editor/playlists">
-        <Layout><EditorPlaylists /></Layout>
+        <ProtectedRoute><Layout><EditorPlaylists /></Layout></ProtectedRoute>
       </Route>
       <Route path="/editor/picks">
-        <Layout><EditorPicks /></Layout>
+        <ProtectedRoute><Layout><EditorPicks /></Layout></ProtectedRoute>
       </Route>
 
       {/* Artist routes */}
       <Route path="/artist/analytics">
-        <Layout><ArtistAnalytics /></Layout>
+        <ProtectedRoute><Layout><ArtistAnalytics /></Layout></ProtectedRoute>
       </Route>
 
       <Route component={NotFound} />

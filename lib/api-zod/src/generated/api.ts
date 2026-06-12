@@ -2377,7 +2377,7 @@ export const ListNotificationsQueryParams = zod.object({
 export const ListNotificationsResponseItem = zod.object({
   "id": zod.number(),
   "userId": zod.number(),
-  "type": zod.enum(['submission_approved', 'submission_rejected', 'new_release', 'general']),
+  "type": zod.enum(['submission_approved', 'submission_rejected', 'new_release', 'general', 'message']),
   "title": zod.string(),
   "message": zod.string(),
   "isRead": zod.boolean(),
@@ -2413,12 +2413,91 @@ export const MarkNotificationReadParams = zod.object({
 export const MarkNotificationReadResponse = zod.object({
   "id": zod.number(),
   "userId": zod.number(),
-  "type": zod.enum(['submission_approved', 'submission_rejected', 'new_release', 'general']),
+  "type": zod.enum(['submission_approved', 'submission_rejected', 'new_release', 'general', 'message']),
   "title": zod.string(),
   "message": zod.string(),
   "isRead": zod.boolean(),
   "submissionId": zod.number().nullish(),
   "createdAt": zod.string()
+})
+
+
+/**
+ * @summary List current user's DM conversations
+ */
+export const ListConversationsResponseItem = zod.object({
+  "id": zod.number(),
+  "otherUser": zod.object({
+  "id": zod.number(),
+  "username": zod.string(),
+  "displayName": zod.string().nullish(),
+  "avatarUrl": zod.string().nullish(),
+  "role": zod.string(),
+  "isVerified": zod.boolean()
+}),
+  "lastMessage": zod.union([zod.object({
+  "id": zod.number(),
+  "body": zod.string(),
+  "senderId": zod.number(),
+  "isRead": zod.boolean(),
+  "createdAt": zod.string()
+}),zod.null()]).optional(),
+  "unreadCount": zod.number(),
+  "lastMessageAt": zod.string(),
+  "createdAt": zod.string()
+})
+export const ListConversationsResponse = zod.array(ListConversationsResponseItem)
+
+
+/**
+ * @summary Send a direct message (creates conversation if needed)
+ */
+export const SendDirectMessageBody = zod.object({
+  "toUserId": zod.number(),
+  "body": zod.string()
+})
+
+
+/**
+ * @summary Get count of unread direct messages
+ */
+export const GetUnreadMessageCountResponse = zod.object({
+  "count": zod.number()
+})
+
+
+/**
+ * @summary Get messages in a conversation
+ */
+export const GetConversationMessagesParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetConversationMessagesResponseItem = zod.object({
+  "id": zod.number(),
+  "conversationId": zod.number(),
+  "senderId": zod.number(),
+  "body": zod.string(),
+  "isRead": zod.boolean(),
+  "createdAt": zod.string(),
+  "senderUsername": zod.string().nullish(),
+  "senderDisplayName": zod.string().nullish(),
+  "senderAvatarUrl": zod.string().nullish(),
+  "senderRole": zod.string().nullish(),
+  "senderIsVerified": zod.boolean().nullish()
+})
+export const GetConversationMessagesResponse = zod.array(GetConversationMessagesResponseItem)
+
+
+/**
+ * @summary Mark all messages in a conversation as read
+ */
+export const MarkConversationReadParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const MarkConversationReadResponse = zod.object({
+  "updated": zod.number()
 })
 
 

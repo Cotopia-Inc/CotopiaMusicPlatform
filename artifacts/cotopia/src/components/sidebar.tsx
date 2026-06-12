@@ -2,20 +2,20 @@ import { Link, useLocation } from "wouter";
 import {
   Home, Compass, Music, Video, Users, Mic2, Library, Building2,
   LayoutDashboard, LogIn, LogOut, Settings, Send, Radio, Bell,
-  BarChart3, Upload, ListMusic, Shield, UserCheck, Layers,
-  MessageSquare, FileText, CreditCard, Eye, BookOpen,
+  BarChart3, Upload, ListMusic, Shield,
+  MessageSquare, FileText, Eye, BookOpen, MessageCircle,
 } from "lucide-react";
 import { RoleBadges } from "@/components/role-badges";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { useGetUnreadNotificationCount, getGetUnreadNotificationCountQueryKey } from "@workspace/api-client-react";
+import { useGetUnreadNotificationCount, getGetUnreadNotificationCountQueryKey, useGetUnreadMessageCount, getGetUnreadMessageCountQueryKey } from "@workspace/api-client-react";
 
 const ADMIN_ROLES = ["admin", "master_admin"];
 const STAFF_ROLES = ["admin", "master_admin", "moderator", "editor"];
 
 export function Sidebar() {
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
   const { user, logout } = useAuth();
 
   const { data: unreadData } = useGetUnreadNotificationCount({
@@ -26,6 +26,15 @@ export function Sidebar() {
     }
   });
   const unreadCount = unreadData?.count ?? 0;
+
+  const { data: unreadMsgData } = useGetUnreadMessageCount({
+    query: {
+      enabled: !!user,
+      queryKey: getGetUnreadMessageCountQueryKey(),
+      refetchInterval: 30_000,
+    }
+  });
+  const unreadMsgCount = unreadMsgData?.count ?? 0;
 
   const mainLinks = [
     { href: "/", label: "Home", icon: Home },
@@ -138,6 +147,32 @@ export function Sidebar() {
                 </Link>
               );
             })}
+
+            {/* Messages */}
+            <Link href="/messages">
+              <Button
+                variant={isActive("/messages") ? "secondary" : "ghost"}
+                className={cn(
+                  "w-full justify-start gap-3 text-sm h-9",
+                  isActive("/messages") ? "font-semibold text-primary bg-primary/10 hover:bg-primary/15" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <div className="relative flex-shrink-0">
+                  <MessageCircle className="w-4 h-4" />
+                  {unreadMsgCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 min-w-[14px] h-[14px] rounded-full bg-blue-500 text-white text-[9px] font-bold flex items-center justify-center px-0.5 leading-none">
+                      {unreadMsgCount > 9 ? "9+" : unreadMsgCount}
+                    </span>
+                  )}
+                </div>
+                Messages
+                {unreadMsgCount > 0 && (
+                  <span className="ml-auto text-[10px] font-bold text-blue-400 bg-blue-500/15 rounded-full px-1.5 py-0.5 leading-none">
+                    {unreadMsgCount}
+                  </span>
+                )}
+              </Button>
+            </Link>
 
             {/* Notifications */}
             <Link href="/notifications">
@@ -277,13 +312,13 @@ export function Sidebar() {
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold truncate flex items-center gap-0.5 flex-wrap">
                     {user.username}
-                    <RoleBadges role={user.role} size="sm" />
+                    <RoleBadges role={user.role} size="sm" isVerified={user.isVerified ?? false} />
                   </p>
                   <p className="text-[10px] text-muted-foreground capitalize">{user.role.replace("_", " ")}</p>
                 </div>
               </div>
             </Link>
-            <Button variant="outline" size="sm" className="w-full justify-start gap-2 text-xs" onClick={() => logout()}>
+            <Button variant="outline" size="sm" className="w-full justify-start gap-2 text-xs" onClick={() => { logout(); navigate("/login"); }}>
               <LogOut className="w-3.5 h-3.5" />
               Sign out
             </Button>

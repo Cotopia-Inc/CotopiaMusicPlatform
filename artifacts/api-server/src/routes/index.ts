@@ -22,6 +22,7 @@ import analyticsRouter from "./analytics";
 import artistAnalyticsRouter from "./artist-analytics";
 import editorialPlaylistsRouter from "./editorial-playlists";
 import editorPicksRouter from "./editor-picks";
+import messagesRouter from "./messages";
 
 const router: IRouter = Router();
 
@@ -48,5 +49,6 @@ router.use(analyticsRouter);
 router.use(artistAnalyticsRouter);
 router.use(editorialPlaylistsRouter);
 router.use(editorPicksRouter);
+router.use(messagesRouter);
 
 export default router;

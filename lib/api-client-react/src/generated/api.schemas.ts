@@ -762,6 +762,53 @@ export interface AppSettingsUpdate {
   maintenanceMode?: boolean;
 }
 
+export interface ConversationUser {
+  id: number;
+  username: string;
+  /** @nullable */
+  displayName?: string | null;
+  /** @nullable */
+  avatarUrl?: string | null;
+  role: string;
+  isVerified: boolean;
+}
+
+export interface ConversationLastMessage {
+  id: number;
+  body: string;
+  senderId: number;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export interface Conversation {
+  id: number;
+  otherUser: ConversationUser;
+  lastMessage?: ConversationLastMessage | null;
+  unreadCount: number;
+  lastMessageAt: string;
+  createdAt: string;
+}
+
+export interface DirectMessage {
+  id: number;
+  conversationId: number;
+  senderId: number;
+  body: string;
+  isRead: boolean;
+  createdAt: string;
+  /** @nullable */
+  senderUsername?: string | null;
+  /** @nullable */
+  senderDisplayName?: string | null;
+  /** @nullable */
+  senderAvatarUrl?: string | null;
+  /** @nullable */
+  senderRole?: string | null;
+  /** @nullable */
+  senderIsVerified?: boolean | null;
+}
+
 export type NotificationType = typeof NotificationType[keyof typeof NotificationType];
 
 
@@ -770,6 +817,7 @@ export const NotificationType = {
   submission_rejected: 'submission_rejected',
   new_release: 'new_release',
   general: 'general',
+  message: 'message',
 } as const;
 
 export interface Notification {
@@ -1187,6 +1235,19 @@ export type GetUnreadNotificationCount200 = {
 };
 
 export type MarkAllNotificationsRead200 = {
+  updated: number;
+};
+
+export type SendDirectMessageBody = {
+  toUserId: number;
+  body: string;
+};
+
+export type GetUnreadMessageCount200 = {
+  count: number;
+};
+
+export type MarkConversationRead200 = {
   updated: number;
 };
 

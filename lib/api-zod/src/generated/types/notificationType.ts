@@ -14,4 +14,5 @@ export const NotificationType = {
   submission_rejected: 'submission_rejected',
   new_release: 'new_release',
   general: 'general',
+  message: 'message',
 } as const;

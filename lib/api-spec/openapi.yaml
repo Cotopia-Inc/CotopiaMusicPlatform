@@ -47,6 +47,8 @@ tags:
     description: Object storage upload and serving endpoints.
   - name: notifications
     description: User notifications
+  - name: messages
+    description: Direct messages between users
   - name: analytics
     description: Analytics event tracking
   - name: editorial
@@ -1985,6 +1987,120 @@ paths:
               schema:
                 $ref: "#/components/schemas/Notification"
 
+  # ── Messages ─────────────────────────────────────────────────────────────
+  /messages:
+    get:
+      operationId: listConversations
+      tags: [messages]
+      summary: List current user's DM conversations
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of conversations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Conversation"
+    post:
+      operationId: sendDirectMessage
+      tags: [messages]
+      summary: Send a direct message (creates conversation if needed)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [toUserId, body]
+              properties:
+                toUserId:
+                  type: integer
+                body:
+                  type: string
+      responses:
+        "201":
+          description: Message sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DirectMessage"
+
+  /messages/unread-count:
+    get:
+      operationId: getUnreadMessageCount
+      tags: [messages]
+      summary: Get count of unread direct messages
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [count]
+                properties:
+                  count:
+                    type: integer
+
+  /messages/{id}:
+    get:
+      operationId: getConversationMessages
+      tags: [messages]
+      summary: Get messages in a conversation
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DirectMessage"
+        "403":
+          description: Not a participant
+        "404":
+          description: Conversation not found
+
+  /messages/{id}/read:
+    put:
+      operationId: markConversationRead
+      tags: [messages]
+      summary: Mark all messages in a conversation as read
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [updated]
+                properties:
+                  updated:
+                    type: integer
+
   # ── Payments ──────────────────────────────────────────────────────────────
   # ── Chat ─────────────────────────────────────────────────────────────────
   /chat/{contentType}/{contentId}:
@@ -3138,6 +3254,85 @@ components:
         maintenanceMode:
           type: boolean
 
+    # ── Messages ──────────────────────────────────────────────────────────────
+    ConversationUser:
+      type: object
+      required: [id, username, role, isVerified]
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        displayName:
+          type: ["string", "null"]
+        avatarUrl:
+          type: ["string", "null"]
+        role:
+          type: string
+        isVerified:
+          type: boolean
+
+    ConversationLastMessage:
+      type: object
+      required: [id, body, senderId, isRead, createdAt]
+      properties:
+        id:
+          type: integer
+        body:
+          type: string
+        senderId:
+          type: integer
+        isRead:
+          type: boolean
+        createdAt:
+          type: string
+
+    Conversation:
+      type: object
+      required: [id, otherUser, unreadCount, lastMessageAt, createdAt]
+      properties:
+        id:
+          type: integer
+        otherUser:
+          $ref: "#/components/schemas/ConversationUser"
+        lastMessage:
+          oneOf:
+            - $ref: "#/components/schemas/ConversationLastMessage"
+            - type: "null"
+        unreadCount:
+          type: integer
+        lastMessageAt:
+          type: string
+        createdAt:
+          type: string
+
+    DirectMessage:
+      type: object
+      required: [id, conversationId, senderId, body, isRead, createdAt]
+      properties:
+        id:
+          type: integer
+        conversationId:
+          type: integer
+        senderId:
+          type: integer
+        body:
+          type: string
+        isRead:
+          type: boolean
+        createdAt:
+          type: string
+        senderUsername:
+          type: ["string", "null"]
+        senderDisplayName:
+          type: ["string", "null"]
+        senderAvatarUrl:
+          type: ["string", "null"]
+        senderRole:
+          type: ["string", "null"]
+        senderIsVerified:
+          type: ["boolean", "null"]
+
     # ── Notifications ────────────────────────────────────────────────────────
     Notification:
       type: object
@@ -3149,7 +3344,7 @@ components:
           type: integer
         type:
           type: string
-          enum: [submission_approved, submission_rejected, new_release, general]
+          enum: [submission_approved, submission_rejected, new_release, general, message]
         title:
           type: string
         message:
