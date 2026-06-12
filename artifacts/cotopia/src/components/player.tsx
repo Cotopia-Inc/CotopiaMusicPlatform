@@ -1,7 +1,7 @@
 import {
   Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Volume1,
   Radio, Heart, ChevronUp, ChevronDown, Shuffle, Repeat, Repeat1, Square,
-  Music2, ListMusic, X, Music, GripHorizontal, Maximize2, Minimize2,
+  Music2, ListMusic, X, Music, GripHorizontal, Maximize2, Minimize2, PictureInPicture2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -28,7 +28,7 @@ export function Player() {
     queue, queueIndex, shuffle, repeat,
     setTrackFavorited, togglePlay, seek, stop, skipNext, skipPrev,
     toggleShuffle, cycleRepeat, playAt,
-    setVolume, setNowPlayingOpen, registerVideoElement,
+    setVolume, setNowPlayingOpen, registerVideoElement, requestPiP,
   } = usePlayer();
 
   const [queueOpen, setQueueOpen] = useState(false);
@@ -165,13 +165,22 @@ export function Player() {
             </div>
             <div className="flex items-center gap-1">
               {isVideoTrack && (
-                <button
-                  onClick={() => setVideoExpanded(v => !v)}
-                  className="text-muted-foreground hover:text-foreground transition-colors p-1"
-                  title={videoExpanded ? "Shrink video" : "Expand video"}
-                >
-                  {videoExpanded ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
-                </button>
+                <>
+                  <button
+                    onClick={() => requestPiP()}
+                    className="text-muted-foreground hover:text-foreground transition-colors p-1"
+                    title="Picture in Picture — float video while browsing"
+                  >
+                    <PictureInPicture2 className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => setVideoExpanded(v => !v)}
+                    className="text-muted-foreground hover:text-foreground transition-colors p-1"
+                    title={videoExpanded ? "Shrink video" : "Expand video"}
+                  >
+                    {videoExpanded ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+                  </button>
+                </>
               )}
               <button
                 onClick={handleClose}
@@ -184,7 +193,7 @@ export function Player() {
           </div>
 
           {/* Video / Cover art */}
-          <div className={isVideoTrack ? "bg-black" : "px-5 pt-4"}>
+          <div className={isVideoTrack ? "bg-black" : ""}>
             <video
               ref={registerVideoElement}
               playsInline
@@ -192,12 +201,29 @@ export function Player() {
               style={isVideoTrack ? { maxHeight: videoExpanded ? 480 : 260, objectFit: "contain" } : {}}
             />
             {!isVideoTrack && (
-              <div className="flex justify-center">
-                <div className="w-52 h-52 rounded-xl overflow-hidden bg-secondary border border-border/50 shadow-xl flex items-center justify-center">
-                  {track?.coverUrl
-                    ? <img src={track.coverUrl} alt={track.title} className="w-full h-full object-cover" />
-                    : <Music2 className="w-14 h-14 text-primary/30" />}
-                </div>
+              <div className="relative w-full overflow-hidden" style={{ height: 200 }}>
+                {track?.coverUrl ? (
+                  <>
+                    {/* Blurred ambient background */}
+                    <img
+                      src={track.coverUrl}
+                      alt=""
+                      aria-hidden
+                      className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-50"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-card/80 via-card/20 to-transparent" />
+                    {/* Centred album art */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-36 h-36 rounded-xl overflow-hidden shadow-2xl border border-white/10 flex-shrink-0">
+                        <img src={track.coverUrl} alt={track.title} className="w-full h-full object-cover" />
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary flex items-center justify-center">
+                    <Music2 className="w-14 h-14 text-primary/30" />
+                  </div>
+                )}
               </div>
             )}
           </div>

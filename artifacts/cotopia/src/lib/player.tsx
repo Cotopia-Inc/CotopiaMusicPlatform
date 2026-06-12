@@ -42,6 +42,7 @@ interface PlayerContextValue {
   setTrackFavorited: (v: boolean) => void;
   setNowPlayingOpen: (v: boolean) => void;
   registerVideoElement: (el: HTMLVideoElement | null) => void;
+  requestPiP: () => Promise<void>;
   audioRef: React.RefObject<HTMLAudioElement | null>;
 }
 
@@ -91,6 +92,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       audioRef.current.src = t.streamUrl;
       audioRef.current.volume = volumeRef.current;
       audioRef.current.play().catch(() => {});
+      setNowPlayingOpen(true);
     }
   }, []);
 
@@ -142,15 +144,59 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     audio.volume = volumeRef.current;
     audioRef.current = audio;
 
-    audio.addEventListener("timeupdate", () => setCurrentTime(audio.currentTime));
+    const setPlaying = (v: boolean) => {
+      setIsPlaying(v);
+      if ('mediaSession' in navigator) navigator.mediaSession.playbackState = v ? 'playing' : 'paused';
+    };
+
+    audio.addEventListener("timeupdate", () => {
+      setCurrentTime(audio.currentTime);
+      if ('mediaSession' in navigator && audio.duration && !isNaN(audio.duration)) {
+        try {
+          navigator.mediaSession.setPositionState({ duration: audio.duration, playbackRate: audio.playbackRate, position: audio.currentTime });
+        } catch {}
+      }
+    });
     audio.addEventListener("durationchange", () => setDuration(audio.duration || 0));
-    audio.addEventListener("ended", () => { setIsPlaying(false); autoAdvanceRef.current(); });
-    audio.addEventListener("play", () => setIsPlaying(true));
-    audio.addEventListener("pause", () => setIsPlaying(false));
-    audio.addEventListener("error", () => setIsPlaying(false));
+    audio.addEventListener("ended", () => { setPlaying(false); autoAdvanceRef.current(); });
+    audio.addEventListener("play", () => setPlaying(true));
+    audio.addEventListener("pause", () => setPlaying(false));
+    audio.addEventListener("error", () => setPlaying(false));
 
     return () => { audio.pause(); audio.src = ""; };
   }, []);
+
+  // Media Session API — action handlers (set once, use refs internally so always current)
+  useEffect(() => {
+    if (!('mediaSession' in navigator)) return;
+    navigator.mediaSession.setActionHandler('play', () => { getMedia()?.play().catch(() => {}); });
+    navigator.mediaSession.setActionHandler('pause', () => { getMedia()?.pause(); });
+    navigator.mediaSession.setActionHandler('nexttrack', () => { autoAdvanceRef.current(); });
+    navigator.mediaSession.setActionHandler('previoustrack', () => {
+      const media = getMedia();
+      if (!media) return;
+      if (media.currentTime > 3) { media.currentTime = 0; setCurrentTime(0); return; }
+      const idx = queueIndexRef.current;
+      const prev = queueRef.current[idx - 1];
+      if (prev) loadAndPlay(prev, idx - 1);
+      else { media.currentTime = 0; setCurrentTime(0); }
+    });
+    navigator.mediaSession.setActionHandler('seekto', (details) => {
+      if (details.seekTime === undefined) return;
+      const media = getMedia();
+      if (media) { media.currentTime = details.seekTime; setCurrentTime(details.seekTime); }
+    });
+  }, [loadAndPlay]);
+
+  // Update Media Session metadata whenever the track changes
+  useEffect(() => {
+    if (!track || !('mediaSession' in navigator)) return;
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: track.title,
+      artist: track.artistName,
+      artwork: track.coverUrl ? [{ src: track.coverUrl, sizes: '512x512' }] : [],
+    });
+  }, [track?.id]);
 
   const registerVideoElement = useCallback((el: HTMLVideoElement | null) => {
     const old = videoElRef.current;
@@ -272,6 +318,14 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     setQueue([...q, ...fresh]);
   };
 
+  const requestPiP = useCallback(async () => {
+    if (!videoElRef.current || !document.pictureInPictureEnabled) return;
+    try {
+      if (document.pictureInPictureElement) await document.exitPictureInPicture();
+      else await videoElRef.current.requestPictureInPicture();
+    } catch {}
+  }, []);
+
   return (
     <PlayerContext.Provider value={{
       track, isPlaying, currentTime, duration, volume,
@@ -281,7 +335,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       play, playAt, togglePlay, seek, stop, skipNext, skipPrev,
       toggleShuffle, cycleRepeat, addToQueue,
       setVolume, setTrackFavorited, setNowPlayingOpen,
-      registerVideoElement, audioRef,
+      registerVideoElement, requestPiP, audioRef,
     }}>
       {children}
     </PlayerContext.Provider>
