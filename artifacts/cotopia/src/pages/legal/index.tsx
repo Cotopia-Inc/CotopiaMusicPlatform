@@ -89,7 +89,7 @@ export default function LegalCenter() {
         <h2 className="font-semibold text-sm">Questions or concerns?</h2>
         <p className="text-xs text-muted-foreground leading-relaxed">
           For legal inquiries, DMCA notices, or policy questions, contact us at{" "}
-          <a href="mailto:legal@cotopia.com" className="text-primary hover:underline">legal@cotopia.com</a>.
+          <a href="mailto:legal@cotopia.org" className="text-primary hover:underline">legal@cotopia.org</a>.
           For copyright disputes, please use the{" "}
           <Link href="/legal/copyright-complaint" className="text-primary hover:underline">copyright complaint form</Link>.
         </p>

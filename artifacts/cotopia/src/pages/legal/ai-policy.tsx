@@ -74,7 +74,7 @@ export default function AiPolicy() {
       </Section>
 
       <div className="pt-4 border-t border-border">
-        <p className="text-xs text-muted-foreground">Questions about AI content: <a href="mailto:legal@cotopia.com" className="text-primary hover:underline">legal@cotopia.com</a></p>
+        <p className="text-xs text-muted-foreground">Questions about AI content: <a href="mailto:legal@cotopia.org" className="text-primary hover:underline">legal@cotopia.org</a></p>
       </div>
     </div>
   );

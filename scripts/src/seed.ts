@@ -39,7 +39,7 @@ async function seed() {
   const hash = await bcrypt.hash("password123", 10);
 
   const [admin] = await db.insert(usersTable).values({
-    email: "admin@cotopia.com",
+    email: "admin@cotopia.org",
     passwordHash: hash,
     username: "cotopia_admin",
     displayName: "Cotopia Admin",
@@ -49,10 +49,10 @@ async function seed() {
   }).onConflictDoNothing().returning();
 
   // Also upsert role to master_admin for existing admin account
-  await db.update(usersTable).set({ role: "master_admin", isVerified: true }).where(eq(usersTable.email, "admin@cotopia.com"));
+  await db.update(usersTable).set({ role: "master_admin", isVerified: true }).where(eq(usersTable.email, "admin@cotopia.org"));
 
   const [editor] = await db.insert(usersTable).values({
-    email: "editor@cotopia.com",
+    email: "editor@cotopia.org",
     passwordHash: hash,
     username: "cotopia_editor",
     displayName: "Cotopia Editor",
@@ -62,7 +62,7 @@ async function seed() {
   }).onConflictDoNothing().returning();
 
   const [moderator] = await db.insert(usersTable).values({
-    email: "mod@cotopia.com",
+    email: "mod@cotopia.org",
     passwordHash: hash,
     username: "cotopia_mod",
     displayName: "Cotopia Moderator",
@@ -414,9 +414,9 @@ async function seed() {
 
   console.log("\n✅ Seed complete!");
   console.log("\nDemo accounts (all use password: password123):");
-  console.log("  admin@cotopia.com    — master_admin role");
-  console.log("  editor@cotopia.com   — editor role");
-  console.log("  mod@cotopia.com      — moderator role");
+  console.log("  admin@cotopia.org    — master_admin role");
+  console.log("  editor@cotopia.org   — editor role");
+  console.log("  mod@cotopia.org      — moderator role");
   console.log("  alex@example.com     — listener role");
   console.log("  nova@example.com     — artist (Nova Sounds)");
   console.log("  midnight@example.com — artist (Midnight Echo)");

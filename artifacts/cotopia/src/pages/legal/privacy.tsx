@@ -72,7 +72,7 @@ export default function PrivacyPolicy() {
           <li>Object to or restrict certain processing</li>
           <li>Receive a copy of your data in a portable format</li>
         </ul>
-        <p>To exercise these rights, contact us at <a href="mailto:legal@cotopia.com" className="text-primary hover:underline">legal@cotopia.com</a>.</p>
+        <p>To exercise these rights, contact us at <a href="mailto:legal@cotopia.org" className="text-primary hover:underline">legal@cotopia.org</a>.</p>
       </Section>
 
       <Section title="7. Security">
@@ -88,7 +88,7 @@ export default function PrivacyPolicy() {
       </Section>
 
       <div className="pt-4 border-t border-border">
-        <p className="text-xs text-muted-foreground">Privacy inquiries: <a href="mailto:legal@cotopia.com" className="text-primary hover:underline">legal@cotopia.com</a></p>
+        <p className="text-xs text-muted-foreground">Privacy inquiries: <a href="mailto:legal@cotopia.org" className="text-primary hover:underline">legal@cotopia.org</a></p>
       </div>
     </div>
   );

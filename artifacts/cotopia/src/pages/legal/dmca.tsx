@@ -43,7 +43,7 @@ export default function DmcaPolicy() {
         <p>Cotopia's designated agent for receiving DMCA notices is:</p>
         <div className="rounded-lg border border-border bg-secondary/30 p-4 space-y-1 text-foreground">
           <p className="font-medium">Cotopia Legal Team</p>
-          <p>Email: <a href="mailto:legal@cotopia.com" className="text-primary hover:underline">legal@cotopia.com</a></p>
+          <p>Email: <a href="mailto:legal@cotopia.org" className="text-primary hover:underline">legal@cotopia.org</a></p>
           <p className="text-xs text-muted-foreground mt-1">Subject line: DMCA Takedown Notice</p>
         </div>
       </Section>
@@ -91,7 +91,7 @@ export default function DmcaPolicy() {
       </Section>
 
       <div className="pt-4 border-t border-border">
-        <p className="text-xs text-muted-foreground">DMCA inquiries: <a href="mailto:legal@cotopia.com" className="text-primary hover:underline">legal@cotopia.com</a></p>
+        <p className="text-xs text-muted-foreground">DMCA inquiries: <a href="mailto:legal@cotopia.org" className="text-primary hover:underline">legal@cotopia.org</a></p>
       </div>
     </div>
   );

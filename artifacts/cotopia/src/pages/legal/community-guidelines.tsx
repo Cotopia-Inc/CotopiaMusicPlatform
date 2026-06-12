@@ -83,14 +83,14 @@ export default function CommunityGuidelines() {
         <h2 className="text-lg font-bold">Reporting Violations</h2>
         <p className="text-sm text-muted-foreground">
           To report a content violation, contact us at{" "}
-          <a href="mailto:legal@cotopia.com" className="text-primary hover:underline">legal@cotopia.com</a>.
+          <a href="mailto:legal@cotopia.org" className="text-primary hover:underline">legal@cotopia.org</a>.
           For copyright-specific claims, use our{" "}
           <Link href="/legal/copyright-complaint" className="text-primary hover:underline">copyright complaint form</Link>.
         </p>
       </section>
 
       <div className="pt-4 border-t border-border">
-        <p className="text-xs text-muted-foreground">Questions: <a href="mailto:legal@cotopia.com" className="text-primary hover:underline">legal@cotopia.com</a></p>
+        <p className="text-xs text-muted-foreground">Questions: <a href="mailto:legal@cotopia.org" className="text-primary hover:underline">legal@cotopia.org</a></p>
       </div>
     </div>
   );

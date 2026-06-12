@@ -55,7 +55,7 @@ A full-stack music and video streaming platform with role-based access, content 
 
 | Email | Role |
 |---|---|
-| admin@cotopia.com | admin |
+| admin@cotopia.org | admin |
 | alex@example.com | listener |
 | nova@example.com | artist (Nova Sounds) |
 | midnight@example.com | artist (Midnight Echo) |

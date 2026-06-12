@@ -43,8 +43,8 @@ export default function AdminLegal() {
     termsVersion: "1.0",
     privacyVersion: "1.0",
     submissionAgreementVersion: "1.0",
-    dmcaContactEmail: "legal@cotopia.com",
-    copyrightAgentInfo: "Cotopia Legal Team, legal@cotopia.com",
+    dmcaContactEmail: "legal@cotopia.org",
+    copyrightAgentInfo: "Cotopia Legal Team, legal@cotopia.org",
     refundPolicyText: "",
     aiPolicyText: "",
     communityRulesText: "",
@@ -128,7 +128,7 @@ export default function AdminLegal() {
         <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">DMCA Contact</h2>
         <div className="space-y-1.5">
           <Label htmlFor="dmca-email" className="text-xs text-muted-foreground">DMCA Contact Email</Label>
-          <Input id="dmca-email" type="email" value={form.dmcaContactEmail} onChange={e => update("dmcaContactEmail", e.target.value)} className="bg-secondary/50 border-secondary" placeholder="legal@cotopia.com" />
+          <Input id="dmca-email" type="email" value={form.dmcaContactEmail} onChange={e => update("dmcaContactEmail", e.target.value)} className="bg-secondary/50 border-secondary" placeholder="legal@cotopia.org" />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="agent" className="text-xs text-muted-foreground">Copyright Agent Information</Label>
