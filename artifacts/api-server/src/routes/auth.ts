@@ -4,6 +4,7 @@ import { eq, ilike, or, and, gt } from "drizzle-orm";
 import { db, usersTable, artistsTable, labelsTable, emailOtpsTable, agreementAcceptancesTable } from "@workspace/db";
 import { RegisterBody, LoginBody, UpdateMeBody, SendOtpBody, VerifyOtpBody, ChangePasswordBody, ChangeUsernameBody, SaveDemographicsBody } from "@workspace/api-zod";
 import { signToken, requireAuth, type AuthRequest } from "../lib/auth";
+import { Resend } from "resend";
 
 const router = Router();
 
@@ -12,10 +13,39 @@ function generateOtp(): string {
   return String(Math.floor(100000 + Math.random() * 900000));
 }
 
-function sendOtpEmail(to: string, code: string, purpose: string): void {
-  // TODO: plug in SendGrid/Mailgun/Postmark here
-  // For now, log to console so you can see the code during development
-  console.log(`[OTP EMAIL] To: ${to} | Code: ${code} | Purpose: ${purpose}`);
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+const OTP_SUBJECTS: Record<string, string> = {
+  verify_email: "Verify your Cotopia email",
+  reset_password: "Reset your Cotopia password",
+};
+
+async function sendOtpEmail(to: string, code: string, purpose: string): Promise<void> {
+  const subject = OTP_SUBJECTS[purpose] ?? "Your Cotopia code";
+  const label = purpose === "reset_password" ? "password reset" : "email verification";
+  try {
+    await resend.emails.send({
+      from: "Cotopia <onboarding@resend.dev>",
+      to,
+      subject,
+      html: `
+        <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px;background:#0a0a0a;color:#f5f5f5;border-radius:12px">
+          <div style="margin-bottom:24px">
+            <span style="font-size:22px;font-weight:800;letter-spacing:-0.5px">&#9678; Everyday Radio</span>
+            <span style="font-size:11px;display:block;color:#888;margin-top:2px;letter-spacing:2px;text-transform:uppercase">by Cotopia</span>
+          </div>
+          <h2 style="font-size:20px;font-weight:700;margin:0 0 8px">Your ${label} code</h2>
+          <p style="color:#aaa;margin:0 0 28px;font-size:14px">Use the code below to complete your ${label}. It expires in 10 minutes.</p>
+          <div style="background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:24px;text-align:center;margin-bottom:24px">
+            <span style="font-size:40px;font-weight:900;letter-spacing:12px;color:#a855f7">${code}</span>
+          </div>
+          <p style="color:#666;font-size:12px;margin:0">If you didn't request this, you can safely ignore this email.</p>
+        </div>
+      `,
+    });
+  } catch (err) {
+    console.error("[OTP EMAIL] Failed to send:", err);
+  }
 }
 
 // ── Register ────────────────────────────────────────────────────────────────
