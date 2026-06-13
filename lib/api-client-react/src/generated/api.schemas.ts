@@ -1215,6 +1215,23 @@ export interface CeoMessage {
   updatedBy?: number | null;
 }
 
+export interface AgreementRecord {
+  id: number;
+  userId: number;
+  agreementType: string;
+  agreementVersion: string;
+  /** @nullable */
+  ipAddress?: string | null;
+  /** @nullable */
+  userAgent?: string | null;
+  acceptedAt: string;
+  /** @nullable */
+  submissionId?: number | null;
+  /** @nullable */
+  paymentId?: number | null;
+  metadata?: unknown | null;
+}
+
 export interface CeoMessageInput {
   content: string;
   authorName: string;

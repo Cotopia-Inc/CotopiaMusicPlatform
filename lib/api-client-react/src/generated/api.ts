@@ -33,6 +33,7 @@ import type {
   AdminUploadVideoInput,
   AdminUserList,
   AdminUserUpdate,
+  AgreementRecord,
   AnalyticsEventInput,
   AnalyticsSummary,
   AppSettings,
@@ -7043,6 +7044,83 @@ export function useAdminListListeners<TData = Awaited<ReturnType<typeof adminLis
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getAdminListListenersQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getAdminGetUserAgreementsUrl = (id: number,) => {
+
+
+
+
+  return `/api/admin/users/${id}/agreements`
+}
+
+/**
+ * @summary Get agreement acceptance records for a user
+ */
+export const adminGetUserAgreements = async (id: number, options?: RequestInit): Promise<AgreementRecord[]> => {
+
+  return customFetch<AgreementRecord[]>(getAdminGetUserAgreementsUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getAdminGetUserAgreementsQueryKey = (id: number,) => {
+    return [
+    `/api/admin/users/${id}/agreements`
+    ] as const;
+    }
+
+
+export const getAdminGetUserAgreementsQueryOptions = <TData = Awaited<ReturnType<typeof adminGetUserAgreements>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof adminGetUserAgreements>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminGetUserAgreementsQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminGetUserAgreements>>> = ({ signal }) => adminGetUserAgreements(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminGetUserAgreements>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type AdminGetUserAgreementsQueryResult = NonNullable<Awaited<ReturnType<typeof adminGetUserAgreements>>>
+export type AdminGetUserAgreementsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get agreement acceptance records for a user
+ */
+
+export function useAdminGetUserAgreements<TData = Awaited<ReturnType<typeof adminGetUserAgreements>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof adminGetUserAgreements>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getAdminGetUserAgreementsQueryOptions(id,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

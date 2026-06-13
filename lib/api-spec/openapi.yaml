@@ -1842,6 +1842,29 @@ paths:
               schema:
                 $ref: "#/components/schemas/AdminListenerList"
 
+  /admin/users/{id}/agreements:
+    get:
+      operationId: adminGetUserAgreements
+      tags: [admin]
+      security:
+        - bearerAuth: []
+      summary: Get agreement acceptance records for a user
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Agreement records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AgreementRecord"
+
   /admin/users/{id}/role:
     patch:
       operationId: adminChangeUserRole
@@ -4035,6 +4058,31 @@ components:
           type: string
         updatedBy:
           type: ["integer", "null"]
+
+    AgreementRecord:
+      type: object
+      required: [id, userId, agreementType, agreementVersion, acceptedAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        agreementType:
+          type: string
+        agreementVersion:
+          type: string
+        ipAddress:
+          type: ["string", "null"]
+        userAgent:
+          type: ["string", "null"]
+        acceptedAt:
+          type: string
+        submissionId:
+          type: ["integer", "null"]
+        paymentId:
+          type: ["integer", "null"]
+        metadata:
+          nullable: true
 
     CeoMessageInput:
       type: object

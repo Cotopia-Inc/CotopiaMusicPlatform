@@ -28,6 +28,7 @@ export * from './adminUploadVideoInput';
 export * from './adminUserList';
 export * from './adminUserUpdate';
 export * from './adminUserUpdateRole';
+export * from './agreementRecord';
 export * from './analyticsEventInput';
 export * from './analyticsEventInputContentType';
 export * from './analyticsEventInputEventType';

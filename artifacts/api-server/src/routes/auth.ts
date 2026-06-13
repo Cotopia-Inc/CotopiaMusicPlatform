@@ -1,7 +1,7 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
 import { eq, ilike, or, and, gt } from "drizzle-orm";
-import { db, usersTable, artistsTable, labelsTable, emailOtpsTable } from "@workspace/db";
+import { db, usersTable, artistsTable, labelsTable, emailOtpsTable, agreementAcceptancesTable } from "@workspace/db";
 import { RegisterBody, LoginBody, UpdateMeBody, SendOtpBody, VerifyOtpBody, ChangePasswordBody, ChangeUsernameBody, SaveDemographicsBody } from "@workspace/api-zod";
 import { signToken, requireAuth, type AuthRequest } from "../lib/auth";
 
@@ -55,6 +55,16 @@ router.post("/auth/register", async (req, res): Promise<void> => {
   } else if (user.role === "label") {
     await db.insert(labelsTable).values({ userId: user.id, name: user.displayName ?? user.username });
   }
+
+  // Record agreement acceptances (ToS, Privacy, Community Guidelines, AI Policy)
+  const ipAddress = (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() || req.socket.remoteAddress || null;
+  const userAgent = req.headers["user-agent"] || null;
+  await db.insert(agreementAcceptancesTable).values([
+    { userId: user.id, agreementType: "terms", agreementVersion: "1.0", ipAddress, userAgent, metadata: { source: "registration" } },
+    { userId: user.id, agreementType: "privacy", agreementVersion: "1.0", ipAddress, userAgent, metadata: { source: "registration" } },
+    { userId: user.id, agreementType: "community_guidelines", agreementVersion: "1.0", ipAddress, userAgent, metadata: { source: "registration" } },
+    { userId: user.id, agreementType: "ai_policy", agreementVersion: "1.0", ipAddress, userAgent, metadata: { source: "registration" } },
+  ]);
 
   // Issue and send email verification OTP
   const code = generateOtp();

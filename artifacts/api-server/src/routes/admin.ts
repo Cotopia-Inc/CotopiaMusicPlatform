@@ -6,6 +6,7 @@ import {
   appSettingsTable, followsTable, chatMessagesTable, favoritesTable,
   playlistsTable, playlistItemsTable, conversationsTable, directMessagesTable,
   dmcaClaimsTable, copyrightStrikesTable, adminAuditLogsTable, notificationsTable,
+  agreementAcceptancesTable,
 } from "@workspace/db";
 import {
   AdminListUsersQueryParams, AdminUpdateUserBody,
@@ -888,6 +889,20 @@ router.get("/admin/users/:id/strikes", requireAuth, requireRole(...ADMIN_ROLES, 
 
   const activeCount = strikes.filter(s => s.status === "active").length;
   res.json({ strikes, activeCount, totalCount: strikes.length });
+});
+
+// ── GET /admin/users/:id/agreements ────────────────────────────────────────
+router.get("/admin/users/:id/agreements", requireAuth, requireRole(...ADMIN_ROLES, "editor", "moderator"), async (req: AuthRequest, res): Promise<void> => {
+  const id = Number(req.params.id);
+  if (!id) { res.status(400).json({ error: "Invalid user id" }); return; }
+
+  const records = await db
+    .select()
+    .from(agreementAcceptancesTable)
+    .where(eq(agreementAcceptancesTable.userId, id))
+    .orderBy(desc(agreementAcceptancesTable.acceptedAt));
+
+  res.json(records);
 });
 
 export default router;

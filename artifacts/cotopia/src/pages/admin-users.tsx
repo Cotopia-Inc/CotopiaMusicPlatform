@@ -1,17 +1,131 @@
-import { useAdminListUsers, getAdminListUsersQueryKey, useAdminUpdateUser } from "@workspace/api-client-react";
+import { useAdminListUsers, getAdminListUsersQueryKey, useAdminUpdateUser, useAdminGetUserAgreements, getAdminGetUserAgreementsQueryKey, type AgreementRecord } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { UserLink } from "@/components/user-link";
-import { AlertTriangle } from "lucide-react";
-import { useState } from "react";
+import { AlertTriangle, ScrollText, Monitor, Globe, FileText, Users, Bot, ChevronDown, ChevronUp } from "lucide-react";
+import { useState, type ReactNode } from "react";
 import { CopyrightStrikeModal, type StrikeTarget } from "@/components/copyright-strike-modal";
 
 const authHeaders = () => ({ Authorization: `Bearer ${localStorage.getItem("cotopia_token")}`, "Content-Type": "application/json" });
+
+const AGREEMENT_LABELS: Record<string, { label: string; icon: ReactNode; color: string }> = {
+  terms:                { label: "Terms of Service",       icon: <FileText className="w-3.5 h-3.5" />,  color: "bg-blue-500/15 text-blue-400 border-blue-500/30" },
+  privacy:              { label: "Privacy Policy",         icon: <Globe className="w-3.5 h-3.5" />,     color: "bg-green-500/15 text-green-400 border-green-500/30" },
+  community_guidelines: { label: "Community Guidelines",   icon: <Users className="w-3.5 h-3.5" />,     color: "bg-purple-500/15 text-purple-400 border-purple-500/30" },
+  ai_policy:            { label: "AI Content Policy",      icon: <Bot className="w-3.5 h-3.5" />,       color: "bg-amber-500/15 text-amber-400 border-amber-500/30" },
+  submission_agreement: { label: "Submission Agreement",   icon: <ScrollText className="w-3.5 h-3.5" />, color: "bg-rose-500/15 text-rose-400 border-rose-500/30" },
+};
+
+function AgreementsDialog({ userId, username, open, onClose }: { userId: number; username: string; open: boolean; onClose: () => void }) {
+  const { data: records, isLoading } = useAdminGetUserAgreements(userId, {
+    query: { enabled: open && !!userId, queryKey: getAdminGetUserAgreementsQueryKey(userId) },
+  });
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+
+  return (
+    <Dialog open={open} onOpenChange={v => { if (!v) onClose(); }}>
+      <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <ScrollText className="w-5 h-5 text-primary" />
+            Agreement Records — <span className="font-mono text-primary">@{username}</span>
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+          {isLoading ? (
+            Array(4).fill(0).map((_, i) => <Skeleton key={i} className="h-14 w-full rounded-lg" />)
+          ) : !records?.length ? (
+            <div className="text-center py-12 text-muted-foreground text-sm">
+              <ScrollText className="w-8 h-8 mx-auto mb-3 opacity-30" />
+              No agreement records found for this user.
+            </div>
+          ) : (
+            records.map((rec: AgreementRecord) => {
+              const meta = AGREEMENT_LABELS[rec.agreementType] ?? { label: rec.agreementType, icon: <FileText className="w-3.5 h-3.5" />, color: "bg-secondary text-foreground border-border" };
+              const expanded = expandedId === rec.id;
+              return (
+                <div key={rec.id} className="rounded-lg border border-border bg-secondary/20 overflow-hidden">
+                  <button
+                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-secondary/40 transition-colors text-left"
+                    onClick={() => setExpandedId(expanded ? null : rec.id)}
+                  >
+                    <Badge className={`gap-1.5 text-[10px] font-medium border shrink-0 ${meta.color}`}>
+                      {meta.icon}
+                      {meta.label}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground font-mono">v{rec.agreementVersion}</span>
+                    <span className="text-xs text-muted-foreground ml-auto">
+                      {format(new Date(rec.acceptedAt), "MMM d, yyyy 'at' HH:mm 'UTC'")}
+                    </span>
+                    {expanded ? <ChevronUp className="w-3.5 h-3.5 text-muted-foreground shrink-0" /> : <ChevronDown className="w-3.5 h-3.5 text-muted-foreground shrink-0" />}
+                  </button>
+
+                  {expanded && (
+                    <div className="px-4 pb-4 pt-1 border-t border-border space-y-3">
+                      <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-xs">
+                        <div>
+                          <p className="text-muted-foreground uppercase tracking-wider text-[10px] font-semibold mb-1">Record ID</p>
+                          <p className="font-mono">#{rec.id}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground uppercase tracking-wider text-[10px] font-semibold mb-1">Accepted At</p>
+                          <p>{format(new Date(rec.acceptedAt), "PPpp")}</p>
+                        </div>
+                        <div className="col-span-2">
+                          <p className="text-muted-foreground uppercase tracking-wider text-[10px] font-semibold mb-1 flex items-center gap-1">
+                            <Globe className="w-3 h-3" /> IP Address
+                          </p>
+                          <p className="font-mono">{rec.ipAddress ?? <span className="text-muted-foreground/50 italic">not captured</span>}</p>
+                        </div>
+                        <div className="col-span-2">
+                          <p className="text-muted-foreground uppercase tracking-wider text-[10px] font-semibold mb-1 flex items-center gap-1">
+                            <Monitor className="w-3 h-3" /> User Agent
+                          </p>
+                          <p className="font-mono text-[10px] break-all text-muted-foreground">{rec.userAgent ?? <span className="italic">not captured</span>}</p>
+                        </div>
+                        {rec.submissionId && (
+                          <div>
+                            <p className="text-muted-foreground uppercase tracking-wider text-[10px] font-semibold mb-1">Submission</p>
+                            <p className="font-mono">#{rec.submissionId}</p>
+                          </div>
+                        )}
+                        {rec.paymentId && (
+                          <div>
+                            <p className="text-muted-foreground uppercase tracking-wider text-[10px] font-semibold mb-1">Payment</p>
+                            <p className="font-mono">#{rec.paymentId}</p>
+                          </div>
+                        )}
+                        {rec.metadata != null && (
+                          <div className="col-span-2">
+                            <p className="text-muted-foreground uppercase tracking-wider text-[10px] font-semibold mb-1">Context</p>
+                            <p className="font-mono text-[10px] text-muted-foreground">{JSON.stringify(rec.metadata)}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {records && records.length > 0 && (
+          <p className="text-xs text-muted-foreground pt-2 border-t border-border">
+            {records.length} record{records.length !== 1 ? "s" : ""} total
+          </p>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 export default function AdminUsers() {
   const { data, isLoading } = useAdminListUsers({ limit: 50 }, {
@@ -22,8 +136,8 @@ export default function AdminUsers() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [strikeTarget, setStrikeTarget] = useState<StrikeTarget | null>(null);
+  const [agreementsUser, setAgreementsUser] = useState<{ id: number; username: string } | null>(null);
 
-  // Fetch strike counts for all users
   const { data: strikeCountData } = useQuery<{ items: { userId: number; count: number }[] }>({
     queryKey: ["admin-strikes-summary"],
     queryFn: async () => {
@@ -111,7 +225,15 @@ export default function AdminUsers() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex gap-2 justify-end">
+                    <div className="flex gap-2 justify-end flex-wrap">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-xs gap-1 text-primary/80 border-primary/20 hover:bg-primary/10"
+                        onClick={() => setAgreementsUser({ id: user.id, username: user.username })}
+                      >
+                        <ScrollText className="w-3 h-3" />Agreements
+                      </Button>
                       <Button
                         variant="outline"
                         size="sm"
@@ -156,6 +278,15 @@ export default function AdminUsers() {
       onClose={() => setStrikeTarget(null)}
       onSuccess={() => queryClient.invalidateQueries({ queryKey: ["admin-strikes-summary"] })}
     />
+
+    {agreementsUser && (
+      <AgreementsDialog
+        userId={agreementsUser.id}
+        username={agreementsUser.username}
+        open={!!agreementsUser}
+        onClose={() => setAgreementsUser(null)}
+      />
+    )}
     </>
   );
 }

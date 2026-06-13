@@ -2336,6 +2336,28 @@ export const AdminListListenersResponse = zod.object({
 
 
 /**
+ * @summary Get agreement acceptance records for a user
+ */
+export const AdminGetUserAgreementsParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const AdminGetUserAgreementsResponseItem = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "agreementType": zod.string(),
+  "agreementVersion": zod.string(),
+  "ipAddress": zod.string().nullish(),
+  "userAgent": zod.string().nullish(),
+  "acceptedAt": zod.string(),
+  "submissionId": zod.number().nullish(),
+  "paymentId": zod.number().nullish(),
+  "metadata": zod.unknown().nullish()
+})
+export const AdminGetUserAgreementsResponse = zod.array(AdminGetUserAgreementsResponseItem)
+
+
+/**
  * @summary Change a user role (master_admin only)
  */
 export const AdminChangeUserRoleParams = zod.object({
