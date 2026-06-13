@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { useAuth } from "@/lib/auth";
 import {
   Music, Film, CheckCircle, CreditCard, FileText,
@@ -337,7 +337,8 @@ export default function Submit() {
   const [paymentInitiated, setPaymentInitiated] = useState(false);
   const [submissionIds, setSubmissionIds] = useState<number[]>([]);
   const [successTitles, setSuccessTitles] = useState<string[]>([]);
-  const [legalChecks, setLegalChecks] = useState<boolean[]>(Array(7).fill(false));
+  const LEGAL_TOTAL = 12;
+  const [legalChecks, setLegalChecks] = useState<boolean[]>(Array(LEGAL_TOTAL).fill(false));
   const allLegalChecked = legalChecks.every(Boolean);
 
   const [songReleaseType, setSongReleaseType] = useState<string>("");
@@ -810,41 +811,70 @@ export default function Submit() {
 
           {/* ── Legal Agreements ── */}
           <div className="bg-card rounded-xl border border-border shadow-sm p-6 space-y-4">
-            <div className="flex items-center gap-2">
-              <FileText className="w-4 h-4 text-primary" />
+            <div className="flex items-center gap-2 flex-wrap">
+              <FileText className="w-4 h-4 text-primary flex-shrink-0" />
               <h3 className="font-semibold text-sm">Required Agreements</h3>
-              <span className="text-xs text-muted-foreground ml-auto">{legalChecks.filter(Boolean).length}/7 checked</span>
+              <div className="ml-auto flex items-center gap-3">
+                <span className="text-xs text-muted-foreground">{legalChecks.filter(Boolean).length}/{LEGAL_TOTAL} accepted</span>
+                <button
+                  type="button"
+                  className="text-xs text-primary hover:underline font-medium"
+                  onClick={() => setLegalChecks(allLegalChecked ? Array(LEGAL_TOTAL).fill(false) : Array(LEGAL_TOTAL).fill(true))}
+                >
+                  {allLegalChecked ? "Uncheck all" : "Accept all"}
+                </button>
+              </div>
             </div>
+
             {!allLegalChecked && (
               <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
                 <AlertCircle className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
-                <p className="text-xs text-amber-300">Please review and check all agreements to proceed.</p>
+                <p className="text-xs text-amber-300">You must review and accept all {LEGAL_TOTAL} agreements before proceeding to payment.</p>
               </div>
             )}
-            <div className="space-y-3">
-              {[
-                "I own or control all rights necessary to upload this content.",
-                "I grant Cotopia a non-exclusive license to host, stream, display, promote, feature, recommend, and place this content in playlists.",
-                "I understand Everyday Radio by Cotopia does not currently pay streaming royalties, mechanical royalties, performance royalties, publishing royalties, or revenue sharing unless covered by a separate written agreement.",
-                "I understand submission and promotion fees are non-refundable once review begins.",
-                "I understand Cotopia may remove content, suspend accounts, or reject submissions that violate platform rules.",
-                "If AI was used in creating this content, I confirm I have the rights necessary to upload and distribute it.",
-                "I agree to defend, indemnify, and hold harmless Cotopia and its related entities if my upload causes legal claims.",
-              ].map((text, i) => (
-                <div key={i} className="flex items-start gap-3">
+
+            {/* Platform Policies */}
+            <div className="space-y-2">
+              <p className="text-[10px] font-semibold text-muted-foreground/50 uppercase tracking-widest">Platform Policies</p>
+              {([
+                { i: 0, label: <span>I have read and agree to the <a href="/legal/terms" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">Terms of Service</a></span> },
+                { i: 1, label: <span>I have read and agree to the <a href="/legal/privacy" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">Privacy Policy</a></span> },
+                { i: 2, label: <span>I have read and agree to the <a href="/legal/community-guidelines" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">Community Guidelines</a></span> },
+                { i: 3, label: <span>I have read and agree to the <a href="/legal/submission-agreement" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">Submission Agreement</a></span> },
+                { i: 4, label: <span>I have read and agree to the <a href="/legal/refund-policy" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">Refund Policy</a> — submission fees are non-refundable once review begins</span> },
+                { i: 5, label: <span>I have read and agree to the <a href="/legal/ai-policy" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">AI Content Policy</a></span> },
+                { i: 6, label: <span>I have read and understand the <a href="/legal/dmca" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">DMCA &amp; Copyright Policy</a></span> },
+              ] as { i: number; label: React.ReactNode }[]).map(({ i, label }) => (
+                <div key={i} className="flex items-start gap-3 py-1">
                   <Checkbox
                     id={`legal-${i}`}
                     checked={legalChecks[i]}
-                    onCheckedChange={v => {
-                      const next = [...legalChecks];
-                      next[i] = Boolean(v);
-                      setLegalChecks(next);
-                    }}
-                    className="mt-0.5"
+                    onCheckedChange={v => { const next = [...legalChecks]; next[i] = Boolean(v); setLegalChecks(next); }}
+                    className="mt-0.5 flex-shrink-0"
                   />
-                  <label htmlFor={`legal-${i}`} className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
-                    {text}
-                  </label>
+                  <label htmlFor={`legal-${i}`} className="text-xs text-muted-foreground leading-relaxed cursor-pointer">{label}</label>
+                </div>
+              ))}
+            </div>
+
+            {/* Content Rights */}
+            <div className="space-y-2 pt-3 border-t border-border">
+              <p className="text-[10px] font-semibold text-muted-foreground/50 uppercase tracking-widest">Content Rights &amp; Declarations</p>
+              {([
+                { i: 7,  text: "I own or control all necessary rights to upload this content, including master recording rights, composition rights, and any required licenses." },
+                { i: 8,  text: "I grant Cotopia a non-exclusive license to host, stream, display, promote, feature, recommend, and place this content in playlists on Everyday Radio." },
+                { i: 9,  text: "I understand Everyday Radio by Cotopia does not currently pay streaming royalties, mechanical royalties, performance royalties, or publishing royalties unless covered by a separate written agreement." },
+                { i: 10, text: "If AI was used in creating this content, I confirm I have the legal rights to upload and distribute it under applicable copyright law." },
+                { i: 11, text: "I agree to defend, indemnify, and hold harmless Cotopia and its related entities from any legal claims, damages, or costs arising from my uploaded content." },
+              ] as { i: number; text: string }[]).map(({ i, text }) => (
+                <div key={i} className="flex items-start gap-3 py-1">
+                  <Checkbox
+                    id={`legal-${i}`}
+                    checked={legalChecks[i]}
+                    onCheckedChange={v => { const next = [...legalChecks]; next[i] = Boolean(v); setLegalChecks(next); }}
+                    className="mt-0.5 flex-shrink-0"
+                  />
+                  <label htmlFor={`legal-${i}`} className="text-xs text-muted-foreground leading-relaxed cursor-pointer">{text}</label>
                 </div>
               ))}
             </div>

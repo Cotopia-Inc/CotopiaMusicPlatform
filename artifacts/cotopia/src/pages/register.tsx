@@ -135,11 +135,13 @@ export default function Register() {
                       />
                     </FormControl>
                     <FormLabel className="text-xs text-muted-foreground leading-relaxed cursor-pointer font-normal">
-                      I agree to the{" "}
-                      <Link href="/legal/terms" className="text-primary hover:underline font-medium" onClick={e => e.stopPropagation()}>Terms of Service</Link>
-                      {" "}and{" "}
-                      <Link href="/legal/privacy" className="text-primary hover:underline font-medium" onClick={e => e.stopPropagation()}>Privacy Policy</Link>.
-                      I confirm I am 18 years of age or older.
+                      I have read and agree to the{" "}
+                      <Link href="/legal/terms" className="text-primary hover:underline font-medium" onClick={e => e.stopPropagation()}>Terms of Service</Link>,{" "}
+                      <Link href="/legal/privacy" className="text-primary hover:underline font-medium" onClick={e => e.stopPropagation()}>Privacy Policy</Link>,{" "}
+                      <Link href="/legal/community-guidelines" className="text-primary hover:underline font-medium" onClick={e => e.stopPropagation()}>Community Guidelines</Link>,{" "}
+                      and{" "}
+                      <Link href="/legal/ai-policy" className="text-primary hover:underline font-medium" onClick={e => e.stopPropagation()}>AI Content Policy</Link>.
+                      {" "}I confirm I am 18 years of age or older.
                     </FormLabel>
                   </div>
                   <FormMessage />
