@@ -105,6 +105,103 @@ export const UpdateMeResponse = zod.object({
 
 
 /**
+ * @summary Send a 6-digit email verification OTP
+ */
+export const SendOtpBody = zod.object({
+  "purpose": zod.enum(['verify_email', 'change_email']),
+  "newEmail": zod.string().optional()
+})
+
+export const SendOtpResponse = zod.object({
+  "ok": zod.boolean().optional()
+})
+
+
+/**
+ * @summary Verify a 6-digit OTP code
+ */
+export const VerifyOtpBody = zod.object({
+  "code": zod.string(),
+  "purpose": zod.enum(['verify_email', 'change_email']),
+  "newEmail": zod.string().optional()
+})
+
+export const VerifyOtpResponse = zod.object({
+  "ok": zod.boolean().optional()
+})
+
+
+/**
+ * @summary Change current user password
+ */
+export const ChangePasswordBody = zod.object({
+  "currentPassword": zod.string(),
+  "newPassword": zod.string()
+})
+
+export const ChangePasswordResponse = zod.object({
+  "ok": zod.boolean().optional()
+})
+
+
+/**
+ * @summary Change current user username
+ */
+export const ChangeUsernameBody = zod.object({
+  "username": zod.string()
+})
+
+export const ChangeUsernameResponse = zod.object({
+  "id": zod.number(),
+  "email": zod.string(),
+  "username": zod.string(),
+  "displayName": zod.string().nullish(),
+  "avatarUrl": zod.string().nullish(),
+  "bio": zod.string().nullish(),
+  "bannerUrl": zod.string().nullish(),
+  "profileVideoUrl": zod.string().nullish(),
+  "role": zod.enum(['listener', 'artist', 'label', 'business', 'admin', 'moderator', 'editor', 'master_admin']),
+  "isActive": zod.boolean().optional(),
+  "isVerified": zod.boolean().optional(),
+  "isSuspended": zod.boolean().optional(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Save user demographics (onboarding)
+ */
+export const SaveDemographicsBody = zod.object({
+  "realName": zod.string().optional(),
+  "address": zod.string().optional(),
+  "city": zod.string().optional(),
+  "state": zod.string().optional(),
+  "country": zod.string().optional(),
+  "postalCode": zod.string().optional(),
+  "sex": zod.string().optional(),
+  "race": zod.string().optional(),
+  "dateOfBirth": zod.string().optional(),
+  "phone": zod.string().optional()
+})
+
+export const SaveDemographicsResponse = zod.object({
+  "id": zod.number(),
+  "email": zod.string(),
+  "username": zod.string(),
+  "displayName": zod.string().nullish(),
+  "avatarUrl": zod.string().nullish(),
+  "bio": zod.string().nullish(),
+  "bannerUrl": zod.string().nullish(),
+  "profileVideoUrl": zod.string().nullish(),
+  "role": zod.enum(['listener', 'artist', 'label', 'business', 'admin', 'moderator', 'editor', 'master_admin']),
+  "isActive": zod.boolean().optional(),
+  "isVerified": zod.boolean().optional(),
+  "isSuspended": zod.boolean().optional(),
+  "createdAt": zod.string()
+})
+
+
+/**
  * @summary Get public profile for any user
  */
 export const GetPublicUserParams = zod.object({

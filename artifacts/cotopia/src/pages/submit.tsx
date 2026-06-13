@@ -324,7 +324,10 @@ export default function Submit() {
 
   const activeFiles = tab === "song" ? songFiles : videoFiles;
   const activeUrls = tab === "song" ? songUrls : videoUrls;
-  const allUploaded = activeFiles.length > 0 && activeUrls.every(u => u !== null);
+  const songAllUploaded = songFiles.length > 0 && songUrls.every(u => u !== null);
+  const videoAllUploaded = videoFiles.length > 0 && videoUrls.every(u => u !== null);
+  const allUploaded = tab === "song" ? songAllUploaded : videoAllUploaded;
+  const anyFiles = songFiles.length > 0 || videoFiles.length > 0;
   const price = PLAN_PRICES[tab][plan];
 
   // ── File management helpers ───────────────────────────────────────────────
@@ -562,7 +565,7 @@ export default function Submit() {
           </Tabs>
 
           <div className="flex justify-end pt-2">
-            <Button onClick={handleStep0Next} className="gap-2 px-6" disabled={activeFiles.length === 0}>
+            <Button onClick={handleStep0Next} className="gap-2 px-6" disabled={!anyFiles}>
               Next: Choose Plan <ChevronRight className="w-4 h-4" />
             </Button>
           </div>

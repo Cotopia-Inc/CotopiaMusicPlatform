@@ -1,4 +1,4 @@
-import { useGetMe, getGetMeQueryKey, useUpdateMe } from "@workspace/api-client-react";
+import { useGetMe, getGetMeQueryKey, useUpdateMe, useChangePassword, useChangeUsername, useSendOtp } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,19 +6,23 @@ import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Upload, X, Loader2 } from "lucide-react";
+import { Upload, X, Loader2, Lock, User, MailCheck, CheckCircle } from "lucide-react";
 import { useUpload } from "@workspace/object-storage-web";
 import { RoleBadges, VerifiedBadge } from "@/components/role-badges";
+import { useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
+import { Badge } from "@/components/ui/badge";
 
 export default function Profile() {
   const { user } = useAuth();
   const { data: profile, isLoading } = useGetMe({
-    query: {
-      enabled: !!user,
-      queryKey: getGetMeQueryKey()
-    }
+    query: { enabled: !!user, queryKey: getGetMeQueryKey() }
   });
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  const [, setLocation] = useLocation();
 
+  // Profile fields
   const [displayName, setDisplayName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [avatarFilename, setAvatarFilename] = useState("");
@@ -30,6 +34,16 @@ export default function Profile() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
 
+  // Username change
+  const [newUsername, setNewUsername] = useState("");
+  const [showUsernameForm, setShowUsernameForm] = useState(false);
+
+  // Password change
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+
   useEffect(() => {
     if (profile && !initialized.current) {
       setDisplayName(profile.displayName || "");
@@ -37,23 +51,22 @@ export default function Profile() {
       setBio((profile as any).bio || "");
       setBannerUrl((profile as any).bannerUrl || "");
       setProfileVideoUrl((profile as any).profileVideoUrl || "");
+      setNewUsername(profile.username || "");
       initialized.current = true;
     }
   }, [profile]);
 
   const updateMutation = useUpdateMe();
-  const { toast } = useToast();
+  const changePasswordMutation = useChangePassword();
+  const changeUsernameMutation = useChangeUsername();
+  const sendOtpMutation = useSendOtp();
 
   const { uploadFile: uploadAvatar, isUploading: isUploadingAvatar, progress: uploadProgress } = useUpload({
-    onSuccess: (res) => {
-      setAvatarUrl(`/api/storage${res.objectPath}`);
-    },
+    onSuccess: (res) => setAvatarUrl(`/api/storage${res.objectPath}`),
   });
 
   const { uploadFile: uploadBanner, isUploading: isUploadingBanner, progress: bannerProgress } = useUpload({
-    onSuccess: (res) => {
-      setBannerUrl(`/api/storage${res.objectPath}`);
-    },
+    onSuccess: (res) => setBannerUrl(`/api/storage${res.objectPath}`),
   });
 
   const handleAvatarFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -78,11 +91,51 @@ export default function Profile() {
   const handleSave = () => {
     updateMutation.mutate({ data: { displayName, avatarUrl, bio, bannerUrl, profileVideoUrl } }, {
       onSuccess: () => {
+        qc.invalidateQueries({ queryKey: getGetMeQueryKey() });
         toast({ title: "Profile updated" });
       },
-      onError: () => {
-        toast({ variant: "destructive", title: "Update failed" });
-      }
+      onError: () => toast({ variant: "destructive", title: "Update failed" }),
+    });
+  };
+
+  const handleChangePassword = () => {
+    if (newPassword !== confirmPassword) {
+      toast({ variant: "destructive", title: "Passwords don't match" });
+      return;
+    }
+    if (newPassword.length < 6) {
+      toast({ variant: "destructive", title: "New password must be at least 6 characters" });
+      return;
+    }
+    changePasswordMutation.mutate({ data: { currentPassword, newPassword } }, {
+      onSuccess: () => {
+        toast({ title: "Password changed", description: "Your password has been updated." });
+        setCurrentPassword(""); setNewPassword(""); setConfirmPassword("");
+        setShowPasswordForm(false);
+      },
+      onError: (err: any) => toast({ variant: "destructive", title: err?.response?.data?.error ?? "Incorrect current password" }),
+    });
+  };
+
+  const handleChangeUsername = () => {
+    if (!newUsername.trim() || newUsername === profile?.username) return;
+    changeUsernameMutation.mutate({ data: { username: newUsername.trim() } }, {
+      onSuccess: (updatedUser) => {
+        qc.invalidateQueries({ queryKey: getGetMeQueryKey() });
+        toast({ title: "Username updated" });
+        setShowUsernameForm(false);
+      },
+      onError: (err: any) => toast({ variant: "destructive", title: err?.response?.data?.error ?? "Username already taken" }),
+    });
+  };
+
+  const handleSendVerification = () => {
+    sendOtpMutation.mutate({ data: { purpose: "verify_email" } }, {
+      onSuccess: () => {
+        toast({ title: "Verification email sent", description: "Check your inbox." });
+        setLocation("/verify-email");
+      },
+      onError: () => toast({ variant: "destructive", title: "Could not send verification email" }),
     });
   };
 
@@ -97,8 +150,11 @@ export default function Profile() {
 
   if (!profile) return <div>Not authenticated</div>;
 
+  const emailVerified = (profile as any).emailVerified;
+
   return (
-    <div className="max-w-2xl mx-auto space-y-12 pb-24">
+    <div className="max-w-2xl mx-auto space-y-8 pb-24">
+      {/* Avatar + name header */}
       <div className="text-center space-y-4">
         <div className="relative w-32 h-32 mx-auto">
           <div className="w-full h-full rounded-full bg-secondary border border-border overflow-hidden flex items-center justify-center">
@@ -121,83 +177,63 @@ export default function Profile() {
         <p className="text-muted-foreground uppercase tracking-widest text-xs font-semibold">{profile.role?.replace("_", " ")}</p>
       </div>
 
+      {/* Email verification banner */}
+      {!emailVerified && (
+        <div className="flex items-center justify-between gap-4 p-4 rounded-xl border border-amber-500/30 bg-amber-500/10">
+          <div className="flex items-center gap-3">
+            <MailCheck className="w-5 h-5 text-amber-400 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-semibold text-amber-300">Email not verified</p>
+              <p className="text-xs text-muted-foreground">Verify your email to secure your account</p>
+            </div>
+          </div>
+          <Button size="sm" variant="outline" onClick={handleSendVerification} disabled={sendOtpMutation.isPending} className="border-amber-500/40 text-amber-300 hover:bg-amber-500/10 flex-shrink-0">
+            {sendOtpMutation.isPending ? "Sending…" : "Verify Now"}
+          </Button>
+        </div>
+      )}
+
+      {/* Profile Settings */}
       <div className="space-y-6 bg-card p-8 rounded-xl border border-border">
         <h2 className="text-xl font-bold">Profile Settings</h2>
-        
+
         <div className="space-y-2">
           <label className="text-sm font-medium">Display Name</label>
-          <Input 
-            value={displayName} 
-            onChange={(e) => setDisplayName(e.target.value)} 
-            className="bg-secondary/50 border-secondary"
-          />
+          <Input value={displayName} onChange={e => setDisplayName(e.target.value)} className="bg-secondary/50 border-secondary" />
         </div>
 
         {/* Avatar upload */}
         <div className="space-y-2">
           <label className="text-sm font-medium">Profile Picture</label>
-
           {!avatarUrlMode ? (
             <div className="space-y-2">
-              <div
-                onClick={() => !isUploadingAvatar && fileInputRef.current?.click()}
-                className={`flex items-center gap-3 p-4 rounded-lg border-2 border-dashed border-border/60 bg-secondary/20 hover:bg-secondary/40 hover:border-primary/40 transition-all group ${isUploadingAvatar ? "cursor-wait opacity-70" : "cursor-pointer"}`}
-              >
+              <div onClick={() => !isUploadingAvatar && fileInputRef.current?.click()}
+                className={`flex items-center gap-3 p-4 rounded-lg border-2 border-dashed border-border/60 bg-secondary/20 hover:bg-secondary/40 hover:border-primary/40 transition-all group ${isUploadingAvatar ? "cursor-wait opacity-70" : "cursor-pointer"}`}>
                 <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
                   {isUploadingAvatar ? <Loader2 className="w-4 h-4 text-primary animate-spin" /> : <Upload className="w-4 h-4 text-primary" />}
                 </div>
                 <div className="flex-1 min-w-0">
                   {isUploadingAvatar ? (
-                    <div>
-                      <p className="text-sm font-medium text-foreground truncate">{avatarFilename}</p>
-                      <p className="text-xs text-primary mt-0.5">Uploading… {uploadProgress}%</p>
-                    </div>
+                    <div><p className="text-sm font-medium text-foreground truncate">{avatarFilename}</p><p className="text-xs text-primary mt-0.5">Uploading… {uploadProgress}%</p></div>
                   ) : avatarFilename && avatarUrl ? (
-                    <div>
-                      <p className="text-sm font-medium text-foreground truncate">{avatarFilename}</p>
-                      <p className="text-xs text-green-400 mt-0.5">Uploaded ✓</p>
-                    </div>
+                    <div><p className="text-sm font-medium text-foreground truncate">{avatarFilename}</p><p className="text-xs text-green-400 mt-0.5">Uploaded ✓</p></div>
                   ) : (
-                    <div>
-                      <p className="text-sm font-medium">Click to upload from device</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">JPG, PNG, or WebP</p>
-                    </div>
+                    <div><p className="text-sm font-medium">Click to upload from device</p><p className="text-xs text-muted-foreground mt-0.5">JPG, PNG, or WebP</p></div>
                   )}
                 </div>
                 {avatarFilename && avatarUrl && !isUploadingAvatar && (
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); clearAvatar(); }}
-                    className="text-muted-foreground hover:text-foreground text-xs px-2 py-1 rounded hover:bg-secondary transition-colors flex-shrink-0"
-                  >
+                  <button type="button" onClick={e => { e.stopPropagation(); clearAvatar(); }} className="text-muted-foreground hover:text-foreground text-xs px-2 py-1 rounded hover:bg-secondary transition-colors flex-shrink-0">
                     <X className="w-3.5 h-3.5" />
                   </button>
                 )}
               </div>
               <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarFile} className="hidden" disabled={isUploadingAvatar} />
-              <button
-                type="button"
-                onClick={() => setAvatarUrlMode(true)}
-                className="text-xs text-primary hover:underline"
-              >
-                Or paste a URL instead
-              </button>
+              <button type="button" onClick={() => setAvatarUrlMode(true)} className="text-xs text-primary hover:underline">Or paste a URL instead</button>
             </div>
           ) : (
             <div className="space-y-1.5">
-              <Input 
-                value={avatarUrl.startsWith("/api/storage") ? "" : avatarUrl}
-                onChange={(e) => setAvatarUrl(e.target.value)} 
-                placeholder="https://... (direct image URL)"
-                className="bg-secondary/50 border-secondary"
-              />
-              <button
-                type="button"
-                onClick={() => setAvatarUrlMode(false)}
-                className="text-xs text-primary hover:underline"
-              >
-                ← Upload from device instead
-              </button>
+              <Input value={avatarUrl.startsWith("/api/storage") ? "" : avatarUrl} onChange={e => setAvatarUrl(e.target.value)} placeholder="https://... (direct image URL)" className="bg-secondary/50 border-secondary" />
+              <button type="button" onClick={() => setAvatarUrlMode(false)} className="text-xs text-primary hover:underline">← Upload from device instead</button>
             </div>
           )}
         </div>
@@ -205,60 +241,38 @@ export default function Profile() {
         {/* Bio */}
         <div className="space-y-2">
           <label className="text-sm font-medium">Bio <span className="text-muted-foreground text-xs">(optional)</span></label>
-          <Textarea
-            value={bio}
-            onChange={(e) => setBio(e.target.value)}
-            placeholder="Tell listeners about yourself, your music, your influences…"
-            rows={4}
-            className="bg-secondary/50 border-secondary resize-none"
-          />
+          <Textarea value={bio} onChange={e => setBio(e.target.value)} placeholder="Tell listeners about yourself…" rows={4} className="bg-secondary/50 border-secondary resize-none" />
         </div>
 
         {/* Banner Image */}
         <div className="space-y-2">
-          <label className="text-sm font-medium">Profile Banner <span className="text-muted-foreground text-xs">(optional — shown on your artist page)</span></label>
+          <label className="text-sm font-medium">Profile Banner <span className="text-muted-foreground text-xs">(optional)</span></label>
           {bannerUrl ? (
             <div className="space-y-2">
               <div className="relative w-full h-28 rounded-lg overflow-hidden border border-border">
                 <img src={bannerUrl} alt="Banner" className="w-full h-full object-cover" />
-                <button
-                  type="button"
-                  onClick={() => setBannerUrl("")}
-                  className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full p-1 transition-colors"
-                >
+                <button type="button" onClick={() => setBannerUrl("")} className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full p-1 transition-colors">
                   <X className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
           ) : (
             <div className="space-y-2">
-              <div
-                onClick={() => !isUploadingBanner && bannerInputRef.current?.click()}
-                className={`flex items-center gap-3 p-4 rounded-lg border-2 border-dashed border-border/60 bg-secondary/20 hover:bg-secondary/40 hover:border-primary/40 transition-all group ${isUploadingBanner ? "cursor-wait opacity-70" : "cursor-pointer"}`}
-              >
+              <div onClick={() => !isUploadingBanner && bannerInputRef.current?.click()}
+                className={`flex items-center gap-3 p-4 rounded-lg border-2 border-dashed border-border/60 bg-secondary/20 hover:bg-secondary/40 hover:border-primary/40 transition-all group ${isUploadingBanner ? "cursor-wait opacity-70" : "cursor-pointer"}`}>
                 <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                   {isUploadingBanner ? <Loader2 className="w-4 h-4 text-primary animate-spin" /> : <Upload className="w-4 h-4 text-primary" />}
                 </div>
                 <div>
-                  {isUploadingBanner ? (
-                    <p className="text-xs text-primary">Uploading… {bannerProgress}%</p>
-                  ) : (
-                    <>
-                      <p className="text-sm font-medium">Click to upload banner image</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">JPG, PNG, WebP — wide/landscape recommended</p>
-                    </>
+                  {isUploadingBanner ? <p className="text-xs text-primary">Uploading… {bannerProgress}%</p> : (
+                    <><p className="text-sm font-medium">Click to upload banner image</p><p className="text-xs text-muted-foreground mt-0.5">JPG, PNG, WebP — wide/landscape</p></>
                   )}
                 </div>
               </div>
               <input ref={bannerInputRef} type="file" accept="image/*" onChange={handleBannerFile} className="hidden" disabled={isUploadingBanner} />
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground">or paste URL:</span>
-                <Input
-                  value={bannerUrl}
-                  onChange={(e) => setBannerUrl(e.target.value)}
-                  placeholder="https://..."
-                  className="bg-secondary/50 border-secondary h-8 text-xs flex-1"
-                />
+                <Input value={bannerUrl} onChange={e => setBannerUrl(e.target.value)} placeholder="https://..." className="bg-secondary/50 border-secondary h-8 text-xs flex-1" />
               </div>
             </div>
           )}
@@ -266,27 +280,99 @@ export default function Profile() {
 
         {/* Profile Video URL */}
         <div className="space-y-2">
-          <label className="text-sm font-medium">Profile Video URL <span className="text-muted-foreground text-xs">(optional — shown on your artist page)</span></label>
-          <Input
-            value={profileVideoUrl}
-            onChange={(e) => setProfileVideoUrl(e.target.value)}
-            placeholder="https://... (link to a video — YouTube, Vimeo, direct MP4)"
-            className="bg-secondary/50 border-secondary"
-          />
+          <label className="text-sm font-medium">Profile Video URL <span className="text-muted-foreground text-xs">(optional)</span></label>
+          <Input value={profileVideoUrl} onChange={e => setProfileVideoUrl(e.target.value)} placeholder="https://... (YouTube, Vimeo, or MP4)" className="bg-secondary/50 border-secondary" />
         </div>
 
+        {/* Email (read-only with verification status) */}
         <div className="space-y-2">
-          <label className="text-sm font-medium">Email</label>
-          <Input 
-            value={profile.email} 
-            disabled 
-            className="bg-secondary/20 border-secondary text-muted-foreground"
-          />
+          <label className="text-sm font-medium flex items-center gap-2">
+            Email
+            {emailVerified
+              ? <Badge className="text-[10px] bg-green-500/20 text-green-400 border-green-500/30"><CheckCircle className="w-2.5 h-2.5 mr-1" />Verified</Badge>
+              : <Badge className="text-[10px] bg-amber-500/20 text-amber-400 border-amber-500/30">Unverified</Badge>
+            }
+          </label>
+          <Input value={profile.email} disabled className="bg-secondary/20 border-secondary text-muted-foreground" />
         </div>
 
         <Button onClick={handleSave} disabled={updateMutation.isPending} className="w-full">
-          {updateMutation.isPending ? "Saving..." : "Save Changes"}
+          {updateMutation.isPending ? "Saving…" : "Save Changes"}
         </Button>
+      </div>
+
+      {/* Change Username */}
+      <div className="bg-card p-6 rounded-xl border border-border space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+              <User className="w-4 h-4 text-primary" />
+            </div>
+            <div>
+              <p className="font-semibold text-sm">Username</p>
+              <p className="text-xs text-muted-foreground">Current: <span className="font-mono text-foreground">@{profile.username}</span></p>
+            </div>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => setShowUsernameForm(v => !v)}>
+            {showUsernameForm ? "Cancel" : "Change"}
+          </Button>
+        </div>
+
+        {showUsernameForm && (
+          <div className="space-y-3 pt-2 border-t border-border">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">New Username</label>
+              <Input
+                value={newUsername}
+                onChange={e => setNewUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_.-]/g, ""))}
+                placeholder="new_username"
+                className="bg-secondary/50 border-secondary font-mono"
+              />
+              <p className="text-xs text-muted-foreground">Only letters, numbers, underscores, dots, and hyphens. Must be unique.</p>
+            </div>
+            <Button onClick={handleChangeUsername} disabled={changeUsernameMutation.isPending || !newUsername.trim() || newUsername === profile.username} size="sm">
+              {changeUsernameMutation.isPending ? "Saving…" : "Save Username"}
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {/* Change Password */}
+      <div className="bg-card p-6 rounded-xl border border-border space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Lock className="w-4 h-4 text-primary" />
+            </div>
+            <div>
+              <p className="font-semibold text-sm">Password</p>
+              <p className="text-xs text-muted-foreground">Update your account password</p>
+            </div>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => setShowPasswordForm(v => !v)}>
+            {showPasswordForm ? "Cancel" : "Change"}
+          </Button>
+        </div>
+
+        {showPasswordForm && (
+          <div className="space-y-3 pt-2 border-t border-border">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Current Password</label>
+              <Input type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} placeholder="••••••••" className="bg-secondary/50 border-secondary" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">New Password</label>
+              <Input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="••••••••" className="bg-secondary/50 border-secondary" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Confirm New Password</label>
+              <Input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="••••••••" className="bg-secondary/50 border-secondary" onKeyDown={e => e.key === "Enter" && handleChangePassword()} />
+            </div>
+            <Button onClick={handleChangePassword} disabled={changePasswordMutation.isPending || !currentPassword || !newPassword} size="sm">
+              {changePasswordMutation.isPending ? "Updating…" : "Update Password"}
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

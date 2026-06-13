@@ -96,6 +96,55 @@ export interface UserUpdate {
   profileVideoUrl?: string;
 }
 
+export type SendOtpInputPurpose = typeof SendOtpInputPurpose[keyof typeof SendOtpInputPurpose];
+
+
+export const SendOtpInputPurpose = {
+  verify_email: 'verify_email',
+  change_email: 'change_email',
+} as const;
+
+export interface SendOtpInput {
+  purpose: SendOtpInputPurpose;
+  newEmail?: string;
+}
+
+export type VerifyOtpInputPurpose = typeof VerifyOtpInputPurpose[keyof typeof VerifyOtpInputPurpose];
+
+
+export const VerifyOtpInputPurpose = {
+  verify_email: 'verify_email',
+  change_email: 'change_email',
+} as const;
+
+export interface VerifyOtpInput {
+  code: string;
+  purpose: VerifyOtpInputPurpose;
+  newEmail?: string;
+}
+
+export interface ChangePasswordInput {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface ChangeUsernameInput {
+  username: string;
+}
+
+export interface DemographicsInput {
+  realName?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  postalCode?: string;
+  sex?: string;
+  race?: string;
+  dateOfBirth?: string;
+  phone?: string;
+}
+
 export type SongStatus = typeof SongStatus[keyof typeof SongStatus];
 
 
@@ -1144,6 +1193,18 @@ export interface CeoMessageInput {
   authorTitle: string;
   isVisible: boolean;
 }
+
+export type SendOtp200 = {
+  ok?: boolean;
+};
+
+export type VerifyOtp200 = {
+  ok?: boolean;
+};
+
+export type ChangePassword200 = {
+  ok?: boolean;
+};
 
 export type ListSongsParams = {
 /**

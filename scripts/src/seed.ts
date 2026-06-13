@@ -39,37 +39,41 @@ async function seed() {
   const hash = await bcrypt.hash("password123", 10);
 
   const [admin] = await db.insert(usersTable).values({
-    email: "admin@cotopia.org",
+    email: "admin@cotopia.com",
     passwordHash: hash,
     username: "cotopia_admin",
     displayName: "Cotopia Admin",
     role: "master_admin",
     isActive: true,
     isVerified: true,
+    emailVerified: true,
   }).onConflictDoNothing().returning();
-
-  // Also upsert role to master_admin for existing admin account
-  await db.update(usersTable).set({ role: "master_admin", isVerified: true }).where(eq(usersTable.email, "admin@cotopia.org"));
+  // Always reset password + role for existing admin account (idempotent)
+  await db.update(usersTable).set({ role: "master_admin", isVerified: true, isActive: true, emailVerified: true, passwordHash: hash }).where(eq(usersTable.email, "admin@cotopia.com"));
 
   const [editor] = await db.insert(usersTable).values({
-    email: "editor@cotopia.org",
+    email: "editor@cotopia.com",
     passwordHash: hash,
     username: "cotopia_editor",
     displayName: "Cotopia Editor",
     role: "editor",
     isActive: true,
     isVerified: true,
+    emailVerified: true,
   }).onConflictDoNothing().returning();
+  await db.update(usersTable).set({ role: "editor", isVerified: true, isActive: true, emailVerified: true, passwordHash: hash }).where(eq(usersTable.email, "editor@cotopia.com"));
 
   const [moderator] = await db.insert(usersTable).values({
-    email: "mod@cotopia.org",
+    email: "mod@cotopia.com",
     passwordHash: hash,
     username: "cotopia_mod",
     displayName: "Cotopia Moderator",
     role: "moderator",
     isActive: true,
     isVerified: true,
+    emailVerified: true,
   }).onConflictDoNothing().returning();
+  await db.update(usersTable).set({ role: "moderator", isVerified: true, isActive: true, emailVerified: true, passwordHash: hash }).where(eq(usersTable.email, "mod@cotopia.com"));
 
   const [listener1] = await db.insert(usersTable).values({
     email: "alex@example.com",

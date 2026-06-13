@@ -32,7 +32,7 @@ export default function AdminAuditLogs() {
   const [page, setPage] = useState(0);
   const limit = 50;
 
-  const { data, isLoading, refetch } = useQuery<{ items: AuditLog[]; total: number }>({
+  const { data, isLoading, isFetching, refetch } = useQuery<{ items: AuditLog[]; total: number }>({
     queryKey: ["admin-audit-logs", page],
     queryFn: async () => {
       const params = new URLSearchParams({ limit: String(limit), offset: String(page * limit) });
@@ -59,8 +59,9 @@ export default function AdminAuditLogs() {
             <p className="text-sm text-muted-foreground">{total} total entr{total !== 1 ? "ies" : "y"}</p>
           </div>
         </div>
-        <Button variant="outline" size="sm" onClick={() => refetch()} className="gap-2">
-          <RefreshCw className="w-3.5 h-3.5" />Refresh
+        <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching} className="gap-2">
+          <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? "animate-spin" : ""}`} />
+          {isFetching ? "Refreshing…" : "Refresh"}
         </Button>
       </div>
 

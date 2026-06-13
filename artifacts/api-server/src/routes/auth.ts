@@ -1,12 +1,24 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
-import { eq, ilike, or } from "drizzle-orm";
-import { db, usersTable, artistsTable, labelsTable } from "@workspace/db";
-import { RegisterBody, LoginBody, UpdateMeBody } from "@workspace/api-zod";
+import { eq, ilike, or, and, gt } from "drizzle-orm";
+import { db, usersTable, artistsTable, labelsTable, emailOtpsTable } from "@workspace/db";
+import { RegisterBody, LoginBody, UpdateMeBody, SendOtpBody, VerifyOtpBody, ChangePasswordBody, ChangeUsernameBody, SaveDemographicsBody } from "@workspace/api-zod";
 import { signToken, requireAuth, type AuthRequest } from "../lib/auth";
 
 const router = Router();
 
+// ── OTP helper ─────────────────────────────────────────────────────────────
+function generateOtp(): string {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+
+function sendOtpEmail(to: string, code: string, purpose: string): void {
+  // TODO: plug in SendGrid/Mailgun/Postmark here
+  // For now, log to console so you can see the code during development
+  console.log(`[OTP EMAIL] To: ${to} | Code: ${code} | Purpose: ${purpose}`);
+}
+
+// ── Register ────────────────────────────────────────────────────────────────
 router.post("/auth/register", async (req, res): Promise<void> => {
   const parsed = RegisterBody.safeParse(req.body);
   if (!parsed.success) {
@@ -34,6 +46,7 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     username,
     displayName: displayName ?? null,
     role: role ?? "listener",
+    emailVerified: false,
   }).returning();
 
   // Create artist/label profile if applicable
@@ -43,20 +56,32 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     await db.insert(labelsTable).values({ userId: user.id, name: user.displayName ?? user.username });
   }
 
+  // Issue and send email verification OTP
+  const code = generateOtp();
+  const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 min
+  await db.insert(emailOtpsTable).values({ userId: user.id, email: user.email, code, purpose: "verify_email", expiresAt });
+  sendOtpEmail(user.email, code, "verify_email");
+
   const token = signToken({ userId: user.id, role: user.role });
   const { passwordHash: _, ...userOut } = user;
   res.status(201).json({ user: userOut, token });
 });
 
+// ── Login (email OR username) ───────────────────────────────────────────────
 router.post("/auth/login", async (req, res): Promise<void> => {
   const parsed = LoginBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const { email, password } = parsed.data;
+  const { email: emailOrUsername, password } = parsed.data;
 
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1);
+  // Try by email first, then by username
+  let [user] = await db.select().from(usersTable).where(eq(usersTable.email, emailOrUsername)).limit(1);
+  if (!user) {
+    [user] = await db.select().from(usersTable).where(eq(usersTable.username, emailOrUsername)).limit(1);
+  }
+
   if (!user) {
     res.status(401).json({ error: "Invalid credentials" });
     return;
@@ -82,6 +107,7 @@ router.post("/auth/logout", (_req, res): void => {
   res.status(200).json({ ok: true });
 });
 
+// ── Get me ─────────────────────────────────────────────────────────────────
 router.get("/auth/me", requireAuth, async (req: AuthRequest, res): Promise<void> => {
   const [user] = await db.select().from(usersTable).where(eq(usersTable.id, req.user!.userId)).limit(1);
   if (!user) {
@@ -92,6 +118,7 @@ router.get("/auth/me", requireAuth, async (req: AuthRequest, res): Promise<void>
   res.json(userOut);
 });
 
+// ── Update me ──────────────────────────────────────────────────────────────
 router.patch("/auth/me", requireAuth, async (req: AuthRequest, res): Promise<void> => {
   const parsed = UpdateMeBody.safeParse(req.body);
   if (!parsed.success) {
@@ -115,6 +142,144 @@ router.patch("/auth/me", requireAuth, async (req: AuthRequest, res): Promise<voi
   res.json(userOut);
 });
 
+// ── Send OTP ───────────────────────────────────────────────────────────────
+router.post("/auth/send-otp", requireAuth, async (req: AuthRequest, res): Promise<void> => {
+  const parsed = SendOtpBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const { purpose, newEmail } = parsed.data;
+
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, req.user!.userId)).limit(1);
+  if (!user) { res.status(404).json({ error: "User not found" }); return; }
+
+  // Invalidate old OTPs for this user+purpose
+  await db.update(emailOtpsTable).set({ used: true }).where(
+    and(eq(emailOtpsTable.userId, user.id), eq(emailOtpsTable.purpose, purpose))
+  );
+
+  const targetEmail = purpose === "change_email" && newEmail ? newEmail : user.email;
+  const code = generateOtp();
+  const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+
+  await db.insert(emailOtpsTable).values({
+    userId: user.id,
+    email: targetEmail,
+    code,
+    purpose,
+    newEmail: purpose === "change_email" ? newEmail ?? null : null,
+    expiresAt,
+  });
+
+  sendOtpEmail(targetEmail, code, purpose);
+  res.json({ ok: true });
+});
+
+// ── Verify OTP ─────────────────────────────────────────────────────────────
+router.post("/auth/verify-otp", requireAuth, async (req: AuthRequest, res): Promise<void> => {
+  const parsed = VerifyOtpBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const { code, purpose, newEmail } = parsed.data;
+
+  const now = new Date();
+  const [otp] = await db.select().from(emailOtpsTable).where(
+    and(
+      eq(emailOtpsTable.userId, req.user!.userId),
+      eq(emailOtpsTable.code, code),
+      eq(emailOtpsTable.purpose, purpose),
+      eq(emailOtpsTable.used, false),
+      gt(emailOtpsTable.expiresAt, now),
+    )
+  ).limit(1);
+
+  if (!otp) {
+    res.status(400).json({ error: "Invalid or expired code" });
+    return;
+  }
+
+  // Mark as used
+  await db.update(emailOtpsTable).set({ used: true }).where(eq(emailOtpsTable.id, otp.id));
+
+  if (purpose === "verify_email") {
+    await db.update(usersTable).set({ emailVerified: true }).where(eq(usersTable.id, req.user!.userId));
+  } else if (purpose === "change_email" && newEmail) {
+    // Check email not in use by someone else
+    const [existing] = await db.select().from(usersTable).where(eq(usersTable.email, newEmail)).limit(1);
+    if (existing && existing.id !== req.user!.userId) {
+      res.status(400).json({ error: "Email already in use" });
+      return;
+    }
+    await db.update(usersTable).set({ email: newEmail, emailVerified: true }).where(eq(usersTable.id, req.user!.userId));
+  }
+
+  res.json({ ok: true });
+});
+
+// ── Change password ────────────────────────────────────────────────────────
+router.post("/auth/change-password", requireAuth, async (req: AuthRequest, res): Promise<void> => {
+  const parsed = ChangePasswordBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const { currentPassword, newPassword } = parsed.data;
+
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, req.user!.userId)).limit(1);
+  if (!user) { res.status(404).json({ error: "User not found" }); return; }
+
+  const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+  if (!valid) {
+    res.status(400).json({ error: "Current password is incorrect" });
+    return;
+  }
+
+  const newHash = await bcrypt.hash(newPassword, 10);
+  await db.update(usersTable).set({ passwordHash: newHash }).where(eq(usersTable.id, req.user!.userId));
+  res.json({ ok: true });
+});
+
+// ── Change username ────────────────────────────────────────────────────────
+router.post("/auth/change-username", requireAuth, async (req: AuthRequest, res): Promise<void> => {
+  const parsed = ChangeUsernameBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const { username } = parsed.data;
+
+  const [existing] = await db.select().from(usersTable).where(eq(usersTable.username, username)).limit(1);
+  if (existing && existing.id !== req.user!.userId) {
+    res.status(400).json({ error: "Username already taken" });
+    return;
+  }
+
+  const [user] = await db.update(usersTable).set({ username }).where(eq(usersTable.id, req.user!.userId)).returning();
+  const { passwordHash: _, ...userOut } = user;
+  res.json(userOut);
+});
+
+// ── Save demographics ──────────────────────────────────────────────────────
+router.post("/auth/demographics", requireAuth, async (req: AuthRequest, res): Promise<void> => {
+  const parsed = SaveDemographicsBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const [user] = await db.update(usersTable)
+    .set({ ...parsed.data, demographicsCompleted: true })
+    .where(eq(usersTable.id, req.user!.userId))
+    .returning();
+
+  const { passwordHash: _, ...userOut } = user;
+  res.json(userOut);
+});
+
+// ── User search ────────────────────────────────────────────────────────────
 router.get("/users/search", async (req, res): Promise<void> => {
   const q = String(req.query.q ?? "").trim();
   if (!q || q.length < 2) { res.json([]); return; }
@@ -132,6 +297,7 @@ router.get("/users/search", async (req, res): Promise<void> => {
   res.json(results);
 });
 
+// ── Get public user ────────────────────────────────────────────────────────
 router.get("/users/:id", async (req, res): Promise<void> => {
   const id = Number(req.params.id);
   if (!id) { res.status(400).json({ error: "Invalid id" }); return; }

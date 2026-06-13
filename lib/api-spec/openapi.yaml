@@ -152,6 +152,114 @@ paths:
               schema:
                 $ref: "#/components/schemas/User"
 
+  /auth/send-otp:
+    post:
+      operationId: sendOtp
+      tags: [auth]
+      summary: Send a 6-digit email verification OTP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendOtpInput"
+      responses:
+        "200":
+          description: OTP sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+
+  /auth/verify-otp:
+    post:
+      operationId: verifyOtp
+      tags: [auth]
+      summary: Verify a 6-digit OTP code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyOtpInput"
+      responses:
+        "200":
+          description: Verified
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+
+  /auth/change-password:
+    post:
+      operationId: changePassword
+      tags: [auth]
+      summary: Change current user password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangePasswordInput"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+        "400":
+          description: Wrong current password
+
+  /auth/change-username:
+    post:
+      operationId: changeUsername
+      tags: [auth]
+      summary: Change current user username
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangeUsernameInput"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          description: Username taken
+
+  /auth/demographics:
+    post:
+      operationId: saveDemographics
+      tags: [auth]
+      summary: Save user demographics (onboarding)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DemographicsInput"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
   /users/{id}:
     get:
       operationId: getPublicUser
@@ -2402,6 +2510,68 @@ components:
         bannerUrl:
           type: string
         profileVideoUrl:
+          type: string
+
+    SendOtpInput:
+      type: object
+      required: [purpose]
+      properties:
+        purpose:
+          type: string
+          enum: [verify_email, change_email]
+        newEmail:
+          type: string
+
+    VerifyOtpInput:
+      type: object
+      required: [code, purpose]
+      properties:
+        code:
+          type: string
+        purpose:
+          type: string
+          enum: [verify_email, change_email]
+        newEmail:
+          type: string
+
+    ChangePasswordInput:
+      type: object
+      required: [currentPassword, newPassword]
+      properties:
+        currentPassword:
+          type: string
+        newPassword:
+          type: string
+
+    ChangeUsernameInput:
+      type: object
+      required: [username]
+      properties:
+        username:
+          type: string
+
+    DemographicsInput:
+      type: object
+      properties:
+        realName:
+          type: string
+        address:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        country:
+          type: string
+        postalCode:
+          type: string
+        sex:
+          type: string
+        race:
+          type: string
+        dateOfBirth:
+          type: string
+        phone:
           type: string
 
     # ── Songs ───────────────────────────────────────────────────────────────

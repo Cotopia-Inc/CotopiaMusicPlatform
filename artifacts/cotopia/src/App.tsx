@@ -66,6 +66,8 @@ import NotificationsPage from "@/pages/notifications";
 import EmbedSong from "@/pages/embed-song";
 import EmbedVideo from "@/pages/embed-video";
 import EmbedPlaylist from "@/pages/embed-playlist";
+import VerifyEmail from "@/pages/verify-email";
+import Onboarding from "@/pages/onboarding";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -126,6 +128,14 @@ function Router() {
       </Route>
       <Route path="/register">
         <AuthRoute><Register /></AuthRoute>
+      </Route>
+
+      {/* Email verification + onboarding (auth required, no layout) */}
+      <Route path="/verify-email">
+        <VerifyEmail />
+      </Route>
+      <Route path="/onboarding">
+        <Onboarding />
       </Route>
 
       {/* Embed routes (no auth needed) */}

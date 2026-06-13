@@ -35,11 +35,12 @@ export default function Register() {
     registerMutation.mutate({ data: { username: values.username, email: values.email, password: values.password, role: values.role } }, {
       onSuccess: (res) => {
         login(res.user, res.token);
-        toast({ title: "Welcome to Everyday Radio", description: "Powered by Cotopia." });
-        setLocation("/");
+        toast({ title: "Account created!", description: "Check your email to verify your address." });
+        setLocation("/verify-email");
       },
-      onError: () => {
-        toast({ variant: "destructive", title: "Registration failed", description: "Please check your details and try again." });
+      onError: (err: any) => {
+        const msg = err?.response?.data?.error ?? "Please check your details and try again.";
+        toast({ variant: "destructive", title: "Registration failed", description: msg });
       }
     });
   };
