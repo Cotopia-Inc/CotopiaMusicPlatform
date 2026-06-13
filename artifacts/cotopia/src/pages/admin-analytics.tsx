@@ -67,14 +67,14 @@ export default function AdminAnalytics() {
       </div>
 
       {/* Key stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Total Users" value={data?.totalUsers ?? 0} icon={Users} />
         <StatCard label="Published Songs" value={data?.totalSongs ?? 0} icon={Music} />
         <StatCard label="Published Videos" value={data?.totalVideos ?? 0} icon={Video} />
         <StatCard label="Pending Review" value={data?.pendingSubmissions ?? 0} icon={Clock} sub="submissions awaiting" />
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Total Plays" value={data?.totalPlays ?? 0} icon={Play} />
         <StatCard label="Total Views" value={data?.totalViews ?? 0} icon={Eye} />
         <StatCard label="Comments" value={data?.totalComments ?? 0} icon={MessageSquare} />

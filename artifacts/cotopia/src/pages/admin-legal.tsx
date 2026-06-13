@@ -108,7 +108,7 @@ export default function AdminLegal() {
 
       <div className="bg-card rounded-xl border border-border p-6 space-y-5">
         <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Policy Versions</h2>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="space-y-1.5">
             <Label htmlFor="tv" className="text-xs text-muted-foreground">Terms Version</Label>
             <Input id="tv" value={form.termsVersion} onChange={e => update("termsVersion", e.target.value)} className="bg-secondary/50 border-secondary" placeholder="1.0" />

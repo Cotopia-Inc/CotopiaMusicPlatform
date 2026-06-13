@@ -62,7 +62,7 @@ export default function ArtistAnalytics() {
       </div>
 
       {/* Key stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Total Plays" value={data.totalPlays} icon={Play} />
         <StatCard label="Total Views" value={data.totalViews} icon={Eye} color="text-blue-400" />
         <StatCard label="Followers" value={data.followerCount} icon={Users} color="text-purple-400" />
