@@ -20,7 +20,7 @@ export default function Discover() {
 
       <section>
         <h3 className="text-2xl font-bold tracking-tight mb-6">Trending Now</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
           {isLoading ? (
             Array(6).fill(0).map((_, i) => (
               <div key={i} className="space-y-3">
@@ -66,7 +66,7 @@ export default function Discover() {
 
       <section>
         <h3 className="text-2xl font-bold tracking-tight mb-6">Top Rated</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
           {isLoading ? (
             Array(6).fill(0).map((_, i) => (
               <div key={i} className="space-y-3">

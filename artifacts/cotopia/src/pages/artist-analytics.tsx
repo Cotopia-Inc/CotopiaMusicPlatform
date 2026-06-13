@@ -69,7 +69,7 @@ export default function ArtistAnalytics() {
         <StatCard label="Favorites" value={data.totalFavorites} icon={Heart} color="text-pink-400" />
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid lg:grid-cols-2 gap-6">
         {/* Top Songs */}
         <Card>
           <CardHeader>

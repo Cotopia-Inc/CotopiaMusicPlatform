@@ -182,7 +182,7 @@ export default function ArtistDetail() {
 
           <TabsContent value="videos" className="pt-6">
              {artist.videos && artist.videos.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {artist.videos.map((video) => (
                     <Link key={video.id} href={`/videos/${video.id}`}>
                       <div className="group cursor-pointer space-y-3">

@@ -101,7 +101,7 @@ export default function LabelDetail() {
           </TabsList>
           
           <TabsContent value="releases" className="pt-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
               {label.recentReleases && label.recentReleases.length > 0 ? (
                 label.recentReleases.map((song) => (
                   <Link key={song.id} href={`/songs/${song.id}`}>
@@ -132,7 +132,7 @@ export default function LabelDetail() {
           </TabsContent>
 
           <TabsContent value="artists" className="pt-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-8">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8">
               {label.artists && label.artists.length > 0 ? (
                 label.artists.map((artist) => (
                   <Link key={artist.id} href={`/artists/${artist.id}`}>

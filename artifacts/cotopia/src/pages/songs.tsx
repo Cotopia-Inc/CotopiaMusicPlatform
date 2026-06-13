@@ -37,7 +37,7 @@ export default function Songs() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
         {isLoading ? (
           Array(12).fill(0).map((_, i) => (
             <div key={i} className="space-y-3">

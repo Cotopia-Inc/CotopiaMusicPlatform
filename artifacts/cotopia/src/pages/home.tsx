@@ -168,7 +168,7 @@ export default function Home() {
             <span className="text-sm text-muted-foreground hover:text-primary transition-colors cursor-pointer">See all →</span>
           </Link>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
           {isLoading ? (
             Array(6).fill(0).map((_, i) => (
               <div key={i} className="space-y-3">
@@ -237,7 +237,7 @@ export default function Home() {
               <span className="text-sm text-muted-foreground hover:text-primary transition-colors cursor-pointer">Full Discover →</span>
             </Link>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {isLoading ? (
               Array(6).fill(0).map((_, i) => (
                 <div key={i} className="space-y-2">
@@ -301,7 +301,7 @@ export default function Home() {
               <span className="text-sm text-muted-foreground hover:text-primary transition-colors cursor-pointer">See all →</span>
             </Link>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5">
             {isLoading ? (
               Array(3).fill(0).map((_, i) => (
                 <div key={i} className="space-y-3">
@@ -363,7 +363,7 @@ export default function Home() {
             <span className="text-sm text-muted-foreground hover:text-primary transition-colors cursor-pointer">See all →</span>
           </Link>
         </div>
-        <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-6">
+        <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-6">
           {isLoading ? (
             Array(8).fill(0).map((_, i) => (
               <div key={i} className="space-y-3 text-center">
