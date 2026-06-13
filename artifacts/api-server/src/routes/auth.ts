@@ -1,7 +1,7 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
 import { eq, ilike, or, and, gt } from "drizzle-orm";
-import { db, usersTable, artistsTable, labelsTable, emailOtpsTable, agreementAcceptancesTable } from "@workspace/db";
+import { db, usersTable, artistsTable, labelsTable, emailOtpsTable, agreementAcceptancesTable, appSettingsTable } from "@workspace/db";
 import { RegisterBody, LoginBody, UpdateMeBody, SendOtpBody, VerifyOtpBody, ChangePasswordBody, ChangeUsernameBody, SaveDemographicsBody } from "@workspace/api-zod";
 import { signToken, requireAuth, type AuthRequest } from "../lib/auth";
 import { Resend } from "resend";
@@ -96,14 +96,25 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     { userId: user.id, agreementType: "ai_policy", agreementVersion: "1.0", ipAddress, userAgent, metadata: { source: "registration" } },
   ]);
 
-  // Issue and send email verification OTP
-  const code = generateOtp();
-  const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 min
-  await db.insert(emailOtpsTable).values({ userId: user.id, email: user.email, code, purpose: "verify_email", expiresAt });
-  await sendOtpEmail(user.email, code, "verify_email");
+  // Check if email verification is required by platform settings
+  const [platformSettings] = await db.select({ requireEmailVerification: appSettingsTable.requireEmailVerification }).from(appSettingsTable).limit(1);
+  const verificationRequired = platformSettings?.requireEmailVerification ?? true;
 
-  const token = signToken({ userId: user.id, role: user.role });
-  const { passwordHash: _, ...userOut } = user;
+  let finalUser = user;
+  if (verificationRequired) {
+    // Issue and send email verification OTP
+    const code = generateOtp();
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 min
+    await db.insert(emailOtpsTable).values({ userId: user.id, email: user.email, code, purpose: "verify_email", expiresAt });
+    await sendOtpEmail(user.email, code, "verify_email");
+  } else {
+    // Verification disabled — mark user as verified immediately
+    const [updated] = await db.update(usersTable).set({ emailVerified: true }).where(eq(usersTable.id, user.id)).returning();
+    finalUser = updated;
+  }
+
+  const token = signToken({ userId: finalUser.id, role: finalUser.role });
+  const { passwordHash: _, ...userOut } = finalUser;
   res.status(201).json({ user: userOut, token });
 });
 

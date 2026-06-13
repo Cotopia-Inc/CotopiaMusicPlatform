@@ -22,4 +22,5 @@ export interface AppSettings {
   songSubmissionFee?: number;
   videoSubmissionFee?: number;
   maintenanceMode?: boolean;
+  requireEmailVerification?: boolean;
 }

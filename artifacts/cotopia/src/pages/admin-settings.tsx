@@ -38,7 +38,8 @@ export default function AdminSettings() {
     primaryColor: "#7c3aed",
     songSubmissionFee: 0,
     videoSubmissionFee: 0,
-    maintenanceMode: false
+    maintenanceMode: false,
+    requireEmailVerification: true,
   });
 
   useEffect(() => {
@@ -49,7 +50,8 @@ export default function AdminSettings() {
         primaryColor: settings.primaryColor || "#7c3aed",
         songSubmissionFee: settings.songSubmissionFee || 0,
         videoSubmissionFee: settings.videoSubmissionFee || 0,
-        maintenanceMode: settings.maintenanceMode || false
+        maintenanceMode: settings.maintenanceMode || false,
+        requireEmailVerification: settings.requireEmailVerification ?? true,
       });
     }
   }, [settings]);
@@ -218,6 +220,17 @@ export default function AdminSettings() {
             <Switch 
               checked={formData.maintenanceMode}
               onCheckedChange={(checked) => setFormData({...formData, maintenanceMode: checked})}
+            />
+          </div>
+
+          <div className="flex items-center justify-between p-4 bg-secondary/30 rounded-lg border border-border">
+            <div className="space-y-1">
+              <Label className="font-bold text-base">Email Verification</Label>
+              <p className="text-sm text-muted-foreground">Require new users to verify their email address after registering. When off, accounts are activated instantly.</p>
+            </div>
+            <Switch
+              checked={formData.requireEmailVerification}
+              onCheckedChange={(checked) => setFormData({...formData, requireEmailVerification: checked})}
             />
           </div>
         </div>

@@ -3512,6 +3512,8 @@ components:
           type: number
         maintenanceMode:
           type: boolean
+        requireEmailVerification:
+          type: boolean
 
     AppSettingsUpdate:
       type: object
@@ -3533,6 +3535,8 @@ components:
         videoSubmissionFee:
           type: number
         maintenanceMode:
+          type: boolean
+        requireEmailVerification:
           type: boolean
 
     # ── Messages ──────────────────────────────────────────────────────────────

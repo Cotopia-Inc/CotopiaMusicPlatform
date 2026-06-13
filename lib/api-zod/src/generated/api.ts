@@ -2172,7 +2172,8 @@ export const GetAppSettingsResponse = zod.object({
   "footerText": zod.string().nullish(),
   "songSubmissionFee": zod.number().optional(),
   "videoSubmissionFee": zod.number().optional(),
-  "maintenanceMode": zod.boolean().optional()
+  "maintenanceMode": zod.boolean().optional(),
+  "requireEmailVerification": zod.boolean().optional()
 })
 
 
@@ -2188,7 +2189,8 @@ export const UpdateAppSettingsBody = zod.object({
   "footerText": zod.string().optional(),
   "songSubmissionFee": zod.number().optional(),
   "videoSubmissionFee": zod.number().optional(),
-  "maintenanceMode": zod.boolean().optional()
+  "maintenanceMode": zod.boolean().optional(),
+  "requireEmailVerification": zod.boolean().optional()
 })
 
 export const UpdateAppSettingsResponse = zod.object({
@@ -2201,7 +2203,8 @@ export const UpdateAppSettingsResponse = zod.object({
   "footerText": zod.string().nullish(),
   "songSubmissionFee": zod.number().optional(),
   "videoSubmissionFee": zod.number().optional(),
-  "maintenanceMode": zod.boolean().optional()
+  "maintenanceMode": zod.boolean().optional(),
+  "requireEmailVerification": zod.boolean().optional()
 })
 
 

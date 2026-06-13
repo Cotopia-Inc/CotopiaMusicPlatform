@@ -839,6 +839,7 @@ export interface AppSettings {
   songSubmissionFee?: number;
   videoSubmissionFee?: number;
   maintenanceMode?: boolean;
+  requireEmailVerification?: boolean;
 }
 
 export interface AppSettingsUpdate {
@@ -851,6 +852,7 @@ export interface AppSettingsUpdate {
   songSubmissionFee?: number;
   videoSubmissionFee?: number;
   maintenanceMode?: boolean;
+  requireEmailVerification?: boolean;
 }
 
 export interface ConversationUser {
