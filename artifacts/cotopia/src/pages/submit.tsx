@@ -427,6 +427,12 @@ export default function Submit() {
       toast({ title: "Upload files first", description: "All files must be uploaded before continuing", variant: "destructive" });
       return;
     }
+    // Auto-upgrade plan if they have multiple files but single is selected
+    if (activeFiles.length > 1 && plan === "single") {
+      setPlan("basic");
+    } else if (activeFiles.length === 1 && plan !== "single") {
+      setPlan("single");
+    }
     setStep(1);
   }
 
@@ -567,7 +573,7 @@ export default function Submit() {
                 label="Audio Files"
                 hint="MP3, WAV, M4A, FLAC"
                 remaining={Math.min(MAX_FILES_PER_TYPE - songFiles.length, MAX_FILES_TOTAL - songFiles.length - videoFiles.length)}
-                maxFiles={plan === "single" ? 1 : MAX_FILES_PER_TYPE}
+                maxFiles={MAX_FILES_PER_TYPE}
                 releaseType={songFiles.length > 0 ? effectiveSongType : undefined}
                 onFilesSelected={fs => addFiles(fs, "song")}
                 onTitleChange={handleSongTitleChange}
@@ -617,7 +623,7 @@ export default function Submit() {
                 label="Video Files"
                 hint="MP4, MOV, WebM"
                 remaining={Math.min(MAX_FILES_PER_TYPE - videoFiles.length, MAX_FILES_TOTAL - songFiles.length - videoFiles.length)}
-                maxFiles={plan === "single" ? 1 : MAX_FILES_PER_TYPE}
+                maxFiles={MAX_FILES_PER_TYPE}
                 releaseType={videoFiles.length > 0 ? effectiveVideoType : undefined}
                 onFilesSelected={fs => addFiles(fs, "video")}
                 onTitleChange={handleVideoTitleChange}
@@ -714,6 +720,12 @@ export default function Submit() {
                     <span className="text-sm font-normal text-muted-foreground ml-1">{perLabel}</span>
                   </p>
                   <p className="text-xs text-muted-foreground mb-3">{subtitle}</p>
+                  {p === "single" && activeFiles.length > 1 && (
+                    <div className="flex items-center gap-1.5 mb-3 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                      <AlertCircle className="w-3 h-3 text-amber-400 flex-shrink-0" />
+                      <span className="text-[10px] text-amber-300">You have {activeFiles.length} files — this plan covers 1</span>
+                    </div>
+                  )}
                   <ul className="space-y-1.5">
                     {PLAN_FEATURES[p].map(f => (
                       <li key={f} className="flex items-start gap-2 text-xs text-muted-foreground">
