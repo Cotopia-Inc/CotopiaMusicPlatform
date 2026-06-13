@@ -1281,7 +1281,7 @@ export const createSubmissionBodyPlanDefault = `basic`;
 
 export const CreateSubmissionBody = zod.object({
   "type": zod.enum(['song', 'video']),
-  "plan": zod.enum(['basic', 'premium']).default(createSubmissionBodyPlanDefault),
+  "plan": zod.enum(['single', 'basic', 'premium']).default(createSubmissionBodyPlanDefault),
   "title": zod.string(),
   "artistName": zod.string().optional(),
   "labelName": zod.string().optional(),
@@ -1305,7 +1305,7 @@ export const createBulkSubmissionBodyIsExplicitDefault = false;
 
 export const CreateBulkSubmissionBody = zod.object({
   "type": zod.enum(['song', 'video']),
-  "plan": zod.enum(['basic', 'premium']).default(createBulkSubmissionBodyPlanDefault),
+  "plan": zod.enum(['single', 'basic', 'premium']).default(createBulkSubmissionBodyPlanDefault),
   "artistName": zod.string().optional(),
   "labelName": zod.string().optional(),
   "genre": zod.string().optional(),

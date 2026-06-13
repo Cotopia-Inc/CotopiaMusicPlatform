@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useCreateBulkSubmission, useInitiatePayment, useCapturePayment } from "@workspace/api-client-react";
 import { useUpload } from "@workspace/object-storage-web";
 import { useToast } from "@/hooks/use-toast";
@@ -26,13 +26,14 @@ const MAX_FILES_PER_TYPE = 20;
 const MAX_FILES_TOTAL = 20;
 
 const PLAN_PRICES = {
-  song: { basic: 19.99, premium: 49.99 },
-  video: { basic: 29.99, premium: 79.99 },
+  song:  { single: 9.99,  basic: 19.99, premium: 49.99 },
+  video: { single: 14.99, basic: 29.99, premium: 79.99 },
 };
 
 const PLAN_FEATURES = {
-  basic: ["Review within 7 days", "Standard placement", "Artist profile listing", "All tracks in batch covered"],
-  premium: ["Priority review within 48 hours", "Featured placement", "Social media spotlight", "Radio scheduling", "Analytics report", "All tracks in batch covered"],
+  single:  ["1 file only", "Review within 14 days", "Standard placement", "Artist profile listing"],
+  basic:   ["Up to 20 files per batch", "Review within 7 days", "Standard placement", "Artist profile listing"],
+  premium: ["Up to 20 files per batch", "Priority review within 48 hours", "Featured placement", "Social media spotlight", "Radio scheduling", "Analytics report"],
 };
 
 const STEPS = ["Files & Details", "Plan", "Payment", "Complete"];
@@ -203,6 +204,7 @@ function FileList({
   label,
   hint,
   remaining,
+  maxFiles,
   onFilesSelected,
   onTitleChange,
   onUrlSet,
@@ -216,14 +218,16 @@ function FileList({
   label: string;
   hint: string;
   remaining: number;
+  maxFiles: number;
   onFilesSelected: (files: File[]) => void;
   onTitleChange: (i: number, t: string) => void;
   onUrlSet: (i: number, url: string) => void;
   onRemove: (i: number) => void;
 }) {
+  const addMoreRef = useRef<HTMLInputElement>(null);
   const uploaded = urls.filter(u => u !== null).length;
   const isBulk = files.length >= 2;
-  const atLimit = remaining <= 0;
+  const atLimit = remaining <= 0 || files.length >= maxFiles;
 
   return (
     <div className="space-y-3">
@@ -249,9 +253,9 @@ function FileList({
           </div>
           <div className="text-center">
             <p className="text-sm font-medium">{atLimit ? "Limit reached" : "Click to select files"}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{hint} · Max {MAX_FILES_PER_TYPE} files</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{hint} · Max {maxFiles} file{maxFiles !== 1 ? "s" : ""}</p>
           </div>
-          {!atLimit && <input type="file" accept={accept} multiple className="hidden"
+          {!atLimit && <input type="file" accept={accept} multiple={maxFiles > 1} className="hidden"
             onChange={e => { const fs = Array.from(e.target.files ?? []); if (fs.length) { onFilesSelected(fs); e.target.value = ""; } }} />}
         </label>
       ) : (
@@ -272,15 +276,15 @@ function FileList({
           </div>
           <div className="flex items-center gap-2 pt-1">
             {!atLimit && (
-              <label className="cursor-pointer">
-                <Button type="button" variant="outline" size="sm" className="text-xs gap-1.5 pointer-events-none">
+              <>
+                <Button type="button" variant="outline" size="sm" className="text-xs gap-1.5" onClick={() => addMoreRef.current?.click()}>
                   <Upload className="w-3 h-3" />Add more files
                 </Button>
-                <input type="file" accept={accept} multiple className="hidden"
+                <input ref={addMoreRef} type="file" accept={accept} multiple={maxFiles > 1} className="hidden"
                   onChange={e => { const fs = Array.from(e.target.files ?? []); if (fs.length) { onFilesSelected(fs); e.target.value = ""; } }} />
-              </label>
+              </>
             )}
-            {atLimit && <span className="text-xs text-amber-400 font-medium">Maximum {MAX_FILES_PER_TYPE} files reached</span>}
+            {atLimit && <span className="text-xs text-amber-400 font-medium">Maximum {maxFiles} file{maxFiles !== 1 ? "s" : ""} reached</span>}
           </div>
         </div>
       )}
@@ -298,7 +302,7 @@ export default function Submit() {
 
   const [step, setStep] = useState(0);
   const [tab, setTab] = useState<"song" | "video">("song");
-  const [plan, setPlan] = useState<"basic" | "premium">("basic");
+  const [plan, setPlan] = useState<"single" | "basic" | "premium">("single");
 
   // Bulk state — separate for songs and videos
   const [songFiles, setSongFiles] = useState<File[]>([]);
@@ -527,6 +531,7 @@ export default function Submit() {
                 label="Audio Files"
                 hint="MP3, WAV, M4A, FLAC"
                 remaining={Math.min(MAX_FILES_PER_TYPE - songFiles.length, MAX_FILES_TOTAL - songFiles.length - videoFiles.length)}
+                maxFiles={plan === "single" ? 1 : MAX_FILES_PER_TYPE}
                 onFilesSelected={fs => addFiles(fs, "song")}
                 onTitleChange={handleSongTitleChange}
                 onUrlSet={handleSongUrlSet}
@@ -550,6 +555,7 @@ export default function Submit() {
                 label="Video Files"
                 hint="MP4, MOV, WebM"
                 remaining={Math.min(MAX_FILES_PER_TYPE - videoFiles.length, MAX_FILES_TOTAL - songFiles.length - videoFiles.length)}
+                maxFiles={plan === "single" ? 1 : MAX_FILES_PER_TYPE}
                 onFilesSelected={fs => addFiles(fs, "video")}
                 onTitleChange={handleVideoTitleChange}
                 onUrlSet={handleVideoUrlSet}
@@ -585,36 +591,51 @@ export default function Submit() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {(["basic", "premium"] as const).map(p => (
-              <button key={p} type="button" onClick={() => setPlan(p)}
-                className={`relative p-5 rounded-xl border-2 transition-all text-left ${plan === p ? "border-primary bg-primary/10" : "border-border bg-secondary/20 hover:border-border/80"}`}>
-                {p === "premium" && (
-                  <Badge className="absolute top-3 right-3 text-[10px] bg-amber-500/20 text-amber-400 border-amber-500/30">⭐ Popular</Badge>
-                )}
-                <div className="flex items-center gap-2 mb-3">
-                  {p === "basic" ? <Radio className="w-5 h-5 text-primary" /> : <Zap className="w-5 h-5 text-amber-400" />}
-                  <span className="font-bold capitalize">{p}</span>
-                </div>
-                <p className="text-2xl font-extrabold mb-1">
-                  ${PLAN_PRICES[tab][p].toFixed(2)}
-                  <span className="text-sm font-normal text-muted-foreground ml-1">/ batch</span>
-                </p>
-                <p className="text-xs text-muted-foreground mb-3">Covers all {activeFiles.length} {tab}{activeFiles.length !== 1 ? "s" : ""}</p>
-                <ul className="space-y-1.5">
-                  {PLAN_FEATURES[p].map(f => (
-                    <li key={f} className="flex items-start gap-2 text-xs text-muted-foreground">
-                      <CheckCircle className="w-3.5 h-3.5 text-primary flex-shrink-0 mt-0.5" />{f}
-                    </li>
-                  ))}
-                </ul>
-                {plan === p && (
-                  <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-                    <CheckCircle className="w-3.5 h-3.5 text-primary-foreground" />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {(["single", "basic", "premium"] as const).map(p => {
+              const isSelected = plan === p;
+              const icon = p === "single"
+                ? <Music className="w-5 h-5 text-primary" />
+                : p === "basic"
+                  ? <Radio className="w-5 h-5 text-primary" />
+                  : <Zap className="w-5 h-5 text-amber-400" />;
+              const perLabel = p === "single" ? "/ track" : "/ batch";
+              const subtitle = p === "single"
+                ? "1 file — great for a single release"
+                : `Covers all ${activeFiles.length} ${tab}${activeFiles.length !== 1 ? "s" : ""}`;
+              return (
+                <button key={p} type="button" onClick={() => setPlan(p)}
+                  className={`relative p-5 rounded-xl border-2 transition-all text-left ${isSelected ? "border-primary bg-primary/10" : "border-border bg-secondary/20 hover:border-border/80"}`}>
+                  {p === "premium" && (
+                    <Badge className="absolute top-3 right-3 text-[10px] bg-amber-500/20 text-amber-400 border-amber-500/30">⭐ Popular</Badge>
+                  )}
+                  {isSelected && p !== "premium" && (
+                    <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                      <CheckCircle className="w-3.5 h-3.5 text-primary-foreground" />
+                    </div>
+                  )}
+                  {isSelected && p === "premium" && (
+                    <Badge className="absolute top-3 right-3 text-[10px] bg-primary text-primary-foreground border-primary">✓ Selected</Badge>
+                  )}
+                  <div className="flex items-center gap-2 mb-3">
+                    {icon}
+                    <span className="font-bold capitalize">{p === "single" ? "Single Track" : p}</span>
                   </div>
-                )}
-              </button>
-            ))}
+                  <p className="text-2xl font-extrabold mb-1">
+                    ${PLAN_PRICES[tab][p].toFixed(2)}
+                    <span className="text-sm font-normal text-muted-foreground ml-1">{perLabel}</span>
+                  </p>
+                  <p className="text-xs text-muted-foreground mb-3">{subtitle}</p>
+                  <ul className="space-y-1.5">
+                    {PLAN_FEATURES[p].map(f => (
+                      <li key={f} className="flex items-start gap-2 text-xs text-muted-foreground">
+                        <CheckCircle className="w-3.5 h-3.5 text-primary flex-shrink-0 mt-0.5" />{f}
+                      </li>
+                    ))}
+                  </ul>
+                </button>
+              );
+            })}
           </div>
 
           <div className="flex justify-between pt-2">

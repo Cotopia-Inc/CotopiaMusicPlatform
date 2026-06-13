@@ -3122,7 +3122,7 @@ components:
           enum: [song, video]
         plan:
           type: string
-          enum: [basic, premium]
+          enum: [single, basic, premium]
           default: basic
         title:
           type: string
@@ -3156,7 +3156,7 @@ components:
           enum: [song, video]
         plan:
           type: string
-          enum: [basic, premium]
+          enum: [single, basic, premium]
           default: basic
         artistName:
           type: string

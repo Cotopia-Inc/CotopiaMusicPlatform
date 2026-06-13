@@ -10,6 +10,7 @@ export type BulkSubmissionInputPlan = typeof BulkSubmissionInputPlan[keyof typeo
 
 
 export const BulkSubmissionInputPlan = {
+  single: 'single',
   basic: 'basic',
   premium: 'premium',
 } as const;

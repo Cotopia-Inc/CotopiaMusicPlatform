@@ -10,6 +10,7 @@ export type SubmissionInputPlan = typeof SubmissionInputPlan[keyof typeof Submis
 
 
 export const SubmissionInputPlan = {
+  single: 'single',
   basic: 'basic',
   premium: 'premium',
 } as const;
