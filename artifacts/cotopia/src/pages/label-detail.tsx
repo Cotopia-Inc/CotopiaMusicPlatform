@@ -1,4 +1,4 @@
-import { useParams, Link } from "wouter";
+import { useParams, Link, useLocation } from "wouter";
 import { useGetLabel, getGetLabelQueryKey, useFollowLabel, useUnfollowLabel } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Users, Music, Play } from "lucide-react";
@@ -14,6 +14,7 @@ export default function LabelDetail() {
   const labelId = Number(id);
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const [, navigate] = useLocation();
 
   const { data: label, isLoading } = useGetLabel(labelId, {
     query: { enabled: !!labelId, queryKey: getGetLabelQueryKey(labelId) }
@@ -114,26 +115,25 @@ export default function LabelDetail() {
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
               {label.recentReleases && label.recentReleases.length > 0 ? (
                 label.recentReleases.map((song) => (
-                  <Link key={song.id} href={`/songs/${song.id}`}>
-                    <div className="group cursor-pointer space-y-3">
-                      <div className="aspect-square relative overflow-hidden rounded-md bg-secondary border border-border">
-                        {song.coverUrl && <img src={song.coverUrl} alt={song.title} className="object-cover w-full h-full group-hover:scale-105 transition-transform" />}
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                          <Play className="w-8 h-8 fill-current" />
-                        </div>
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-sm truncate">{song.title}</h4>
-                        <UserLink
-                          username={song.artistName}
-                          artistId={song.artistId}
-                          role="artist"
-                          isVerified={(song as any).artistIsVerified ?? false}
-                          className="text-xs text-muted-foreground"
-                        />
+                  <div key={song.id} className="group cursor-pointer space-y-3" onClick={() => navigate(`/songs/${song.id}`)}>
+                    <div className="aspect-square relative overflow-hidden rounded-md bg-secondary border border-border">
+                      {song.coverUrl && <img src={song.coverUrl} alt={song.title} className="object-cover w-full h-full group-hover:scale-105 transition-transform" />}
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                        <Play className="w-8 h-8 fill-current" />
                       </div>
                     </div>
-                  </Link>
+                    <div>
+                      <h4 className="font-semibold text-sm truncate">{song.title}</h4>
+                      <UserLink
+                        username={song.artistName}
+                        artistId={song.artistId}
+                        role="artist"
+                        isVerified={(song as any).artistIsVerified ?? false}
+                        className="text-xs text-muted-foreground"
+                        onClick={e => e.stopPropagation()}
+                      />
+                    </div>
+                  </div>
                 ))
               ) : (
                 <p className="col-span-full text-muted-foreground py-8">No releases available.</p>

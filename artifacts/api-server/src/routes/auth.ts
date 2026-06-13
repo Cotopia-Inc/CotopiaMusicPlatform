@@ -100,7 +100,7 @@ router.post("/auth/register", async (req, res): Promise<void> => {
   const code = generateOtp();
   const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 min
   await db.insert(emailOtpsTable).values({ userId: user.id, email: user.email, code, purpose: "verify_email", expiresAt });
-  sendOtpEmail(user.email, code, "verify_email");
+  await sendOtpEmail(user.email, code, "verify_email");
 
   const token = signToken({ userId: user.id, role: user.role });
   const { passwordHash: _, ...userOut } = user;
@@ -212,7 +212,7 @@ router.post("/auth/send-otp", requireAuth, async (req: AuthRequest, res): Promis
     expiresAt,
   });
 
-  sendOtpEmail(targetEmail, code, purpose);
+  await sendOtpEmail(targetEmail, code, purpose);
   res.json({ ok: true });
 });
 
