@@ -106,7 +106,8 @@ export default function AdminDmca() {
         </div>
       ) : (
         <div className="bg-card rounded-xl border border-border overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[560px]">
             <thead>
               <tr className="border-b border-border bg-secondary/20">
                 <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">ID</th>
@@ -150,6 +151,7 @@ export default function AdminDmca() {
               })}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 

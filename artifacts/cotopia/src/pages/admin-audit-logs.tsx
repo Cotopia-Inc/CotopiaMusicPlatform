@@ -76,7 +76,8 @@ export default function AdminAuditLogs() {
         </div>
       ) : (
         <div className="bg-card rounded-xl border border-border overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[600px]">
             <thead>
               <tr className="border-b border-border bg-secondary/20">
                 <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Time</th>
@@ -110,6 +111,7 @@ export default function AdminAuditLogs() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 

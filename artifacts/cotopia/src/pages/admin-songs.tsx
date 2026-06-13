@@ -82,6 +82,7 @@ export default function AdminSongs() {
       </div>
 
       <div className="bg-card rounded-xl border border-border overflow-hidden">
+        <div className="overflow-x-auto">
         <Table>
           <TableHeader className="bg-secondary/30">
             <TableRow>
@@ -223,6 +224,7 @@ export default function AdminSongs() {
             )}
           </TableBody>
         </Table>
+        </div>
       </div>
     </div>
 

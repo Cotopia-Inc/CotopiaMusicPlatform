@@ -48,7 +48,7 @@ export function Layout({ children }: LayoutProps) {
           </button>
 
           <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-background to-background pointer-events-none -z-10" />
-          <div className="p-8 pl-10">
+          <div className="p-4 pl-8 md:p-6 md:pl-9 lg:p-8 lg:pl-10">
             {children}
           </div>
 
