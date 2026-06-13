@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { eq, desc, and, count, sql, sum } from "drizzle-orm";
+import { eq, desc, and, count, sql } from "drizzle-orm";
 import {
   db, songsTable, videosTable, artistsTable, favoritesTable,
-  followsTable, albumsTable,
+  followsTable, albumsTable, analyticsEventsTable,
 } from "@workspace/db";
 import { requireAuth, type AuthRequest } from "../lib/auth";
 
@@ -55,7 +55,7 @@ router.get("/artist/analytics", requireAuth, async (req: AuthRequest, res): Prom
       .limit(10),
   ]);
 
-  const [[playsRow], [viewsRow], [followerCountRow], [favoriteCountRow]] = await Promise.all([
+  const [[playsRow], [viewsRow], [followerCountRow], [favoriteCountRow], [profileVisitorsRow]] = await Promise.all([
     db.select({ total: sql<number>`coalesce(sum(${songsTable.playCount}), 0)` })
       .from(songsTable).where(eq(songsTable.artistId, artistId)),
     db.select({ total: sql<number>`coalesce(sum(${videosTable.viewCount}), 0)` })
@@ -63,7 +63,14 @@ router.get("/artist/analytics", requireAuth, async (req: AuthRequest, res): Prom
     db.select({ count: count() }).from(followsTable)
       .where(and(eq(followsTable.targetType, "artist"), eq(followsTable.targetId, artistId))),
     db.select({ count: count() }).from(favoritesTable)
-      .where(eq(favoritesTable.contentType, "song")),
+      .innerJoin(songsTable, eq(favoritesTable.contentId, songsTable.id))
+      .where(and(eq(favoritesTable.contentType, "song"), eq(songsTable.artistId, artistId))),
+    db.select({ count: count() }).from(analyticsEventsTable)
+      .where(and(
+        eq(analyticsEventsTable.eventType, "page_view"),
+        eq(analyticsEventsTable.eventName, "artist_profile"),
+        eq(analyticsEventsTable.contentId, artistId),
+      )),
   ]);
 
   // Build recent activity by month (last 6 months using createdAt as proxy for play date)
@@ -78,6 +85,7 @@ router.get("/artist/analytics", requireAuth, async (req: AuthRequest, res): Prom
     totalViews: Number(viewsRow?.total ?? 0),
     totalFavorites: favoriteCountRow?.count ?? 0,
     followerCount: followerCountRow?.count ?? 0,
+    profileVisitors: profileVisitorsRow?.count ?? 0,
     topSongs: songs,
     topVideos: videos,
     recentActivity,
