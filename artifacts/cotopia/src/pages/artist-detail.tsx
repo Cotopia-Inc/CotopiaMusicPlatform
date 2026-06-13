@@ -191,17 +191,28 @@ export default function ArtistDetail() {
              {artist.videos && artist.videos.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {artist.videos.map((video) => (
-                    <Link key={video.id} href={`/videos/${video.id}`}>
-                      <div className="group cursor-pointer space-y-3">
-                        <div className="aspect-video relative overflow-hidden rounded-md bg-secondary border border-border">
-                          {video.thumbnailUrl && <img src={video.thumbnailUrl} alt={video.title} className="object-cover w-full h-full group-hover:scale-105 transition-transform" />}
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Play className="w-10 h-10 fill-current text-white" />
-                          </div>
+                    <div key={video.id} className="group cursor-pointer space-y-3">
+                      <div className="aspect-video relative overflow-hidden rounded-md bg-secondary border border-border">
+                        {video.thumbnailUrl
+                          ? <img src={video.thumbnailUrl} alt={video.title} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
+                          : <div className="w-full h-full flex items-center justify-center text-muted-foreground/30"><Play className="w-8 h-8" /></div>
+                        }
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <button
+                            className="bg-primary text-primary-foreground rounded-full p-4 transform scale-90 group-hover:scale-100 transition-all duration-300 shadow-lg"
+                            title={`Play ${video.title}`}
+                            onClick={() => play({ id: video.id, title: video.title, artistName: (video as any).artistName ?? artist.stageName ?? "", artistId: video.artistId, artistIsVerified: (artist as any).isVerified ?? false, coverUrl: video.thumbnailUrl, videoUrl: (video as any).videoUrl, duration: video.duration })}
+                          >
+                            <Play className="w-8 h-8 fill-current ml-1" />
+                          </button>
                         </div>
-                        <h4 className="font-medium text-sm truncate">{video.title}</h4>
                       </div>
-                    </Link>
+                      <div className="flex items-start justify-between gap-2">
+                        <Link href={`/videos/${video.id}`}>
+                          <h4 className="font-medium text-sm truncate hover:text-primary transition-colors">{video.title}</h4>
+                        </Link>
+                      </div>
+                    </div>
                   ))}
                 </div>
              ) : (

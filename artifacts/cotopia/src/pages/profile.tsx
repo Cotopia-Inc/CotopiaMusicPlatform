@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Upload, X, Loader2, Lock, User, MailCheck, CheckCircle, Mail, RefreshCw } from "lucide-react";
+import { Upload, X, Loader2, Lock, User, MailCheck, CheckCircle, Mail, RefreshCw, Film } from "lucide-react";
 import { useUpload } from "@workspace/object-storage-web";
 import { RoleBadges, VerifiedBadge } from "@/components/role-badges";
 import { useQueryClient } from "@tanstack/react-query";
@@ -33,6 +33,7 @@ export default function Profile() {
   const initialized = useRef(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
 
   // Username change
   const [newUsername, setNewUsername] = useState("");
@@ -77,6 +78,17 @@ export default function Profile() {
   const { uploadFile: uploadBanner, isUploading: isUploadingBanner, progress: bannerProgress } = useUpload({
     onSuccess: (res) => setBannerUrl(`/api/storage${res.objectPath}`),
   });
+
+  const { uploadFile: uploadVideo, isUploading: isUploadingVideo, progress: videoProgress } = useUpload({
+    onSuccess: (res) => setProfileVideoUrl(`/api/storage${res.objectPath}`),
+  });
+
+  const handleVideoFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    await uploadVideo(file);
+    e.target.value = "";
+  };
 
   const handleAvatarFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -331,10 +343,44 @@ export default function Profile() {
           )}
         </div>
 
-        {/* Profile Video URL */}
+        {/* Profile Video */}
         <div className="space-y-2">
-          <label className="text-sm font-medium">Profile Video URL <span className="text-muted-foreground text-xs">(optional)</span></label>
-          <Input value={profileVideoUrl} onChange={e => setProfileVideoUrl(e.target.value)} placeholder="https://... (YouTube, Vimeo, or MP4)" className="bg-secondary/50 border-secondary" />
+          <label className="text-sm font-medium">Profile Video <span className="text-muted-foreground text-xs">(optional)</span></label>
+          <input ref={videoInputRef} type="file" accept="video/*" onChange={handleVideoFile} className="hidden" disabled={isUploadingVideo} />
+          <div
+            onClick={() => !isUploadingVideo && videoInputRef.current?.click()}
+            className={`flex items-center gap-3 p-4 rounded-lg border-2 border-dashed border-border/60 bg-secondary/20 hover:bg-secondary/40 hover:border-primary/40 transition-all group ${isUploadingVideo ? "cursor-wait opacity-70" : "cursor-pointer"}`}
+          >
+            {isUploadingVideo ? (
+              <Loader2 className="w-5 h-5 text-primary animate-spin flex-shrink-0" />
+            ) : (
+              <Film className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
+            )}
+            <div className="flex-1 min-w-0">
+              {isUploadingVideo ? (
+                <p className="text-sm text-primary">Uploading… {videoProgress}%</p>
+              ) : profileVideoUrl && profileVideoUrl.startsWith("/api/storage") ? (
+                <p className="text-sm text-green-400 truncate">Video uploaded ✓</p>
+              ) : (
+                <p className="text-sm text-muted-foreground">Click to upload a video from your device</p>
+              )}
+              <p className="text-xs text-muted-foreground/60">MP4, MOV, WebM accepted</p>
+            </div>
+            {profileVideoUrl && !isUploadingVideo && (
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setProfileVideoUrl(""); if (videoInputRef.current) videoInputRef.current.value = ""; }}
+                className="text-muted-foreground hover:text-destructive transition-colors flex-shrink-0"
+                title="Remove video"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">or paste URL:</span>
+            <Input value={profileVideoUrl} onChange={e => setProfileVideoUrl(e.target.value)} placeholder="https://... (YouTube, Vimeo, or MP4)" className="bg-secondary/50 border-secondary h-8 text-xs flex-1" />
+          </div>
         </div>
 
         {/* Email (read-only with verification status) */}
