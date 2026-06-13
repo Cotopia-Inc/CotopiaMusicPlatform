@@ -13,9 +13,9 @@ export interface StrikeTarget {
   userId: number;
   uploaderName: string;
   uploaderEmail?: string;
-  contentType: "song" | "video" | "submission" | "comment" | "chat_message" | "company_post";
+  contentType?: "song" | "video" | "submission" | "comment" | "chat_message" | "company_post";
   contentId?: number;
-  contentTitle: string;
+  contentTitle?: string;
   dmcaClaimId?: number;
 }
 
@@ -118,7 +118,7 @@ export function CopyrightStrikeModal({ target, onClose, onSuccess }: CopyrightSt
 
   if (!target) return null;
 
-  const ContentIcon = CONTENT_TYPE_ICONS[target.contentType] ?? FileText;
+  const ContentIcon = (target.contentType ? CONTENT_TYPE_ICONS[target.contentType] : undefined) ?? FileText;
 
   return (
     <Dialog open={!!target} onOpenChange={(open) => { if (!open) handleClose(); }}>
@@ -150,7 +150,7 @@ export function CopyrightStrikeModal({ target, onClose, onSuccess }: CopyrightSt
               <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Content</p>
               <div className="flex items-center gap-1.5">
                 <ContentIcon className="w-3.5 h-3.5 text-muted-foreground" />
-                <Badge variant="outline" className="text-[9px] uppercase">{CONTENT_TYPE_LABELS[target.contentType] ?? target.contentType}</Badge>
+                <Badge variant="outline" className="text-[9px] uppercase">{target.contentType ? (CONTENT_TYPE_LABELS[target.contentType] ?? target.contentType) : "Content"}</Badge>
               </div>
               <p className="text-xs text-foreground font-medium truncate">{target.contentTitle || `#${target.contentId}`}</p>
             </div>

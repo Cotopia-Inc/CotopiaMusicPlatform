@@ -5,7 +5,7 @@ import {
   labelsTable, albumsTable, commentsTable, ratingsTable, analyticsEventsTable,
   appSettingsTable, followsTable, chatMessagesTable, favoritesTable,
   playlistsTable, playlistItemsTable, conversationsTable, directMessagesTable,
-  dmcaClaimsTable, copyrightStrikesTable, adminAuditLogsTable,
+  dmcaClaimsTable, copyrightStrikesTable, adminAuditLogsTable, notificationsTable,
 } from "@workspace/db";
 import {
   AdminListUsersQueryParams, AdminUpdateUserBody,
@@ -594,6 +594,32 @@ router.post("/admin/dmca/:claimId/strike", requireAuth, requireRole(...ADMIN_ROL
     metadata: { claimId, strikeReason } as unknown,
   });
 
+  // Count active strikes and notify the user
+  const [strikeCount] = await db.select({ activeCount: count() }).from(copyrightStrikesTable)
+    .where(and(eq(copyrightStrikesTable.userId, Number(userId)), eq(copyrightStrikesTable.status, "active")));
+  const activeCount = strikeCount?.activeCount ?? 1;
+
+  let notifTitle: string;
+  let notifMessage: string;
+  if (activeCount >= 3) {
+    notifTitle = `🚨 Final Warning — Copyright Strike #${activeCount}`;
+    notifMessage = `Your ${contentType} #${contentId} has received a copyright strike: ${String(strikeReason)}. You now have ${activeCount} active strikes. Your account is at immediate risk of permanent suspension. Remove all infringing content immediately or your account will be terminated.`;
+  } else if (activeCount === 2) {
+    notifTitle = `⚠️ Serious Warning — Copyright Strike #2`;
+    notifMessage = `Your ${contentType} #${contentId} has received a copyright strike: ${String(strikeReason)}. You now have 2 active strikes. Either take down any infringing content immediately or we will remove it. A third strike results in account suspension.`;
+  } else {
+    notifTitle = `⚠️ Copyright Strike Issued`;
+    notifMessage = `Your ${contentType} #${contentId} has received a copyright strike: ${String(strikeReason)}. Please remove any infringing content immediately. Accumulating 3 strikes will result in account suspension.`;
+  }
+
+  await db.insert(notificationsTable).values({
+    userId: Number(userId),
+    type: "copyright_strike",
+    title: notifTitle,
+    message: notifMessage,
+    isRead: false,
+  });
+
   res.status(201).json(strike);
 });
 
@@ -776,6 +802,29 @@ router.post("/admin/strikes", requireAuth, requireRole(...ADMIN_ROLES, "moderato
     targetId: resolvedUserId,
     description: `Copyright strike issued to @${target.username} for ${contentType}${contentTitle ? ` "${contentTitle}"` : contentId ? ` #${contentId}` : ""}. Active strikes: ${activeCount}`,
     metadata: { strikeReason, contentType, contentId, contentTitle, activeStrikeCount: activeCount } as unknown,
+  });
+
+  // Notify the user with a firm warning scaled to their total active strike count
+  const contentLabel = contentTitle ? `"${contentTitle}"` : `${contentType} #${contentId ?? "N/A"}`;
+  let notifTitle: string;
+  let notifMessage: string;
+  if (activeCount >= 3) {
+    notifTitle = `🚨 Final Warning — Copyright Strike #${activeCount}`;
+    notifMessage = `Your ${contentType} ${contentLabel} has received a copyright strike: ${String(strikeReason)}. You now have ${activeCount} active strikes — your account is at immediate risk of permanent suspension. Remove all infringing content RIGHT NOW or we will remove it and terminate your account.`;
+  } else if (activeCount === 2) {
+    notifTitle = `⚠️ Serious Warning — Copyright Strike #2`;
+    notifMessage = `Your ${contentType} ${contentLabel} has received a copyright strike: ${String(strikeReason)}. You now have 2 active strikes. This is your last warning before suspension. Either take down any infringing content immediately or we will remove it for you. A third strike will result in account suspension.`;
+  } else {
+    notifTitle = `⚠️ Copyright Strike Issued`;
+    notifMessage = `Your ${contentType} ${contentLabel} has received a copyright strike: ${String(strikeReason)}. Please remove any infringing content immediately to avoid further action. Accumulating 3 strikes will result in account suspension — either take it down yourself, or we will.`;
+  }
+
+  await db.insert(notificationsTable).values({
+    userId: resolvedUserId,
+    type: "copyright_strike",
+    title: notifTitle,
+    message: notifMessage,
+    isRead: false,
   });
 
   res.status(201).json({ strike, activeStrikeCount: activeCount });

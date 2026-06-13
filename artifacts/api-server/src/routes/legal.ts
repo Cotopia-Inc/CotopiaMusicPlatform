@@ -1,12 +1,12 @@
 import { Router } from "express";
-import { desc } from "drizzle-orm";
-import { db, dmcaClaimsTable, agreementAcceptancesTable } from "@workspace/db";
+import { desc, eq } from "drizzle-orm";
+import { db, dmcaClaimsTable, agreementAcceptancesTable, usersTable } from "@workspace/db";
 import { requireAuth, type AuthRequest } from "../lib/auth";
 
 const router = Router();
 
-// ── Public: Submit DMCA Claim ─────────────────────────────────────────────────
-router.post("/legal/dmca-claim", async (req, res): Promise<void> => {
+// ── Authenticated: Submit DMCA Claim (must be a registered user) ──────────────
+router.post("/legal/dmca-claim", requireAuth, async (req: AuthRequest, res): Promise<void> => {
   const {
     claimantName, claimantEmail, claimantCompany, copyrightOwner,
     workDescription, infringingUrl, goodFaithStatement,

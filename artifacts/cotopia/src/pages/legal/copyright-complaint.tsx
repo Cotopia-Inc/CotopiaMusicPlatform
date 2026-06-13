@@ -1,15 +1,17 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { ChevronLeft, AlertTriangle, CheckCircle, Loader2, Home } from "lucide-react";
+import { ChevronLeft, AlertTriangle, CheckCircle, Loader2, Home, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/lib/auth";
 
 export default function CopyrightComplaint() {
   const { toast } = useToast();
+  const { user, isLoading: authLoading } = useAuth();
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [form, setForm] = useState({
@@ -37,9 +39,13 @@ export default function CopyrightComplaint() {
     if (!canSubmit) return;
     setIsSubmitting(true);
     try {
+      const token = localStorage.getItem("cotopia_token");
       const res = await fetch(`${import.meta.env.BASE_URL}api/legal/dmca-claim`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify(form),
       });
       if (!res.ok) {
@@ -53,6 +59,54 @@ export default function CopyrightComplaint() {
       setIsSubmitting(false);
     }
   };
+
+  if (authLoading) return (
+    <div className="flex items-center justify-center py-24">
+      <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+
+  if (!user) return (
+    <div className="max-w-2xl mx-auto px-4 py-10">
+      <div className="space-y-1 mb-8">
+        <div className="flex items-center gap-3 mb-3">
+          <Link href="/" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+            <Home className="w-3 h-3" />Home
+          </Link>
+          <span className="text-muted-foreground/30 text-xs">·</span>
+          <Link href="/legal" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+            <ChevronLeft className="w-3 h-3" />Legal Center
+          </Link>
+        </div>
+        <h1 className="text-3xl font-extrabold">File a Copyright Complaint</h1>
+        <p className="text-xs text-muted-foreground">Everyday Radio by Cotopia · DMCA Takedown Form</p>
+      </div>
+
+      <div className="bg-card rounded-xl border border-border p-10 text-center space-y-5">
+        <div className="w-16 h-16 rounded-full bg-amber-500/15 flex items-center justify-center mx-auto">
+          <Lock className="w-8 h-8 text-amber-400" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-xl font-bold">Sign In Required</h2>
+          <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+            You must be a registered Cotopia member to file a DMCA copyright complaint. This helps us verify claims and prevent abuse.
+          </p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <Link href="/login">
+            <Button className="w-full sm:w-auto">Sign In</Button>
+          </Link>
+          <Link href="/register">
+            <Button variant="outline" className="w-full sm:w-auto">Create Account</Button>
+          </Link>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Already have a claim reference? Contact us at{" "}
+          <a href="mailto:legal@cotopia.org" className="text-primary hover:underline">legal@cotopia.org</a>
+        </p>
+      </div>
+    </div>
+  );
 
   if (submitted) {
     return (

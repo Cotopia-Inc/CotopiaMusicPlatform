@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Link, useRoute } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ChevronLeft, AlertOctagon, Save, AlertTriangle, CheckCircle, Loader2, ExternalLink } from "lucide-react";
+import { ChevronLeft, AlertOctagon, Save, AlertTriangle, CheckCircle, Loader2, ExternalLink, Search, UserX, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -41,6 +42,14 @@ interface DmcaClaim {
   updatedAt: string;
 }
 
+interface FoundUser {
+  id: number;
+  username: string;
+  displayName: string | null;
+  email: string;
+  role: string;
+}
+
 const authHeaders = () => ({ Authorization: `Bearer ${localStorage.getItem("cotopia_token")}`, "Content-Type": "application/json" });
 
 export default function AdminDmcaDetail() {
@@ -63,6 +72,12 @@ export default function AdminDmcaDetail() {
   const [adminNotes, setAdminNotes] = useState<string>("");
   const [strikeTarget, setStrikeTarget] = useState<StrikeTarget | null>(null);
 
+  // User search for issuing a strike
+  const [userSearch, setUserSearch] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  const [foundUser, setFoundUser] = useState<FoundUser | null>(null);
+  const [searchError, setSearchError] = useState("");
+
   const updateMutation = useMutation({
     mutationFn: async () => {
       const body: Record<string, unknown> = {};
@@ -83,6 +98,29 @@ export default function AdminDmcaDetail() {
     onError: (err) => toast({ title: "Update failed", description: String(err instanceof Error ? err.message : err), variant: "destructive" }),
   });
 
+  const handleUserSearch = async () => {
+    if (!userSearch.trim()) return;
+    setIsSearching(true);
+    setFoundUser(null);
+    setSearchError("");
+    try {
+      const res = await fetch(
+        `${import.meta.env.BASE_URL}api/admin/users?q=${encodeURIComponent(userSearch.trim())}&limit=5`,
+        { headers: authHeaders() }
+      );
+      if (!res.ok) throw new Error("Search failed");
+      const data = await res.json() as { items: FoundUser[]; total: number };
+      if (!data.items || data.items.length === 0) {
+        setSearchError("No registered user found with that username or email. Only platform members can receive copyright strikes.");
+      } else {
+        setFoundUser(data.items[0]);
+      }
+    } catch {
+      setSearchError("User search failed. Please try again.");
+    } finally {
+      setIsSearching(false);
+    }
+  };
 
   if (isLoading) return (
     <div className="flex items-center justify-center py-24">
@@ -198,35 +236,85 @@ export default function AdminDmcaDetail() {
         </Button>
       </div>
 
+      {/* Issue Strike — requires finding the accused registered user first */}
       <div className="bg-card rounded-xl border border-amber-500/20 p-6 space-y-4">
         <div className="flex items-center gap-2">
           <AlertTriangle className="w-4 h-4 text-amber-400" />
           <h2 className="font-semibold text-sm">Issue Copyright Strike</h2>
         </div>
         <p className="text-xs text-muted-foreground">
-          Issue a strike to the uploader of the infringing content. All strikes are logged and auditable.
+          Find the registered platform member who uploaded the infringing content. Only registered users can receive strikes — look up their username to proceed.
         </p>
-        <Button
-          variant="destructive"
-          size="sm"
-          className="gap-2"
-          onClick={() => setStrikeTarget({
-            userId: 0,
-            uploaderName: claim.claimantName,
-            contentType: "song",
-            contentTitle: claim.workDescription.slice(0, 60),
-            dmcaClaimId: claim.id,
-          })}
-        >
-          <AlertTriangle className="w-4 h-4" />
-          Open Strike Form
-        </Button>
+
+        <div className="space-y-3">
+          <Label className="text-xs text-muted-foreground">Search for the infringing uploader</Label>
+          <div className="flex gap-2">
+            <Input
+              placeholder="Enter username or email of the accused uploader…"
+              value={userSearch}
+              onChange={e => { setUserSearch(e.target.value); setFoundUser(null); setSearchError(""); }}
+              onKeyDown={e => e.key === "Enter" && handleUserSearch()}
+              className="bg-secondary/50 border-secondary text-sm"
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleUserSearch}
+              disabled={isSearching || !userSearch.trim()}
+              className="gap-1.5 shrink-0"
+            >
+              {isSearching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+              Find
+            </Button>
+          </div>
+
+          {searchError && (
+            <div className="flex items-start gap-2 rounded-lg border border-red-500/20 bg-red-500/10 p-3">
+              <UserX className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+              <p className="text-xs text-red-300">{searchError}</p>
+            </div>
+          )}
+
+          {foundUser && (
+            <div className="rounded-lg border border-border bg-secondary/30 p-4 space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                  <User className="w-4 h-4 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium">{foundUser.displayName || foundUser.username}</p>
+                  <p className="text-xs text-muted-foreground">@{foundUser.username} · {foundUser.email} · <span className="capitalize">{foundUser.role.replace(/_/g, " ")}</span></p>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                This user will receive a copyright strike and an in-app notification with a firm warning about content removal.
+              </p>
+              <Button
+                variant="destructive"
+                size="sm"
+                className="gap-2"
+                onClick={() => setStrikeTarget({
+                  userId: foundUser.id,
+                  uploaderName: foundUser.displayName || foundUser.username,
+                  dmcaClaimId: claim.id,
+                })}
+              >
+                <AlertTriangle className="w-4 h-4" />
+                Issue Strike to @{foundUser.username}
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
 
       <CopyrightStrikeModal
         target={strikeTarget}
         onClose={() => setStrikeTarget(null)}
-        onSuccess={() => { toast({ title: "Strike issued" }); }}
+        onSuccess={() => {
+          toast({ title: "Strike issued", description: `@${foundUser?.username} has been notified.` });
+          setFoundUser(null);
+          setUserSearch("");
+        }}
       />
     </div>
   );
