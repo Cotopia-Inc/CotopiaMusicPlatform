@@ -2601,27 +2601,38 @@ components:
 
     DemographicsInput:
       type: object
+      required: [realName, address, city, state, country, postalCode, sex, race, dateOfBirth, phone]
       properties:
         realName:
           type: string
+          minLength: 1
         address:
           type: string
+          minLength: 1
         city:
           type: string
+          minLength: 1
         state:
           type: string
+          minLength: 1
         country:
           type: string
+          minLength: 1
         postalCode:
           type: string
+          minLength: 1
         sex:
           type: string
+          minLength: 1
         race:
           type: string
+          minLength: 1
         dateOfBirth:
           type: string
+          minLength: 1
         phone:
           type: string
+          minLength: 1
 
     # ── Songs ───────────────────────────────────────────────────────────────
     Song:

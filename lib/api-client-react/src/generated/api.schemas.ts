@@ -133,16 +133,26 @@ export interface ChangeUsernameInput {
 }
 
 export interface DemographicsInput {
-  realName?: string;
-  address?: string;
-  city?: string;
-  state?: string;
-  country?: string;
-  postalCode?: string;
-  sex?: string;
-  race?: string;
-  dateOfBirth?: string;
-  phone?: string;
+  /** @minLength 1 */
+  realName: string;
+  /** @minLength 1 */
+  address: string;
+  /** @minLength 1 */
+  city: string;
+  /** @minLength 1 */
+  state: string;
+  /** @minLength 1 */
+  country: string;
+  /** @minLength 1 */
+  postalCode: string;
+  /** @minLength 1 */
+  sex: string;
+  /** @minLength 1 */
+  race: string;
+  /** @minLength 1 */
+  dateOfBirth: string;
+  /** @minLength 1 */
+  phone: string;
 }
 
 export type SongStatus = typeof SongStatus[keyof typeof SongStatus];

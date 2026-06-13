@@ -13,13 +13,28 @@ const US_STATES = ["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","
 const RACE_OPTIONS = ["American Indian or Alaska Native","Asian","Black or African American","Hispanic or Latino","Middle Eastern or North African","Native Hawaiian or Other Pacific Islander","White","Two or More Races","Prefer not to say","Other"];
 const SEX_OPTIONS = ["Male","Female","Non-binary / Non-conforming","Prefer not to say","Other"];
 
+const FIELD_LABELS: Record<string, string> = {
+  realName: "Full Legal Name",
+  dateOfBirth: "Date of Birth",
+  phone: "Phone",
+  sex: "Sex",
+  race: "Race / Ethnicity",
+  address: "Street Address",
+  city: "City",
+  state: "State",
+  postalCode: "ZIP / Postal Code",
+  country: "Country",
+};
+
+type FormKey = "realName" | "address" | "city" | "state" | "country" | "postalCode" | "sex" | "race" | "dateOfBirth" | "phone";
+
 export default function Onboarding() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const saveMutation = useSaveDemographics();
 
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<Record<FormKey, string>>({
     realName: "",
     address: "",
     city: "",
@@ -32,9 +47,33 @@ export default function Onboarding() {
     phone: "",
   });
 
-  const set = (k: keyof typeof form, v: string) => setForm(prev => ({ ...prev, [k]: v }));
+  const [errors, setErrors] = useState<Partial<Record<FormKey, string>>>({});
+  const [submitted, setSubmitted] = useState(false);
+
+  const set = (k: FormKey, v: string) => {
+    setForm(prev => ({ ...prev, [k]: v }));
+    if (submitted) {
+      setErrors(prev => ({ ...prev, [k]: v.trim() ? undefined : `${FIELD_LABELS[k]} is required` }));
+    }
+  };
+
+  function validate(): boolean {
+    const newErrors: Partial<Record<FormKey, string>> = {};
+    (Object.keys(FIELD_LABELS) as FormKey[]).forEach(k => {
+      if (!form[k]?.trim()) {
+        newErrors[k] = `${FIELD_LABELS[k]} is required`;
+      }
+    });
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }
 
   function handleSubmit() {
+    setSubmitted(true);
+    if (!validate()) {
+      toast({ variant: "destructive", title: "All fields are required", description: "Please fill in every field before continuing." });
+      return;
+    }
     saveMutation.mutate({ data: form }, {
       onSuccess: () => {
         toast({ title: "Profile complete!", description: "Welcome to Everyday Radio." });
@@ -45,6 +84,12 @@ export default function Onboarding() {
   }
 
   if (!user) { setLocation("/login"); return null; }
+
+  const fieldClass = (k: FormKey) =>
+    `bg-secondary/50 border-secondary${errors[k] ? " border-destructive focus-visible:ring-destructive" : ""}`;
+
+  const triggerClass = (k: FormKey) =>
+    `bg-secondary/50 border-secondary${errors[k] ? " border-destructive" : ""}`;
 
   return (
     <div className="min-h-screen bg-background">
@@ -61,7 +106,7 @@ export default function Onboarding() {
             </div>
             <div>
               <h1 className="text-2xl font-extrabold">Complete your profile</h1>
-              <p className="text-sm text-muted-foreground">This step is required before you can access the platform.</p>
+              <p className="text-sm text-muted-foreground">All fields are required before you can access the platform.</p>
             </div>
           </div>
         </div>
@@ -70,35 +115,40 @@ export default function Onboarding() {
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Personal Information</h2>
 
           <div className="space-y-2">
-            <Label>Full Legal Name</Label>
-            <Input placeholder="Jane Smith" value={form.realName} onChange={e => set("realName", e.target.value)} className="bg-secondary/50 border-secondary" />
+            <Label>Full Legal Name <span className="text-destructive">*</span></Label>
+            <Input placeholder="Jane Smith" value={form.realName} onChange={e => set("realName", e.target.value)} className={fieldClass("realName")} />
+            {errors.realName && <p className="text-xs text-destructive">{errors.realName}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Date of Birth</Label>
-              <Input type="date" value={form.dateOfBirth} onChange={e => set("dateOfBirth", e.target.value)} className="bg-secondary/50 border-secondary" />
+              <Label>Date of Birth <span className="text-destructive">*</span></Label>
+              <Input type="date" value={form.dateOfBirth} onChange={e => set("dateOfBirth", e.target.value)} className={fieldClass("dateOfBirth")} />
+              {errors.dateOfBirth && <p className="text-xs text-destructive">{errors.dateOfBirth}</p>}
             </div>
             <div className="space-y-2">
-              <Label>Phone</Label>
-              <Input placeholder="+1 (555) 000-0000" value={form.phone} onChange={e => set("phone", e.target.value)} className="bg-secondary/50 border-secondary" />
+              <Label>Phone <span className="text-destructive">*</span></Label>
+              <Input placeholder="+1 (555) 000-0000" value={form.phone} onChange={e => set("phone", e.target.value)} className={fieldClass("phone")} />
+              {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Sex</Label>
+              <Label>Sex <span className="text-destructive">*</span></Label>
               <Select value={form.sex} onValueChange={v => set("sex", v)}>
-                <SelectTrigger className="bg-secondary/50 border-secondary"><SelectValue placeholder="Select" /></SelectTrigger>
+                <SelectTrigger className={triggerClass("sex")}><SelectValue placeholder="Select" /></SelectTrigger>
                 <SelectContent>{SEX_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
               </Select>
+              {errors.sex && <p className="text-xs text-destructive">{errors.sex}</p>}
             </div>
             <div className="space-y-2">
-              <Label>Race / Ethnicity</Label>
+              <Label>Race / Ethnicity <span className="text-destructive">*</span></Label>
               <Select value={form.race} onValueChange={v => set("race", v)}>
-                <SelectTrigger className="bg-secondary/50 border-secondary"><SelectValue placeholder="Select" /></SelectTrigger>
+                <SelectTrigger className={triggerClass("race")}><SelectValue placeholder="Select" /></SelectTrigger>
                 <SelectContent>{RACE_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
               </Select>
+              {errors.race && <p className="text-xs text-destructive">{errors.race}</p>}
             </div>
           </div>
         </div>
@@ -107,32 +157,37 @@ export default function Onboarding() {
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Address</h2>
 
           <div className="space-y-2">
-            <Label>Street Address</Label>
-            <Input placeholder="123 Main St, Apt 4B" value={form.address} onChange={e => set("address", e.target.value)} className="bg-secondary/50 border-secondary" />
+            <Label>Street Address <span className="text-destructive">*</span></Label>
+            <Input placeholder="123 Main St, Apt 4B" value={form.address} onChange={e => set("address", e.target.value)} className={fieldClass("address")} />
+            {errors.address && <p className="text-xs text-destructive">{errors.address}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>City</Label>
-              <Input placeholder="New York" value={form.city} onChange={e => set("city", e.target.value)} className="bg-secondary/50 border-secondary" />
+              <Label>City <span className="text-destructive">*</span></Label>
+              <Input placeholder="New York" value={form.city} onChange={e => set("city", e.target.value)} className={fieldClass("city")} />
+              {errors.city && <p className="text-xs text-destructive">{errors.city}</p>}
             </div>
             <div className="space-y-2">
-              <Label>State</Label>
+              <Label>State <span className="text-destructive">*</span></Label>
               <Select value={form.state} onValueChange={v => set("state", v)}>
-                <SelectTrigger className="bg-secondary/50 border-secondary"><SelectValue placeholder="Select" /></SelectTrigger>
+                <SelectTrigger className={triggerClass("state")}><SelectValue placeholder="Select" /></SelectTrigger>
                 <SelectContent>{US_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
               </Select>
+              {errors.state && <p className="text-xs text-destructive">{errors.state}</p>}
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>ZIP / Postal Code</Label>
-              <Input placeholder="10001" value={form.postalCode} onChange={e => set("postalCode", e.target.value)} className="bg-secondary/50 border-secondary" />
+              <Label>ZIP / Postal Code <span className="text-destructive">*</span></Label>
+              <Input placeholder="10001" value={form.postalCode} onChange={e => set("postalCode", e.target.value)} className={fieldClass("postalCode")} />
+              {errors.postalCode && <p className="text-xs text-destructive">{errors.postalCode}</p>}
             </div>
             <div className="space-y-2">
-              <Label>Country</Label>
-              <Input placeholder="United States" value={form.country} onChange={e => set("country", e.target.value)} className="bg-secondary/50 border-secondary" />
+              <Label>Country <span className="text-destructive">*</span></Label>
+              <Input placeholder="United States" value={form.country} onChange={e => set("country", e.target.value)} className={fieldClass("country")} />
+              {errors.country && <p className="text-xs text-destructive">{errors.country}</p>}
             </div>
           </div>
         </div>

@@ -171,17 +171,29 @@ export const ChangeUsernameResponse = zod.object({
 /**
  * @summary Save user demographics (onboarding)
  */
+
+
+
+
+
+
+
+
+
+
+
+
 export const SaveDemographicsBody = zod.object({
-  "realName": zod.string().optional(),
-  "address": zod.string().optional(),
-  "city": zod.string().optional(),
-  "state": zod.string().optional(),
-  "country": zod.string().optional(),
-  "postalCode": zod.string().optional(),
-  "sex": zod.string().optional(),
-  "race": zod.string().optional(),
-  "dateOfBirth": zod.string().optional(),
-  "phone": zod.string().optional()
+  "realName": zod.string().min(1),
+  "address": zod.string().min(1),
+  "city": zod.string().min(1),
+  "state": zod.string().min(1),
+  "country": zod.string().min(1),
+  "postalCode": zod.string().min(1),
+  "sex": zod.string().min(1),
+  "race": zod.string().min(1),
+  "dateOfBirth": zod.string().min(1),
+  "phone": zod.string().min(1)
 })
 
 export const SaveDemographicsResponse = zod.object({
