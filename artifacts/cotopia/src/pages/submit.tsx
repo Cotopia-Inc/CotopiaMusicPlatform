@@ -38,6 +38,23 @@ const PLAN_FEATURES = {
 
 const STEPS = ["Files & Details", "Plan", "Payment", "Complete"];
 
+const MUSIC_RELEASE_TYPES = ["Single", "EP", "Album"] as const;
+const VIDEO_RELEASE_TYPES = ["Video", "Video Collection"] as const;
+
+function detectReleaseType(count: number, type: "song" | "video"): string {
+  if (type === "video") return count <= 1 ? "Video" : "Video Collection";
+  if (count <= 1) return "Single";
+  if (count <= 6) return "EP";
+  return "Album";
+}
+
+function releaseTypeBadgeClass(rt: string): string {
+  if (rt === "EP") return "bg-blue-500/20 text-blue-400 border-blue-500/30";
+  if (rt === "Album") return "bg-violet-500/20 text-violet-400 border-violet-500/30";
+  if (rt === "Video Collection") return "bg-teal-500/20 text-teal-400 border-teal-500/30";
+  return "bg-muted text-muted-foreground border-border";
+}
+
 // ── Per-row file upload component ─────────────────────────────────────────────
 function FileRow({
   file,
@@ -205,6 +222,7 @@ function FileList({
   hint,
   remaining,
   maxFiles,
+  releaseType,
   onFilesSelected,
   onTitleChange,
   onUrlSet,
@@ -219,6 +237,7 @@ function FileList({
   hint: string;
   remaining: number;
   maxFiles: number;
+  releaseType?: string;
   onFilesSelected: (files: File[]) => void;
   onTitleChange: (i: number, t: string) => void;
   onUrlSet: (i: number, url: string) => void;
@@ -226,7 +245,6 @@ function FileList({
 }) {
   const addMoreRef = useRef<HTMLInputElement>(null);
   const uploaded = urls.filter(u => u !== null).length;
-  const isBulk = files.length >= 2;
   const atLimit = remaining <= 0 || files.length >= maxFiles;
 
   return (
@@ -234,9 +252,9 @@ function FileList({
       <div className="flex items-center justify-between">
         <Label className="flex items-center gap-2">
           <Icon className="w-3.5 h-3.5" />{label} <span className="text-destructive">*</span>
-          {files.length > 0 && (
-            <Badge className={`text-[10px] px-1.5 py-0 ${isBulk ? "bg-primary/20 text-primary border-primary/30" : "bg-muted text-muted-foreground"}`}>
-              {isBulk ? "Bulk" : "Single"}
+          {files.length > 0 && releaseType && (
+            <Badge className={`text-[10px] px-1.5 py-0 ${releaseTypeBadgeClass(releaseType)}`}>
+              {releaseType}
             </Badge>
           )}
         </Label>
@@ -322,6 +340,11 @@ export default function Submit() {
   const [legalChecks, setLegalChecks] = useState<boolean[]>(Array(7).fill(false));
   const allLegalChecked = legalChecks.every(Boolean);
 
+  const [songReleaseType, setSongReleaseType] = useState<string>("");
+  const [videoReleaseType, setVideoReleaseType] = useState<string>("");
+  const [songReleaseName, setSongReleaseName] = useState("");
+  const [videoReleaseName, setVideoReleaseName] = useState("");
+
   const bulkMutation = useCreateBulkSubmission();
   const initiateMutation = useInitiatePayment();
   const captureMutation = useCapturePayment();
@@ -333,6 +356,10 @@ export default function Submit() {
   const allUploaded = tab === "song" ? songAllUploaded : videoAllUploaded;
   const anyFiles = songFiles.length > 0 || videoFiles.length > 0;
   const price = PLAN_PRICES[tab][plan];
+  const effectiveSongType = songReleaseType || detectReleaseType(songFiles.length, "song");
+  const effectiveVideoType = videoReleaseType || detectReleaseType(videoFiles.length, "video");
+  const effectiveActiveType = tab === "song" ? effectiveSongType : effectiveVideoType;
+  const activeReleaseName = tab === "song" ? songReleaseName : videoReleaseName;
 
   // ── File management helpers ───────────────────────────────────────────────
   function addFiles(newFiles: File[], type: "song" | "video") {
@@ -410,6 +437,15 @@ export default function Submit() {
       ? songTitles.map((title, i) => ({ title, fileUrl: songUrls[i]! }))
       : videoTitles.map((title, i) => ({ title, fileUrl: videoUrls[i]! }));
 
+    const releaseName = tab === "song" ? songReleaseName : videoReleaseName;
+    const releaseTypeLabel = tab === "song" ? effectiveSongType : effectiveVideoType;
+    let descriptionWithRelease = meta.description;
+    if (releaseName) {
+      descriptionWithRelease = `${releaseTypeLabel}: "${releaseName}"${meta.description ? `\n\n${meta.description}` : ""}`;
+    } else if (releaseTypeLabel !== "Single" && releaseTypeLabel !== "Video") {
+      descriptionWithRelease = `[${releaseTypeLabel}]${meta.description ? ` ${meta.description}` : ""}`;
+    }
+
     try {
       const submissions = await bulkMutation.mutateAsync({
         data: {
@@ -419,7 +455,7 @@ export default function Submit() {
           labelName: meta.labelName || undefined,
           genre: meta.genre || undefined,
           mood: meta.mood || undefined,
-          description: meta.description || undefined,
+          description: descriptionWithRelease || undefined,
           credits: meta.credits || undefined,
           coverUrl: meta.coverUrl || undefined,
           releaseDate: meta.releaseDate || undefined,
@@ -532,11 +568,37 @@ export default function Submit() {
                 hint="MP3, WAV, M4A, FLAC"
                 remaining={Math.min(MAX_FILES_PER_TYPE - songFiles.length, MAX_FILES_TOTAL - songFiles.length - videoFiles.length)}
                 maxFiles={plan === "single" ? 1 : MAX_FILES_PER_TYPE}
+                releaseType={songFiles.length > 0 ? effectiveSongType : undefined}
                 onFilesSelected={fs => addFiles(fs, "song")}
                 onTitleChange={handleSongTitleChange}
                 onUrlSet={handleSongUrlSet}
                 onRemove={i => removeFile(i, "song")}
               />
+              {songFiles.length > 0 && (
+                <div className="flex flex-col gap-3 p-4 rounded-lg border border-border bg-secondary/20">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <span className="text-sm text-muted-foreground">{songFiles.length} track{songFiles.length !== 1 ? "s" : ""} — auto-grouped as</span>
+                    <Badge className={`${releaseTypeBadgeClass(effectiveSongType)} text-xs px-2 py-0.5`}>{effectiveSongType}</Badge>
+                    <div className="ml-auto flex-shrink-0">
+                      <Select value={songReleaseType || effectiveSongType} onValueChange={setSongReleaseType}>
+                        <SelectTrigger className="h-7 text-xs w-36 bg-background/50"><SelectValue /></SelectTrigger>
+                        <SelectContent>{MUSIC_RELEASE_TYPES.map(t => <SelectItem key={t} value={t} className="text-xs">{t}</SelectItem>)}</SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  {effectiveSongType !== "Single" && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground w-24 flex-shrink-0">{effectiveSongType} Title</span>
+                      <Input
+                        placeholder={effectiveSongType === "EP" ? `e.g. "Midnight Dreams EP"` : `e.g. "Echoes of Tomorrow"`}
+                        value={songReleaseName}
+                        onChange={e => setSongReleaseName(e.target.value)}
+                        className="flex-1 h-8 text-sm bg-background/50"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
               {songFiles.length > 0 && (
                 <div className="border-t border-border pt-5">
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">Shared Metadata (applies to all tracks)</p>
@@ -556,11 +618,37 @@ export default function Submit() {
                 hint="MP4, MOV, WebM"
                 remaining={Math.min(MAX_FILES_PER_TYPE - videoFiles.length, MAX_FILES_TOTAL - songFiles.length - videoFiles.length)}
                 maxFiles={plan === "single" ? 1 : MAX_FILES_PER_TYPE}
+                releaseType={videoFiles.length > 0 ? effectiveVideoType : undefined}
                 onFilesSelected={fs => addFiles(fs, "video")}
                 onTitleChange={handleVideoTitleChange}
                 onUrlSet={handleVideoUrlSet}
                 onRemove={i => removeFile(i, "video")}
               />
+              {videoFiles.length > 0 && (
+                <div className="flex flex-col gap-3 p-4 rounded-lg border border-border bg-secondary/20">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <span className="text-sm text-muted-foreground">{videoFiles.length} video{videoFiles.length !== 1 ? "s" : ""} — auto-grouped as</span>
+                    <Badge className={`${releaseTypeBadgeClass(effectiveVideoType)} text-xs px-2 py-0.5`}>{effectiveVideoType}</Badge>
+                    <div className="ml-auto flex-shrink-0">
+                      <Select value={videoReleaseType || effectiveVideoType} onValueChange={setVideoReleaseType}>
+                        <SelectTrigger className="h-7 text-xs w-44 bg-background/50"><SelectValue /></SelectTrigger>
+                        <SelectContent>{VIDEO_RELEASE_TYPES.map(t => <SelectItem key={t} value={t} className="text-xs">{t}</SelectItem>)}</SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  {effectiveVideoType === "Video Collection" && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground w-24 flex-shrink-0">Collection Title</span>
+                      <Input
+                        placeholder={`e.g. "Live at The Venue"`}
+                        value={videoReleaseName}
+                        onChange={e => setVideoReleaseName(e.target.value)}
+                        className="flex-1 h-8 text-sm bg-background/50"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
               {videoFiles.length > 0 && (
                 <div className="border-t border-border pt-5">
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">Shared Metadata (applies to all videos)</p>
@@ -676,6 +764,16 @@ export default function Submit() {
                 <span className="text-muted-foreground">Plan</span>
                 <span className="font-medium capitalize">{plan}</span>
               </div>
+              <div className="flex justify-between items-center py-2 border-b border-border/50">
+                <span className="text-muted-foreground">Release Type</span>
+                <Badge className={`${releaseTypeBadgeClass(effectiveActiveType)} text-xs`}>{effectiveActiveType}</Badge>
+              </div>
+              {activeReleaseName && (
+                <div className="flex justify-between py-2 border-b border-border/50">
+                  <span className="text-muted-foreground">Release Title</span>
+                  <span className="font-medium truncate max-w-[200px]">{activeReleaseName}</span>
+                </div>
+              )}
               {(tab === "song" ? songMeta : videoMeta).genre && (
                 <div className="flex justify-between py-2 border-b border-border/50">
                   <span className="text-muted-foreground">Genre</span>
@@ -808,6 +906,8 @@ export default function Submit() {
               setStep(0); setPaypalOrderId(null); setPaymentInitiated(false); setSubmissionIds([]); setSuccessTitles([]);
               setSongFiles([]); setSongTitles([]); setSongUrls([]); setSongMeta({ ...defaultMeta });
               setVideoFiles([]); setVideoTitles([]); setVideoUrls([]); setVideoMeta({ ...defaultMeta });
+              setSongReleaseType(""); setVideoReleaseType("");
+              setSongReleaseName(""); setVideoReleaseName("");
             }}>
               Submit More
             </Button>
