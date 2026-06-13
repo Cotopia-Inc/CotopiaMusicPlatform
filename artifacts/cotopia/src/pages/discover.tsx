@@ -4,6 +4,7 @@ import { Play } from "lucide-react";
 import { Link } from "wouter";
 import { usePlayer } from "@/lib/player";
 import { UserLink } from "@/components/user-link";
+import { AddToPlaylist } from "@/components/add-to-playlist";
 
 export default function Discover() {
   const { play } = usePlayer();
@@ -51,9 +52,12 @@ export default function Discover() {
                   </div>
                 </Link>
                 <div>
-                  <Link href={`/songs/${song.id}`}>
-                    <h4 className="font-semibold text-sm truncate hover:text-primary transition-colors">{song.title}</h4>
-                  </Link>
+                  <div className="flex items-start justify-between gap-1">
+                    <Link href={`/songs/${song.id}`}>
+                      <h4 className="font-semibold text-sm truncate hover:text-primary transition-colors">{song.title}</h4>
+                    </Link>
+                    <AddToPlaylist songId={song.id} className="flex-shrink-0 -mt-1 -mr-1 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition-opacity" />
+                  </div>
                   <UserLink username={song.artistName} artistId={song.artistId} role="artist" isVerified={song.artistIsVerified ?? false} className="text-xs text-muted-foreground" />
                 </div>
               </div>
@@ -97,9 +101,12 @@ export default function Discover() {
                   </div>
                 </Link>
                 <div>
-                  <Link href={`/songs/${song.id}`}>
-                    <h4 className="font-semibold text-sm truncate hover:text-primary transition-colors">{song.title}</h4>
-                  </Link>
+                  <div className="flex items-start justify-between gap-1">
+                    <Link href={`/songs/${song.id}`}>
+                      <h4 className="font-semibold text-sm truncate hover:text-primary transition-colors">{song.title}</h4>
+                    </Link>
+                    <AddToPlaylist songId={song.id} className="flex-shrink-0 -mt-1 -mr-1 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition-opacity" />
+                  </div>
                   <UserLink username={song.artistName} artistId={song.artistId} role="artist" isVerified={song.artistIsVerified ?? false} className="text-xs text-muted-foreground" />
                 </div>
               </div>

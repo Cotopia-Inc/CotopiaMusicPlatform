@@ -10,7 +10,9 @@ import { useAuth } from "@/lib/auth";
 import { UserLink } from "@/components/user-link";
 import {
   useFavoriteSong, useUnfavoriteSong, getGetSongQueryKey, useTrackAnalyticsEvent,
+  useRecordSongPlay, useRecordVideoView,
 } from "@workspace/api-client-react";
+import { AddToPlaylist } from "@/components/add-to-playlist";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useRef, useState, useCallback } from "react";
@@ -47,6 +49,8 @@ export function Player() {
   const favoriteMutation = useFavoriteSong();
   const unfavoriteMutation = useUnfavoriteSong();
   const trackEvent = useTrackAnalyticsEvent();
+  const recordSongPlay = useRecordSongPlay();
+  const recordVideoView = useRecordVideoView();
   const lastTrackedId = useRef<number | null>(null);
 
   useEffect(() => {
@@ -58,6 +62,11 @@ export function Player() {
           contentType: "song", contentId: track.id,
         },
       });
+      if (isVideoTrack) {
+        recordVideoView.mutate({ id: track.id });
+      } else {
+        recordSongPlay.mutate({ id: track.id });
+      }
     }
   }, [track?.id]);
 
@@ -257,6 +266,9 @@ export function Player() {
               >
                 <Heart className={`w-5 h-5 transition-all ${trackFavorited ? "fill-current" : ""}`} />
               </button>
+              {track && !isVideoTrack && (
+                <AddToPlaylist songId={track.id} className="text-muted-foreground hover:text-foreground" />
+              )}
             </div>
 
             {/* Progress */}
@@ -437,6 +449,9 @@ export function Player() {
           >
             <Heart className={`w-4 h-4 transition-all ${trackFavorited ? "fill-current" : ""}`} />
           </Button>
+          {track && !isVideoTrack && (
+            <AddToPlaylist songId={track.id} className="w-8 h-8 text-muted-foreground hover:text-foreground" />
+          )}
         </div>
 
         {/* Centre: controls + progress */}
