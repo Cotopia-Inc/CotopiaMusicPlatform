@@ -345,7 +345,7 @@ export default function Profile() {
 
         {/* Profile Video */}
         <div className="space-y-2">
-          <label className="text-sm font-medium">Profile Video <span className="text-muted-foreground text-xs">(optional)</span></label>
+          <label className="text-sm font-medium">Profile Video <span className="text-muted-foreground text-xs">(optional — plays in your banner area, visible to everyone)</span></label>
           <input ref={videoInputRef} type="file" accept="video/*" onChange={handleVideoFile} className="hidden" disabled={isUploadingVideo} />
           <div
             onClick={() => !isUploadingVideo && videoInputRef.current?.click()}

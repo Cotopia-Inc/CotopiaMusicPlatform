@@ -71,9 +71,18 @@ export default function ArtistDetail() {
         Back
       </button>
 
-      {/* Banner */}
+      {/* Banner / Profile Video */}
       <div className="w-full h-64 md:h-80 rounded-xl overflow-hidden bg-secondary border border-border relative">
-        {artist.bannerUrl ? (
+        {(artist as any).profileVideoUrl ? (
+          <video
+            src={(artist as any).profileVideoUrl}
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="w-full h-full object-cover opacity-80"
+          />
+        ) : artist.bannerUrl ? (
           <img src={artist.bannerUrl} alt="Banner" className="w-full h-full object-cover opacity-60" />
         ) : (
           <div className="w-full h-full bg-gradient-to-r from-primary/20 to-secondary" />
@@ -221,27 +230,11 @@ export default function ArtistDetail() {
           </TabsContent>
           
           <TabsContent value="about" className="pt-6">
-            <div className="max-w-3xl space-y-8">
-              {/* Profile video */}
-              {(artist as any).profileVideoUrl && (
-                <div className="space-y-3">
-                  <h3 className="text-xl font-bold">Artist Trailer</h3>
-                  <div className="aspect-video rounded-xl overflow-hidden bg-black border border-border shadow-lg">
-                    <video
-                      src={(artist as any).profileVideoUrl}
-                      controls
-                      className="w-full h-full object-contain"
-                      poster={artist.bannerUrl ?? undefined}
-                    />
-                  </div>
-                </div>
-              )}
-              <div>
-                <h3 className="text-xl font-bold mb-4">Biography</h3>
-                <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                  {artist.bio || "No biography provided."}
-                </p>
-              </div>
+            <div className="max-w-3xl">
+              <h3 className="text-xl font-bold mb-4">Biography</h3>
+              <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                {artist.bio || "No biography provided."}
+              </p>
             </div>
           </TabsContent>
         </Tabs>
