@@ -9,8 +9,9 @@ import React, { useState, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import {
   Play, Pause, ChevronDown, ChevronUp, Music, Video,
-  CheckCircle, XCircle, Clock, AlertCircle
+  CheckCircle, XCircle, Clock, AlertCircle, AlertTriangle
 } from "lucide-react";
+import { CopyrightStrikeModal, type StrikeTarget } from "@/components/copyright-strike-modal";
 import type { AdminListSubmissionsStatus } from "@workspace/api-client-react";
 
 type SubmissionStatus = "approved" | "rejected" | "pending_review" | "draft" | "published";
@@ -136,6 +137,7 @@ function SubmissionCard({
 }) {
   const [expanded, setExpanded] = useState(false);
   const [notes, setNotes] = useState(sub.adminNotes ?? "");
+  const [strikeTarget, setStrikeTarget] = useState<StrikeTarget | null>(null);
 
   return (
     <div className="bg-card border border-border rounded-2xl overflow-hidden transition-all">
@@ -238,7 +240,23 @@ function SubmissionCard({
                   onChange={(e) => setNotes(e.target.value)}
                 />
               </div>
-              <div className="flex gap-2 justify-end">
+              <div className="flex gap-2 justify-end flex-wrap">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 text-xs text-red-400 border-red-500/30 hover:bg-red-500/10"
+                  onClick={() => setStrikeTarget({
+                    userId: sub.userId,
+                    uploaderName: sub.submitterName ?? `User ${sub.userId}`,
+                    contentType: "submission",
+                    contentId: sub.id,
+                    contentTitle: sub.title,
+                  })}
+                >
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                  Issue Strike
+                </Button>
+                <div className="flex-1" />
                 <Button
                   variant="destructive"
                   size="sm"
@@ -263,6 +281,11 @@ function SubmissionCard({
           )}
         </div>
       )}
+
+      <CopyrightStrikeModal
+        target={strikeTarget}
+        onClose={() => setStrikeTarget(null)}
+      />
     </div>
   );
 }

@@ -1,0 +1,86 @@
+Improve the Copyright Strike system so admins never have to manually type User ID or Content ID.
+
+Current issue:
+The Issue Copyright Strike form asks for User ID and Song/Video ID manually. Replace this with searchable dropdowns and action buttons connected to all songs, videos, uploads, and submissions.
+
+Update copyright strike workflow:
+
+1. Add “Issue Strike” action buttons on:
+
+* /admin/songs
+* /admin/videos
+* /admin/submissions
+* /admin/uploads if it exists
+* /admin/dmca claim detail pages
+* Song detail admin actions
+* Video detail admin actions
+
+2. When admin clicks “Issue Strike,” automatically pass:
+
+* user_id/uploader_id
+* content_type
+* content_id
+* content title
+* uploader name
+* uploader email
+
+3. Replace manual ID fields with:
+
+* Search uploader by name/email
+* Search content by title
+* Content Type dropdown: Song, Video, Submission, Company Post, Chat Message, Comment
+* Strike reason field
+* Internal admin notes field
+* Optional DMCA claim link
+
+4. Add reusable component:
+   CopyrightStrikeModal
+
+Props:
+
+* userId
+* contentType
+* contentId
+* contentTitle
+* uploaderName
+* uploaderEmail
+
+5. Create helper buttons:
+
+* Issue Strike
+* Remove Content
+* Suspend User
+* View Uploader
+* View Content
+
+6. Make the copyright strike system work across:
+
+* songs
+* videos
+* submissions
+* uploaded media files
+* comments
+* chat messages
+* company posts
+
+7. When a strike is issued:
+
+* create copyright_strikes record
+* create admin_audit_logs record
+* optionally hide/remove the content
+* update user strike count
+* show warning if user has 2+ strikes
+* suggest suspension if user has 3+ strikes
+
+8. Admin UX:
+   Admins should not need to know database IDs.
+   All IDs should be handled internally.
+   Display user-friendly names, titles, emails, dates, and statuses.
+
+After completing, give me a testing guide for issuing a strike from:
+
+* admin songs page
+* admin videos page
+* admin submissions page
+* DMCA detail page
+* comment/chat moderation page

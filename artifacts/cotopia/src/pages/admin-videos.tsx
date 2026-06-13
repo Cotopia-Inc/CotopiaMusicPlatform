@@ -5,16 +5,18 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Search, Star, Sparkles, EyeOff, Eye, Loader2 } from "lucide-react";
+import { Search, Star, Sparkles, EyeOff, Eye, Loader2, AlertTriangle } from "lucide-react";
 import { UserLink } from "@/components/user-link";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { CopyrightStrikeModal, type StrikeTarget } from "@/components/copyright-strike-modal";
 
 export default function AdminVideos() {
   const [search, setSearch] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [pendingId, setPendingId] = useState<number | null>(null);
+  const [strikeTarget, setStrikeTarget] = useState<StrikeTarget | null>(null);
 
   const { data, isLoading } = useListVideos(
     { q: search, limit: 100 },
@@ -59,6 +61,7 @@ export default function AdminVideos() {
   };
 
   return (
+    <>
     <div className="space-y-8 pb-24">
       <div>
         <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Admin</p>
@@ -183,6 +186,22 @@ export default function AdminVideos() {
                           <Sparkles className="w-3 h-3" />
                           {video.isFeatured ? "Unfeature" : "Feature"}
                         </Button>
+
+                        {/* Issue Strike */}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-xs gap-1.5 text-red-400 border-red-500/30 hover:bg-red-500/10"
+                          onClick={() => setStrikeTarget({
+                            userId: (video as any).uploaderId ?? (video as any).userId ?? 0,
+                            uploaderName: video.artistName ?? "Unknown",
+                            contentType: "video",
+                            contentId: video.id,
+                            contentTitle: video.title,
+                          })}
+                        >
+                          <AlertTriangle className="w-3 h-3" />Strike
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -199,5 +218,11 @@ export default function AdminVideos() {
         </Table>
       </div>
     </div>
+
+    <CopyrightStrikeModal
+      target={strikeTarget}
+      onClose={() => setStrikeTarget(null)}
+    />
+    </>
   );
 }

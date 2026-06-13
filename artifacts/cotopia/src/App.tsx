@@ -47,6 +47,7 @@ import AdminDmca from "@/pages/admin-dmca";
 import AdminDmcaDetail from "@/pages/admin-dmca-detail";
 import AdminAuditLogs from "@/pages/admin-audit-logs";
 import AdminLegal from "@/pages/admin-legal";
+import AdminStrikes from "@/pages/admin-strikes";
 import EditorDashboard from "@/pages/editor-dashboard";
 import EditorPlaylists from "@/pages/editor-playlists";
 import EditorPicks from "@/pages/editor-picks";
@@ -267,6 +268,9 @@ function Router() {
       </Route>
       <Route path="/admin/legal">
         <ProtectedRoute><Layout><AdminLegal /></Layout></ProtectedRoute>
+      </Route>
+      <Route path="/admin/strikes">
+        <ProtectedRoute><Layout><AdminStrikes /></Layout></ProtectedRoute>
       </Route>
 
       {/* Editor routes */}

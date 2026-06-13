@@ -5,16 +5,18 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Search, Star, Sparkles, EyeOff, Eye, Loader2 } from "lucide-react";
+import { Search, Star, Sparkles, EyeOff, Eye, Loader2, AlertTriangle } from "lucide-react";
 import { UserLink } from "@/components/user-link";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { CopyrightStrikeModal, type StrikeTarget } from "@/components/copyright-strike-modal";
 
 export default function AdminSongs() {
   const [search, setSearch] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [pendingId, setPendingId] = useState<number | null>(null);
+  const [strikeTarget, setStrikeTarget] = useState<StrikeTarget | null>(null);
 
   const { data, isLoading } = useListSongs(
     { q: search, limit: 100 },
@@ -59,6 +61,7 @@ export default function AdminSongs() {
   };
 
   return (
+    <>
     <div className="space-y-8 pb-24">
       <div>
         <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Admin</p>
@@ -190,6 +193,22 @@ export default function AdminSongs() {
                           <Sparkles className="w-3 h-3" />
                           {song.isFeatured ? "Unfeature" : "Feature"}
                         </Button>
+
+                        {/* Issue Strike */}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-xs gap-1.5 text-red-400 border-red-500/30 hover:bg-red-500/10"
+                          onClick={() => setStrikeTarget({
+                            userId: (song as any).uploaderId ?? (song as any).userId ?? 0,
+                            uploaderName: song.artistName ?? "Unknown",
+                            contentType: "song",
+                            contentId: song.id,
+                            contentTitle: song.title,
+                          })}
+                        >
+                          <AlertTriangle className="w-3 h-3" />Strike
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -206,5 +225,11 @@ export default function AdminSongs() {
         </Table>
       </div>
     </div>
+
+    <CopyrightStrikeModal
+      target={strikeTarget}
+      onClose={() => setStrikeTarget(null)}
+    />
+    </>
   );
 }

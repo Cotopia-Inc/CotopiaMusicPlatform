@@ -4,7 +4,7 @@ import {
   LayoutDashboard, LogIn, LogOut, Settings, Send, Radio, Bell,
   BarChart3, Upload, ListMusic, Shield,
   MessageSquare, FileText, Eye, BookOpen, MessageCircle,
-  AlertOctagon, ScrollText, Scale,
+  AlertOctagon, ScrollText, Scale, ShieldOff,
 } from "lucide-react";
 import { RoleBadges } from "@/components/role-badges";
 import { useAuth } from "@/lib/auth";
@@ -67,6 +67,7 @@ export function Sidebar() {
     { href: "/admin/comments", label: "Comments", icon: MessageSquare },
     { href: "/admin/messages", label: "DM Feed", icon: MessageCircle },
     { href: "/admin/dmca", label: "DMCA Claims", icon: AlertOctagon },
+    { href: "/admin/strikes", label: "Copyright Strikes", icon: ShieldOff },
     { href: "/admin/settings", label: "Settings", icon: Settings },
   ];
 

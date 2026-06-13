@@ -209,7 +209,7 @@ router.get("/admin/listeners", requireAuth, requireRole(...ADMIN_ROLES, "moderat
   const offset = Number(req.query.offset) || 0;
   const q = req.query.q as string | undefined;
 
-  const conditions = [eq(usersTable.role, "listener")];
+  const conditions: ReturnType<typeof eq>[] = [];
   if (q) conditions.push(or(ilike(usersTable.username, `%${q}%`), ilike(usersTable.email, `%${q}%`)) as any);
 
   const [listeners, [totalRow]] = await Promise.all([
@@ -671,6 +671,169 @@ router.patch("/admin/legal-settings", requireAuth, requireRole("master_admin"), 
     aiPolicyText: updated.aiPolicyText,
     communityRulesText: updated.communityRulesText,
   });
+});
+
+// ── Copyright Strikes ─────────────────────────────────────────────────────────
+
+router.get("/admin/strikes", requireAuth, requireRole(...ADMIN_ROLES, "moderator"), async (req: AuthRequest, res): Promise<void> => {
+  const limit = Math.min(Number(req.query.limit ?? 50), 100);
+  const offset = Number(req.query.offset ?? 0);
+  const userId = req.query.userId ? Number(req.query.userId) : undefined;
+
+  const conditions = userId ? [eq(copyrightStrikesTable.userId, userId)] : [];
+
+  const [strikes, [totalRow]] = await Promise.all([
+    db
+      .select({
+        id: copyrightStrikesTable.id,
+        userId: copyrightStrikesTable.userId,
+        username: sql<string>`u.username`,
+        email: sql<string>`u.email`,
+        displayName: sql<string>`u.display_name`,
+        contentType: copyrightStrikesTable.contentType,
+        contentId: copyrightStrikesTable.contentId,
+        contentTitle: copyrightStrikesTable.contentTitle,
+        dmcaClaimId: copyrightStrikesTable.dmcaClaimId,
+        strikeReason: copyrightStrikesTable.strikeReason,
+        internalNotes: copyrightStrikesTable.internalNotes,
+        issuedByUserId: copyrightStrikesTable.issuedByUserId,
+        issuedByUsername: sql<string>`ib.username`,
+        status: copyrightStrikesTable.status,
+        createdAt: copyrightStrikesTable.createdAt,
+        resolvedAt: copyrightStrikesTable.resolvedAt,
+        resolvedReason: copyrightStrikesTable.resolvedReason,
+      })
+      .from(copyrightStrikesTable)
+      .leftJoin(sql`users u`, sql`${copyrightStrikesTable.userId} = u.id`)
+      .leftJoin(sql`users ib`, sql`${copyrightStrikesTable.issuedByUserId} = ib.id`)
+      .where(conditions.length ? and(...conditions) : undefined)
+      .orderBy(desc(copyrightStrikesTable.createdAt))
+      .limit(limit)
+      .offset(offset),
+    db.select({ count: count() }).from(copyrightStrikesTable).where(conditions.length ? and(...conditions) : undefined),
+  ]);
+
+  res.json({ items: strikes, total: totalRow?.count ?? 0 });
+});
+
+router.post("/admin/strikes", requireAuth, requireRole(...ADMIN_ROLES, "moderator"), async (req: AuthRequest, res): Promise<void> => {
+  const { userId, contentType, contentId, contentTitle, strikeReason, internalNotes, dmcaClaimId } = req.body as Record<string, unknown>;
+
+  if (!contentType || !strikeReason) {
+    res.status(400).json({ error: "contentType and strikeReason are required" });
+    return;
+  }
+
+  // Resolve userId from content if not provided directly
+  let resolvedUserId = userId ? Number(userId) : 0;
+  if (!resolvedUserId && contentId) {
+    if (contentType === "song") {
+      const [song] = await db.select({ artistId: songsTable.artistId }).from(songsTable).where(eq(songsTable.id, Number(contentId))).limit(1);
+      if (song) {
+        const [artist] = await db.select({ userId: artistsTable.userId }).from(artistsTable).where(eq(artistsTable.id, song.artistId)).limit(1);
+        if (artist) resolvedUserId = artist.userId;
+      }
+    } else if (contentType === "video") {
+      const [video] = await db.select({ artistId: videosTable.artistId }).from(videosTable).where(eq(videosTable.id, Number(contentId))).limit(1);
+      if (video) {
+        const [artist] = await db.select({ userId: artistsTable.userId }).from(artistsTable).where(eq(artistsTable.id, video.artistId)).limit(1);
+        if (artist) resolvedUserId = artist.userId;
+      }
+    }
+  }
+
+  if (!resolvedUserId) {
+    res.status(400).json({ error: "userId is required (or provide contentType + contentId to resolve it)" });
+    return;
+  }
+
+  const [target] = await db.select({ username: usersTable.username, email: usersTable.email }).from(usersTable).where(eq(usersTable.id, resolvedUserId)).limit(1);
+  if (!target) {
+    res.status(404).json({ error: "User not found" });
+    return;
+  }
+
+  const [strike] = await db.insert(copyrightStrikesTable).values({
+    userId: resolvedUserId,
+    contentType: String(contentType),
+    contentId: contentId ? Number(contentId) : null,
+    contentTitle: contentTitle ? String(contentTitle) : null,
+    strikeReason: String(strikeReason),
+    internalNotes: internalNotes ? String(internalNotes) : null,
+    dmcaClaimId: dmcaClaimId ? Number(dmcaClaimId) : null,
+    issuedByUserId: req.user!.userId,
+    status: "active",
+  }).returning();
+
+  // Count active strikes to determine severity
+  const [{ activeCount }] = await db.select({ activeCount: count() }).from(copyrightStrikesTable)
+    .where(and(eq(copyrightStrikesTable.userId, resolvedUserId), eq(copyrightStrikesTable.status, "active")));
+
+  await db.insert(adminAuditLogsTable).values({
+    adminUserId: req.user!.userId,
+    action: "copyright_strike_issued",
+    targetType: "user",
+    targetId: resolvedUserId,
+    description: `Copyright strike issued to @${target.username} for ${contentType}${contentTitle ? ` "${contentTitle}"` : contentId ? ` #${contentId}` : ""}. Active strikes: ${activeCount}`,
+    metadata: { strikeReason, contentType, contentId, contentTitle, activeStrikeCount: activeCount } as unknown,
+  });
+
+  res.status(201).json({ strike, activeStrikeCount: activeCount });
+});
+
+router.patch("/admin/strikes/:id/resolve", requireAuth, requireRole(...ADMIN_ROLES, "moderator"), async (req: AuthRequest, res): Promise<void> => {
+  const id = parseInt(String(req.params["id"] ?? "0"), 10);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+
+  const { resolvedReason } = req.body as { resolvedReason?: string };
+
+  const [existing] = await db.select({ userId: copyrightStrikesTable.userId }).from(copyrightStrikesTable).where(eq(copyrightStrikesTable.id, id)).limit(1);
+  if (!existing) { res.status(404).json({ error: "Strike not found" }); return; }
+
+  const [strike] = await db.update(copyrightStrikesTable).set({
+    status: "resolved",
+    resolvedAt: new Date(),
+    resolvedReason: resolvedReason ?? "Revoked by admin",
+  }).where(eq(copyrightStrikesTable.id, id)).returning();
+
+  await db.insert(adminAuditLogsTable).values({
+    adminUserId: req.user!.userId,
+    action: "copyright_strike_resolved",
+    targetType: "user",
+    targetId: existing.userId,
+    description: `Copyright strike #${id} revoked${resolvedReason ? `: ${resolvedReason}` : ""}`,
+    metadata: { strikeId: id, resolvedReason } as unknown,
+  });
+
+  res.json(strike);
+});
+
+router.get("/admin/users/:id/strikes", requireAuth, requireRole(...ADMIN_ROLES, "moderator"), async (req: AuthRequest, res): Promise<void> => {
+  const idRaw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const id = parseInt(idRaw, 10);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+
+  const strikes = await db
+    .select({
+      id: copyrightStrikesTable.id,
+      contentType: copyrightStrikesTable.contentType,
+      contentId: copyrightStrikesTable.contentId,
+      contentTitle: copyrightStrikesTable.contentTitle,
+      strikeReason: copyrightStrikesTable.strikeReason,
+      internalNotes: copyrightStrikesTable.internalNotes,
+      status: copyrightStrikesTable.status,
+      createdAt: copyrightStrikesTable.createdAt,
+      resolvedAt: copyrightStrikesTable.resolvedAt,
+      resolvedReason: copyrightStrikesTable.resolvedReason,
+      issuedByUsername: sql<string>`ib.username`,
+    })
+    .from(copyrightStrikesTable)
+    .leftJoin(sql`users ib`, sql`${copyrightStrikesTable.issuedByUserId} = ib.id`)
+    .where(eq(copyrightStrikesTable.userId, id))
+    .orderBy(desc(copyrightStrikesTable.createdAt));
+
+  const activeCount = strikes.filter(s => s.status === "active").length;
+  res.json({ strikes, activeCount, totalCount: strikes.length });
 });
 
 export default router;

@@ -4,10 +4,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, AlertOctagon, Save, AlertTriangle, CheckCircle, Loader2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { CopyrightStrikeModal, type StrikeTarget } from "@/components/copyright-strike-modal";
 
 const VALID_STATUSES = [
   "received", "under_review", "removed", "rejected",
@@ -61,10 +61,7 @@ export default function AdminDmcaDetail() {
 
   const [selectedStatus, setSelectedStatus] = useState<string>("");
   const [adminNotes, setAdminNotes] = useState<string>("");
-  const [strikeUserId, setStrikeUserId] = useState("");
-  const [strikeContentType, setStrikeContentType] = useState("song");
-  const [strikeContentId, setStrikeContentId] = useState("");
-  const [strikeReason, setStrikeReason] = useState("");
+  const [strikeTarget, setStrikeTarget] = useState<StrikeTarget | null>(null);
 
   const updateMutation = useMutation({
     mutationFn: async () => {
@@ -86,22 +83,6 @@ export default function AdminDmcaDetail() {
     onError: (err) => toast({ title: "Update failed", description: String(err instanceof Error ? err.message : err), variant: "destructive" }),
   });
 
-  const strikeMutation = useMutation({
-    mutationFn: async () => {
-      const res = await fetch(`${import.meta.env.BASE_URL}api/admin/dmca/${claimId}/strike`, {
-        method: "POST",
-        headers: authHeaders(),
-        body: JSON.stringify({ userId: Number(strikeUserId), contentType: strikeContentType, contentId: Number(strikeContentId), strikeReason }),
-      });
-      if (!res.ok) throw new Error("Strike failed");
-      return res.json();
-    },
-    onSuccess: () => {
-      toast({ title: "Copyright strike issued" });
-      setStrikeUserId(""); setStrikeContentId(""); setStrikeReason("");
-    },
-    onError: (err) => toast({ title: "Strike failed", description: String(err instanceof Error ? err.message : err), variant: "destructive" }),
-  });
 
   if (isLoading) return (
     <div className="flex items-center justify-center py-24">
@@ -222,41 +203,31 @@ export default function AdminDmcaDetail() {
           <AlertTriangle className="w-4 h-4 text-amber-400" />
           <h2 className="font-semibold text-sm">Issue Copyright Strike</h2>
         </div>
-        <p className="text-xs text-muted-foreground">Issue a copyright strike to the uploader. Repeated strikes may result in account suspension.</p>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">User ID <span className="text-red-400">*</span></Label>
-            <Input placeholder="User ID" value={strikeUserId} onChange={e => setStrikeUserId(e.target.value)} className="bg-secondary/50 border-secondary text-sm h-8" />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">Content Type</Label>
-            <select value={strikeContentType} onChange={e => setStrikeContentType(e.target.value)} className="w-full h-8 rounded-md border border-secondary bg-secondary/50 px-2 text-sm">
-              <option value="song">Song</option>
-              <option value="video">Video</option>
-            </select>
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">Content ID <span className="text-red-400">*</span></Label>
-            <Input placeholder="Song or Video ID" value={strikeContentId} onChange={e => setStrikeContentId(e.target.value)} className="bg-secondary/50 border-secondary text-sm h-8" />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">Strike Reason <span className="text-red-400">*</span></Label>
-            <Input placeholder="Brief reason" value={strikeReason} onChange={e => setStrikeReason(e.target.value)} className="bg-secondary/50 border-secondary text-sm h-8" />
-          </div>
-        </div>
-
+        <p className="text-xs text-muted-foreground">
+          Issue a strike to the uploader of the infringing content. All strikes are logged and auditable.
+        </p>
         <Button
           variant="destructive"
           size="sm"
-          onClick={() => strikeMutation.mutate()}
-          disabled={!strikeUserId || !strikeContentId || !strikeReason || strikeMutation.isPending}
           className="gap-2"
+          onClick={() => setStrikeTarget({
+            userId: 0,
+            uploaderName: claim.claimantName,
+            contentType: "song",
+            contentTitle: claim.workDescription.slice(0, 60),
+            dmcaClaimId: claim.id,
+          })}
         >
-          {strikeMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <AlertTriangle className="w-4 h-4" />}
-          Issue Strike
+          <AlertTriangle className="w-4 h-4" />
+          Open Strike Form
         </Button>
       </div>
+
+      <CopyrightStrikeModal
+        target={strikeTarget}
+        onClose={() => setStrikeTarget(null)}
+        onSuccess={() => { toast({ title: "Strike issued" }); }}
+      />
     </div>
   );
 }
