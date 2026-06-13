@@ -1,16 +1,127 @@
 import { Link, useLocation } from "wouter";
+import { useState, useEffect, useRef } from "react";
 import {
   Home, Compass, Music, Video, Users, Mic2, Library, Building2,
   LayoutDashboard, LogIn, LogOut, Settings, Send, Radio, Bell,
   BarChart3, Upload, ListMusic, Shield,
   MessageSquare, FileText, Eye, BookOpen, MessageCircle,
-  AlertOctagon, ScrollText, Scale, ShieldOff,
+  AlertOctagon, ScrollText, Scale, ShieldOff, Search, X,
 } from "lucide-react";
 import { RoleBadges } from "@/components/role-badges";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useGetUnreadNotificationCount, getGetUnreadNotificationCountQueryKey, useGetUnreadMessageCount, getGetUnreadMessageCountQueryKey } from "@workspace/api-client-react";
+
+interface SearchUser {
+  id: number;
+  username: string;
+  displayName: string | null;
+  avatarUrl: string | null;
+  role: string;
+  isVerified: boolean | null;
+}
+
+function UserSearch() {
+  const [, navigate] = useLocation();
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<SearchUser[]>([]);
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (query.trim().length < 2) { setResults([]); setOpen(false); return; }
+    const t = setTimeout(async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/users/search?q=${encodeURIComponent(query.trim())}`);
+        const data: SearchUser[] = await res.json();
+        setResults(data);
+        setOpen(true);
+      } finally {
+        setLoading(false);
+      }
+    }, 300);
+    return () => clearTimeout(t);
+  }, [query]);
+
+  useEffect(() => {
+    function onDown(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") { setOpen(false); inputRef.current?.blur(); }
+    }
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => { document.removeEventListener("mousedown", onDown); document.removeEventListener("keydown", onKey); };
+  }, []);
+
+  function go(user: SearchUser) {
+    setQuery("");
+    setOpen(false);
+    navigate(`/users/${user.id}`);
+  }
+
+  function clear() { setQuery(""); setResults([]); setOpen(false); inputRef.current?.focus(); }
+
+  return (
+    <div ref={containerRef} className="relative px-3 py-2">
+      <div className="relative">
+        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+        <Input
+          ref={inputRef}
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          onFocus={() => { if (results.length > 0) setOpen(true); }}
+          placeholder="Search people…"
+          className="pl-8 pr-7 h-8 text-xs bg-secondary/50 border-secondary"
+        />
+        {query && (
+          <button onClick={clear} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+            <X className="w-3 h-3" />
+          </button>
+        )}
+      </div>
+
+      {open && (
+        <div className="absolute left-3 right-3 top-full mt-1 z-50 bg-popover border border-border rounded-lg shadow-xl overflow-hidden">
+          {loading && (
+            <div className="px-3 py-2 text-xs text-muted-foreground">Searching…</div>
+          )}
+          {!loading && results.length === 0 && (
+            <div className="px-3 py-2 text-xs text-muted-foreground">No results for "{query}"</div>
+          )}
+          {!loading && results.map(u => (
+            <button
+              key={u.id}
+              onClick={() => go(u)}
+              className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-secondary/60 transition-colors text-left"
+            >
+              <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xs font-bold flex-shrink-0 overflow-hidden">
+                {u.avatarUrl
+                  ? <img src={u.avatarUrl} alt={u.username} className="w-full h-full object-cover" />
+                  : (u.displayName ?? u.username)[0].toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold truncate flex items-center gap-0.5 flex-wrap">
+                  {u.displayName ?? u.username}
+                  <RoleBadges role={u.role} size="sm" isVerified={u.isVerified ?? false} />
+                </p>
+                <p className="text-[10px] text-muted-foreground truncate">@{u.username}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 const ADMIN_ROLES = ["admin", "master_admin"];
 const STAFF_ROLES = ["admin", "master_admin", "moderator", "editor"];
@@ -104,6 +215,11 @@ export function Sidebar() {
             <p className="text-[10px] text-muted-foreground tracking-widest uppercase pl-7">Powered by Cotopia</p>
           </div>
         </Link>
+      </div>
+
+      {/* Search */}
+      <div className="border-b border-border/50">
+        <UserSearch />
       </div>
 
       {/* Main Nav */}
