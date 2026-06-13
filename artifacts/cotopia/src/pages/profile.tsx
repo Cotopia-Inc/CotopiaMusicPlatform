@@ -1,4 +1,4 @@
-import { useGetMe, getGetMeQueryKey, useUpdateMe, useChangePassword, useChangeUsername, useSendOtp } from "@workspace/api-client-react";
+import { useGetMe, getGetMeQueryKey, useUpdateMe, useChangePassword, useChangeUsername, useSendOtp, useVerifyOtp } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Upload, X, Loader2, Lock, User, MailCheck, CheckCircle } from "lucide-react";
+import { Upload, X, Loader2, Lock, User, MailCheck, CheckCircle, Mail, RefreshCw } from "lucide-react";
 import { useUpload } from "@workspace/object-storage-web";
 import { RoleBadges, VerifiedBadge } from "@/components/role-badges";
 import { useQueryClient } from "@tanstack/react-query";
@@ -44,6 +44,14 @@ export default function Profile() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPasswordForm, setShowPasswordForm] = useState(false);
 
+  // Email change
+  const [showEmailForm, setShowEmailForm] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [emailCode, setEmailCode] = useState("");
+  const [emailStep, setEmailStep] = useState<1 | 2>(1);
+  const [emailCountdown, setEmailCountdown] = useState(0);
+  const emailTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   useEffect(() => {
     if (profile && !initialized.current) {
       setDisplayName(profile.displayName || "");
@@ -60,6 +68,7 @@ export default function Profile() {
   const changePasswordMutation = useChangePassword();
   const changeUsernameMutation = useChangeUsername();
   const sendOtpMutation = useSendOtp();
+  const verifyOtpMutation = useVerifyOtp();
 
   const { uploadFile: uploadAvatar, isUploading: isUploadingAvatar, progress: uploadProgress } = useUpload({
     onSuccess: (res) => setAvatarUrl(`/api/storage${res.objectPath}`),
@@ -126,6 +135,50 @@ export default function Profile() {
         setShowUsernameForm(false);
       },
       onError: (err: any) => toast({ variant: "destructive", title: err?.response?.data?.error ?? "Username already taken" }),
+    });
+  };
+
+  function startEmailCountdown() {
+    setEmailCountdown(60);
+    emailTimerRef.current = setInterval(() => {
+      setEmailCountdown(c => {
+        if (c <= 1) { clearInterval(emailTimerRef.current!); return 0; }
+        return c - 1;
+      });
+    }, 1000);
+  }
+
+  const handleSendEmailCode = () => {
+    if (!newEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail.trim())) {
+      toast({ variant: "destructive", title: "Enter a valid email address" });
+      return;
+    }
+    if (newEmail.trim().toLowerCase() === profile?.email?.toLowerCase()) {
+      toast({ variant: "destructive", title: "That's already your current email" });
+      return;
+    }
+    sendOtpMutation.mutate({ data: { purpose: "change_email", newEmail: newEmail.trim() } }, {
+      onSuccess: () => {
+        setEmailStep(2);
+        startEmailCountdown();
+        toast({ title: "Code sent", description: `A 6-digit code was sent to ${newEmail.trim()}.` });
+      },
+      onError: (err: any) => toast({ variant: "destructive", title: err?.response?.data?.error ?? "Could not send code" }),
+    });
+  };
+
+  const handleVerifyEmailCode = () => {
+    if (emailCode.length !== 6) { toast({ variant: "destructive", title: "Enter the 6-digit code" }); return; }
+    verifyOtpMutation.mutate({ data: { purpose: "change_email", code: emailCode.trim(), newEmail: newEmail.trim() } }, {
+      onSuccess: () => {
+        qc.invalidateQueries({ queryKey: getGetMeQueryKey() });
+        toast({ title: "Email updated", description: "Your email address has been changed." });
+        setShowEmailForm(false);
+        setEmailStep(1);
+        setNewEmail("");
+        setEmailCode("");
+      },
+      onError: (err: any) => toast({ variant: "destructive", title: err?.response?.data?.error ?? "Incorrect or expired code" }),
     });
   };
 
@@ -371,6 +424,79 @@ export default function Profile() {
             <Button onClick={handleChangePassword} disabled={changePasswordMutation.isPending || !currentPassword || !newPassword} size="sm">
               {changePasswordMutation.isPending ? "Updating…" : "Update Password"}
             </Button>
+          </div>
+        )}
+      </div>
+
+      {/* Change Email */}
+      <div className="bg-card p-6 rounded-xl border border-border space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Mail className="w-4 h-4 text-primary" />
+            </div>
+            <div>
+              <p className="font-semibold text-sm">Email Address</p>
+              <p className="text-xs text-muted-foreground font-mono">{profile.email}</p>
+            </div>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => { setShowEmailForm(v => !v); setEmailStep(1); setNewEmail(""); setEmailCode(""); }}>
+            {showEmailForm ? "Cancel" : "Change"}
+          </Button>
+        </div>
+
+        {showEmailForm && emailStep === 1 && (
+          <div className="space-y-3 pt-2 border-t border-border">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">New Email Address</label>
+              <Input
+                type="email"
+                value={newEmail}
+                onChange={e => setNewEmail(e.target.value)}
+                placeholder="new@example.com"
+                className="bg-secondary/50 border-secondary"
+                onKeyDown={e => e.key === "Enter" && handleSendEmailCode()}
+              />
+              <p className="text-xs text-muted-foreground">A 6-digit verification code will be sent to this address.</p>
+            </div>
+            <Button onClick={handleSendEmailCode} disabled={sendOtpMutation.isPending || !newEmail.trim()} size="sm">
+              {sendOtpMutation.isPending ? "Sending…" : "Send Verification Code"}
+            </Button>
+          </div>
+        )}
+
+        {showEmailForm && emailStep === 2 && (
+          <div className="space-y-3 pt-2 border-t border-border">
+            <p className="text-xs text-muted-foreground">
+              Enter the 6-digit code sent to <span className="font-semibold text-foreground">{newEmail}</span>
+            </p>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Verification Code</label>
+              <Input
+                value={emailCode}
+                onChange={e => setEmailCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                placeholder="123456"
+                maxLength={6}
+                className="bg-secondary/50 border-secondary h-12 text-center text-2xl tracking-[0.5em] font-mono"
+                onKeyDown={e => e.key === "Enter" && handleVerifyEmailCode()}
+              />
+            </div>
+            <div className="flex items-center gap-3">
+              <Button onClick={handleVerifyEmailCode} disabled={verifyOtpMutation.isPending || emailCode.length !== 6} size="sm">
+                {verifyOtpMutation.isPending ? "Verifying…" : "Confirm Code"}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleSendEmailCode}
+                disabled={emailCountdown > 0 || sendOtpMutation.isPending}
+                className="text-xs text-muted-foreground gap-1.5"
+              >
+                <RefreshCw className="w-3 h-3" />
+                {emailCountdown > 0 ? `Resend in ${emailCountdown}s` : "Resend"}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground/60">(During development, the code is logged to the server console.)</p>
           </div>
         )}
       </div>
