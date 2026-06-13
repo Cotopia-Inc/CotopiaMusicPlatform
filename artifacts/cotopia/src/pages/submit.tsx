@@ -98,6 +98,7 @@ interface SharedMeta {
   genre: string;
   mood: string;
   description: string;
+  credits: string;
   releaseDate: string;
   isExplicit: boolean;
   coverUrl: string;
@@ -137,6 +138,11 @@ function MetadataSection({ meta, onChange, type }: { meta: SharedMeta; onChange:
       <div className="space-y-2">
         <Label>Description <span className="text-muted-foreground text-xs">(optional, shared across all tracks)</span></Label>
         <Textarea placeholder="Tell us about this release — the story, the inspiration, the vibe..." rows={2} value={meta.description} onChange={e => set({ description: e.target.value })} className="bg-secondary/50 border-secondary resize-none" />
+      </div>
+
+      <div className="space-y-2">
+        <Label>Credits <span className="text-muted-foreground text-xs">(optional, shared across all tracks)</span></Label>
+        <Textarea placeholder="e.g. Written by Jane Doe · Produced by John Smith · Mastered at Studio A" rows={2} value={meta.credits} onChange={e => set({ credits: e.target.value })} className="bg-secondary/50 border-secondary resize-none" />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -283,7 +289,7 @@ function FileList({
 }
 
 // ── Main component ─────────────────────────────────────────────────────────────
-const defaultMeta: SharedMeta = { artistName: "", labelName: "", genre: "", mood: "", description: "", releaseDate: "", isExplicit: false, coverUrl: "" };
+const defaultMeta: SharedMeta = { artistName: "", labelName: "", genre: "", mood: "", description: "", credits: "", releaseDate: "", isExplicit: false, coverUrl: "" };
 
 export default function Submit() {
   const { user } = useAuth();

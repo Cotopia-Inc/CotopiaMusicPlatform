@@ -31,5 +31,7 @@ export interface Song {
   status: SongStatus;
   releaseType?: SongReleaseType;
   isFeatured?: boolean;
+  /** @nullable */
+  credits?: string | null;
   createdAt: string;
 }

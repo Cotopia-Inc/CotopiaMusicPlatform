@@ -2,6 +2,7 @@ import { useGetMe, getGetMeQueryKey, useUpdateMe } from "@workspace/api-client-r
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -22,13 +23,20 @@ export default function Profile() {
   const [avatarUrl, setAvatarUrl] = useState("");
   const [avatarFilename, setAvatarFilename] = useState("");
   const [avatarUrlMode, setAvatarUrlMode] = useState(false);
+  const [bio, setBio] = useState("");
+  const [bannerUrl, setBannerUrl] = useState("");
+  const [profileVideoUrl, setProfileVideoUrl] = useState("");
   const initialized = useRef(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (profile && !initialized.current) {
       setDisplayName(profile.displayName || "");
       setAvatarUrl(profile.avatarUrl || "");
+      setBio((profile as any).bio || "");
+      setBannerUrl((profile as any).bannerUrl || "");
+      setProfileVideoUrl((profile as any).profileVideoUrl || "");
       initialized.current = true;
     }
   }, [profile]);
@@ -42,11 +50,23 @@ export default function Profile() {
     },
   });
 
+  const { uploadFile: uploadBanner, isUploading: isUploadingBanner, progress: bannerProgress } = useUpload({
+    onSuccess: (res) => {
+      setBannerUrl(`/api/storage${res.objectPath}`);
+    },
+  });
+
   const handleAvatarFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setAvatarFilename(file.name);
     await uploadAvatar(file);
+  };
+
+  const handleBannerFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    await uploadBanner(file);
   };
 
   const clearAvatar = () => {
@@ -56,7 +76,7 @@ export default function Profile() {
   };
 
   const handleSave = () => {
-    updateMutation.mutate({ data: { displayName, avatarUrl } }, {
+    updateMutation.mutate({ data: { displayName, avatarUrl, bio, bannerUrl, profileVideoUrl } }, {
       onSuccess: () => {
         toast({ title: "Profile updated" });
       },
@@ -180,6 +200,79 @@ export default function Profile() {
               </button>
             </div>
           )}
+        </div>
+
+        {/* Bio */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Bio <span className="text-muted-foreground text-xs">(optional)</span></label>
+          <Textarea
+            value={bio}
+            onChange={(e) => setBio(e.target.value)}
+            placeholder="Tell listeners about yourself, your music, your influences…"
+            rows={4}
+            className="bg-secondary/50 border-secondary resize-none"
+          />
+        </div>
+
+        {/* Banner Image */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Profile Banner <span className="text-muted-foreground text-xs">(optional — shown on your artist page)</span></label>
+          {bannerUrl ? (
+            <div className="space-y-2">
+              <div className="relative w-full h-28 rounded-lg overflow-hidden border border-border">
+                <img src={bannerUrl} alt="Banner" className="w-full h-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => setBannerUrl("")}
+                  className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full p-1 transition-colors"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <div
+                onClick={() => !isUploadingBanner && bannerInputRef.current?.click()}
+                className={`flex items-center gap-3 p-4 rounded-lg border-2 border-dashed border-border/60 bg-secondary/20 hover:bg-secondary/40 hover:border-primary/40 transition-all group ${isUploadingBanner ? "cursor-wait opacity-70" : "cursor-pointer"}`}
+              >
+                <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  {isUploadingBanner ? <Loader2 className="w-4 h-4 text-primary animate-spin" /> : <Upload className="w-4 h-4 text-primary" />}
+                </div>
+                <div>
+                  {isUploadingBanner ? (
+                    <p className="text-xs text-primary">Uploading… {bannerProgress}%</p>
+                  ) : (
+                    <>
+                      <p className="text-sm font-medium">Click to upload banner image</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">JPG, PNG, WebP — wide/landscape recommended</p>
+                    </>
+                  )}
+                </div>
+              </div>
+              <input ref={bannerInputRef} type="file" accept="image/*" onChange={handleBannerFile} className="hidden" disabled={isUploadingBanner} />
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">or paste URL:</span>
+                <Input
+                  value={bannerUrl}
+                  onChange={(e) => setBannerUrl(e.target.value)}
+                  placeholder="https://..."
+                  className="bg-secondary/50 border-secondary h-8 text-xs flex-1"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Profile Video URL */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Profile Video URL <span className="text-muted-foreground text-xs">(optional — shown on your artist page)</span></label>
+          <Input
+            value={profileVideoUrl}
+            onChange={(e) => setProfileVideoUrl(e.target.value)}
+            placeholder="https://... (link to a video — YouTube, Vimeo, direct MP4)"
+            className="bg-secondary/50 border-secondary"
+          />
         </div>
 
         <div className="space-y-2">

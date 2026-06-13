@@ -96,6 +96,16 @@ router.patch("/playlists/:id", requireAuth, async (req: AuthRequest, res): Promi
     return;
   }
 
+  const [existing] = await db.select({ userId: playlistsTable.userId }).from(playlistsTable).where(eq(playlistsTable.id, params.data.id)).limit(1);
+  if (!existing) {
+    res.status(404).json({ error: "Playlist not found" });
+    return;
+  }
+  if (existing.userId !== req.user!.userId) {
+    res.status(403).json({ error: "Not your playlist" });
+    return;
+  }
+
   const [playlist] = await db.update(playlistsTable).set(parsed.data).where(eq(playlistsTable.id, params.data.id)).returning();
   const [c] = await db.select({ count: count() }).from(playlistItemsTable).where(eq(playlistItemsTable.playlistId, params.data.id));
   res.json({ ...playlist, songCount: c?.count ?? 0 });

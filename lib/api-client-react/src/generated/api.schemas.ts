@@ -56,6 +56,10 @@ export interface User {
   avatarUrl?: string | null;
   /** @nullable */
   bio?: string | null;
+  /** @nullable */
+  bannerUrl?: string | null;
+  /** @nullable */
+  profileVideoUrl?: string | null;
   role: UserRole;
   isActive?: boolean;
   isVerified?: boolean;
@@ -88,6 +92,8 @@ export interface UserUpdate {
   displayName?: string;
   avatarUrl?: string;
   bio?: string;
+  bannerUrl?: string;
+  profileVideoUrl?: string;
 }
 
 export type SongStatus = typeof SongStatus[keyof typeof SongStatus];
@@ -133,6 +139,8 @@ export interface Song {
   status: SongStatus;
   releaseType?: SongReleaseType;
   isFeatured?: boolean;
+  /** @nullable */
+  credits?: string | null;
   createdAt: string;
 }
 
@@ -151,6 +159,7 @@ export interface SongInput {
   coverUrl?: string;
   streamUrl?: string;
   lyrics?: string;
+  credits?: string;
 }
 
 export type SongUpdateStatus = typeof SongUpdateStatus[keyof typeof SongUpdateStatus];
@@ -168,6 +177,7 @@ export interface SongUpdate {
   coverUrl?: string;
   streamUrl?: string;
   lyrics?: string;
+  credits?: string;
   isFeatured?: boolean;
   status?: SongUpdateStatus;
 }
@@ -206,6 +216,8 @@ export interface Video {
   avgRating?: number | null;
   status: VideoStatus;
   isFeatured?: boolean;
+  /** @nullable */
+  credits?: string | null;
   createdAt: string;
 }
 
@@ -225,6 +237,7 @@ export interface VideoInput {
   thumbnailUrl?: string;
   videoUrl?: string;
   description?: string;
+  credits?: string;
 }
 
 export type VideoUpdateStatus = typeof VideoUpdateStatus[keyof typeof VideoUpdateStatus];
@@ -242,6 +255,7 @@ export interface VideoUpdate {
   thumbnailUrl?: string;
   videoUrl?: string;
   description?: string;
+  credits?: string;
   isFeatured?: boolean;
   status?: VideoUpdateStatus;
 }
@@ -886,6 +900,7 @@ export interface AdminUploadSongInput {
   releaseDate?: string;
   releaseType?: AdminUploadSongInputReleaseType;
   isFeatured?: boolean;
+  credits?: string;
 }
 
 export type AdminBulkUploadSongsInputReleaseType = typeof AdminBulkUploadSongsInputReleaseType[keyof typeof AdminBulkUploadSongsInputReleaseType];
@@ -925,6 +940,7 @@ export interface AdminUploadVideoInput {
   thumbnailUrl?: string;
   releaseDate?: string;
   isFeatured?: boolean;
+  credits?: string;
 }
 
 export type AdminBulkUploadVideosInputVideosItem = {

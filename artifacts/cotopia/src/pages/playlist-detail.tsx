@@ -1,15 +1,22 @@
 import { useParams, Link } from "wouter";
 import { UserLink } from "@/components/user-link";
-import { useGetPlaylist, getGetPlaylistQueryKey } from "@workspace/api-client-react";
+import { useGetPlaylist, getGetPlaylistQueryKey, useUpdatePlaylist } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Play, ListMusic, MoreVertical } from "lucide-react";
+import { Play, ListMusic, ArrowLeft, Share2, Globe, Lock, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePlayer } from "@/lib/player";
+import { useAuth } from "@/lib/auth";
+import { useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 
 export default function PlaylistDetail() {
   const { id } = useParams();
   const playlistId = Number(id);
   const { play } = usePlayer();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [copied, setCopied] = useState(false);
+  const updateMutation = useUpdatePlaylist();
 
   const { data: playlist, isLoading } = useGetPlaylist(playlistId, {
     query: { enabled: !!playlistId, queryKey: getGetPlaylistQueryKey(playlistId) }
@@ -32,8 +39,31 @@ export default function PlaylistDetail() {
 
   if (!playlist) return <div className="p-8 text-center text-muted-foreground">Playlist not found</div>;
 
+  const isOwner = user && playlist.userId === user.id;
+
+  const handleShare = () => {
+    const url = `${window.location.origin}/playlists/${playlistId}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  const handleTogglePublic = () => {
+    updateMutation.mutate(
+      { id: playlistId, data: { isPublic: !playlist.isPublic } },
+      { onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetPlaylistQueryKey(playlistId) }) }
+    );
+  };
+
   return (
     <div className="space-y-12 pb-24">
+      {/* Back navigation */}
+      <button onClick={() => window.history.back()} className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm font-medium group">
+        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+        Back
+      </button>
+
       {/* Header */}
       <div className="flex flex-col md:flex-row gap-8 items-end">
         <div className="w-64 h-64 rounded-md shadow-2xl overflow-hidden bg-secondary border border-border flex-shrink-0 flex items-center justify-center">
@@ -56,13 +86,37 @@ export default function PlaylistDetail() {
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-3 flex-wrap">
         <Button size="icon" className="w-14 h-14 rounded-full bg-primary text-primary-foreground hover:scale-105 transition-transform" title={`Play ${playlist.name}`} onClick={() => { if (playlist.songs?.[0]) play({ id: playlist.songs[0].id, title: playlist.songs[0].title, artistName: playlist.songs[0].artistName ?? "", artistId: playlist.songs[0].artistId, artistIsVerified: (playlist.songs[0] as any).artistIsVerified ?? false, coverUrl: playlist.songs[0].coverUrl, streamUrl: playlist.songs[0].streamUrl, duration: playlist.songs[0].duration }); }}>
           <Play className="w-6 h-6 ml-1 fill-current" />
         </Button>
-        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground" title="More options">
-          <MoreVertical className="w-8 h-8" />
+
+        {/* Share button */}
+        <Button variant="outline" size="sm" className="gap-2 h-9" onClick={handleShare}>
+          {copied ? <Check className="w-4 h-4 text-green-400" /> : <Share2 className="w-4 h-4" />}
+          {copied ? "Copied!" : "Share"}
         </Button>
+
+        {/* Public / Private toggle — owner only */}
+        {isOwner && (
+          <Button
+            variant={playlist.isPublic ? "secondary" : "outline"}
+            size="sm"
+            className="gap-2 h-9"
+            onClick={handleTogglePublic}
+            disabled={updateMutation.isPending}
+          >
+            {playlist.isPublic ? <Globe className="w-4 h-4 text-green-400" /> : <Lock className="w-4 h-4" />}
+            {playlist.isPublic ? "Public" : "Private"}
+          </Button>
+        )}
+
+        {/* Public badge for non-owners */}
+        {!isOwner && playlist.isPublic && (
+          <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Globe className="w-3.5 h-3.5 text-green-400" /> Public playlist
+          </span>
+        )}
       </div>
 
       {/* Songs List */}

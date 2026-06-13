@@ -1,7 +1,7 @@
 import { useParams, Link, useLocation } from "wouter";
 import { useGetArtist, getGetArtistQueryKey, useFollowArtist, useUnfollowArtist, useTrackAnalyticsEvent } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Play, Users, Music, MessageCircle } from "lucide-react";
+import { Play, Users, Music, MessageCircle, ArrowLeft } from "lucide-react";
 import { RoleBadges } from "@/components/role-badges";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
@@ -58,6 +58,12 @@ export default function ArtistDetail() {
 
   return (
     <div className="space-y-12 pb-24">
+      {/* Back navigation */}
+      <button onClick={() => window.history.back()} className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm font-medium group">
+        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+        Back
+      </button>
+
       {/* Banner */}
       <div className="w-full h-64 md:h-80 rounded-xl overflow-hidden bg-secondary border border-border relative">
         {artist.bannerUrl ? (

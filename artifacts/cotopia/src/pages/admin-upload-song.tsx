@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -109,6 +110,7 @@ export default function AdminUploadSong() {
     coverUrl: "",
     releaseDate: "",
     isFeatured: false,
+    credits: "",
   });
   const [singleDone, setSingleDone] = useState<{ id: number; title: string } | null>(null);
 
@@ -139,6 +141,7 @@ export default function AdminUploadSong() {
           releaseDate: form.releaseDate || undefined,
           releaseType: "single",
           isFeatured: form.isFeatured,
+          credits: form.credits || undefined,
         },
       });
       setSingleDone({ id: song.id, title: song.title });
@@ -244,7 +247,7 @@ export default function AdminUploadSong() {
         </div>
         <div className="flex gap-3">
           <Link href={`/songs/${singleDone.id}`}><Button variant="outline">View Song</Button></Link>
-          <Button onClick={() => { setSingleDone(null); setForm({ title: "", artistId: 0, genre: "", duration: 0, streamUrl: "", coverUrl: "", releaseDate: "", isFeatured: false }); }}>
+          <Button onClick={() => { setSingleDone(null); setForm({ title: "", artistId: 0, genre: "", duration: 0, streamUrl: "", coverUrl: "", releaseDate: "", isFeatured: false, credits: "" }); }}>
             Upload Another
           </Button>
         </div>
@@ -384,6 +387,18 @@ export default function AdminUploadSong() {
                 <p className="text-xs text-muted-foreground">Show on homepage featured section</p>
               </div>
               <Switch checked={form.isFeatured} onCheckedChange={v => setForm(f => ({ ...f, isFeatured: v }))} />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="credits">Credits <span className="text-muted-foreground text-xs">(optional)</span></Label>
+              <Textarea
+                id="credits"
+                placeholder="e.g. Written by Jane Doe · Produced by John Smith · Mixed at Studio A"
+                rows={3}
+                value={form.credits}
+                onChange={e => setForm(f => ({ ...f, credits: e.target.value }))}
+                className="resize-none text-sm"
+              />
             </div>
 
             <Button type="submit" className="w-full gap-2" disabled={uploadSong.isPending || audioUpload.isUploading}>

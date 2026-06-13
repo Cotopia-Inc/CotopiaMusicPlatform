@@ -25,5 +25,7 @@ export interface Video {
   avgRating?: number | null;
   status: VideoStatus;
   isFeatured?: boolean;
+  /** @nullable */
+  credits?: string | null;
   createdAt: string;
 }

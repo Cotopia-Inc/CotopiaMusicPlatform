@@ -9,6 +9,8 @@ export const usersTable = pgTable("users", {
   username: text("username").notNull().unique(),
   displayName: text("display_name"),
   avatarUrl: text("avatar_url"),
+  bannerUrl: text("banner_url"),
+  profileVideoUrl: text("profile_video_url"),
   bio: text("bio"),
   role: text("role").notNull().default("listener"), // listener | artist | label | business | admin | moderator | editor | master_admin
   isVerified: boolean("is_verified").notNull().default(false),

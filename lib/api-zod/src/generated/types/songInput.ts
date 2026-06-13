@@ -14,4 +14,5 @@ export interface SongInput {
   coverUrl?: string;
   streamUrl?: string;
   lyrics?: string;
+  credits?: string;
 }

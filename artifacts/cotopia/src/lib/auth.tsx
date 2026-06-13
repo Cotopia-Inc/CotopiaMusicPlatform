@@ -46,6 +46,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem("cotopia_token");
     queryClient.setQueryData(getGetMeQueryKey(), null);
     queryClient.clear(); // Clear all queries on logout
+    // Signal player to stop
+    window.dispatchEvent(new CustomEvent("cotopia:logout"));
   };
 
   return (

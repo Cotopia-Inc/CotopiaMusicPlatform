@@ -10,4 +10,6 @@ export interface UserUpdate {
   displayName?: string;
   avatarUrl?: string;
   bio?: string;
+  bannerUrl?: string;
+  profileVideoUrl?: string;
 }

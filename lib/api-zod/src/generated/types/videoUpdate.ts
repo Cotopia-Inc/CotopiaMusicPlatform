@@ -13,6 +13,7 @@ export interface VideoUpdate {
   thumbnailUrl?: string;
   videoUrl?: string;
   description?: string;
+  credits?: string;
   isFeatured?: boolean;
   status?: VideoUpdateStatus;
 }

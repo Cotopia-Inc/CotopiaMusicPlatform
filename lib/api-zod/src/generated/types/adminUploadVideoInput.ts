@@ -16,4 +16,5 @@ export interface AdminUploadVideoInput {
   thumbnailUrl?: string;
   releaseDate?: string;
   isFeatured?: boolean;
+  credits?: string;
 }

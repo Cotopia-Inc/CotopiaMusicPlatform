@@ -5,7 +5,7 @@ import {
   useRateVideo, useFavoriteVideo, useUnfavoriteVideo, useTrackAnalyticsEvent,
 } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Play, Heart, Star, Send, Radio, Users, MessageCircle, Maximize2 } from "lucide-react";
+import { Play, Heart, Star, Send, Radio, Users, MessageCircle, Maximize2, ArrowLeft } from "lucide-react";
 import { RoleTag } from "@/components/role-badges";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
@@ -146,6 +146,12 @@ export default function VideoDetail() {
 
   return (
     <div className="pb-24 space-y-4">
+      {/* Back navigation */}
+      <button onClick={() => window.history.back()} className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm font-medium group">
+        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+        Back
+      </button>
+
       {/* ── Video player with chat overlay ── */}
       <div className="relative w-full rounded-xl overflow-hidden bg-black border border-border shadow-2xl" style={{ aspectRatio: "16/9" }}>
         {/* Real video element (shown once play is clicked) */}
@@ -364,6 +370,14 @@ export default function VideoDetail() {
         {/* Description */}
         {video.description && (
           <p className="text-muted-foreground text-sm leading-relaxed">{video.description}</p>
+        )}
+
+        {/* Credits */}
+        {(video as any).credits && (
+          <div className="bg-secondary/30 rounded-xl border border-border/50 p-5 space-y-2 mt-2">
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">Credits</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{(video as any).credits}</p>
+          </div>
         )}
       </div>
     </div>

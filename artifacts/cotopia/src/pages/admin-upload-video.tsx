@@ -79,7 +79,7 @@ export default function AdminUploadVideo() {
   const artists = artistsData ?? [];
 
   // ── Single video state ────────────────────────────────────────
-  const [form, setForm] = useState({ title: "", artistId: 0, genre: "", description: "", duration: 0, videoUrl: "", thumbnailUrl: "", releaseDate: "", isFeatured: false });
+  const [form, setForm] = useState({ title: "", artistId: 0, genre: "", description: "", credits: "", duration: 0, videoUrl: "", thumbnailUrl: "", releaseDate: "", isFeatured: false });
   const [singleDone, setSingleDone] = useState<{ id: number; title: string } | null>(null);
 
   const videoUpload = useUpload({ onSuccess: (res) => setForm(f => ({ ...f, videoUrl: `/api/storage${res.objectPath}` })) });
@@ -94,7 +94,7 @@ export default function AdminUploadVideo() {
     }
     try {
       const video = await uploadVideo.mutateAsync({
-        data: { title: form.title, artistId: form.artistId, genre: form.genre || undefined, description: form.description || undefined, duration: form.duration || undefined, videoUrl: form.videoUrl, thumbnailUrl: form.thumbnailUrl || undefined, releaseDate: form.releaseDate || undefined, isFeatured: form.isFeatured },
+        data: { title: form.title, artistId: form.artistId, genre: form.genre || undefined, description: form.description || undefined, credits: form.credits || undefined, duration: form.duration || undefined, videoUrl: form.videoUrl, thumbnailUrl: form.thumbnailUrl || undefined, releaseDate: form.releaseDate || undefined, isFeatured: form.isFeatured },
       });
       setSingleDone({ id: video.id, title: video.title });
       toast({ title: "Video published!", description: `"${video.title}" is now live on Everyday Radio` });
@@ -169,7 +169,7 @@ export default function AdminUploadVideo() {
         <div><h2 className="text-xl font-bold">Video Published!</h2><p className="text-muted-foreground mt-1">"{singleDone.title}" is now live.</p></div>
         <div className="flex gap-3">
           <Link href={`/videos/${singleDone.id}`}><Button variant="outline">View Video</Button></Link>
-          <Button onClick={() => { setSingleDone(null); setForm({ title: "", artistId: 0, genre: "", description: "", duration: 0, videoUrl: "", thumbnailUrl: "", releaseDate: "", isFeatured: false }); }}>Upload Another</Button>
+          <Button onClick={() => { setSingleDone(null); setForm({ title: "", artistId: 0, genre: "", description: "", credits: "", duration: 0, videoUrl: "", thumbnailUrl: "", releaseDate: "", isFeatured: false }); }}>Upload Another</Button>
         </div>
       </div>
     );
@@ -243,6 +243,18 @@ export default function AdminUploadVideo() {
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
               <Textarea id="description" placeholder="Describe this video..." rows={3} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="credits">Credits <span className="text-muted-foreground text-xs">(optional)</span></Label>
+              <Textarea
+                id="credits"
+                placeholder="e.g. Directed by Jane Doe · Cinematography by John Smith · Music by Nova Sounds"
+                rows={3}
+                value={form.credits}
+                onChange={e => setForm(f => ({ ...f, credits: e.target.value }))}
+                className="resize-none text-sm"
+              />
             </div>
 
             <div className="space-y-2">

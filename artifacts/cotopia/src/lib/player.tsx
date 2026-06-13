@@ -198,6 +198,21 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     });
   }, [track?.id]);
 
+  // Stop playback on logout
+  useEffect(() => {
+    const handleLogout = () => {
+      const media = getMedia();
+      if (media) { media.pause(); media.currentTime = 0; }
+      setIsPlaying(false);
+      setTrack(null);
+      setQueue([]);
+      setQueueIndex(-1);
+      trackRef.current = null;
+    };
+    window.addEventListener("cotopia:logout", handleLogout);
+    return () => window.removeEventListener("cotopia:logout", handleLogout);
+  }, []);
+
   const registerVideoElement = useCallback((el: HTMLVideoElement | null) => {
     const old = videoElRef.current;
     if (old) {

@@ -8,6 +8,7 @@ export const videosTable = pgTable("videos", {
   artistId: integer("artist_id").notNull().references(() => artistsTable.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   description: text("description"),
+  credits: text("credits"),
   genre: text("genre"),
   duration: integer("duration").notNull().default(0),
   thumbnailUrl: text("thumbnail_url"),

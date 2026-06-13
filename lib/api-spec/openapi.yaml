@@ -2351,6 +2351,10 @@ components:
           type: ["string", "null"]
         bio:
           type: ["string", "null"]
+        bannerUrl:
+          type: ["string", "null"]
+        profileVideoUrl:
+          type: ["string", "null"]
         role:
           type: string
           enum: [listener, artist, label, business, admin, moderator, editor, master_admin]
@@ -2395,6 +2399,10 @@ components:
           type: string
         bio:
           type: string
+        bannerUrl:
+          type: string
+        profileVideoUrl:
+          type: string
 
     # ── Songs ───────────────────────────────────────────────────────────────
     Song:
@@ -2435,6 +2443,8 @@ components:
           enum: [single, ep, album]
         isFeatured:
           type: boolean
+        credits:
+          type: ["string", "null"]
         createdAt:
           type: string
 
@@ -2468,6 +2478,8 @@ components:
           type: string
         lyrics:
           type: string
+        credits:
+          type: string
 
     SongUpdate:
       type: object
@@ -2481,6 +2493,8 @@ components:
         streamUrl:
           type: string
         lyrics:
+          type: string
+        credits:
           type: string
         isFeatured:
           type: boolean
@@ -2531,6 +2545,8 @@ components:
           enum: [draft, pending_review, approved, rejected, published]
         isFeatured:
           type: boolean
+        credits:
+          type: ["string", "null"]
         createdAt:
           type: string
 
@@ -2564,6 +2580,8 @@ components:
           type: string
         description:
           type: string
+        credits:
+          type: string
 
     VideoUpdate:
       type: object
@@ -2577,6 +2595,8 @@ components:
         videoUrl:
           type: string
         description:
+          type: string
+        credits:
           type: string
         isFeatured:
           type: boolean
@@ -3442,6 +3462,8 @@ components:
           enum: [single, ep, album]
         isFeatured:
           type: boolean
+        credits:
+          type: string
 
     AdminBulkUploadSongsInput:
       type: object
@@ -3499,6 +3521,8 @@ components:
           type: string
         isFeatured:
           type: boolean
+        credits:
+          type: string
 
     AdminBulkUploadVideosInput:
       type: object

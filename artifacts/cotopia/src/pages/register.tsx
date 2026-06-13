@@ -49,10 +49,10 @@ export default function Register() {
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-20" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
         <div className="relative z-10">
-          <div className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <Radio className="w-6 h-6 text-primary" />
             <span className="text-xl font-extrabold tracking-tighter">Everyday Radio</span>
-          </div>
+          </Link>
           <p className="text-[11px] text-muted-foreground tracking-widest uppercase mt-0.5 pl-8">Powered by Cotopia</p>
         </div>
         <div className="relative z-10 space-y-4 max-w-md">
@@ -66,10 +66,10 @@ export default function Register() {
         <div className="w-full max-w-sm space-y-6">
           {/* Mobile logo */}
           <div className="flex lg:hidden flex-col items-center gap-1">
-            <div className="flex items-center gap-2">
+            <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
               <Radio className="w-6 h-6 text-primary" />
               <span className="text-xl font-extrabold tracking-tighter">Everyday Radio</span>
-            </div>
+            </Link>
             <p className="text-[10px] text-muted-foreground tracking-widest uppercase">Powered by Cotopia</p>
           </div>
 

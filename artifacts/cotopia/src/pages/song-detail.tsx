@@ -5,7 +5,7 @@ import {
   useRateSong, useFavoriteSong, useUnfavoriteSong,
 } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Play, Pause, Heart, Star, Send, Radio, Users, MessageCircle } from "lucide-react";
+import { Play, Pause, Heart, Star, Send, Radio, Users, MessageCircle, ArrowLeft } from "lucide-react";
 import { RoleTag } from "@/components/role-badges";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
@@ -140,6 +140,12 @@ export default function SongDetail() {
     <div className="flex gap-6 pb-24 h-full">
       {/* ── Main Content ── */}
       <div className="flex-1 min-w-0 space-y-8">
+        {/* Back navigation */}
+        <button onClick={() => window.history.back()} className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm font-medium group">
+          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+          Back
+        </button>
+
         {/* Header */}
         <div className="flex flex-col md:flex-row gap-8 items-end">
           <div className="w-56 h-56 rounded-xl shadow-2xl overflow-hidden bg-secondary border border-border flex-shrink-0">
@@ -230,6 +236,14 @@ export default function SongDetail() {
         {song.genre && (
           <div className="flex gap-2 flex-wrap">
             <Badge variant="secondary" className="text-xs">{song.genre}</Badge>
+          </div>
+        )}
+
+        {/* Credits */}
+        {(song as any).credits && (
+          <div className="bg-secondary/30 rounded-xl border border-border/50 p-5 space-y-2">
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">Credits</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{(song as any).credits}</p>
           </div>
         )}
       </div>

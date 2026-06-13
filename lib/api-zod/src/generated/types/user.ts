@@ -17,6 +17,10 @@ export interface User {
   avatarUrl?: string | null;
   /** @nullable */
   bio?: string | null;
+  /** @nullable */
+  bannerUrl?: string | null;
+  /** @nullable */
+  profileVideoUrl?: string | null;
   role: UserRole;
   isActive?: boolean;
   isVerified?: boolean;

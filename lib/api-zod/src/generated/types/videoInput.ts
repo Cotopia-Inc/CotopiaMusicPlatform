@@ -13,4 +13,5 @@ export interface VideoInput {
   thumbnailUrl?: string;
   videoUrl?: string;
   description?: string;
+  credits?: string;
 }

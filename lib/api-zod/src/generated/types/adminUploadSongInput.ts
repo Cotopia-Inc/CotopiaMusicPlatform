@@ -18,4 +18,5 @@ export interface AdminUploadSongInput {
   releaseDate?: string;
   releaseType?: AdminUploadSongInputReleaseType;
   isFeatured?: boolean;
+  credits?: string;
 }

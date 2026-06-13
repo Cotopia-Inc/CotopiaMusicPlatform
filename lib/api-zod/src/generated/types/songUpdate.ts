@@ -13,6 +13,7 @@ export interface SongUpdate {
   coverUrl?: string;
   streamUrl?: string;
   lyrics?: string;
+  credits?: string;
   isFeatured?: boolean;
   status?: SongUpdateStatus;
 }
