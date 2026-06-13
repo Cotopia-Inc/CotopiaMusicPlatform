@@ -438,6 +438,35 @@ export default function Submit() {
   }
 
   // ── Payment flow ──────────────────────────────────────────────────────────
+  const SUBMISSION_AGREEMENT_TYPES = [
+    "terms",
+    "privacy",
+    "community_guidelines",
+    "submission_agreement",
+    "refund_policy",
+    "ai_policy",
+    "dmca_copyright",
+    "content_ownership",
+    "license_grant",
+    "no_royalties",
+    "ai_rights",
+    "indemnification",
+  ] as const;
+
+  async function recordSubmissionAgreements(submissionId: number) {
+    const token = localStorage.getItem("cotopia_token");
+    const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
+    await Promise.all(
+      SUBMISSION_AGREEMENT_TYPES.map(agreementType =>
+        fetch(`${import.meta.env.BASE_URL}api/legal/agree`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ agreementType, agreementVersion: "1.0", submissionId }),
+        })
+      )
+    );
+  }
+
   async function handleCreateAndInitiate() {
     const meta = tab === "song" ? songMeta : videoMeta;
     const files = tab === "song"
@@ -474,6 +503,9 @@ export default function Submit() {
       const ids = (submissions as any[]).map((s: any) => s.id);
       setSubmissionIds(ids);
       setSuccessTitles((submissions as any[]).map((s: any) => s.title ?? ""));
+
+      // Record all 12 agreement acceptances linked to this submission
+      await recordSubmissionAgreements(ids[0]);
 
       // Initiate payment using the first submission id (represents the batch)
       initiateMutation.mutate({ data: { submissionId: ids[0] } }, {
