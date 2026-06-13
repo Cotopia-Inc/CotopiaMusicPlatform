@@ -381,6 +381,17 @@ export default function Profile() {
             <span className="text-xs text-muted-foreground">or paste URL:</span>
             <Input value={profileVideoUrl} onChange={e => setProfileVideoUrl(e.target.value)} placeholder="https://... (YouTube, Vimeo, or MP4)" className="bg-secondary/50 border-secondary h-8 text-xs flex-1" />
           </div>
+          {/* Video preview */}
+          {profileVideoUrl && (
+            <div className="aspect-video rounded-lg overflow-hidden bg-black border border-border">
+              <video
+                key={profileVideoUrl}
+                src={profileVideoUrl}
+                controls
+                className="w-full h-full object-contain"
+              />
+            </div>
+          )}
         </div>
 
         {/* Email (read-only with verification status) */}

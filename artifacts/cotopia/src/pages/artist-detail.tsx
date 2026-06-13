@@ -221,11 +221,27 @@ export default function ArtistDetail() {
           </TabsContent>
           
           <TabsContent value="about" className="pt-6">
-            <div className="max-w-3xl">
-              <h3 className="text-xl font-bold mb-4">Biography</h3>
-              <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                {artist.bio || "No biography provided."}
-              </p>
+            <div className="max-w-3xl space-y-8">
+              {/* Profile video */}
+              {(artist as any).profileVideoUrl && (
+                <div className="space-y-3">
+                  <h3 className="text-xl font-bold">Artist Trailer</h3>
+                  <div className="aspect-video rounded-xl overflow-hidden bg-black border border-border shadow-lg">
+                    <video
+                      src={(artist as any).profileVideoUrl}
+                      controls
+                      className="w-full h-full object-contain"
+                      poster={artist.bannerUrl ?? undefined}
+                    />
+                  </div>
+                </div>
+              )}
+              <div>
+                <h3 className="text-xl font-bold mb-4">Biography</h3>
+                <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                  {artist.bio || "No biography provided."}
+                </p>
+              </div>
             </div>
           </TabsContent>
         </Tabs>

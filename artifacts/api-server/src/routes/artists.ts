@@ -26,6 +26,7 @@ async function getArtistRow(id: number, userId?: number) {
       labelId: artistsTable.labelId,
       createdAt: artistsTable.createdAt,
       isVerified: usersTable.isVerified,
+      profileVideoUrl: usersTable.profileVideoUrl,
     })
     .from(artistsTable)
     .innerJoin(usersTable, eq(artistsTable.userId, usersTable.id))
