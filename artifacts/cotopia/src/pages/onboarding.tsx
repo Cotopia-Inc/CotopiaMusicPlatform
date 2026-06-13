@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Radio, UserCheck, ChevronRight, SkipForward } from "lucide-react";
+import { Radio, UserCheck, ChevronRight } from "lucide-react";
 
 const US_STATES = ["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY","DC"];
 const RACE_OPTIONS = ["American Indian or Alaska Native","Asian","Black or African American","Hispanic or Latino","Middle Eastern or North African","Native Hawaiian or Other Pacific Islander","White","Two or More Races","Prefer not to say","Other"];
@@ -44,10 +44,6 @@ export default function Onboarding() {
     });
   }
 
-  function handleSkip() {
-    setLocation("/");
-  }
-
   if (!user) { setLocation("/login"); return null; }
 
   return (
@@ -65,7 +61,7 @@ export default function Onboarding() {
             </div>
             <div>
               <h1 className="text-2xl font-extrabold">Complete your profile</h1>
-              <p className="text-sm text-muted-foreground">Help us personalize your experience. All fields are optional.</p>
+              <p className="text-sm text-muted-foreground">This step is required before you can access the platform.</p>
             </div>
           </div>
         </div>
@@ -145,14 +141,9 @@ export default function Onboarding() {
           Your demographic information is collected to comply with music industry reporting standards and to personalize your experience. It is never sold or shared without your consent.
         </div>
 
-        <div className="flex gap-3">
-          <Button onClick={handleSubmit} className="flex-1 gap-2 h-11 font-semibold" disabled={saveMutation.isPending}>
-            {saveMutation.isPending ? "Saving…" : <><span>Save & Continue</span><ChevronRight className="w-4 h-4" /></>}
-          </Button>
-          <Button variant="outline" onClick={handleSkip} className="gap-2 h-11">
-            <SkipForward className="w-4 h-4" />Skip for now
-          </Button>
-        </div>
+        <Button onClick={handleSubmit} className="w-full gap-2 h-11 font-semibold" disabled={saveMutation.isPending}>
+          {saveMutation.isPending ? "Saving…" : <><span>Save & Continue</span><ChevronRight className="w-4 h-4" /></>}
+        </Button>
       </div>
     </div>
   );

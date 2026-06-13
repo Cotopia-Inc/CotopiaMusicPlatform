@@ -82,13 +82,19 @@ const queryClient = new QueryClient({
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
 
   useEffect(() => {
-    if (!isLoading && !user) {
+    if (isLoading) return;
+    if (!user) {
       navigate("/login");
+      return;
     }
-  }, [user, isLoading, navigate]);
+    const demographicsCompleted = (user as any).demographicsCompleted;
+    if (demographicsCompleted === false && location !== "/onboarding") {
+      navigate("/onboarding");
+    }
+  }, [user, isLoading, navigate, location]);
 
   if (isLoading) {
     return (
@@ -98,6 +104,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     );
   }
   if (!user) return null;
+  if ((user as any).demographicsCompleted === false) return null;
   return <>{children}</>;
 }
 
