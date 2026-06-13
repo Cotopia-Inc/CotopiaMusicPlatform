@@ -5,7 +5,7 @@ import {
   useRateVideo, useFavoriteVideo, useUnfavoriteVideo, useTrackAnalyticsEvent,
 } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Play, Heart, Star, Send, Radio, Users, MessageCircle, Maximize2, ArrowLeft } from "lucide-react";
+import { Play, Heart, Star, Send, Radio, Users, MessageCircle, Maximize2, ArrowLeft, Trash2 } from "lucide-react";
 import { RoleTag } from "@/components/role-badges";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
@@ -43,6 +43,7 @@ export default function VideoDetail() {
   });
 
   const [chatInput, setChatInput] = useState("");
+  const [deletingChatMsgId, setDeletingChatMsgId] = useState<number | null>(null);
   const [localFavorited, setLocalFavorited] = useState<boolean | null>(null);
   const [localRating, setLocalRating] = useState<number | null>(null);
   const [hoveredRating, setHoveredRating] = useState<number | null>(null);
@@ -65,6 +66,19 @@ export default function VideoDetail() {
   }, []);
 
   const postChatMutation = usePostChatMessage();
+
+  async function handleDeleteChatMsg(msgId: number) {
+    setDeletingChatMsgId(msgId);
+    const token = localStorage.getItem("cotopia_token");
+    try {
+      await fetch(`/api/chat/msg/${msgId}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
+      queryClient.invalidateQueries({ queryKey: getGetChatMessagesQueryKey("video", videoId) });
+    } catch {
+      toast({ title: "Failed to delete message", variant: "destructive" });
+    } finally {
+      setDeletingChatMsgId(null);
+    }
+  }
   const rateMutation = useRateVideo();
   const favoriteMutation = useFavoriteVideo();
   const unfavoriteMutation = useUnfavoriteVideo();
@@ -251,26 +265,43 @@ export default function VideoDetail() {
               ))
             ) : chatMessages?.length ? (
               <>
-                {chatMessages.map((msg) => (
-                  <div key={msg.id} className="flex gap-2 px-1 group">
-                    <div className="w-6 h-6 rounded-full bg-primary/30 overflow-hidden flex-shrink-0 text-[10px] flex items-center justify-center font-bold text-primary">
-                      {msg.avatarUrl
-                        ? <img src={msg.avatarUrl} alt={msg.username} className="w-full h-full object-cover" />
-                        : msg.username[0].toUpperCase()}
+                {chatMessages.map((msg) => {
+                  const isOwn = msg.userId === user?.id;
+                  const isDeleting = deletingChatMsgId === msg.id;
+                  return (
+                    <div key={msg.id} className="flex gap-2 px-1 group">
+                      <div className="w-6 h-6 rounded-full bg-primary/30 overflow-hidden flex-shrink-0 text-[10px] flex items-center justify-center font-bold text-primary">
+                        {msg.avatarUrl
+                          ? <img src={msg.avatarUrl} alt={msg.username} className="w-full h-full object-cover" />
+                          : msg.username[0].toUpperCase()}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-baseline gap-1.5">
+                          <UserLink
+                            username={msg.username}
+                            userId={msg.userId}
+                            role={msg.role ?? undefined}
+                            isVerified={msg.isVerified}
+                            artistId={msg.artistId}
+                            className="text-[10px] font-semibold text-primary"
+                          />
+                          <span className={`text-[10px] break-words leading-relaxed ${isDeleting ? "opacity-40" : "text-white/80"}`}>
+                            {isDeleting ? "Deleting…" : msg.message}
+                          </span>
+                          {isOwn && !isDeleting && (
+                            <button
+                              onClick={() => handleDeleteChatMsg(msg.id)}
+                              className="opacity-0 group-hover:opacity-100 transition-opacity ml-auto flex-shrink-0 text-white/30 hover:text-red-400"
+                              title="Delete"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <UserLink
-                        username={msg.username}
-                        userId={msg.userId}
-                        role={msg.role ?? undefined}
-                        isVerified={msg.isVerified}
-                        artistId={msg.artistId}
-                        className="text-[10px] font-semibold text-primary mr-1.5"
-                      />
-                      <span className="text-[10px] text-white/80 break-words leading-relaxed">{msg.message}</span>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
                 <div ref={chatEndRef} />
               </>
             ) : (

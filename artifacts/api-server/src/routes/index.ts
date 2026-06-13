@@ -24,6 +24,7 @@ import editorialPlaylistsRouter from "./editorial-playlists";
 import editorPicksRouter from "./editor-picks";
 import messagesRouter from "./messages";
 import legalRouter from "./legal";
+import blocksRouter from "./blocks";
 
 const router: IRouter = Router();
 
@@ -52,5 +53,6 @@ router.use(editorialPlaylistsRouter);
 router.use(editorPicksRouter);
 router.use(messagesRouter);
 router.use(legalRouter);
+router.use(blocksRouter);
 
 export default router;

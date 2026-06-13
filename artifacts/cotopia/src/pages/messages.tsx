@@ -15,7 +15,7 @@ import { RoleBadges } from "@/components/role-badges";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Send, MessageCircle, ArrowLeft, Search, Plus, X, Star, UserRound, Pencil, Trash2 } from "lucide-react";
+import { Send, MessageCircle, ArrowLeft, Search, Plus, X, Star, UserRound, Pencil, Trash2, MoreVertical, BellOff, Bell, Shield, ShieldOff } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -62,6 +62,13 @@ export default function MessagesPage() {
   const [editingBody, setEditingBody] = useState("");
   const [editSaving, setEditSaving] = useState(false);
   const [deletingMsgId, setDeletingMsgId] = useState<number | null>(null);
+
+  // Moderation state
+  const [blockedUserIds, setBlockedUserIds] = useState<Set<number>>(new Set());
+  const [convOptionsOpen, setConvOptionsOpen] = useState<number | null>(null);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+  const convOptionsRef = useRef<HTMLDivElement>(null);
 
   // Handle ?new=userId URL param to pre-start conversation
   useEffect(() => {
@@ -166,6 +173,76 @@ export default function MessagesPage() {
     }
   }
 
+  // Load blocked users
+  useEffect(() => {
+    if (!user) return;
+    fetch("/api/users/blocks", { headers: authHeaders() })
+      .then(r => r.ok ? r.json() : [])
+      .then((ids: number[]) => setBlockedUserIds(new Set(ids)))
+      .catch(() => {});
+  }, [user?.id]);
+
+  // Close options dropdown on outside click
+  useEffect(() => {
+    if (convOptionsOpen === null) return;
+    function handle(e: MouseEvent) {
+      if (convOptionsRef.current && !convOptionsRef.current.contains(e.target as Node)) {
+        setConvOptionsOpen(null);
+      }
+    }
+    document.addEventListener("mousedown", handle);
+    return () => document.removeEventListener("mousedown", handle);
+  }, [convOptionsOpen]);
+
+  async function handleMuteToggle(convId: number) {
+    setActionLoading("mute");
+    try {
+      await fetch(`/api/messages/${convId}/mute`, { method: "PUT", headers: authHeaders() });
+      qc.invalidateQueries({ queryKey: getListConversationsQueryKey() });
+    } catch {
+      toast({ title: "Failed to update", variant: "destructive" });
+    } finally {
+      setActionLoading(null);
+      setConvOptionsOpen(null);
+    }
+  }
+
+  async function handleBlockToggle(targetUserId: number, isBlocked: boolean) {
+    setActionLoading("block");
+    try {
+      if (isBlocked) {
+        await fetch(`/api/users/block/${targetUserId}`, { method: "DELETE", headers: authHeaders() });
+        setBlockedUserIds(prev => { const next = new Set(prev); next.delete(targetUserId); return next; });
+        toast({ title: "User unblocked" });
+      } else {
+        await fetch("/api/users/block", { method: "POST", headers: authHeaders(), body: JSON.stringify({ userId: targetUserId }) });
+        setBlockedUserIds(prev => new Set([...prev, targetUserId]));
+        toast({ title: "User blocked" });
+      }
+    } catch {
+      toast({ title: "Failed", variant: "destructive" });
+    } finally {
+      setActionLoading(null);
+      setConvOptionsOpen(null);
+    }
+  }
+
+  async function handleDeleteConversation(convId: number) {
+    setActionLoading("delete");
+    try {
+      await fetch(`/api/messages/${convId}`, { method: "DELETE", headers: authHeaders() });
+      setSelectedConvId(null);
+      setDeleteConfirmId(null);
+      qc.invalidateQueries({ queryKey: getListConversationsQueryKey() });
+      toast({ title: "Conversation deleted" });
+    } catch {
+      toast({ title: "Failed to delete", variant: "destructive" });
+    } finally {
+      setActionLoading(null);
+      setConvOptionsOpen(null);
+    }
+  }
+
   async function handleDeleteMsg(msgId: number) {
     setDeletingMsgId(msgId);
     try {
@@ -191,6 +268,29 @@ export default function MessagesPage() {
 
   return (
     <div className="h-[calc(100vh-64px)] flex overflow-hidden">
+
+      {/* ── Delete Confirmation Modal ─────────────────────────────────── */}
+      {deleteConfirmId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setDeleteConfirmId(null)}>
+          <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-6 space-y-4" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center flex-shrink-0">
+                <Trash2 className="w-5 h-5 text-destructive" />
+              </div>
+              <div>
+                <h3 className="font-bold">Delete conversation?</h3>
+                <p className="text-xs text-muted-foreground">This permanently removes all messages for both parties.</p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setDeleteConfirmId(null)}>Cancel</Button>
+              <Button variant="destructive" disabled={actionLoading === "delete"} onClick={() => handleDeleteConversation(deleteConfirmId)}>
+                {actionLoading === "delete" ? "Deleting…" : "Delete"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── New Message Dialog ─────────────────────────────────────────── */}
       {newMsgOpen && (
@@ -316,6 +416,7 @@ export default function MessagesPage() {
                       {last && <p className={cn("text-xs truncate mt-0.5", hasUnread ? "text-foreground font-medium" : "text-muted-foreground")}>{last.senderId === user?.id ? "You: " : ""}{last.body}</p>}
                     </div>
                     {hasUnread && <span className="flex-shrink-0 min-w-[18px] h-[18px] rounded-full bg-blue-500 text-white text-[10px] font-bold flex items-center justify-center px-0.5">{conv.unreadCount > 9 ? "9+" : conv.unreadCount}</span>}
+                    {(conv as any).isMuted && <BellOff className="w-3 h-3 text-muted-foreground/40 flex-shrink-0" />}
                   </button>
                 );
               })}
@@ -352,10 +453,55 @@ export default function MessagesPage() {
                 </Link>
                 <p className="text-[10px] text-muted-foreground capitalize">{newConvUser ? "New conversation" : activeUser?.role?.replace("_", " ")}</p>
               </div>
-              <Link href={`/users/${activeUser?.id}`}>
-                <Button variant="ghost" size="sm" className="text-xs text-muted-foreground h-7">View Profile</Button>
-              </Link>
+              <div className="flex items-center gap-1">
+                <Link href={`/users/${activeUser?.id}`}>
+                  <Button variant="ghost" size="sm" className="text-xs text-muted-foreground h-7">Profile</Button>
+                </Link>
+                {selectedConvId && !newConvUser && (
+                  <div className="relative" ref={convOptionsRef}>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setConvOptionsOpen(convOptionsOpen === selectedConvId ? null : selectedConvId)}>
+                      <MoreVertical className="w-4 h-4" />
+                    </Button>
+                    {convOptionsOpen === selectedConvId && (
+                      <div className="absolute right-0 top-8 z-50 bg-card border border-border rounded-xl shadow-xl w-52 overflow-hidden py-1">
+                        <button
+                          onClick={() => handleMuteToggle(selectedConvId)}
+                          disabled={actionLoading === "mute"}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors disabled:opacity-50 text-left"
+                        >
+                          {(selectedConv as any)?.isMuted ? <Bell className="w-4 h-4 text-primary" /> : <BellOff className="w-4 h-4" />}
+                          {(selectedConv as any)?.isMuted ? "Unmute conversation" : "Mute conversation"}
+                        </button>
+                        <button
+                          onClick={() => handleBlockToggle(activeUser?.id ?? -1, blockedUserIds.has(activeUser?.id ?? -1))}
+                          disabled={actionLoading === "block"}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-muted transition-colors disabled:opacity-50 text-left"
+                        >
+                          {blockedUserIds.has(activeUser?.id ?? -1) ? <ShieldOff className="w-4 h-4 text-green-500" /> : <Shield className="w-4 h-4 text-destructive" />}
+                          {blockedUserIds.has(activeUser?.id ?? -1) ? "Unblock user" : "Block user"}
+                        </button>
+                        <div className="border-t border-border my-1" />
+                        <button
+                          onClick={() => { setDeleteConfirmId(selectedConvId); setConvOptionsOpen(null); }}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-destructive hover:bg-destructive/10 transition-colors text-left"
+                        >
+                          <Trash2 className="w-4 h-4" />Delete conversation
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
+
+            {/* Blocked banner */}
+            {activeUser && blockedUserIds.has(activeUser.id) && (
+              <div className="flex items-center gap-3 px-4 py-2.5 bg-destructive/10 border-b border-destructive/20 flex-shrink-0">
+                <Shield className="w-4 h-4 text-destructive flex-shrink-0" />
+                <p className="text-xs text-destructive flex-1">You've blocked {activeUser.displayName ?? activeUser.username}. They can't message you.</p>
+                <button onClick={() => handleBlockToggle(activeUser.id, true)} className="text-xs text-muted-foreground hover:text-foreground underline flex-shrink-0">Unblock</button>
+              </div>
+            )}
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -438,16 +584,23 @@ export default function MessagesPage() {
             </div>
 
             {/* Compose */}
-            <form onSubmit={handleSend} className="flex items-center gap-2 p-4 border-t border-border flex-shrink-0">
-              <Input
-                placeholder={newConvUser ? `Message ${newConvUser.displayName ?? newConvUser.username}...` : "Type a message..."}
-                value={newMsgBody} onChange={e => setNewMsgBody(e.target.value)} className="flex-1"
-                onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(e as any); } }}
-              />
-              <Button type="submit" size="icon" disabled={!newMsgBody.trim() || sendMsg.isPending} className="flex-shrink-0">
-                <Send className="w-4 h-4" />
-              </Button>
-            </form>
+            {activeUser && blockedUserIds.has(activeUser.id) ? (
+              <div className="flex items-center gap-2 p-4 border-t border-border flex-shrink-0 bg-muted/20">
+                <Shield className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                <p className="text-xs text-muted-foreground">Messaging is disabled while this user is blocked.</p>
+              </div>
+            ) : (
+              <form onSubmit={handleSend} className="flex items-center gap-2 p-4 border-t border-border flex-shrink-0">
+                <Input
+                  placeholder={newConvUser ? `Message ${newConvUser.displayName ?? newConvUser.username}...` : "Type a message..."}
+                  value={newMsgBody} onChange={e => setNewMsgBody(e.target.value)} className="flex-1"
+                  onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(e as any); } }}
+                />
+                <Button type="submit" size="icon" disabled={!newMsgBody.trim() || sendMsg.isPending} className="flex-shrink-0">
+                  <Send className="w-4 h-4" />
+                </Button>
+              </form>
+            )}
           </>
         )}
       </div>

@@ -96,4 +96,16 @@ router.post("/chat/:contentType/:contentId", requireAuth, async (req: AuthReques
   });
 });
 
+router.delete("/chat/msg/:msgId", requireAuth, async (req: AuthRequest, res): Promise<void> => {
+  const userId = req.user!.userId;
+  const msgId = parseInt(String(req.params["msgId"] ?? "0"), 10);
+
+  const [msg] = await db.select().from(chatMessagesTable).where(eq(chatMessagesTable.id, msgId)).limit(1);
+  if (!msg) { res.status(404).json({ error: "Not found" }); return; }
+  if (msg.userId !== userId) { res.status(403).json({ error: "Not your message" }); return; }
+
+  await db.delete(chatMessagesTable).where(eq(chatMessagesTable.id, msgId));
+  res.json({ success: true });
+});
+
 export default router;

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { eq, or, and, desc, ne } from "drizzle-orm";
-import { db, conversationsTable, directMessagesTable, usersTable, notificationsTable, artistsTable, followsTable } from "@workspace/db";
+import { db, conversationsTable, directMessagesTable, usersTable, notificationsTable, artistsTable, followsTable, userBlocksTable } from "@workspace/db";
 import { requireAuth, type AuthRequest } from "../lib/auth";
 import { count } from "drizzle-orm";
 
@@ -17,6 +17,8 @@ router.get("/messages", requireAuth, async (req: AuthRequest, res): Promise<void
       participant2Id: conversationsTable.participant2Id,
       lastMessageAt: conversationsTable.lastMessageAt,
       createdAt: conversationsTable.createdAt,
+      mutedByP1: conversationsTable.mutedByP1,
+      mutedByP2: conversationsTable.mutedByP2,
     })
     .from(conversationsTable)
     .where(or(eq(conversationsTable.participant1Id, userId), eq(conversationsTable.participant2Id, userId)))
@@ -68,6 +70,7 @@ router.get("/messages", requireAuth, async (req: AuthRequest, res): Promise<void
       isFollowedByMe = !!followRow;
     }
 
+    const isMuted = conv.participant1Id === userId ? conv.mutedByP1 : conv.mutedByP2;
     return {
       id: conv.id,
       otherUser: otherUser ?? null,
@@ -76,6 +79,7 @@ router.get("/messages", requireAuth, async (req: AuthRequest, res): Promise<void
       lastMessageAt: conv.lastMessageAt,
       createdAt: conv.createdAt,
       isFollowedByMe,
+      isMuted,
     };
   }));
 
@@ -158,6 +162,14 @@ router.post("/messages", requireAuth, async (req: AuthRequest, res): Promise<voi
   const [targetUser] = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.id, toUserId)).limit(1);
   if (!targetUser) { res.status(404).json({ error: "User not found" }); return; }
 
+  const [blockRow] = await db.select({ id: userBlocksTable.id }).from(userBlocksTable).where(
+    or(
+      and(eq(userBlocksTable.blockerId, userId), eq(userBlocksTable.blockedId, toUserId)),
+      and(eq(userBlocksTable.blockerId, toUserId), eq(userBlocksTable.blockedId, userId))
+    )
+  ).limit(1);
+  if (blockRow) { res.status(403).json({ error: "Cannot message this user" }); return; }
+
   const p1 = Math.min(userId, toUserId);
   const p2 = Math.max(userId, toUserId);
 
@@ -227,6 +239,29 @@ router.delete("/messages/msg/:msgId", requireAuth, async (req: AuthRequest, res)
   res.json({ success: true });
 });
 
+// PUT /messages/:id/mute — toggle mute for current user
+router.put("/messages/:id/mute", requireAuth, async (req: AuthRequest, res): Promise<void> => {
+  const userId = req.user!.userId;
+  const convId = parseInt(String(req.params["id"] ?? "0"), 10);
+
+  const [conv] = await db.select().from(conversationsTable).where(eq(conversationsTable.id, convId)).limit(1);
+  if (!conv) { res.status(404).json({ error: "Not found" }); return; }
+  if (conv.participant1Id !== userId && conv.participant2Id !== userId) {
+    res.status(403).json({ error: "Not a participant" }); return;
+  }
+
+  const isP1 = conv.participant1Id === userId;
+  const currentMuted = isP1 ? conv.mutedByP1 : conv.mutedByP2;
+
+  if (isP1) {
+    await db.update(conversationsTable).set({ mutedByP1: !currentMuted }).where(eq(conversationsTable.id, convId));
+  } else {
+    await db.update(conversationsTable).set({ mutedByP2: !currentMuted }).where(eq(conversationsTable.id, convId));
+  }
+
+  res.json({ isMuted: !currentMuted });
+});
+
 // PUT /messages/:id/read — mark all messages in conversation as read
 router.put("/messages/:id/read", requireAuth, async (req: AuthRequest, res): Promise<void> => {
   const userId = req.user!.userId;
@@ -247,6 +282,23 @@ router.put("/messages/:id/read", requireAuth, async (req: AuthRequest, res): Pro
     ));
 
   res.json({ updated: result.rowCount ?? 0 });
+});
+
+// DELETE /messages/:id — delete conversation (removes messages + conversation record)
+router.delete("/messages/:id", requireAuth, async (req: AuthRequest, res): Promise<void> => {
+  const userId = req.user!.userId;
+  const convId = parseInt(String(req.params["id"] ?? "0"), 10);
+
+  const [conv] = await db.select().from(conversationsTable).where(eq(conversationsTable.id, convId)).limit(1);
+  if (!conv) { res.status(404).json({ error: "Not found" }); return; }
+  if (conv.participant1Id !== userId && conv.participant2Id !== userId) {
+    res.status(403).json({ error: "Not a participant" }); return;
+  }
+
+  await db.delete(directMessagesTable).where(eq(directMessagesTable.conversationId, convId));
+  await db.delete(conversationsTable).where(eq(conversationsTable.id, convId));
+
+  res.json({ success: true });
 });
 
 export default router;

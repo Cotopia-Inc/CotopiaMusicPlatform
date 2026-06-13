@@ -5,7 +5,7 @@ import {
   useRateSong, useFavoriteSong, useUnfavoriteSong,
 } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Play, Pause, Heart, Star, Send, Radio, Users, MessageCircle, ArrowLeft } from "lucide-react";
+import { Play, Pause, Heart, Star, Send, Radio, Users, MessageCircle, ArrowLeft, Trash2 } from "lucide-react";
 import { RoleTag } from "@/components/role-badges";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
@@ -44,6 +44,7 @@ export default function SongDetail() {
   });
 
   const [chatInput, setChatInput] = useState("");
+  const [deletingChatMsgId, setDeletingChatMsgId] = useState<number | null>(null);
   const [localFavorited, setLocalFavorited] = useState<boolean | null>(null);
   const [localRating, setLocalRating] = useState<number | null>(null);
   const [hoveredRating, setHoveredRating] = useState<number | null>(null);
@@ -53,6 +54,19 @@ export default function SongDetail() {
   const isThisSongPlaying = isPlaying && currentTrack?.id === songId;
 
   const postChatMutation = usePostChatMessage();
+
+  async function handleDeleteChatMsg(msgId: number) {
+    setDeletingChatMsgId(msgId);
+    const token = localStorage.getItem("cotopia_token");
+    try {
+      await fetch(`/api/chat/msg/${msgId}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
+      queryClient.invalidateQueries({ queryKey: getGetChatMessagesQueryKey("song", songId) });
+    } catch {
+      toast({ title: "Failed to delete message", variant: "destructive" });
+    } finally {
+      setDeletingChatMsgId(null);
+    }
+  }
   const rateMutation = useRateSong();
   const favoriteMutation = useFavoriteSong();
   const unfavoriteMutation = useUnfavoriteSong();
@@ -300,31 +314,44 @@ export default function SongDetail() {
             ))
           ) : chatMessages?.length ? (
             <>
-              {chatMessages.map((msg) => (
-                <div key={msg.id} className="flex gap-2 group">
-                  <div className="w-7 h-7 rounded-full bg-primary/20 overflow-hidden flex-shrink-0 text-xs flex items-center justify-center font-bold text-primary">
-                    {msg.avatarUrl
-                      ? <img src={msg.avatarUrl} alt={msg.username} className="w-full h-full object-cover" />
-                      : msg.username[0].toUpperCase()}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-baseline gap-2">
-                      <UserLink
-                        username={msg.username}
-                        userId={msg.userId}
-                        role={msg.role ?? undefined}
-                        isVerified={msg.isVerified}
-                        artistId={msg.artistId}
-                        className="text-[11px] font-semibold text-foreground"
-                      />
-                      <span className="text-[10px] text-muted-foreground/60">{formatTime(msg.createdAt)}</span>
+              {chatMessages.map((msg) => {
+                const isOwn = msg.userId === user?.id;
+                const isDeleting = deletingChatMsgId === msg.id;
+                return (
+                  <div key={msg.id} className="flex gap-2 group">
+                    <div className="w-7 h-7 rounded-full bg-primary/20 overflow-hidden flex-shrink-0 text-xs flex items-center justify-center font-bold text-primary">
+                      {msg.avatarUrl
+                        ? <img src={msg.avatarUrl} alt={msg.username} className="w-full h-full object-cover" />
+                        : msg.username[0].toUpperCase()}
                     </div>
-                    <div className="bg-secondary/60 rounded-lg px-3 py-2 mt-0.5">
-                      <p className="text-xs leading-relaxed break-words text-foreground/90">{msg.message}</p>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-baseline gap-2">
+                        <UserLink
+                          username={msg.username}
+                          userId={msg.userId}
+                          role={msg.role ?? undefined}
+                          isVerified={msg.isVerified}
+                          artistId={msg.artistId}
+                          className="text-[11px] font-semibold text-foreground"
+                        />
+                        <span className="text-[10px] text-muted-foreground/60">{formatTime(msg.createdAt)}</span>
+                        {isOwn && !isDeleting && (
+                          <button
+                            onClick={() => handleDeleteChatMsg(msg.id)}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity ml-auto flex-shrink-0 text-muted-foreground/50 hover:text-destructive"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        )}
+                      </div>
+                      <div className={`bg-secondary/60 rounded-lg px-3 py-2 mt-0.5 ${isDeleting ? "opacity-40" : ""}`}>
+                        <p className="text-xs leading-relaxed break-words text-foreground/90">{isDeleting ? "Deleting…" : msg.message}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               <div ref={chatEndRef} />
             </>
           ) : (
