@@ -37,66 +37,86 @@ export default function UserProfile() {
   const isMe = me?.id === user.id;
 
   return (
-    <div className="max-w-lg mx-auto py-12 px-6 space-y-8">
-      <Link href={history.length > 1 ? "#" : "/"} onClick={() => window.history.back()}>
-        <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
-          <ArrowLeft className="w-4 h-4" /> Back
-        </span>
-      </Link>
+    <div className="space-y-0 pb-24">
+      {/* Back */}
+      <div className="px-2 pt-2">
+        <Link href={history.length > 1 ? "#" : "/"} onClick={() => window.history.back()}>
+          <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+            <ArrowLeft className="w-4 h-4" /> Back
+          </span>
+        </Link>
+      </div>
 
-      <div className="flex flex-col items-center gap-4 text-center">
-        <div className="relative">
-          <div className="w-24 h-24 rounded-full bg-secondary border border-border overflow-hidden flex items-center justify-center">
-            {user.avatarUrl ? (
-              <img src={user.avatarUrl} alt={user.username} className="w-full h-full object-cover" />
-            ) : (
-              <span className="text-3xl font-bold text-muted-foreground">{user.username[0].toUpperCase()}</span>
+      {/* Banner / Profile Video */}
+      <div className="w-full h-48 md:h-64 rounded-xl overflow-hidden bg-secondary border border-border relative mt-2">
+        {(user as any).profileVideoUrl ? (
+          <video
+            src={(user as any).profileVideoUrl}
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="w-full h-full object-cover opacity-80"
+          />
+        ) : (user as any).bannerUrl ? (
+          <img src={(user as any).bannerUrl} alt="Banner" className="w-full h-full object-cover opacity-60" />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-r from-primary/20 to-secondary" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
+      </div>
+
+      {/* Avatar + info */}
+      <div className="flex flex-col md:flex-row gap-6 px-6 -mt-14 relative z-10 items-end">
+        <div className="w-28 h-28 rounded-full bg-card border-4 border-background shadow-2xl overflow-hidden flex items-center justify-center flex-shrink-0">
+          {user.avatarUrl ? (
+            <img src={user.avatarUrl} alt={user.username} className="w-full h-full object-cover" />
+          ) : (
+            <span className="text-3xl font-bold text-muted-foreground">{user.username[0].toUpperCase()}</span>
+          )}
+        </div>
+        <div className="flex-1 flex flex-col md:flex-row md:items-end justify-between gap-4 pb-2">
+          <div className="space-y-1">
+            <h1 className="text-3xl font-extrabold tracking-tight flex items-center gap-2 flex-wrap">
+              {user.displayName || user.username}
+              <RoleBadges role={user.role} isVerified={user.isVerified} size="md" />
+            </h1>
+            {user.displayName && (
+              <p className="text-sm text-muted-foreground">@{user.username}</p>
+            )}
+            <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">{user.role?.replace("_", " ")}</p>
+          </div>
+          <div className="flex gap-3 flex-wrap">
+            {user.artistId && (
+              <Link href={`/artists/${user.artistId}`}>
+                <Button variant="outline" size="sm" className="gap-1.5">
+                  <Music className="w-4 h-4" />
+                  Artist Profile
+                </Button>
+              </Link>
+            )}
+            {me && !isMe && (
+              <Button size="sm" className="gap-1.5" onClick={() => navigate(`/messages?new=${user.id}`)}>
+                <MessageCircle className="w-4 h-4" />
+                Message
+              </Button>
             )}
           </div>
         </div>
-
-        <div className="space-y-1">
-          <h1 className="text-2xl font-extrabold tracking-tight flex items-center justify-center gap-1.5 flex-wrap">
-            {user.displayName || user.username}
-            <RoleBadges role={user.role} isVerified={user.isVerified} size="md" />
-          </h1>
-          {user.displayName && (
-            <p className="text-sm text-muted-foreground">@{user.username}</p>
-          )}
-          <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">{user.role?.replace("_", " ")}</p>
-        </div>
-
-        {user.bio && (
-          <p className="text-sm text-muted-foreground max-w-xs leading-relaxed">{user.bio}</p>
-        )}
-
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <CalendarDays className="w-3.5 h-3.5" />
-          Joined {formatDistanceToNow(new Date(user.createdAt), { addSuffix: true })}
-        </div>
-
-        {/* Action buttons */}
-        <div className="flex items-center gap-3 flex-wrap justify-center">
-          {user.artistId && (
-            <Link href={`/artists/${user.artistId}`}>
-              <Button variant="outline" size="sm" className="gap-1.5">
-                <Music className="w-4 h-4" />
-                Artist Profile
-              </Button>
-            </Link>
-          )}
-          {me && !isMe && (
-            <Button
-              size="sm"
-              className="gap-1.5"
-              onClick={() => navigate(`/messages?new=${user.id}`)}
-            >
-              <MessageCircle className="w-4 h-4" />
-              Message
-            </Button>
-          )}
-        </div>
       </div>
+
+      {/* Bio + meta */}
+      {(user.bio || user.createdAt) && (
+        <div className="px-6 pt-6 space-y-2 max-w-2xl">
+          {user.bio && (
+            <p className="text-sm text-muted-foreground leading-relaxed">{user.bio}</p>
+          )}
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <CalendarDays className="w-3.5 h-3.5" />
+            Joined {formatDistanceToNow(new Date(user.createdAt), { addSuffix: true })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

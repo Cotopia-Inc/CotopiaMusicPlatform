@@ -318,6 +318,8 @@ router.get("/users/:id", async (req, res): Promise<void> => {
       username: usersTable.username,
       displayName: usersTable.displayName,
       avatarUrl: usersTable.avatarUrl,
+      bannerUrl: usersTable.bannerUrl,
+      profileVideoUrl: usersTable.profileVideoUrl,
       bio: usersTable.bio,
       role: usersTable.role,
       isVerified: usersTable.isVerified,

@@ -50,13 +50,23 @@ export default function LabelDetail() {
 
   return (
     <div className="space-y-12 pb-24">
-      {/* Banner */}
+      {/* Banner / Profile Video */}
       <div className="w-full h-48 md:h-64 rounded-xl overflow-hidden bg-secondary border border-border relative">
-        {label.bannerUrl ? (
+        {(label as any).profileVideoUrl ? (
+          <video
+            src={(label as any).profileVideoUrl}
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="w-full h-full object-cover opacity-80"
+          />
+        ) : label.bannerUrl ? (
           <img src={label.bannerUrl} alt="Banner" className="w-full h-full object-cover opacity-50" />
         ) : (
           <div className="w-full h-full bg-gradient-to-r from-primary/10 to-primary/5" />
         )}
+        <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
       </div>
 
       {/* Header Info */}
