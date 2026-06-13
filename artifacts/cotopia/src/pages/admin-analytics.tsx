@@ -2,7 +2,7 @@ import { useGetAdminAnalytics } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
 import { useLocation } from "wouter";
 import { useEffect } from "react";
-import { BarChart3, Music, Video, Users, Play, Eye, MessageSquare, Clock, TrendingUp, Star } from "lucide-react";
+import { BarChart3, Music, Video, Users, Play, Eye, MessageSquare, Clock, TrendingUp, Star, Globe, UserCheck } from "lucide-react";
 import { RoleTag } from "@/components/role-badges";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -79,6 +79,11 @@ export default function AdminAnalytics() {
         <StatCard label="Total Views" value={data?.totalViews ?? 0} icon={Eye} />
         <StatCard label="Comments" value={data?.totalComments ?? 0} icon={MessageSquare} />
         <StatCard label="Artists" value={(data as any)?.totalArtists ?? 0} icon={Star} />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <StatCard label="Page Views" value={(data as any)?.totalPageViews ?? 0} icon={Globe} sub="total tracked page visits" />
+        <StatCard label="Unique Visitors" value={(data as any)?.totalUniqueVisitors ?? 0} icon={UserCheck} sub="distinct logged-in visitors" />
       </div>
 
       {/* Users by role */}

@@ -155,6 +155,7 @@ router.get("/admin/analytics", requireAuth, requireRole(...ADMIN_ROLES), async (
     [totalUsersRow], [totalSongsRow], [totalVideosRow],
     [totalPlaysRow], [totalViewsRow], [totalCommentsRow], [pendingRow],
     [totalArtistsRow], [totalLabelsRow],
+    [totalPageViewsRow], [totalUniqueVisitorsRow],
   ] = await Promise.all([
     db.select({ count: count() }).from(usersTable),
     db.select({ count: count() }).from(songsTable).where(eq(songsTable.status, "published")),
@@ -165,6 +166,8 @@ router.get("/admin/analytics", requireAuth, requireRole(...ADMIN_ROLES), async (
     db.select({ count: count() }).from(submissionsTable).where(eq(submissionsTable.status, "pending_review")),
     db.select({ count: count() }).from(artistsTable),
     db.select({ count: count() }).from(labelsTable),
+    db.select({ count: count() }).from(analyticsEventsTable).where(eq(analyticsEventsTable.eventType, "page_view")),
+    db.select({ count: sql<number>`count(distinct ${analyticsEventsTable.userId})` }).from(analyticsEventsTable).where(eq(analyticsEventsTable.eventType, "page_view")),
   ]);
 
   const usersByRole = await db.select({ role: usersTable.role, count: count() }).from(usersTable).groupBy(usersTable.role);
@@ -196,6 +199,8 @@ router.get("/admin/analytics", requireAuth, requireRole(...ADMIN_ROLES), async (
     totalViews: Number(totalViewsRow?.total ?? 0),
     totalComments: totalCommentsRow?.count ?? 0,
     pendingSubmissions: pendingRow?.count ?? 0,
+    totalPageViews: Number(totalPageViewsRow?.count ?? 0),
+    totalUniqueVisitors: Number(totalUniqueVisitorsRow?.count ?? 0),
     usersByRole: usersByRoleObj,
     topSongs: topSongsWithRatings,
     topVideos,

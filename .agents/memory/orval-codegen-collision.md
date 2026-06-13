@@ -13,11 +13,14 @@ error TS2308: Module "./generated/api" has already exported a member named 'Get<
 
 ## How to apply
 
-After codegen, open `lib/api-zod/src/generated/types/index.ts` and delete the line:
+After codegen, open `lib/api-zod/src/generated/types/index.ts` and delete the lines:
 
 ```ts
-export * from './<operationIdCamelCase>Params';
+export * from './getChatMessagesParams';
+export * from './sendDirectMessageBody';
 ```
+
+These two are the persistent offenders — they regenerate on every codegen run and must be removed each time. Additional `Params` types may appear when adding endpoints with both path AND query params; remove those too.
 
 The Zod schema in `api.ts` is the source of truth; the TypeScript type in `types/` is redundant.
 

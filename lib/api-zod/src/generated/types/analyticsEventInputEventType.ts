@@ -14,4 +14,5 @@ export const AnalyticsEventInputEventType = {
   content: 'content',
   engagement: 'engagement',
   admin: 'admin',
+  page_view: 'page_view',
 } as const;

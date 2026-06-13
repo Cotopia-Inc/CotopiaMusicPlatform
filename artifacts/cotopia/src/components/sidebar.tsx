@@ -225,6 +225,27 @@ export function Sidebar() {
               </>
             )}
 
+            {/* Label Analytics */}
+            {role === "label" && (
+              <>
+                <div className="pt-4 pb-1">
+                  <p className="px-3 text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Label Tools</p>
+                </div>
+                <Link href="/label/analytics">
+                  <Button
+                    variant={isActive("/label/analytics") ? "secondary" : "ghost"}
+                    className={cn(
+                      "w-full justify-start gap-3 text-sm h-9",
+                      isActive("/label/analytics") ? "font-semibold text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <BarChart3 className="w-4 h-4 flex-shrink-0" />
+                    My Analytics
+                  </Button>
+                </Link>
+              </>
+            )}
+
             {/* Editor section */}
             {(isEditor || isAdmin || isMasterAdmin) && (
               <>

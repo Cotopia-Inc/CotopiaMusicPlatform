@@ -3456,10 +3456,8 @@ components:
                 type: integer
               stageName:
                 type: string
-              logoUrl:
+              avatarUrl:
                 type: ["string", "null"]
-              isVerified:
-                type: boolean
               totalPlays:
                 type: integer
               totalViews:
@@ -3855,7 +3853,7 @@ components:
       properties:
         eventType:
           type: string
-          enum: [user, content, engagement, admin]
+          enum: [user, content, engagement, admin, page_view]
         eventName:
           type: string
         contentType:

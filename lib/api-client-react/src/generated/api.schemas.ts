@@ -798,9 +798,29 @@ export interface AnalyticsSummary {
   totalViews: number;
   totalComments: number;
   pendingSubmissions: number;
+  totalPageViews?: number;
+  totalUniqueVisitors?: number;
   usersByRole?: AnalyticsSummaryUsersByRole;
   topSongs?: Song[];
   topVideos?: Video[];
+}
+
+export type LabelAnalyticsTopArtistsItem = {
+  id?: number;
+  stageName?: string;
+  /** @nullable */
+  avatarUrl?: string | null;
+  totalPlays?: number;
+  totalViews?: number;
+  followerCount?: number;
+};
+
+export interface LabelAnalytics {
+  totalArtists: number;
+  totalPlays: number;
+  totalViews: number;
+  totalFollowers: number;
+  topArtists: LabelAnalyticsTopArtistsItem[];
 }
 
 export interface AppSettings {
@@ -1067,6 +1087,7 @@ export const AnalyticsEventInputEventType = {
   content: 'content',
   engagement: 'engagement',
   admin: 'admin',
+  page_view: 'page_view',
 } as const;
 
 export type AnalyticsEventInputContentType = typeof AnalyticsEventInputContentType[keyof typeof AnalyticsEventInputContentType];
@@ -1100,6 +1121,7 @@ export interface ArtistAnalytics {
   totalViews: number;
   totalFavorites: number;
   followerCount: number;
+  profileVisitors: number;
   topSongs: Song[];
   topVideos: Video[];
   recentActivity?: ArtistAnalyticsRecentActivityItem[];

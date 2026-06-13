@@ -80,7 +80,6 @@ export * from './editorPickInput';
 export * from './editorPickInputContentType';
 export * from './editorPickUpdateInput';
 export * from './errorEnvelope';
-
 export * from './getHistoryParams';
 export * from './getTrendingSongsParams';
 export * from './getTrendingVideosParams';
@@ -91,6 +90,8 @@ export * from './historyItem';
 export * from './historyItemType';
 export * from './homeFeed';
 export * from './label';
+export * from './labelAnalytics';
+export * from './labelAnalyticsTopArtistsItem';
 export * from './labelProfile';
 export * from './labelUpdate';
 export * from './listArtistsParams';
@@ -118,7 +119,6 @@ export * from './ratingInput';
 export * from './ratingResult';
 export * from './registerInput';
 export * from './registerInputRole';
-
 export * from './sendOtp200';
 export * from './sendOtpInput';
 export * from './sendOtpInputPurpose';

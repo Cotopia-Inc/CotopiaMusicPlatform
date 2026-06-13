@@ -52,6 +52,7 @@ import EditorDashboard from "@/pages/editor-dashboard";
 import EditorPlaylists from "@/pages/editor-playlists";
 import EditorPicks from "@/pages/editor-picks";
 import ArtistAnalytics from "@/pages/artist-analytics";
+import LabelAnalytics from "@/pages/label-analytics";
 
 import LegalCenter from "@/pages/legal/index";
 import LegalTerms from "@/pages/legal/terms";
@@ -287,6 +288,9 @@ function Router() {
       {/* Artist routes */}
       <Route path="/artist/analytics">
         <ProtectedRoute><Layout><ArtistAnalytics /></Layout></ProtectedRoute>
+      </Route>
+      <Route path="/label/analytics">
+        <ProtectedRoute><Layout><LabelAnalytics /></Layout></ProtectedRoute>
       </Route>
 
       <Route component={NotFound} />

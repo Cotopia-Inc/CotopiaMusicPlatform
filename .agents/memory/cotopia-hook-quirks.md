@@ -29,6 +29,9 @@ useGetEditorialPlaylist(id, {
 ```
 **Why:** Orval emits `UseQueryOptions` which marks `queryKey` as required in TanStack Query v5.
 
+## AnalyticsEventInputEventType enum
+Accepts `'user' | 'content' | 'engagement' | 'admin' | 'page_view'`. The `page_view` value was added to support profile/content page visit tracking.
+
 ## AnalyticsEventInputContentType enum
 Only accepts `'song' | 'video' | 'playlist' | 'user'` — `'artist'` is not valid:
 ```ts
@@ -36,6 +39,10 @@ Only accepts `'song' | 'video' | 'playlist' | 'user'` — `'artist'` is not vali
 // Right: contentType: "user" (use artist's ID as contentId)
 ```
 **Why:** OpenAPI spec enum for analytics event input is limited to these four values.
+
+## artistsTable columns
+Schema has `avatarUrl` (not `logoUrl`) and `bannerUrl`. No `isVerified` field exists on artists table.
+**Why:** Verified status not modeled in the DB; artists have `avatarUrl` for their profile image.
 
 ## follows table columns
 Uses `targetType` and `targetId` (not `followeeType`/`followeeId`):

@@ -17,6 +17,8 @@ export interface AnalyticsSummary {
   totalViews: number;
   totalComments: number;
   pendingSubmissions: number;
+  totalPageViews?: number;
+  totalUniqueVisitors?: number;
   usersByRole?: AnalyticsSummaryUsersByRole;
   topSongs?: Song[];
   topVideos?: Video[];

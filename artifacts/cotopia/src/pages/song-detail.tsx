@@ -3,7 +3,7 @@ import {
   useGetSong, getGetSongQueryKey,
   useGetChatMessages, getGetChatMessagesQueryKey, usePostChatMessage,
   useRateSong, useFavoriteSong, useUnfavoriteSong,
-  useDeleteSong, useUpdateSong,
+  useDeleteSong, useUpdateSong, useTrackAnalyticsEvent,
 } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Play, Pause, Heart, Star, Send, Radio, Users, MessageCircle, ArrowLeft, Trash2, Edit2, X, Save } from "lucide-react";
@@ -53,6 +53,13 @@ export default function SongDetail() {
 
   const { play: playerPlay, isPlaying, track: currentTrack } = usePlayer();
   const isThisSongPlaying = isPlaying && currentTrack?.id === songId;
+
+  const trackEvent = useTrackAnalyticsEvent();
+  useEffect(() => {
+    if (song?.id) {
+      trackEvent.mutate({ data: { eventType: "page_view", eventName: "song_page", contentType: "song" as const, contentId: song.id } });
+    }
+  }, [song?.id]);
 
   const postChatMutation = usePostChatMessage();
 

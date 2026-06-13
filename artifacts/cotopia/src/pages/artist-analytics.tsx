@@ -2,7 +2,7 @@ import { useGetArtistAnalytics } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
 import { useLocation } from "wouter";
 import { useEffect } from "react";
-import { BarChart3, Play, Eye, Heart, Users, TrendingUp, Music, Video } from "lucide-react";
+import { BarChart3, Play, Eye, Heart, Users, TrendingUp, Music, Video, Globe } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "wouter";
 
@@ -62,11 +62,12 @@ export default function ArtistAnalytics() {
       </div>
 
       {/* Key stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         <StatCard label="Total Plays" value={data.totalPlays} icon={Play} />
         <StatCard label="Total Views" value={data.totalViews} icon={Eye} color="text-blue-400" />
         <StatCard label="Followers" value={data.followerCount} icon={Users} color="text-purple-400" />
         <StatCard label="Favorites" value={data.totalFavorites} icon={Heart} color="text-pink-400" />
+        <StatCard label="Profile Visitors" value={data.profileVisitors} icon={Globe} color="text-green-400" />
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6">

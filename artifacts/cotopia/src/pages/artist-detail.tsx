@@ -1,4 +1,5 @@
 import { useParams, Link, useLocation } from "wouter";
+import { useEffect } from "react";
 import { useGetArtist, getGetArtistQueryKey, useFollowArtist, useUnfollowArtist, useTrackAnalyticsEvent } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Play, Users, Music, MessageCircle, ArrowLeft } from "lucide-react";
@@ -24,6 +25,12 @@ export default function ArtistDetail() {
   const followMutation = useFollowArtist();
   const unfollowMutation = useUnfollowArtist();
   const trackEvent = useTrackAnalyticsEvent();
+
+  useEffect(() => {
+    if (artist?.id) {
+      trackEvent.mutate({ data: { eventType: "page_view", eventName: "artist_profile", contentType: "user" as const, contentId: artist.id } });
+    }
+  }, [artist?.id]);
 
   const handleFollowToggle = () => {
     if (!artist) return;

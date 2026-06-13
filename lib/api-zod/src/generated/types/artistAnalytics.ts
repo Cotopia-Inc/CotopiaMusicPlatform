@@ -14,6 +14,7 @@ export interface ArtistAnalytics {
   totalViews: number;
   totalFavorites: number;
   followerCount: number;
+  profileVisitors: number;
   topSongs: Song[];
   topVideos: Video[];
   recentActivity?: ArtistAnalyticsRecentActivityItem[];

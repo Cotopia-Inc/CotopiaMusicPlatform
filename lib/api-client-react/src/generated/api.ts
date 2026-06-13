@@ -76,6 +76,7 @@ import type {
   HistoryItem,
   HomeFeed,
   Label,
+  LabelAnalytics,
   LabelProfile,
   LabelUpdate,
   ListArtistsParams,
@@ -7262,6 +7263,83 @@ export function useGetArtistAnalytics<TData = Awaited<ReturnType<typeof getArtis
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetArtistAnalyticsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetLabelAnalyticsUrl = () => {
+
+
+
+
+  return `/api/label/analytics`
+}
+
+/**
+ * @summary Get analytics for the current label
+ */
+export const getLabelAnalytics = async ( options?: RequestInit): Promise<LabelAnalytics> => {
+
+  return customFetch<LabelAnalytics>(getGetLabelAnalyticsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetLabelAnalyticsQueryKey = () => {
+    return [
+    `/api/label/analytics`
+    ] as const;
+    }
+
+
+export const getGetLabelAnalyticsQueryOptions = <TData = Awaited<ReturnType<typeof getLabelAnalytics>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getLabelAnalytics>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetLabelAnalyticsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getLabelAnalytics>>> = ({ signal }) => getLabelAnalytics({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getLabelAnalytics>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetLabelAnalyticsQueryResult = NonNullable<Awaited<ReturnType<typeof getLabelAnalytics>>>
+export type GetLabelAnalyticsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get analytics for the current label
+ */
+
+export function useGetLabelAnalytics<TData = Awaited<ReturnType<typeof getLabelAnalytics>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getLabelAnalytics>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetLabelAnalyticsQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

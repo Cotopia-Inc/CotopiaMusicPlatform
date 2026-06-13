@@ -2114,6 +2114,8 @@ export const GetAdminAnalyticsResponse = zod.object({
   "totalViews": zod.number(),
   "totalComments": zod.number(),
   "pendingSubmissions": zod.number(),
+  "totalPageViews": zod.number().optional(),
+  "totalUniqueVisitors": zod.number().optional(),
   "usersByRole": zod.record(zod.string(), zod.number()).optional(),
   "topSongs": zod.array(zod.object({
   "id": zod.number(),
@@ -2368,7 +2370,7 @@ export const AdminChangeUserRoleResponse = zod.object({
  * @summary Track an analytics event
  */
 export const TrackAnalyticsEventBody = zod.object({
-  "eventType": zod.enum(['user', 'content', 'engagement', 'admin']),
+  "eventType": zod.enum(['user', 'content', 'engagement', 'admin', 'page_view']),
   "eventName": zod.string(),
   "contentType": zod.enum(['song', 'video', 'playlist', 'user']).optional(),
   "contentId": zod.number().optional(),
@@ -2386,6 +2388,7 @@ export const GetArtistAnalyticsResponse = zod.object({
   "totalViews": zod.number(),
   "totalFavorites": zod.number(),
   "followerCount": zod.number(),
+  "profileVisitors": zod.number(),
   "topSongs": zod.array(zod.object({
   "id": zod.number(),
   "title": zod.string(),
@@ -2430,6 +2433,25 @@ export const GetArtistAnalyticsResponse = zod.object({
   "plays": zod.number().optional(),
   "views": zod.number().optional()
 })).optional()
+})
+
+
+/**
+ * @summary Get analytics for the current label
+ */
+export const GetLabelAnalyticsResponse = zod.object({
+  "totalArtists": zod.number(),
+  "totalPlays": zod.number(),
+  "totalViews": zod.number(),
+  "totalFollowers": zod.number(),
+  "topArtists": zod.array(zod.object({
+  "id": zod.number().optional(),
+  "stageName": zod.string().optional(),
+  "avatarUrl": zod.string().nullish(),
+  "totalPlays": zod.number().optional(),
+  "totalViews": zod.number().optional(),
+  "followerCount": zod.number().optional()
+}))
 })
 
 

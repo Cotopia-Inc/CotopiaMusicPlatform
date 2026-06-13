@@ -84,6 +84,13 @@ export default function VideoDetail() {
   const favoriteMutation = useFavoriteVideo();
   const unfavoriteMutation = useUnfavoriteVideo();
   const trackEvent = useTrackAnalyticsEvent();
+
+  useEffect(() => {
+    if (video?.id) {
+      trackEvent.mutate({ data: { eventType: "page_view", eventName: "video_page", contentType: "video" as const, contentId: video.id } });
+    }
+  }, [video?.id]);
+
   const deleteVideoMutation = useDeleteVideo();
   const updateVideoMutation = useUpdateVideo();
   const [, navigate] = useLocation();
