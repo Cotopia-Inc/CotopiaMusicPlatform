@@ -21,6 +21,7 @@ async function getSongWithArtist(id: number, userId?: number) {
       id: songsTable.id,
       title: songsTable.title,
       artistId: songsTable.artistId,
+      artistUserId: usersTable.id,
       artistName: artistsTable.stageName,
       artistIsVerified: usersTable.isVerified,
       albumId: songsTable.albumId,
@@ -268,6 +269,13 @@ router.delete("/songs/:id", requireAuth, async (req: AuthRequest, res): Promise<
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
     return;
+  }
+  const [existing] = await db.select().from(songsTable).where(eq(songsTable.id, params.data.id)).limit(1);
+  if (!existing) { res.status(404).json({ error: "Song not found" }); return; }
+  const isAdmin = req.user!.role === "admin" || req.user!.role === "master_admin";
+  if (!isAdmin) {
+    const [artist] = await db.select().from(artistsTable).where(eq(artistsTable.userId, req.user!.userId)).limit(1);
+    if (!artist || existing.artistId !== artist.id) { res.status(403).json({ error: "Forbidden" }); return; }
   }
   await db.delete(songsTable).where(eq(songsTable.id, params.data.id));
   res.sendStatus(204);

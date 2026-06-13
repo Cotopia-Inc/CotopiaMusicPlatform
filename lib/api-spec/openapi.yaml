@@ -1317,6 +1317,19 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Submission"
+    delete:
+      operationId: deleteSubmission
+      tags: [submissions]
+      summary: Delete (withdraw) a submission — owner or admin only
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
 
   # ── Library ───────────────────────────────────────────────────────────────
   /library/history:
@@ -2585,6 +2598,8 @@ components:
           type: string
         artistId:
           type: integer
+        artistUserId:
+          type: ["integer", "null"]
         artistName:
           type: string
         artistIsVerified:
@@ -2694,6 +2709,8 @@ components:
           type: string
         artistId:
           type: integer
+        artistUserId:
+          type: ["integer", "null"]
         artistName:
           type: string
         artistIsVerified:

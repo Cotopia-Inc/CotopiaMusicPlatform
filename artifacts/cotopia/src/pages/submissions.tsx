@@ -1,13 +1,34 @@
-import { useListSubmissions, getListSubmissionsQueryKey } from "@workspace/api-client-react";
+import { useListSubmissions, getListSubmissionsQueryKey, useDeleteSubmission } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format } from "date-fns";
+import { Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 
 export default function Submissions() {
   const { data, isLoading } = useListSubmissions({
     query: { queryKey: getListSubmissionsQueryKey() }
   });
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const deleteMutation = useDeleteSubmission();
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+
+  const handleWithdraw = (id: number) => {
+    setDeletingId(id);
+    deleteMutation.mutate({ id }, {
+      onSuccess: () => {
+        qc.invalidateQueries({ queryKey: getListSubmissionsQueryKey() });
+        toast({ title: "Submission withdrawn and deleted" });
+      },
+      onError: () => toast({ variant: "destructive", title: "Failed to withdraw submission" }),
+      onSettled: () => setDeletingId(null),
+    });
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -36,6 +57,7 @@ export default function Submissions() {
               <TableHead>Payment</TableHead>
               <TableHead>Submitted</TableHead>
               <TableHead>Notes</TableHead>
+              <TableHead className="w-24">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -65,11 +87,26 @@ export default function Submissions() {
                   <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
                     {sub.adminNotes || '-'}
                   </TableCell>
+                  <TableCell>
+                    {["draft", "pending_review"].includes(sub.status) && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 text-xs text-red-500/60 hover:text-red-500 hover:bg-red-500/10 gap-1"
+                        onClick={() => handleWithdraw(sub.id)}
+                        disabled={deletingId === sub.id}
+                        title="Withdraw and delete this submission"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        {deletingId === sub.id ? "…" : "Withdraw"}
+                      </Button>
+                    )}
+                  </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
+                <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
                   You haven't submitted any content yet.
                 </TableCell>
               </TableRow>

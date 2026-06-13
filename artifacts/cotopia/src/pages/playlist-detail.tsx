@@ -1,13 +1,14 @@
-import { useParams, Link } from "wouter";
+import { useParams, Link, useLocation } from "wouter";
 import { UserLink } from "@/components/user-link";
-import { useGetPlaylist, getGetPlaylistQueryKey, useUpdatePlaylist } from "@workspace/api-client-react";
+import { useGetPlaylist, getGetPlaylistQueryKey, useUpdatePlaylist, useDeletePlaylist, useRemoveSongFromPlaylist } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Play, ListMusic, ArrowLeft, Share2, Globe, Lock, Check } from "lucide-react";
+import { Play, ListMusic, ArrowLeft, Share2, Globe, Lock, Check, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePlayer } from "@/lib/player";
 import { useAuth } from "@/lib/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function PlaylistDetail() {
   const { id } = useParams();
@@ -15,8 +16,14 @@ export default function PlaylistDetail() {
   const { play } = usePlayer();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const [, navigate] = useLocation();
+  const { toast } = useToast();
   const [copied, setCopied] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [removingSongId, setRemovingSongId] = useState<number | null>(null);
   const updateMutation = useUpdatePlaylist();
+  const deleteMutation = useDeletePlaylist();
+  const removeSongMutation = useRemoveSongFromPlaylist();
 
   const { data: playlist, isLoading } = useGetPlaylist(playlistId, {
     query: { enabled: !!playlistId, queryKey: getGetPlaylistQueryKey(playlistId) }
@@ -54,6 +61,22 @@ export default function PlaylistDetail() {
       { id: playlistId, data: { isPublic: !playlist.isPublic } },
       { onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetPlaylistQueryKey(playlistId) }) }
     );
+  };
+
+  const handleDeletePlaylist = () => {
+    deleteMutation.mutate({ id: playlistId }, {
+      onSuccess: () => { toast({ title: "Playlist deleted" }); navigate("/library"); },
+      onError: () => toast({ variant: "destructive", title: "Failed to delete playlist" }),
+    });
+  };
+
+  const handleRemoveSong = (songId: number) => {
+    setRemovingSongId(songId);
+    removeSongMutation.mutate({ id: playlistId, songId }, {
+      onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetPlaylistQueryKey(playlistId) }),
+      onError: () => toast({ variant: "destructive", title: "Failed to remove song" }),
+      onSettled: () => setRemovingSongId(null),
+    });
   };
 
   return (
@@ -117,6 +140,22 @@ export default function PlaylistDetail() {
             <Globe className="w-3.5 h-3.5 text-green-400" /> Public playlist
           </span>
         )}
+
+        {/* Delete playlist — owner only */}
+        {isOwner && !confirmDelete && (
+          <Button variant="ghost" size="sm" className="gap-2 h-9 text-red-500/60 hover:text-red-500 hover:bg-red-500/10" onClick={() => setConfirmDelete(true)}>
+            <Trash2 className="w-4 h-4" /> Delete Playlist
+          </Button>
+        )}
+        {isOwner && confirmDelete && (
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20">
+            <span className="text-xs text-red-400">Delete permanently?</span>
+            <Button size="sm" variant="destructive" className="h-7 text-xs" onClick={handleDeletePlaylist} disabled={deleteMutation.isPending}>
+              {deleteMutation.isPending ? "Deleting…" : "Delete"}
+            </Button>
+            <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setConfirmDelete(false)}>Cancel</Button>
+          </div>
+        )}
       </div>
 
       {/* Songs List */}
@@ -154,6 +193,16 @@ export default function PlaylistDetail() {
                 <div className="text-muted-foreground text-sm w-32 text-right">
                   {Math.floor(song.duration / 60)}:{(song.duration % 60).toString().padStart(2, '0')}
                 </div>
+                {isOwner && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleRemoveSong(song.id); }}
+                    disabled={removingSongId === song.id}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity w-8 flex justify-center text-muted-foreground/40 hover:text-red-400 disabled:opacity-30"
+                    title="Remove from playlist"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
             ))}
           </>

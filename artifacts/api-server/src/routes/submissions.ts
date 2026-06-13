@@ -301,4 +301,21 @@ router.patch("/submissions/:id", requireAuth, async (req: AuthRequest, res): Pro
   res.json(enriched);
 });
 
+router.delete("/submissions/:id", requireAuth, async (req: AuthRequest, res): Promise<void> => {
+  const params = GetSubmissionParams.safeParse(req.params);
+  if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
+
+  const [submission] = await db.select().from(submissionsTable).where(eq(submissionsTable.id, params.data.id)).limit(1);
+  if (!submission) { res.status(404).json({ error: "Submission not found" }); return; }
+
+  const isAdmin = req.user!.role === "admin" || req.user!.role === "master_admin" || req.user!.role === "editor";
+  if (!isAdmin && submission.userId !== req.user!.userId) {
+    res.status(403).json({ error: "Forbidden" });
+    return;
+  }
+
+  await db.delete(submissionsTable).where(eq(submissionsTable.id, params.data.id));
+  res.sendStatus(204);
+});
+
 export default router;

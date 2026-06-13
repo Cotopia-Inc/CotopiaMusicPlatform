@@ -1,11 +1,12 @@
-import { useParams } from "wouter";
+import { useParams, useLocation } from "wouter";
 import {
   useGetVideo, getGetVideoQueryKey,
   useGetChatMessages, getGetChatMessagesQueryKey, usePostChatMessage,
   useRateVideo, useFavoriteVideo, useUnfavoriteVideo, useTrackAnalyticsEvent,
+  useDeleteVideo, useUpdateVideo,
 } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Play, Heart, Star, Send, Radio, Users, MessageCircle, Maximize2, ArrowLeft, Trash2 } from "lucide-react";
+import { Play, Heart, Star, Send, Radio, Users, MessageCircle, Maximize2, ArrowLeft, Trash2, Edit2, X, Save } from "lucide-react";
 import { RoleTag } from "@/components/role-badges";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
@@ -83,6 +84,13 @@ export default function VideoDetail() {
   const favoriteMutation = useFavoriteVideo();
   const unfavoriteMutation = useUnfavoriteVideo();
   const trackEvent = useTrackAnalyticsEvent();
+  const deleteVideoMutation = useDeleteVideo();
+  const updateVideoMutation = useUpdateVideo();
+  const [, navigate] = useLocation();
+  const [editOpen, setEditOpen] = useState(false);
+  const [editTitle, setEditTitle] = useState("");
+  const [editGenre, setEditGenre] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const isFavorited = localFavorited ?? video?.isFavorited ?? false;
   const userRating = localRating ?? video?.userRating ?? null;
@@ -143,6 +151,36 @@ export default function VideoDetail() {
         setChatInput("");
         queryClient.invalidateQueries({ queryKey: getGetChatMessagesQueryKey("video", videoId) });
       }
+    });
+  };
+
+  const handleOpenEdit = () => {
+    setEditTitle(video?.title ?? "");
+    setEditGenre(video?.genre ?? "");
+    setConfirmDelete(false);
+    setEditOpen(true);
+  };
+
+  const handleSaveEdit = () => {
+    if (!video) return;
+    updateVideoMutation.mutate(
+      { id: videoId, data: { title: editTitle.trim(), genre: editGenre.trim() || undefined } },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getGetVideoQueryKey(videoId) });
+          setEditOpen(false);
+          toast({ title: "Video updated" });
+        },
+        onError: () => toast({ variant: "destructive", title: "Failed to update video" }),
+      }
+    );
+  };
+
+  const handleDeleteVideo = () => {
+    if (!video) return;
+    deleteVideoMutation.mutate({ id: videoId }, {
+      onSuccess: () => { toast({ title: "Video deleted" }); navigate("/videos"); },
+      onError: () => toast({ variant: "destructive", title: "Failed to delete video" }),
     });
   };
 
@@ -397,6 +435,56 @@ export default function VideoDetail() {
             </span>
           </div>
         </div>
+
+        {/* ── Owner Controls ── */}
+        {video.artistUserId != null && user?.id === video.artistUserId && (
+          <div className="space-y-3">
+            {!editOpen && !confirmDelete && (
+              <div className="flex items-center gap-2">
+                <button onClick={handleOpenEdit} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors border border-border rounded-lg px-3 py-1.5">
+                  <Edit2 className="w-3.5 h-3.5" /> Edit video
+                </button>
+                <button onClick={() => setConfirmDelete(true)} className="flex items-center gap-1.5 text-xs text-red-500/70 hover:text-red-500 transition-colors border border-red-500/20 hover:border-red-500/40 rounded-lg px-3 py-1.5">
+                  <Trash2 className="w-3.5 h-3.5" /> Delete
+                </button>
+              </div>
+            )}
+            {editOpen && (
+              <div className="bg-secondary/40 rounded-xl border border-border p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold">Edit Video</span>
+                  <button onClick={() => setEditOpen(false)}><X className="w-3.5 h-3.5 text-muted-foreground" /></button>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Title</label>
+                  <Input value={editTitle} onChange={e => setEditTitle(e.target.value)} className="h-8 text-sm bg-secondary/50" />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Genre</label>
+                  <Input value={editGenre} onChange={e => setEditGenre(e.target.value)} placeholder="e.g. Hip-Hop, Pop…" className="h-8 text-sm bg-secondary/50" />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button variant="ghost" size="sm" onClick={() => setEditOpen(false)} className="h-7 text-xs">Cancel</Button>
+                  <Button size="sm" onClick={handleSaveEdit} disabled={updateVideoMutation.isPending || !editTitle.trim()} className="h-7 text-xs gap-1.5">
+                    <Save className="w-3 h-3" /> {updateVideoMutation.isPending ? "Saving…" : "Save"}
+                  </Button>
+                </div>
+              </div>
+            )}
+            {confirmDelete && (
+              <div className="bg-red-500/5 rounded-xl border border-red-500/20 p-4 space-y-3">
+                <p className="text-sm font-medium">Delete this video permanently?</p>
+                <p className="text-xs text-muted-foreground">This will remove the video and all associated data. This cannot be undone.</p>
+                <div className="flex gap-2">
+                  <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(false)} className="h-7 text-xs">Cancel</Button>
+                  <Button variant="destructive" size="sm" onClick={handleDeleteVideo} disabled={deleteVideoMutation.isPending} className="h-7 text-xs">
+                    {deleteVideoMutation.isPending ? "Deleting…" : "Yes, delete permanently"}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Description */}
         {video.description && (

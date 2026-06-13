@@ -5017,6 +5017,76 @@ export const useUpdateSubmission = <TError = ErrorType<unknown>,
       return useMutation(getUpdateSubmissionMutationOptions(options));
     }
 
+export const getDeleteSubmissionUrl = (id: number,) => {
+
+
+
+
+  return `/api/submissions/${id}`
+}
+
+/**
+ * @summary Delete (withdraw) a submission — owner or admin only
+ */
+export const deleteSubmission = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteSubmissionUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteSubmissionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSubmission>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteSubmission>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteSubmission'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteSubmission>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteSubmission(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteSubmissionMutationResult = NonNullable<Awaited<ReturnType<typeof deleteSubmission>>>
+
+    export type DeleteSubmissionMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete (withdraw) a submission — owner or admin only
+ */
+export const useDeleteSubmission = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSubmission>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteSubmission>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteSubmissionMutationOptions(options));
+    }
+
 export const getGetHistoryUrl = (params?: GetHistoryParams,) => {
   const normalizedParams = new URLSearchParams();
 

@@ -12,6 +12,8 @@ export interface Song {
   id: number;
   title: string;
   artistId: number;
+  /** @nullable */
+  artistUserId?: number | null;
   artistName: string;
   artistIsVerified?: boolean;
   /** @nullable */

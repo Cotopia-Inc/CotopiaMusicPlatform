@@ -20,6 +20,7 @@ async function getVideoWithArtist(id: number, userId?: number) {
       id: videosTable.id,
       title: videosTable.title,
       artistId: videosTable.artistId,
+      artistUserId: usersTable.id,
       artistName: artistsTable.stageName,
       artistIsVerified: usersTable.isVerified,
       genre: videosTable.genre,
@@ -231,6 +232,13 @@ router.delete("/videos/:id", requireAuth, async (req: AuthRequest, res): Promise
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
     return;
+  }
+  const [existing] = await db.select().from(videosTable).where(eq(videosTable.id, params.data.id)).limit(1);
+  if (!existing) { res.status(404).json({ error: "Video not found" }); return; }
+  const isAdmin = req.user!.role === "admin" || req.user!.role === "master_admin";
+  if (!isAdmin) {
+    const [artist] = await db.select().from(artistsTable).where(eq(artistsTable.userId, req.user!.userId)).limit(1);
+    if (!artist || existing.artistId !== artist.id) { res.status(403).json({ error: "Forbidden" }); return; }
   }
   await db.delete(videosTable).where(eq(videosTable.id, params.data.id));
   res.sendStatus(204);

@@ -80,6 +80,7 @@ export * from './editorPickInput';
 export * from './editorPickInputContentType';
 export * from './editorPickUpdateInput';
 export * from './errorEnvelope';
+
 export * from './getHistoryParams';
 export * from './getTrendingSongsParams';
 export * from './getTrendingVideosParams';
@@ -117,6 +118,7 @@ export * from './ratingInput';
 export * from './ratingResult';
 export * from './registerInput';
 export * from './registerInputRole';
+
 export * from './sendOtp200';
 export * from './sendOtpInput';
 export * from './sendOtpInputPurpose';

@@ -1,6 +1,7 @@
-import { useListCompanyPosts, getListCompanyPostsQueryKey, useGetCeoMessage, useSetCeoMessage } from "@workspace/api-client-react";
+import { useListCompanyPosts, getListCompanyPostsQueryKey, useGetCeoMessage, useSetCeoMessage, useDeleteCompanyPost } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Megaphone, Quote, Crown, Save, Edit2, X } from "lucide-react";
+import { Megaphone, Quote, Crown, Save, Edit2, X, Trash2, ExternalLink } from "lucide-react";
+import { Link } from "wouter";
 import { RoleBadges } from "@/components/role-badges";
 import { useAuth } from "@/lib/auth";
 import { useState } from "react";
@@ -15,6 +16,22 @@ export default function CompanyHub() {
   const { toast } = useToast();
   const qc = useQueryClient();
   const isMasterAdmin = user?.role === "master_admin";
+  const isAdmin = isMasterAdmin || user?.role === "editor";
+  const [deletingPostId, setDeletingPostId] = useState<number | null>(null);
+  const deletePostMutation = useDeleteCompanyPost();
+
+  const handleDeletePost = (id: number) => {
+    if (!window.confirm("Delete this post permanently? This cannot be undone.")) return;
+    setDeletingPostId(id);
+    deletePostMutation.mutate({ id }, {
+      onSuccess: () => {
+        qc.invalidateQueries({ queryKey: getListCompanyPostsQueryKey({ limit: 50 }) });
+        toast({ title: "Post deleted" });
+      },
+      onError: () => toast({ variant: "destructive", title: "Failed to delete post" }),
+      onSettled: () => setDeletingPostId(null),
+    });
+  };
 
   const { data, isLoading } = useListCompanyPosts(
     { limit: 50 },
@@ -184,11 +201,31 @@ export default function CompanyHub() {
                 </div>
               )}
               <div className="p-8 space-y-4">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 flex-wrap">
                   <span className="px-3 py-1 bg-secondary text-secondary-foreground rounded-full text-xs font-semibold uppercase tracking-wider">
                     {post.type.replace('_', ' ')}
                   </span>
                   <span className="text-sm text-muted-foreground">{new Date(post.createdAt).toLocaleDateString()}</span>
+                  {isAdmin && (
+                    <div className="ml-auto flex items-center gap-1">
+                      <Link href="/admin/company">
+                        <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 text-muted-foreground hover:text-foreground">
+                          <Edit2 className="w-3 h-3" /> Edit in Admin
+                        </Button>
+                      </Link>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-xs gap-1 text-red-500/60 hover:text-red-500 hover:bg-red-500/10"
+                        onClick={() => handleDeletePost(post.id)}
+                        disabled={deletingPostId === post.id}
+                        title="Delete this post"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        {deletingPostId === post.id ? "Deleting…" : "Delete"}
+                      </Button>
+                    </div>
+                  )}
                 </div>
                 <h2 className="text-3xl font-bold tracking-tight">{post.title}</h2>
                 <div className="prose prose-invert max-w-none text-muted-foreground" dangerouslySetInnerHTML={{ __html: post.content }} />
