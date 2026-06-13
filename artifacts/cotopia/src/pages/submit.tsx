@@ -413,6 +413,7 @@ export default function Submit() {
           genre: meta.genre || undefined,
           mood: meta.mood || undefined,
           description: meta.description || undefined,
+          credits: meta.credits || undefined,
           coverUrl: meta.coverUrl || undefined,
           releaseDate: meta.releaseDate || undefined,
           isExplicit: meta.isExplicit,

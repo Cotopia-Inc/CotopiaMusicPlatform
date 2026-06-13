@@ -41,7 +41,9 @@ router.get("/chat/:contentType/:contentId", optionalAuth, async (req: AuthReques
     .orderBy(desc(chatMessagesTable.createdAt))
     .limit(limit);
 
-  res.json(messages.reverse());
+  const seen = new Set<number>();
+  const deduped = messages.filter(m => { if (seen.has(m.id)) return false; seen.add(m.id); return true; });
+  res.json(deduped.reverse());
 });
 
 router.post("/chat/:contentType/:contentId", requireAuth, async (req: AuthRequest, res): Promise<void> => {

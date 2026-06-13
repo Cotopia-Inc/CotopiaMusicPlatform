@@ -2966,6 +2966,8 @@ components:
           type: string
         description:
           type: string
+        credits:
+          type: string
         fileUrl:
           type: string
         coverUrl:
@@ -2995,6 +2997,8 @@ components:
         mood:
           type: string
         description:
+          type: string
+        credits:
           type: string
         coverUrl:
           type: string

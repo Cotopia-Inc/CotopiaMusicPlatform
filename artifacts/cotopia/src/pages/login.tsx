@@ -7,12 +7,14 @@ import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Radio } from "lucide-react";
 
 const formSchema = z.object({
   email: z.string().email("Please enter a valid email"),
   password: z.string().min(6, "Password must be at least 6 characters"),
+  tosAccepted: z.boolean().refine(v => v === true, { message: "You must accept the Terms of Service to continue" }),
 });
 
 export default function Login() {
@@ -23,11 +25,11 @@ export default function Login() {
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { email: "", password: "" },
+    defaultValues: { email: "", password: "", tosAccepted: false },
   });
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    loginMutation.mutate({ data: values }, {
+    loginMutation.mutate({ data: { email: values.email, password: values.password } }, {
       onSuccess: (res) => {
         login(res.user, res.token);
         toast({ title: "Welcome back", description: "Tuned into Everyday Radio." });
@@ -103,6 +105,32 @@ export default function Login() {
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name="tosAccepted"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex items-start gap-3 p-3 rounded-lg border border-border bg-secondary/20">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          className="mt-0.5"
+                        />
+                      </FormControl>
+                      <FormLabel className="text-xs text-muted-foreground leading-relaxed cursor-pointer font-normal">
+                        I agree to the{" "}
+                        <Link href="/legal/terms" className="text-primary hover:underline font-medium" onClick={e => e.stopPropagation()}>Terms of Service</Link>
+                        {" "}and{" "}
+                        <Link href="/legal/privacy" className="text-primary hover:underline font-medium" onClick={e => e.stopPropagation()}>Privacy Policy</Link>
+                      </FormLabel>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <Button type="submit" className="w-full h-11 text-sm font-semibold bg-primary" disabled={loginMutation.isPending}>
                 {loginMutation.isPending ? "Signing in..." : "Sign In"}
               </Button>

@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { ChevronLeft, AlertCircle } from "lucide-react";
+import { ChevronLeft, AlertCircle, Home } from "lucide-react";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -14,9 +14,15 @@ export default function RefundPolicy() {
   return (
     <div className="max-w-3xl mx-auto px-4 py-10 space-y-8">
       <div className="space-y-1">
-        <Link href="/legal" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors mb-3">
-          <ChevronLeft className="w-3 h-3" />Legal Center
-        </Link>
+        <div className="flex items-center gap-3 mb-3">
+          <Link href="/" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+            <Home className="w-3 h-3" />Home
+          </Link>
+          <span className="text-muted-foreground/30 text-xs">·</span>
+          <Link href="/legal" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+            <ChevronLeft className="w-3 h-3" />Legal Center
+          </Link>
+        </div>
         <h1 className="text-3xl font-extrabold">Refund Policy</h1>
         <p className="text-xs text-muted-foreground">Everyday Radio by Cotopia · Version 1.0 · Last updated June 2026</p>
       </div>

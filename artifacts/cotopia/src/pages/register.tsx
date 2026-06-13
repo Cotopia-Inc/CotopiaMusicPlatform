@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Radio } from "lucide-react";
@@ -16,6 +17,7 @@ const formSchema = z.object({
   email: z.string().email("Please enter a valid email"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   role: z.nativeEnum(RegisterInputRole),
+  tosAccepted: z.boolean().refine(v => v === true, { message: "You must accept the Terms of Service to continue" }),
 });
 
 export default function Register() {
@@ -26,11 +28,11 @@ export default function Register() {
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { username: "", email: "", password: "", role: RegisterInputRole.listener },
+    defaultValues: { username: "", email: "", password: "", role: RegisterInputRole.listener, tosAccepted: false },
   });
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    registerMutation.mutate({ data: values }, {
+    registerMutation.mutate({ data: { username: values.username, email: values.email, password: values.password, role: values.role } }, {
       onSuccess: (res) => {
         login(res.user, res.token);
         toast({ title: "Welcome to Everyday Radio", description: "Powered by Cotopia." });
@@ -120,6 +122,29 @@ export default function Register() {
                   <FormMessage />
                 </FormItem>
               )} />
+
+              <FormField control={form.control} name="tosAccepted" render={({ field }) => (
+                <FormItem>
+                  <div className="flex items-start gap-3 p-3 rounded-lg border border-border bg-secondary/20">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        className="mt-0.5"
+                      />
+                    </FormControl>
+                    <FormLabel className="text-xs text-muted-foreground leading-relaxed cursor-pointer font-normal">
+                      I agree to the{" "}
+                      <Link href="/legal/terms" className="text-primary hover:underline font-medium" onClick={e => e.stopPropagation()}>Terms of Service</Link>
+                      {" "}and{" "}
+                      <Link href="/legal/privacy" className="text-primary hover:underline font-medium" onClick={e => e.stopPropagation()}>Privacy Policy</Link>.
+                      I confirm I am 18 years of age or older.
+                    </FormLabel>
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )} />
+
               <Button type="submit" className="w-full h-11 text-sm font-semibold bg-primary mt-2" disabled={registerMutation.isPending}>
                 {registerMutation.isPending ? "Creating account..." : "Get Started"}
               </Button>
@@ -132,13 +157,7 @@ export default function Register() {
           </div>
 
           <div className="text-center">
-            <p className="text-[11px] text-muted-foreground/60 leading-relaxed">
-              By creating an account you agree to our{" "}
-              <Link href="/legal/terms" className="text-muted-foreground hover:text-primary underline">Terms of Service</Link>
-              {" "}and{" "}
-              <Link href="/legal/privacy" className="text-muted-foreground hover:text-primary underline">Privacy Policy</Link>.{" "}
-              <Link href="/legal" className="text-muted-foreground hover:text-primary underline">Legal Center</Link>
-            </p>
+            <Link href="/legal" className="text-[11px] text-muted-foreground/60 hover:text-muted-foreground underline transition-colors">Legal Center</Link>
           </div>
         </div>
       </div>

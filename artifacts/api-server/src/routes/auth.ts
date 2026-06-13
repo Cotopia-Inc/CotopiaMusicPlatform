@@ -99,6 +99,18 @@ router.patch("/auth/me", requireAuth, async (req: AuthRequest, res): Promise<voi
     return;
   }
   const [user] = await db.update(usersTable).set(parsed.data).where(eq(usersTable.id, req.user!.userId)).returning();
+
+  if (parsed.data.bio !== undefined || parsed.data.bannerUrl !== undefined) {
+    const patch: Record<string, unknown> = {};
+    if (parsed.data.bio !== undefined) patch["bio"] = parsed.data.bio;
+    if (parsed.data.bannerUrl !== undefined) patch["bannerUrl"] = parsed.data.bannerUrl;
+    if (user.role === "artist") {
+      await db.update(artistsTable).set(patch as any).where(eq(artistsTable.userId, req.user!.userId));
+    } else if (user.role === "label") {
+      await db.update(labelsTable).set(patch as any).where(eq(labelsTable.userId, req.user!.userId));
+    }
+  }
+
   const { passwordHash: _, ...userOut } = user;
   res.json(userOut);
 });
