@@ -14,7 +14,7 @@ const router = Router();
 
 async function getLabelRow(id: number, userId?: number) {
   const [label] = await db
-    .select({ id: labelsTable.id, userId: labelsTable.userId, name: labelsTable.name, bio: labelsTable.bio, logoUrl: labelsTable.logoUrl, bannerUrl: labelsTable.bannerUrl, profileVideoUrl: usersTable.profileVideoUrl, createdAt: labelsTable.createdAt, isVerified: usersTable.isVerified })
+    .select({ id: labelsTable.id, userId: labelsTable.userId, name: labelsTable.name, bio: labelsTable.bio, logoUrl: labelsTable.logoUrl, bannerUrl: labelsTable.bannerUrl, profileVideoUrl: usersTable.profileVideoUrl, createdAt: labelsTable.createdAt, isVerified: usersTable.isVerified, userRole: usersTable.role })
     .from(labelsTable)
     .innerJoin(usersTable, eq(labelsTable.userId, usersTable.id))
     .where(eq(labelsTable.id, id))
@@ -45,7 +45,7 @@ router.get("/labels", optionalAuth, async (req: AuthRequest, res): Promise<void>
 
   const conditions = q ? [ilike(labelsTable.name, `%${q}%`)] : [];
   const labels = await db
-    .select({ id: labelsTable.id, userId: labelsTable.userId, name: labelsTable.name, bio: labelsTable.bio, logoUrl: labelsTable.logoUrl, bannerUrl: labelsTable.bannerUrl, createdAt: labelsTable.createdAt, isVerified: usersTable.isVerified })
+    .select({ id: labelsTable.id, userId: labelsTable.userId, name: labelsTable.name, bio: labelsTable.bio, logoUrl: labelsTable.logoUrl, bannerUrl: labelsTable.bannerUrl, createdAt: labelsTable.createdAt, isVerified: usersTable.isVerified, userRole: usersTable.role })
     .from(labelsTable)
     .innerJoin(usersTable, eq(labelsTable.userId, usersTable.id))
     .where(conditions.length ? and(...conditions) : undefined)
@@ -68,7 +68,7 @@ router.get("/labels", optionalAuth, async (req: AuthRequest, res): Promise<void>
 
 router.get("/labels/featured", async (_req, res): Promise<void> => {
   const labels = await db
-    .select({ id: labelsTable.id, userId: labelsTable.userId, name: labelsTable.name, bio: labelsTable.bio, logoUrl: labelsTable.logoUrl, bannerUrl: labelsTable.bannerUrl, createdAt: labelsTable.createdAt, isVerified: usersTable.isVerified })
+    .select({ id: labelsTable.id, userId: labelsTable.userId, name: labelsTable.name, bio: labelsTable.bio, logoUrl: labelsTable.logoUrl, bannerUrl: labelsTable.bannerUrl, createdAt: labelsTable.createdAt, isVerified: usersTable.isVerified, userRole: usersTable.role })
     .from(labelsTable)
     .innerJoin(usersTable, eq(labelsTable.userId, usersTable.id))
     .orderBy(desc(labelsTable.createdAt))
@@ -97,7 +97,7 @@ router.get("/labels/:id", optionalAuth, async (req: AuthRequest, res): Promise<v
   }
 
   const artists = await db
-    .select({ id: artistsTable.id, userId: artistsTable.userId, stageName: artistsTable.stageName, bio: artistsTable.bio, avatarUrl: artistsTable.avatarUrl, bannerUrl: artistsTable.bannerUrl, genre: artistsTable.genre, labelId: artistsTable.labelId, createdAt: artistsTable.createdAt, isVerified: usersTable.isVerified })
+    .select({ id: artistsTable.id, userId: artistsTable.userId, stageName: artistsTable.stageName, bio: artistsTable.bio, avatarUrl: artistsTable.avatarUrl, bannerUrl: artistsTable.bannerUrl, genre: artistsTable.genre, labelId: artistsTable.labelId, createdAt: artistsTable.createdAt, isVerified: usersTable.isVerified, userRole: usersTable.role })
     .from(artistsTable)
     .innerJoin(usersTable, eq(artistsTable.userId, usersTable.id))
     .where(eq(artistsTable.labelId, params.data.id))

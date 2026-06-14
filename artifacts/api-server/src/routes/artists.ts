@@ -27,6 +27,7 @@ async function getArtistRow(id: number, userId?: number) {
       createdAt: artistsTable.createdAt,
       isVerified: usersTable.isVerified,
       profileVideoUrl: usersTable.profileVideoUrl,
+      userRole: usersTable.role,
     })
     .from(artistsTable)
     .innerJoin(usersTable, eq(artistsTable.userId, usersTable.id))
@@ -106,7 +107,7 @@ router.get("/artists", optionalAuth, async (req: AuthRequest, res): Promise<void
 
 router.get("/artists/new", async (_req, res): Promise<void> => {
   const artists = await db
-    .select({ id: artistsTable.id, userId: artistsTable.userId, stageName: artistsTable.stageName, bio: artistsTable.bio, avatarUrl: artistsTable.avatarUrl, bannerUrl: artistsTable.bannerUrl, genre: artistsTable.genre, labelId: artistsTable.labelId, createdAt: artistsTable.createdAt, isVerified: usersTable.isVerified })
+    .select({ id: artistsTable.id, userId: artistsTable.userId, stageName: artistsTable.stageName, bio: artistsTable.bio, avatarUrl: artistsTable.avatarUrl, bannerUrl: artistsTable.bannerUrl, genre: artistsTable.genre, labelId: artistsTable.labelId, createdAt: artistsTable.createdAt, isVerified: usersTable.isVerified, userRole: usersTable.role })
     .from(artistsTable)
     .innerJoin(usersTable, eq(artistsTable.userId, usersTable.id))
     .orderBy(desc(artistsTable.createdAt))
@@ -123,7 +124,7 @@ router.get("/artists/new", async (_req, res): Promise<void> => {
 
 router.get("/artists/featured", async (_req, res): Promise<void> => {
   const artists = await db
-    .select({ id: artistsTable.id, userId: artistsTable.userId, stageName: artistsTable.stageName, bio: artistsTable.bio, avatarUrl: artistsTable.avatarUrl, bannerUrl: artistsTable.bannerUrl, genre: artistsTable.genre, labelId: artistsTable.labelId, createdAt: artistsTable.createdAt, isVerified: usersTable.isVerified })
+    .select({ id: artistsTable.id, userId: artistsTable.userId, stageName: artistsTable.stageName, bio: artistsTable.bio, avatarUrl: artistsTable.avatarUrl, bannerUrl: artistsTable.bannerUrl, genre: artistsTable.genre, labelId: artistsTable.labelId, createdAt: artistsTable.createdAt, isVerified: usersTable.isVerified, userRole: usersTable.role })
     .from(artistsTable)
     .innerJoin(usersTable, eq(artistsTable.userId, usersTable.id))
     .orderBy(desc(artistsTable.createdAt))
