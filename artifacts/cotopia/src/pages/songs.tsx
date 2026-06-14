@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { UserLink } from "@/components/user-link";
 import { usePlayer } from "@/lib/player";
-import { AddToPlaylist } from "@/components/add-to-playlist";
+import { SongMenu } from "@/components/song-menu";
 
 export default function Songs() {
   const [search, setSearch] = useState("");
@@ -73,7 +73,7 @@ export default function Songs() {
                   <Link href={`/songs/${song.id}`}>
                     <h4 className="font-semibold text-sm truncate hover:text-primary transition-colors">{song.title}</h4>
                   </Link>
-                  <AddToPlaylist songId={song.id} className="flex-shrink-0 -mt-1 -mr-1 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition-opacity" />
+                  <SongMenu song={song} className="flex-shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition-opacity" />
                 </div>
                 <UserLink
                   username={song.artistName}

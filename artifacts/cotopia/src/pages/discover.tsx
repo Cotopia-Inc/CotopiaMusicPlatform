@@ -4,7 +4,7 @@ import { Play, Star, Video as VideoIcon } from "lucide-react";
 import { Link } from "wouter";
 import { usePlayer } from "@/lib/player";
 import { UserLink } from "@/components/user-link";
-import { AddToPlaylist } from "@/components/add-to-playlist";
+import { SongMenu } from "@/components/song-menu";
 
 export default function Discover() {
   const { play } = usePlayer();
@@ -73,7 +73,7 @@ export default function Discover() {
                         <Link href={`/songs/${song.id}`}>
                           <h4 className="font-semibold text-sm truncate hover:text-primary transition-colors">{song.title}</h4>
                         </Link>
-                        <AddToPlaylist songId={song.id} className="flex-shrink-0 -mt-1 -mr-1 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition-opacity" />
+                        <SongMenu song={song} className="flex-shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition-opacity" />
                       </div>
                       <UserLink username={song.artistName} artistId={song.artistId} role="artist" isVerified={song.artistIsVerified ?? false} className="text-xs text-muted-foreground" />
                     </div>
@@ -164,7 +164,7 @@ export default function Discover() {
                     <Link href={`/songs/${song.id}`}>
                       <h4 className="font-semibold text-sm truncate hover:text-primary transition-colors">{song.title}</h4>
                     </Link>
-                    <AddToPlaylist songId={song.id} className="flex-shrink-0 -mt-1 -mr-1 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition-opacity" />
+                    <SongMenu song={song} className="flex-shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition-opacity" />
                   </div>
                   <UserLink username={song.artistName} artistId={song.artistId} role="artist" isVerified={song.artistIsVerified ?? false} className="text-xs text-muted-foreground" />
                 </div>
@@ -213,7 +213,7 @@ export default function Discover() {
                     <Link href={`/songs/${song.id}`}>
                       <h4 className="font-semibold text-sm truncate hover:text-primary transition-colors">{song.title}</h4>
                     </Link>
-                    <AddToPlaylist songId={song.id} className="flex-shrink-0 -mt-1 -mr-1 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition-opacity" />
+                    <SongMenu song={song} className="flex-shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition-opacity" />
                   </div>
                   <UserLink username={song.artistName} artistId={song.artistId} role="artist" isVerified={song.artistIsVerified ?? false} className="text-xs text-muted-foreground" />
                 </div>

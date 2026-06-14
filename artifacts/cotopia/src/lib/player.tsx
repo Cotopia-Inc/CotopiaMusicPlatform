@@ -38,6 +38,7 @@ interface PlayerContextValue {
   toggleShuffle: () => void;
   cycleRepeat: () => void;
   addToQueue: (tracks: Track[]) => void;
+  removeFromQueue: (index: number) => void;
   setVolume: (v: number) => void;
   setTrackFavorited: (v: boolean) => void;
   setNowPlayingOpen: (v: boolean) => void;
@@ -333,6 +334,16 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     setQueue([...q, ...fresh]);
   };
 
+  const removeFromQueue = (index: number) => {
+    const q = [...queueRef.current];
+    const currentIdx = queueIndexRef.current;
+    q.splice(index, 1);
+    setQueue(q);
+    if (index < currentIdx) {
+      setQueueIndex(currentIdx - 1);
+    }
+  };
+
   const requestPiP = useCallback(async () => {
     if (!videoElRef.current || !document.pictureInPictureEnabled) return;
     try {
@@ -348,7 +359,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       isVideoTrack: !!trackRef.current?.videoUrl,
       queue, queueIndex, shuffle, repeat,
       play, playAt, togglePlay, seek, stop, skipNext, skipPrev,
-      toggleShuffle, cycleRepeat, addToQueue,
+      toggleShuffle, cycleRepeat, addToQueue, removeFromQueue,
       setVolume, setTrackFavorited, setNowPlayingOpen,
       registerVideoElement, requestPiP, audioRef,
     }}>

@@ -29,7 +29,7 @@ export function Player() {
     trackFavorited, nowPlayingOpen, isVideoTrack,
     queue, queueIndex, shuffle, repeat,
     setTrackFavorited, togglePlay, seek, stop, skipNext, skipPrev,
-    toggleShuffle, cycleRepeat, playAt,
+    toggleShuffle, cycleRepeat, playAt, addToQueue, removeFromQueue,
     setVolume, setNowPlayingOpen, registerVideoElement, requestPiP,
   } = usePlayer();
 
@@ -541,16 +541,8 @@ export function Player() {
           </div>
         </div>
 
-        {/* Right: stop + queue + volume */}
+        {/* Right: queue + volume + stop */}
         <div className="flex items-center justify-end gap-2 w-[30%]">
-          <button
-            onClick={stop} disabled={!track}
-            className="w-7 h-7 rounded bg-red-600 hover:bg-red-500 text-white flex items-center justify-center transition-colors disabled:opacity-30 flex-shrink-0"
-            title="Stop"
-          >
-            <Square className="w-3 h-3 fill-current" />
-          </button>
-
           <button
             onClick={() => setQueueOpen(v => !v)}
             disabled={!track}
@@ -579,6 +571,14 @@ export function Player() {
             onValueChange={([v]) => setVolume(v / 100)}
             title={`Volume: ${Math.round(volume * 100)}%`}
           />
+
+          <button
+            onClick={stop} disabled={!track}
+            className="w-7 h-7 rounded bg-red-600 hover:bg-red-500 text-white flex items-center justify-center transition-colors disabled:opacity-30 flex-shrink-0 ml-1"
+            title="Stop"
+          >
+            <Square className="w-3 h-3 fill-current" />
+          </button>
         </div>
       </div>
 
@@ -609,33 +609,44 @@ export function Player() {
                 queue.map((t, idx) => {
                   const isActive = idx === queueIndex;
                   return (
-                    <button
+                    <div
                       key={`${t.id}-${idx}`}
-                      onClick={() => { playAt(idx); setQueueOpen(false); }}
-                      className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-left ${
+                      className={`w-full flex items-center gap-3 px-4 py-2.5 transition-colors ${
                         isActive ? "bg-primary/10 text-primary" : "hover:bg-secondary/60 text-foreground"
                       }`}
                     >
-                      <div className="w-5 text-center flex-shrink-0">
-                        {isActive
-                          ? <span className="inline-block w-2 h-2 rounded-full bg-primary animate-pulse" />
-                          : <span className="text-xs text-muted-foreground">{idx + 1}</span>
-                        }
-                      </div>
-                      <div className="w-9 h-9 rounded bg-secondary overflow-hidden flex-shrink-0 border border-border/40">
-                        {t.coverUrl
-                          ? <img src={t.coverUrl} alt={t.title} className="w-full h-full object-cover" />
-                          : <div className="w-full h-full flex items-center justify-center"><Music2 className="w-4 h-4 text-muted-foreground/40" /></div>
-                        }
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className={`text-sm font-medium truncate ${isActive ? "text-primary" : ""}`}>{t.title}</p>
-                        <p className="text-xs text-muted-foreground truncate">{t.artistName}</p>
-                      </div>
-                      <span className="text-xs text-muted-foreground tabular-nums flex-shrink-0">
-                        {formatDuration(t.duration ?? 0)}
-                      </span>
-                    </button>
+                      <button
+                        onClick={() => { playAt(idx); setQueueOpen(false); }}
+                        className="flex items-center gap-3 flex-1 min-w-0 text-left"
+                      >
+                        <div className="w-5 text-center flex-shrink-0">
+                          {isActive
+                            ? <span className="inline-block w-2 h-2 rounded-full bg-primary animate-pulse" />
+                            : <span className="text-xs text-muted-foreground">{idx + 1}</span>
+                          }
+                        </div>
+                        <div className="w-9 h-9 rounded bg-secondary overflow-hidden flex-shrink-0 border border-border/40">
+                          {t.coverUrl
+                            ? <img src={t.coverUrl} alt={t.title} className="w-full h-full object-cover" />
+                            : <div className="w-full h-full flex items-center justify-center"><Music2 className="w-4 h-4 text-muted-foreground/40" /></div>
+                          }
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-sm font-medium truncate ${isActive ? "text-primary" : ""}`}>{t.title}</p>
+                          <p className="text-xs text-muted-foreground truncate">{t.artistName}</p>
+                        </div>
+                        <span className="text-xs text-muted-foreground tabular-nums flex-shrink-0">
+                          {formatDuration(t.duration ?? 0)}
+                        </span>
+                      </button>
+                      <button
+                        onClick={() => removeFromQueue(idx)}
+                        className="flex-shrink-0 text-muted-foreground/40 hover:text-red-400 transition-colors p-1 rounded"
+                        title="Remove from queue"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   );
                 })
               )}

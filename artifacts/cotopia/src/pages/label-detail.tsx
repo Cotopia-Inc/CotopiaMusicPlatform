@@ -1,5 +1,5 @@
 import { useParams, Link, useLocation } from "wouter";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useGetLabel, getGetLabelQueryKey, useFollowLabel, useUnfollowLabel } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Users, Music, Play, Volume2, VolumeX } from "lucide-react";
@@ -18,6 +18,10 @@ export default function LabelDetail() {
   const [, navigate] = useLocation();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isMuted, setIsMuted] = useState(true);
+
+  useEffect(() => {
+    if (videoRef.current) videoRef.current.muted = isMuted;
+  }, [isMuted]);
 
   const { data: label, isLoading } = useGetLabel(labelId, {
     query: { enabled: !!labelId, queryKey: getGetLabelQueryKey(labelId) }

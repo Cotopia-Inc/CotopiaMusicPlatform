@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SongMenu } from "@/components/song-menu";
 import { useGetFavoriteSongs, getGetFavoriteSongsQueryKey, useListPlaylists, getListPlaylistsQueryKey, useGetHistory, getGetHistoryQueryKey, useCreatePlaylist } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Play, Music, ListMusic, Clock, Plus, BookOpen, Heart, X, ArrowLeft, Home } from "lucide-react";
@@ -145,6 +146,7 @@ export default function Library() {
                   <div className="text-muted-foreground text-sm w-16 text-right">
                     {Math.floor(song.duration / 60)}:{(song.duration % 60).toString().padStart(2, '0')}
                   </div>
+                  <SongMenu song={song} className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition-opacity w-7 h-7" />
                 </div>
               ))}
             </div>

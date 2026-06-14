@@ -9,6 +9,7 @@ import { useAuth } from "@/lib/auth";
 import { usePlayer } from "@/lib/player";
 import { useQueryClient } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SongMenu } from "@/components/song-menu";
 
 export default function ArtistDetail() {
   const { id } = useParams();
@@ -33,6 +34,10 @@ export default function ArtistDetail() {
       trackEvent.mutate({ data: { eventType: "page_view", eventName: "artist_profile", contentType: "user" as const, contentId: artist.id } });
     }
   }, [artist?.id]);
+
+  useEffect(() => {
+    if (videoRef.current) videoRef.current.muted = isMuted;
+  }, [isMuted]);
 
   const handleFollowToggle = () => {
     if (!artist) return;
@@ -203,6 +208,7 @@ export default function ArtistDetail() {
                     <Link href={`/songs/${song.id}`} onClick={(e) => e.stopPropagation()} className="text-muted-foreground text-sm w-16 text-right hover:text-primary">
                       {Math.floor(song.duration / 60)}:{(song.duration % 60).toString().padStart(2, '0')}
                     </Link>
+                    <SongMenu song={song} className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition-opacity w-7 h-7" />
                   </div>
                 ))}
               </div>

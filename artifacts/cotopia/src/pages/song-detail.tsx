@@ -6,7 +6,7 @@ import {
   useDeleteSong, useUpdateSong, useTrackAnalyticsEvent,
 } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Play, Pause, Heart, Star, Send, Radio, Users, MessageCircle, ArrowLeft, Trash2, Edit2, X, Save } from "lucide-react";
+import { Play, Pause, Heart, Star, Send, Radio, Users, MessageCircle, ArrowLeft, Trash2, Edit2, X, Save, Upload, ImageIcon } from "lucide-react";
 import { RoleTag } from "@/components/role-badges";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
@@ -18,6 +18,8 @@ import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { UserLink } from "@/components/user-link";
+import { useUpload } from "@workspace/object-storage-web";
+import { SongMenu } from "@/components/song-menu";
 
 function formatTime(iso: string) {
   const d = new Date(iso);
@@ -84,7 +86,11 @@ export default function SongDetail() {
   const [editOpen, setEditOpen] = useState(false);
   const [editTitle, setEditTitle] = useState("");
   const [editGenre, setEditGenre] = useState("");
+  const [editCoverUrl, setEditCoverUrl] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const coverUpload = useUpload({
+    onSuccess: (res) => setEditCoverUrl(`/api/storage${res.objectPath}`),
+  });
 
   const isFavorited = localFavorited ?? song?.isFavorited ?? false;
   const userRating = localRating ?? song?.userRating ?? null;
@@ -151,6 +157,7 @@ export default function SongDetail() {
   const handleOpenEdit = () => {
     setEditTitle(song?.title ?? "");
     setEditGenre(song?.genre ?? "");
+    setEditCoverUrl(song?.coverUrl ?? "");
     setConfirmDelete(false);
     setEditOpen(true);
   };
@@ -158,7 +165,7 @@ export default function SongDetail() {
   const handleSaveEdit = () => {
     if (!song) return;
     updateSongMutation.mutate(
-      { id: songId, data: { title: editTitle.trim(), genre: editGenre.trim() || undefined } },
+      { id: songId, data: { title: editTitle.trim(), genre: editGenre.trim() || undefined, coverUrl: editCoverUrl || undefined } },
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getGetSongQueryKey(songId) });
@@ -319,9 +326,30 @@ export default function SongDetail() {
                   <label className="text-xs text-muted-foreground mb-1 block">Genre</label>
                   <Input value={editGenre} onChange={e => setEditGenre(e.target.value)} placeholder="e.g. Hip-Hop, Pop…" className="h-8 text-sm bg-secondary/50" />
                 </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Cover Image</label>
+                  <div className="flex items-center gap-3">
+                    {editCoverUrl ? (
+                      <div className="relative w-14 h-14 rounded overflow-hidden flex-shrink-0 bg-secondary border border-border">
+                        <img src={editCoverUrl} alt="Cover" className="w-full h-full object-cover" />
+                        <button onClick={() => setEditCoverUrl("")} className="absolute top-0.5 right-0.5 bg-black/60 rounded p-0.5" title="Remove">
+                          <X className="w-2.5 h-2.5 text-white" />
+                        </button>
+                      </div>
+                    ) : null}
+                    <label className="cursor-pointer flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground border border-dashed border-border rounded-lg px-3 py-2 flex-1">
+                      {coverUpload.isUploading ? (
+                        <><Upload className="w-3.5 h-3.5" /> Uploading {coverUpload.progress}%</>
+                      ) : (
+                        <><ImageIcon className="w-3.5 h-3.5" /> {editCoverUrl ? "Change image" : "Upload image"}</>
+                      )}
+                      <input type="file" accept="image/*" className="sr-only" onChange={(e) => { const f = e.target.files?.[0]; if (f) coverUpload.uploadFile(f); }} />
+                    </label>
+                  </div>
+                </div>
                 <div className="flex justify-end gap-2">
                   <Button variant="ghost" size="sm" onClick={() => setEditOpen(false)} className="h-7 text-xs">Cancel</Button>
-                  <Button size="sm" onClick={handleSaveEdit} disabled={updateSongMutation.isPending || !editTitle.trim()} className="h-7 text-xs gap-1.5">
+                  <Button size="sm" onClick={handleSaveEdit} disabled={updateSongMutation.isPending || !editTitle.trim() || coverUpload.isUploading} className="h-7 text-xs gap-1.5">
                     <Save className="w-3 h-3" /> {updateSongMutation.isPending ? "Saving…" : "Save"}
                   </Button>
                 </div>

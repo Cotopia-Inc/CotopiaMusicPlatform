@@ -1,5 +1,5 @@
 import { useParams, Link, useLocation } from "wouter";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useGetPublicUser } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RoleBadges } from "@/components/role-badges";
@@ -15,6 +15,10 @@ export default function UserProfile() {
   const [, navigate] = useLocation();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isMuted, setIsMuted] = useState(true);
+
+  useEffect(() => {
+    if (videoRef.current) videoRef.current.muted = isMuted;
+  }, [isMuted]);
 
   if (isLoading) {
     return (
