@@ -420,20 +420,39 @@ export default function Submit() {
 
   // ── Step navigation ───────────────────────────────────────────────────────
   function handleStep0Next() {
+    const meta = tab === "song" ? songMeta : videoMeta;
+    const titles = tab === "song" ? songTitles : videoTitles;
+    const releaseName = tab === "song" ? songReleaseName : videoReleaseName;
+    const releaseType = tab === "song" ? effectiveSongType : effectiveVideoType;
+    const needsReleaseName = releaseType !== "Single" && releaseType !== "Video";
+
     if (activeFiles.length === 0) {
-      toast({ title: "No files selected", description: "Select at least one file to continue", variant: "destructive" });
+      toast({ title: "No files selected", description: "Select at least one file to continue.", variant: "destructive" });
       return;
     }
     if (!allUploaded) {
-      toast({ title: "Upload files first", description: "All files must be uploaded before continuing", variant: "destructive" });
+      toast({ title: "Upload files first", description: "All files must finish uploading before continuing.", variant: "destructive" });
       return;
     }
-    // Auto-upgrade plan if they have multiple files but single is selected
-    if (activeFiles.length > 1 && plan === "single") {
-      setPlan("basic");
-    } else if (activeFiles.length === 1 && plan !== "single") {
-      setPlan("single");
+    if (!meta.artistName.trim()) {
+      toast({ title: "Artist name required", description: "Fill in the Artist / Stage Name field.", variant: "destructive" });
+      return;
     }
+    if (!meta.genre) {
+      toast({ title: "Genre required", description: "Select a genre for your release.", variant: "destructive" });
+      return;
+    }
+    if (needsReleaseName && !releaseName.trim()) {
+      toast({ title: `${releaseType} title required`, description: `Enter a title for your ${releaseType}.`, variant: "destructive" });
+      return;
+    }
+    const emptyTitle = titles.findIndex(t => !t.trim());
+    if (emptyTitle !== -1) {
+      toast({ title: "Track title required", description: `Track ${emptyTitle + 1} is missing a title.`, variant: "destructive" });
+      return;
+    }
+    // Lock plan to match file count
+    setPlan(activeFiles.length === 1 ? "single" : "basic");
     setStep(1);
   }
 
@@ -721,7 +740,9 @@ export default function Submit() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {(["single", "basic", "premium"] as const).map(p => {
               const isSelected = plan === p;
-              const locked = p === "single" && activeFiles.length > 1;
+              const locked =
+                (p === "single" && activeFiles.length > 1) ||
+                ((p === "basic" || p === "premium") && activeFiles.length === 1);
               const icon = p === "single"
                 ? <Music className={`w-5 h-5 ${locked ? "text-muted-foreground" : "text-primary"}`} />
                 : p === "basic"
@@ -745,7 +766,9 @@ export default function Submit() {
                   {locked && (
                     <div className="absolute top-3 right-3 flex items-center gap-1 bg-destructive/10 border border-destructive/20 rounded-full px-2 py-0.5">
                       <AlertCircle className="w-2.5 h-2.5 text-destructive" />
-                      <span className="text-[9px] text-destructive font-medium">1 file max</span>
+                      <span className="text-[9px] text-destructive font-medium">
+                        {p === "single" ? "1 file max" : "2+ files needed"}
+                      </span>
                     </div>
                   )}
                   {isSelected && !locked && p !== "premium" && (
@@ -768,7 +791,11 @@ export default function Submit() {
                   {locked && (
                     <div className="flex items-center gap-1.5 mb-3 p-2 rounded-lg bg-destructive/10 border border-destructive/20">
                       <AlertCircle className="w-3 h-3 text-destructive flex-shrink-0" />
-                      <span className="text-[10px] text-destructive/80">You have {activeFiles.length} files. Choose Basic or Premium.</span>
+                      <span className="text-[10px] text-destructive/80">
+                        {p === "single"
+                          ? `You have ${activeFiles.length} files — choose Basic or Premium.`
+                          : "You have 1 file — only Single Track is available."}
+                      </span>
                     </div>
                   )}
                   <ul className="space-y-1.5">
