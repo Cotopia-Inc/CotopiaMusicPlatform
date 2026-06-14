@@ -721,48 +721,60 @@ export default function Submit() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {(["single", "basic", "premium"] as const).map(p => {
               const isSelected = plan === p;
+              const locked = p === "single" && activeFiles.length > 1;
               const icon = p === "single"
-                ? <Music className="w-5 h-5 text-primary" />
+                ? <Music className={`w-5 h-5 ${locked ? "text-muted-foreground" : "text-primary"}`} />
                 : p === "basic"
                   ? <Radio className="w-5 h-5 text-primary" />
                   : <Zap className="w-5 h-5 text-amber-400" />;
               const perLabel = p === "single" ? "/ track" : "/ batch";
               const subtitle = p === "single"
-                ? "1 file — great for a single release"
+                ? "1 file only — for a single track release"
                 : `Covers all ${activeFiles.length} ${tab}${activeFiles.length !== 1 ? "s" : ""}`;
               return (
-                <button key={p} type="button" onClick={() => setPlan(p)}
-                  className={`relative p-5 rounded-xl border-2 transition-all text-left ${isSelected ? "border-primary bg-primary/10" : "border-border bg-secondary/20 hover:border-border/80"}`}>
-                  {p === "premium" && (
+                <button key={p} type="button"
+                  onClick={() => !locked && setPlan(p)}
+                  disabled={locked}
+                  className={`relative p-5 rounded-xl border-2 transition-all text-left
+                    ${locked ? "opacity-40 cursor-not-allowed border-border bg-secondary/10" :
+                      isSelected ? "border-primary bg-primary/10" :
+                      "border-border bg-secondary/20 hover:border-border/80"}`}>
+                  {p === "premium" && !locked && (
                     <Badge className="absolute top-3 right-3 text-[10px] bg-amber-500/20 text-amber-400 border-amber-500/30">⭐ Popular</Badge>
                   )}
-                  {isSelected && p !== "premium" && (
+                  {locked && (
+                    <div className="absolute top-3 right-3 flex items-center gap-1 bg-destructive/10 border border-destructive/20 rounded-full px-2 py-0.5">
+                      <AlertCircle className="w-2.5 h-2.5 text-destructive" />
+                      <span className="text-[9px] text-destructive font-medium">1 file max</span>
+                    </div>
+                  )}
+                  {isSelected && !locked && p !== "premium" && (
                     <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
                       <CheckCircle className="w-3.5 h-3.5 text-primary-foreground" />
                     </div>
                   )}
-                  {isSelected && p === "premium" && (
+                  {isSelected && !locked && p === "premium" && (
                     <Badge className="absolute top-3 right-3 text-[10px] bg-primary text-primary-foreground border-primary">✓ Selected</Badge>
                   )}
                   <div className="flex items-center gap-2 mb-3">
                     {icon}
-                    <span className="font-bold capitalize">{p === "single" ? "Single Track" : p}</span>
+                    <span className={`font-bold capitalize ${locked ? "text-muted-foreground" : ""}`}>{p === "single" ? "Single Track" : p}</span>
                   </div>
-                  <p className="text-2xl font-extrabold mb-1">
+                  <p className={`text-2xl font-extrabold mb-1 ${locked ? "text-muted-foreground" : ""}`}>
                     ${PLAN_PRICES[tab][p].toFixed(2)}
                     <span className="text-sm font-normal text-muted-foreground ml-1">{perLabel}</span>
                   </p>
                   <p className="text-xs text-muted-foreground mb-3">{subtitle}</p>
-                  {p === "single" && activeFiles.length > 1 && (
-                    <div className="flex items-center gap-1.5 mb-3 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                      <AlertCircle className="w-3 h-3 text-amber-400 flex-shrink-0" />
-                      <span className="text-[10px] text-amber-300">You have {activeFiles.length} files — this plan covers 1</span>
+                  {locked && (
+                    <div className="flex items-center gap-1.5 mb-3 p-2 rounded-lg bg-destructive/10 border border-destructive/20">
+                      <AlertCircle className="w-3 h-3 text-destructive flex-shrink-0" />
+                      <span className="text-[10px] text-destructive/80">You have {activeFiles.length} files. Choose Basic or Premium.</span>
                     </div>
                   )}
                   <ul className="space-y-1.5">
                     {PLAN_FEATURES[p].map(f => (
                       <li key={f} className="flex items-start gap-2 text-xs text-muted-foreground">
-                        <CheckCircle className="w-3.5 h-3.5 text-primary flex-shrink-0 mt-0.5" />{f}
+                        <CheckCircle className={`w-3.5 h-3.5 flex-shrink-0 mt-0.5 ${locked ? "text-muted-foreground/50" : "text-primary"}`} />{f}
                       </li>
                     ))}
                   </ul>
