@@ -57,10 +57,9 @@ export default function LabelDetail() {
           <video
             src={(label as any).profileVideoUrl}
             autoPlay
-            muted
             loop
             playsInline
-            className="w-full h-full object-cover opacity-80"
+            className="w-full h-full object-cover"
           />
         ) : label.bannerUrl ? (
           <img src={label.bannerUrl} alt="Banner" className="w-full h-full object-cover opacity-50" />

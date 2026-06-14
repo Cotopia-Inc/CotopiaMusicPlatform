@@ -77,10 +77,9 @@ export default function ArtistDetail() {
           <video
             src={(artist as any).profileVideoUrl}
             autoPlay
-            muted
             loop
             playsInline
-            className="w-full h-full object-cover opacity-80"
+            className="w-full h-full object-cover"
           />
         ) : artist.bannerUrl ? (
           <img src={artist.bannerUrl} alt="Banner" className="w-full h-full object-cover opacity-60" />

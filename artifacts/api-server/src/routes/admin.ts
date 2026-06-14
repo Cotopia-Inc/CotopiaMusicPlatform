@@ -891,6 +891,20 @@ router.get("/admin/users/:id/strikes", requireAuth, requireRole(...ADMIN_ROLES, 
   res.json({ strikes, activeCount, totalCount: strikes.length });
 });
 
+// ── DELETE /admin/users/:id (master_admin only) ───────────────────────────
+router.delete("/admin/users/:id", requireAuth, requireRole("master_admin"), async (req: AuthRequest, res): Promise<void> => {
+  const id = Number(req.params.id);
+  if (!id) { res.status(400).json({ error: "Invalid user id" }); return; }
+  if (id === req.user!.userId) { res.status(400).json({ error: "Cannot delete your own account" }); return; }
+
+  const [target] = await db.select({ role: usersTable.role }).from(usersTable).where(eq(usersTable.id, id));
+  if (!target) { res.status(404).json({ error: "User not found" }); return; }
+  if (target.role === "master_admin") { res.status(403).json({ error: "Cannot delete another master admin" }); return; }
+
+  await db.delete(usersTable).where(eq(usersTable.id, id));
+  res.status(204).end();
+});
+
 // ── GET /admin/users/:id/agreements ────────────────────────────────────────
 router.get("/admin/users/:id/agreements", requireAuth, requireRole(...ADMIN_ROLES, "editor", "moderator"), async (req: AuthRequest, res): Promise<void> => {
   const id = Number(req.params.id);

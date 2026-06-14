@@ -3,14 +3,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { UserLink } from "@/components/user-link";
-import { AlertTriangle, ScrollText, Monitor, Globe, FileText, Users, Bot, ChevronDown, ChevronUp } from "lucide-react";
+import { AlertTriangle, ScrollText, Monitor, Globe, FileText, Users, Bot, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { CopyrightStrikeModal, type StrikeTarget } from "@/components/copyright-strike-modal";
+import { useAuth } from "@/lib/auth";
 
 const authHeaders = () => ({ Authorization: `Bearer ${localStorage.getItem("cotopia_token")}`, "Content-Type": "application/json" });
 
@@ -135,8 +136,35 @@ export default function AdminUsers() {
   const updateMutation = useAdminUpdateUser();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user: currentUser } = useAuth();
+  const isMasterAdmin = currentUser?.role === "master_admin";
   const [strikeTarget, setStrikeTarget] = useState<StrikeTarget | null>(null);
   const [agreementsUser, setAgreementsUser] = useState<{ id: number; username: string } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: number; username: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteUser = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`${import.meta.env.BASE_URL}api/admin/users/${deleteTarget.id}`, {
+        method: "DELETE",
+        headers: authHeaders(),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        toast({ variant: "destructive", title: "Delete failed", description: err.error ?? "Unknown error" });
+      } else {
+        toast({ title: `@${deleteTarget.username} has been permanently deleted` });
+        queryClient.invalidateQueries({ queryKey: getAdminListUsersQueryKey({ limit: 50 }) });
+        setDeleteTarget(null);
+      }
+    } catch {
+      toast({ variant: "destructive", title: "Network error" });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const { data: strikeCountData } = useQuery<{ items: { userId: number; count: number }[] }>({
     queryKey: ["admin-strikes-summary"],
@@ -256,6 +284,16 @@ export default function AdminUsers() {
                       >
                         {user.isActive ? "Deactivate" : "Activate"}
                       </Button>
+                      {isMasterAdmin && user.role !== "master_admin" && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-xs gap-1 text-red-400 border-red-500/20 hover:bg-red-500/10 hover:border-red-500/40"
+                          onClick={() => setDeleteTarget({ id: user.id, username: user.username })}
+                        >
+                          <Trash2 className="w-3 h-3" />Delete
+                        </Button>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>
@@ -287,6 +325,39 @@ export default function AdminUsers() {
         onClose={() => setAgreementsUser(null)}
       />
     )}
+
+    <Dialog open={!!deleteTarget} onOpenChange={v => { if (!v) setDeleteTarget(null); }}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-red-400">
+            <Trash2 className="w-5 h-5" />
+            Delete User Permanently
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3 py-2">
+          <p className="text-sm text-muted-foreground">
+            You are about to permanently delete{" "}
+            <span className="font-semibold text-foreground">@{deleteTarget?.username}</span>.
+            This will remove their account, content, and all associated data. This cannot be undone.
+          </p>
+          <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+            <p className="text-xs text-red-400 font-medium">⚠ All songs, videos, playlists, and messages belonging to this user will also be deleted.</p>
+          </div>
+        </div>
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={() => setDeleteTarget(null)} disabled={isDeleting}>Cancel</Button>
+          <Button
+            variant="destructive"
+            onClick={handleDeleteUser}
+            disabled={isDeleting}
+            className="gap-2"
+          >
+            {isDeleting ? <span className="animate-spin">⏳</span> : <Trash2 className="w-4 h-4" />}
+            {isDeleting ? "Deleting..." : "Delete Permanently"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
     </>
   );
 }

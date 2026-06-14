@@ -53,10 +53,9 @@ export default function UserProfile() {
           <video
             src={(user as any).profileVideoUrl}
             autoPlay
-            muted
             loop
             playsInline
-            className="w-full h-full object-cover opacity-80"
+            className="w-full h-full object-cover"
           />
         ) : (user as any).bannerUrl ? (
           <img src={(user as any).bannerUrl} alt="Banner" className="w-full h-full object-cover opacity-60" />
