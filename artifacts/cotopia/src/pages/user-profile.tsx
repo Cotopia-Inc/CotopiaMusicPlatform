@@ -15,7 +15,7 @@ export default function UserProfile() {
   const { user: me } = useAuth();
   const [, navigate] = useLocation();
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [volume, setVolume] = useState(0.8);
+  const [volume, setVolume] = useState(0);
 
 
   if (isLoading) {

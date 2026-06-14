@@ -12,7 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Radio } from "lucide-react";
 
 const formSchema = z.object({
-  email: z.string().email("Please enter a valid email"),
+  identifier: z.string().min(1, "Please enter your email or username"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   tosAccepted: z.boolean().refine(v => v === true, { message: "You must accept the Terms of Service to continue" }),
 });
@@ -25,11 +25,11 @@ export default function Login() {
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { email: "", password: "", tosAccepted: false },
+    defaultValues: { identifier: "", password: "", tosAccepted: false },
   });
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    loginMutation.mutate({ data: { email: values.email, password: values.password } }, {
+    loginMutation.mutate({ data: { email: values.identifier, password: values.password } }, {
       onSuccess: (res) => {
         login(res.user, res.token);
         toast({ title: "Welcome back", description: "Tuned into Everyday Radio." });
@@ -81,12 +81,12 @@ export default function Login() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
               <FormField
                 control={form.control}
-                name="email"
+                name="identifier"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>Email or Username</FormLabel>
                     <FormControl>
-                      <Input placeholder="name@example.com" {...field} className="bg-secondary/50 border-secondary h-11" />
+                      <Input placeholder="name@example.com or @username" {...field} className="bg-secondary/50 border-secondary h-11" autoComplete="username" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

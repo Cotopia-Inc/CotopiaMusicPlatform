@@ -20,7 +20,7 @@ export default function ArtistDetail() {
   const { play } = usePlayer();
   const [, navigate] = useLocation();
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [volume, setVolume] = useState(0.8);
+  const [volume, setVolume] = useState(0);
 
   const { data: artist, isLoading } = useGetArtist(artistId, {
     query: { enabled: !!artistId, queryKey: getGetArtistQueryKey(artistId) }

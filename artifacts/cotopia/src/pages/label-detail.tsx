@@ -19,7 +19,7 @@ export default function LabelDetail() {
   const queryClient = useQueryClient();
   const [, navigate] = useLocation();
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [volume, setVolume] = useState(0.8);
+  const [volume, setVolume] = useState(0);
 
   const [showAddArtist, setShowAddArtist] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
