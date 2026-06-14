@@ -112,7 +112,6 @@ function FileRow({
 // ── Shared metadata form ───────────────────────────────────────────────────────
 interface SharedMeta {
   artistName: string;
-  labelName: string;
   genre: string;
   mood: string;
   description: string;
@@ -129,13 +128,9 @@ function MetadataSection({ meta, onChange, type }: { meta: SharedMeta; onChange:
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
+        <div className="space-y-2 col-span-2">
           <Label>Artist / Stage Name</Label>
           <Input placeholder="Your artist name" value={meta.artistName} onChange={e => set({ artistName: e.target.value })} className="bg-secondary/50 border-secondary" />
-        </div>
-        <div className="space-y-2">
-          <Label>Label Name <span className="text-muted-foreground text-xs">(optional)</span></Label>
-          <Input placeholder="e.g. Neon Records" value={meta.labelName} onChange={e => set({ labelName: e.target.value })} className="bg-secondary/50 border-secondary" />
         </div>
         <div className="space-y-2">
           <Label>Genre</Label>
@@ -311,7 +306,7 @@ function FileList({
 }
 
 // ── Main component ─────────────────────────────────────────────────────────────
-const defaultMeta: SharedMeta = { artistName: "", labelName: "", genre: "", mood: "", description: "", credits: "", releaseDate: "", isExplicit: false, coverUrl: "" };
+const defaultMeta: SharedMeta = { artistName: "", genre: "", mood: "", description: "", credits: "", releaseDate: "", isExplicit: false, coverUrl: "" };
 
 export default function Submit() {
   const { user } = useAuth();
@@ -488,7 +483,6 @@ export default function Submit() {
           type: tab,
           plan,
           artistName: meta.artistName || undefined,
-          labelName: meta.labelName || undefined,
           genre: meta.genre || undefined,
           mood: meta.mood || undefined,
           description: descriptionWithRelease || undefined,

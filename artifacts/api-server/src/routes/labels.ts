@@ -146,6 +146,48 @@ router.patch("/labels/:id", requireAuth, async (req: AuthRequest, res): Promise<
   res.json(result);
 });
 
+router.post("/labels/:id/artists", requireAuth, async (req: AuthRequest, res): Promise<void> => {
+  const params = GetLabelParams.safeParse(req.params);
+  if (!params.success) { res.status(400).json({ error: "Invalid label id" }); return; }
+
+  const artistId = req.body?.artistId;
+  if (!artistId || typeof artistId !== "number") {
+    res.status(400).json({ error: "artistId is required" });
+    return;
+  }
+
+  const [label] = await db.select().from(labelsTable).where(eq(labelsTable.id, params.data.id)).limit(1);
+  if (!label) { res.status(404).json({ error: "Label not found" }); return; }
+
+  const isAdmin = ["admin", "master_admin", "editor"].includes(req.user!.role);
+  if (!isAdmin && label.userId !== req.user!.userId) {
+    res.status(403).json({ error: "Forbidden" }); return;
+  }
+
+  const [artist] = await db.select().from(artistsTable).where(eq(artistsTable.id, artistId)).limit(1);
+  if (!artist) { res.status(404).json({ error: "Artist not found" }); return; }
+
+  await db.update(artistsTable).set({ labelId: params.data.id }).where(eq(artistsTable.id, artistId));
+  res.json({ ok: true });
+});
+
+router.delete("/labels/:id/artists/:artistId", requireAuth, async (req: AuthRequest, res): Promise<void> => {
+  const labelId = Number(req.params.id);
+  const artistId = Number(req.params.artistId);
+  if (!labelId || !artistId) { res.status(400).json({ error: "Invalid ids" }); return; }
+
+  const [label] = await db.select().from(labelsTable).where(eq(labelsTable.id, labelId)).limit(1);
+  if (!label) { res.status(404).json({ error: "Label not found" }); return; }
+
+  const isAdmin = ["admin", "master_admin", "editor"].includes(req.user!.role);
+  if (!isAdmin && label.userId !== req.user!.userId) {
+    res.status(403).json({ error: "Forbidden" }); return;
+  }
+
+  await db.update(artistsTable).set({ labelId: null }).where(and(eq(artistsTable.id, artistId), eq(artistsTable.labelId, labelId)));
+  res.json({ ok: true });
+});
+
 router.post("/labels/:id/follow", requireAuth, async (req: AuthRequest, res): Promise<void> => {
   const params = FollowLabelParams.safeParse(req.params);
   if (!params.success) {

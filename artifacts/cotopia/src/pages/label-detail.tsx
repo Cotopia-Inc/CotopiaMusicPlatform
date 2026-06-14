@@ -1,12 +1,13 @@
 import { useParams, Link, useLocation } from "wouter";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState } from "react";
 import { useGetLabel, getGetLabelQueryKey, useFollowLabel, useUnfollowLabel } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, Music, Play, Volume2, VolumeX } from "lucide-react";
+import { Users, Music, Play, Volume2, VolumeX, UserPlus, X, Search, Loader2 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { UserLink } from "@/components/user-link";
 import { RoleBadges } from "@/components/role-badges";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -20,6 +21,11 @@ export default function LabelDetail() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [volume, setVolume] = useState(0.8);
 
+  const [showAddArtist, setShowAddArtist] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<{ id: number; stageName: string; avatarUrl: string | null; labelId: number | null }[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [rosterBusy, setRosterBusy] = useState<number | null>(null);
 
   const { data: label, isLoading } = useGetLabel(labelId, {
     query: { enabled: !!labelId, queryKey: getGetLabelQueryKey(labelId) }
@@ -27,6 +33,8 @@ export default function LabelDetail() {
 
   const followMutation = useFollowLabel();
   const unfollowMutation = useUnfollowLabel();
+
+  const isOwner = !!(user && label && (label as any).userId === user.id);
 
   const handleFollowToggle = () => {
     if (!label) return;
@@ -36,6 +44,53 @@ export default function LabelDetail() {
         queryClient.invalidateQueries({ queryKey: getGetLabelQueryKey(labelId) });
       }
     });
+  };
+
+  const searchArtists = async (q: string) => {
+    if (!q.trim()) { setSearchResults([]); return; }
+    setSearching(true);
+    try {
+      const res = await fetch(`/api/artists?q=${encodeURIComponent(q)}&limit=10`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("cotopia_token")}` },
+      });
+      const data = await res.json();
+      setSearchResults(Array.isArray(data) ? data : (data.items ?? []));
+    } catch {
+      setSearchResults([]);
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const addArtist = async (artistId: number) => {
+    setRosterBusy(artistId);
+    try {
+      await fetch(`/api/labels/${labelId}/artists`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("cotopia_token")}`,
+        },
+        body: JSON.stringify({ artistId }),
+      });
+      queryClient.invalidateQueries({ queryKey: getGetLabelQueryKey(labelId) });
+      setSearchResults(prev => prev.filter(a => a.id !== artistId));
+    } finally {
+      setRosterBusy(null);
+    }
+  };
+
+  const removeArtist = async (artistId: number) => {
+    setRosterBusy(artistId);
+    try {
+      await fetch(`/api/labels/${labelId}/artists/${artistId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${localStorage.getItem("cotopia_token")}` },
+      });
+      queryClient.invalidateQueries({ queryKey: getGetLabelQueryKey(labelId) });
+    } finally {
+      setRosterBusy(null);
+    }
   };
 
   if (isLoading) {
@@ -105,10 +160,10 @@ export default function LabelDetail() {
             </div>
           </div>
           <div className="flex gap-3">
-            {user && (
-              <Button 
-                variant={label.isFollowed ? "outline" : "default"} 
-                size="lg" 
+            {user && !isOwner && (
+              <Button
+                variant={label.isFollowed ? "outline" : "default"}
+                size="lg"
                 className="rounded-full px-6"
                 onClick={handleFollowToggle}
                 disabled={followMutation.isPending || unfollowMutation.isPending}
@@ -127,7 +182,7 @@ export default function LabelDetail() {
             <TabsTrigger value="artists" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 py-3 text-base">Roster</TabsTrigger>
             <TabsTrigger value="about" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 py-3 text-base">About</TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="releases" className="pt-6">
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
               {label.recentReleases && label.recentReleases.length > 0 ? (
@@ -159,30 +214,101 @@ export default function LabelDetail() {
           </TabsContent>
 
           <TabsContent value="artists" className="pt-6">
+            {/* Add Artist panel — label owner only */}
+            {isOwner && (
+              <div className="mb-6">
+                {!showAddArtist ? (
+                  <Button variant="outline" size="sm" className="gap-2" onClick={() => setShowAddArtist(true)}>
+                    <UserPlus className="w-4 h-4" /> Add Artist to Roster
+                  </Button>
+                ) : (
+                  <div className="border border-border rounded-xl p-4 space-y-3 bg-secondary/30">
+                    <div className="flex items-center justify-between">
+                      <p className="font-semibold text-sm">Search for an artist to add</p>
+                      <button onClick={() => { setShowAddArtist(false); setSearchQuery(""); setSearchResults([]); }} className="text-muted-foreground hover:text-foreground transition-colors">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search by artist name…"
+                        value={searchQuery}
+                        onChange={e => { setSearchQuery(e.target.value); searchArtists(e.target.value); }}
+                        className="pl-9 bg-background"
+                        autoFocus
+                      />
+                      {searching && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />}
+                    </div>
+                    {searchResults.length > 0 && (
+                      <div className="space-y-1 max-h-48 overflow-y-auto">
+                        {searchResults.map(a => {
+                          const alreadyOnRoster = label.artists?.some(ra => ra.id === a.id);
+                          return (
+                            <div key={a.id} className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-secondary transition-colors">
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full overflow-hidden bg-muted flex items-center justify-center text-xs font-bold flex-shrink-0">
+                                  {a.avatarUrl ? <img src={a.avatarUrl} alt={a.stageName} className="w-full h-full object-cover" /> : a.stageName.charAt(0)}
+                                </div>
+                                <span className="text-sm font-medium">{a.stageName}</span>
+                                {a.labelId && a.labelId !== labelId && <span className="text-xs text-muted-foreground">(signed elsewhere)</span>}
+                              </div>
+                              {alreadyOnRoster ? (
+                                <span className="text-xs text-muted-foreground">On roster</span>
+                              ) : (
+                                <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => addArtist(a.id)} disabled={rosterBusy === a.id}>
+                                  {rosterBusy === a.id ? <Loader2 className="w-3 h-3 animate-spin" /> : "Add"}
+                                </Button>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                    {searchQuery && !searching && searchResults.length === 0 && (
+                      <p className="text-sm text-muted-foreground text-center py-2">No artists found</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8">
               {label.artists && label.artists.length > 0 ? (
                 label.artists.map((artist) => (
-                  <Link key={artist.id} href={`/artists/${artist.id}`}>
-                    <div className="group cursor-pointer space-y-4 text-center">
-                      <div className="w-full aspect-square relative overflow-hidden rounded-full bg-secondary border border-border">
-                        {artist.avatarUrl ? (
-                          <img src={artist.avatarUrl} alt={artist.stageName} className="object-cover w-full h-full group-hover:scale-105 transition-transform" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-muted-foreground">
-                            {artist.stageName.charAt(0)}
-                          </div>
-                        )}
+                  <div key={artist.id} className="relative group">
+                    <Link href={`/artists/${artist.id}`}>
+                      <div className="cursor-pointer space-y-4 text-center">
+                        <div className="w-full aspect-square relative overflow-hidden rounded-full bg-secondary border border-border">
+                          {artist.avatarUrl ? (
+                            <img src={artist.avatarUrl} alt={artist.stageName} className="object-cover w-full h-full group-hover:scale-105 transition-transform" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-muted-foreground">
+                              {artist.stageName.charAt(0)}
+                            </div>
+                          )}
+                        </div>
+                        <h4 className="font-semibold text-sm flex items-center justify-center gap-1 flex-wrap"><span className="truncate">{artist.stageName}</span><RoleBadges role={(artist as any).userRole ?? "artist"} isVerified={(artist as any).isVerified} size="sm" /></h4>
                       </div>
-                      <h4 className="font-semibold text-sm flex items-center justify-center gap-1 flex-wrap"><span className="truncate">{artist.stageName}</span><RoleBadges role={(artist as any).userRole ?? "artist"} isVerified={(artist as any).isVerified} size="sm" /></h4>
-                    </div>
-                  </Link>
+                    </Link>
+                    {isOwner && (
+                      <button
+                        className="absolute top-0 right-0 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
+                        title="Remove from roster"
+                        onClick={() => removeArtist(artist.id)}
+                        disabled={rosterBusy === artist.id}
+                      >
+                        {rosterBusy === artist.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <X className="w-3 h-3" />}
+                      </button>
+                    )}
+                  </div>
                 ))
               ) : (
                 <p className="col-span-full text-muted-foreground py-8">No artists on roster.</p>
               )}
             </div>
           </TabsContent>
-          
+
           <TabsContent value="about" className="pt-6">
             <div className="max-w-3xl">
               <h3 className="text-xl font-bold mb-4">About Label</h3>
