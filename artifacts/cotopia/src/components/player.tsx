@@ -187,14 +187,6 @@ export function Player() {
               </div>
             </div>
             <div className="flex items-center gap-0.5">
-              {/* Stop */}
-              <button
-                onClick={stop} disabled={!track}
-                className="w-6 h-6 rounded bg-red-600/80 hover:bg-red-500 text-white flex items-center justify-center transition-colors disabled:opacity-30 mr-1"
-                title="Stop"
-              >
-                <Square className="w-3 h-3 fill-current" />
-              </button>
               {isVideoTrack && (
                 <>
                   <button
@@ -346,6 +338,14 @@ export function Player() {
                 title="Next"
               >
                 <SkipForward className="w-6 h-6 fill-current" />
+              </button>
+
+              <button
+                onClick={stop} disabled={!track}
+                className="w-7 h-7 rounded bg-red-600/80 hover:bg-red-500 text-white flex items-center justify-center transition-colors disabled:opacity-30"
+                title="Stop"
+              >
+                <Square className="w-3 h-3 fill-current" />
               </button>
 
               <button
