@@ -722,6 +722,8 @@ export interface HomeFeed {
 }
 
 export interface DiscoverFeed {
+  featuredSongs: Song[];
+  featuredVideos: Video[];
   trendingSongs: Song[];
   trendingVideos: Video[];
   topRatedSongs: Song[];

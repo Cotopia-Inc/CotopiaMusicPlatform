@@ -54,6 +54,7 @@ import EditorPicks from "@/pages/editor-picks";
 import ArtistAnalytics from "@/pages/artist-analytics";
 import LabelAnalytics from "@/pages/label-analytics";
 import Contact from "@/pages/contact";
+import AdminDiscover from "@/pages/admin-discover";
 
 import LegalCenter from "@/pages/legal/index";
 import LegalTerms from "@/pages/legal/terms";
@@ -302,6 +303,9 @@ function Router() {
       </Route>
       <Route path="/contact">
         <ProtectedRoute><Layout><Contact /></Layout></ProtectedRoute>
+      </Route>
+      <Route path="/admin/discover">
+        <ProtectedRoute><Layout><AdminDiscover /></Layout></ProtectedRoute>
       </Route>
 
       <Route component={NotFound} />

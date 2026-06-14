@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import {
   Home, Compass, Music, Video, Users, Mic2, Library, Building2,
   LayoutDashboard, LogIn, LogOut, Settings, Send, Radio, Bell,
-  BarChart3, Upload, ListMusic, Shield, Mail,
+  BarChart3, Upload, ListMusic, Shield, Mail, Sparkles,
   MessageSquare, FileText, Eye, BookOpen, MessageCircle,
   AlertOctagon, ScrollText, Scale, ShieldOff, Search, X,
 } from "lucide-react";
@@ -174,6 +174,7 @@ export function Sidebar() {
     { href: "/admin/upload-song", label: "Upload Song", icon: Upload },
     { href: "/admin/upload-video", label: "Upload Video", icon: Upload },
     { href: "/admin/submissions", label: "Submissions", icon: FileText },
+    { href: "/admin/discover", label: "Discover Curation", icon: Sparkles },
     { href: "/admin/songs", label: "Songs", icon: Music },
     { href: "/admin/videos", label: "Videos", icon: Video },
     { href: "/admin/comments", label: "Comments", icon: MessageSquare },
@@ -186,6 +187,7 @@ export function Sidebar() {
   const editorLinks = [
     { href: "/editor", label: "Editor Dashboard", icon: BookOpen },
     { href: "/editor/playlists", label: "Editorial Playlists", icon: ListMusic },
+    { href: "/admin/discover", label: "Discover Curation", icon: Sparkles },
   ];
 
   const isActive = (href: string) =>

@@ -3324,8 +3324,16 @@ components:
     # ── Discover ──────────────────────────────────────────────────────────────
     DiscoverFeed:
       type: object
-      required: [trendingSongs, trendingVideos, topRatedSongs, mostDiscussed, newArtists, newLabels]
+      required: [trendingSongs, trendingVideos, topRatedSongs, mostDiscussed, newArtists, newLabels, featuredSongs, featuredVideos]
       properties:
+        featuredSongs:
+          type: array
+          items:
+            $ref: "#/components/schemas/Song"
+        featuredVideos:
+          type: array
+          items:
+            $ref: "#/components/schemas/Video"
         trendingSongs:
           type: array
           items:
