@@ -1,7 +1,7 @@
 import { useGetAdminAnalytics, getGetAdminAnalyticsQueryKey } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, Music, Video, PlayCircle, Eye, MessageSquare, AlertCircle, Mic2, Building2, DollarSign, Radio, ChevronRight, Megaphone } from "lucide-react";
+import { Users, Music, Video, PlayCircle, Eye, MessageSquare, AlertCircle, Mic2, Building2, DollarSign, Radio, ChevronRight, Megaphone, ArrowLeft, Home } from "lucide-react";
 import { RoleTag } from "@/components/role-badges";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -36,6 +36,16 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-10 pb-24">
+      <div className="flex items-center gap-3">
+        <button onClick={() => window.history.back()} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <ArrowLeft className="w-4 h-4" />Back
+        </button>
+        <span className="text-muted-foreground/30">·</span>
+        <Link href="/" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <Home className="w-4 h-4" />Home
+        </Link>
+      </div>
+
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>

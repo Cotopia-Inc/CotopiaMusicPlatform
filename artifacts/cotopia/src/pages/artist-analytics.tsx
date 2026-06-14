@@ -2,7 +2,7 @@ import { useGetArtistAnalytics } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
 import { useLocation } from "wouter";
 import { useEffect } from "react";
-import { BarChart3, Play, Eye, Heart, Users, TrendingUp, Music, Video, Globe } from "lucide-react";
+import { BarChart3, Play, Eye, Heart, Users, TrendingUp, Music, Video, Globe, ArrowLeft, Home } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "wouter";
 
@@ -52,6 +52,16 @@ export default function ArtistAnalytics() {
 
   return (
     <div className="p-8 max-w-5xl mx-auto space-y-8">
+      <div className="flex items-center gap-3">
+        <button onClick={() => window.history.back()} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <ArrowLeft className="w-4 h-4" />Back
+        </button>
+        <span className="text-muted-foreground/30">·</span>
+        <Link href="/" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <Home className="w-4 h-4" />Home
+        </Link>
+      </div>
+
       {/* Header */}
       <div className="flex items-center gap-3">
         <BarChart3 className="w-6 h-6 text-primary" />

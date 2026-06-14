@@ -2,7 +2,7 @@ import { useListEditorialPlaylists, useAdminListSubmissions, useListEditorPicks,
 import { useAuth } from "@/lib/auth";
 import { useLocation, Link } from "wouter";
 import { useEffect } from "react";
-import { BookOpen, ListMusic, FileText, Music, Video, Plus, ArrowRight, Sparkles } from "lucide-react";
+import { BookOpen, ListMusic, FileText, Music, Video, Plus, ArrowRight, Sparkles, ArrowLeft, Home } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -37,6 +37,16 @@ export default function EditorDashboard() {
 
   return (
     <div className="p-8 max-w-5xl mx-auto space-y-8">
+      <div className="flex items-center gap-3">
+        <button onClick={() => window.history.back()} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <ArrowLeft className="w-4 h-4" />Back
+        </button>
+        <span className="text-muted-foreground/30">·</span>
+        <Link href="/" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <Home className="w-4 h-4" />Home
+        </Link>
+      </div>
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
