@@ -6,6 +6,7 @@ import { RoleBadges } from "@/components/role-badges";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
 import { ArrowLeft, CalendarDays, Music, MessageCircle, Volume2, VolumeX } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
 import { useAuth } from "@/lib/auth";
 
 export default function UserProfile() {
@@ -14,7 +15,7 @@ export default function UserProfile() {
   const { user: me } = useAuth();
   const [, navigate] = useLocation();
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [isMuted, setIsMuted] = useState(true);
+  const [volume, setVolume] = useState(0);
 
 
   if (isLoading) {
@@ -55,7 +56,7 @@ export default function UserProfile() {
       <div className="w-full h-48 md:h-64 rounded-xl overflow-hidden bg-secondary border border-border relative mt-2">
         {(user as any).profileVideoUrl ? (
           <video
-            ref={(el) => { videoRef.current = el; if (el) el.muted = isMuted; }}
+            ref={(el) => { videoRef.current = el; if (el) { el.volume = volume; el.muted = volume === 0; } }}
             src={(user as any).profileVideoUrl}
             autoPlay
             loop
@@ -70,12 +71,12 @@ export default function UserProfile() {
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
         {(user as any).profileVideoUrl && (
-          <button
-            onClick={() => setIsMuted(prev => !prev)}
-            className="absolute bottom-3 right-3 z-10 bg-black/50 hover:bg-black/75 text-white rounded-full p-2 transition-colors"
-          >
-            {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-          </button>
+          <div className="absolute bottom-3 right-3 z-10 flex items-center gap-2 bg-black/50 hover:bg-black/70 rounded-full px-3 py-1.5 transition-colors">
+            <button onClick={() => setVolume(v => v === 0 ? 0.8 : 0)} className="text-white flex-shrink-0" title={volume === 0 ? "Unmute" : "Mute"}>
+              {volume === 0 ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+            </button>
+            <Slider value={[volume * 100]} max={100} step={1} className="w-20 h-1" onValueChange={([v]) => setVolume(v / 100)} />
+          </div>
         )}
       </div>
 
