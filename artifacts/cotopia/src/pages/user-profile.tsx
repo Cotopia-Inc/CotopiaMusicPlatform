@@ -62,7 +62,7 @@ export default function UserProfile() {
             src={(user as any).profileVideoUrl}
             autoPlay
             loop
-            muted
+            muted={isMuted}
             playsInline
             className="w-full h-full object-cover"
           />

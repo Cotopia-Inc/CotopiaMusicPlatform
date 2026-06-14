@@ -66,7 +66,7 @@ export default function LabelDetail() {
             src={(label as any).profileVideoUrl}
             autoPlay
             loop
-            muted
+            muted={isMuted}
             playsInline
             className="w-full h-full object-cover"
           />

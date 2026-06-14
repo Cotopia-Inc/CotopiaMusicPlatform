@@ -6,7 +6,7 @@ import {
   useDeleteVideo, useUpdateVideo,
 } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Play, Heart, Star, Send, Radio, Users, MessageCircle, Maximize2, ArrowLeft, Trash2, Edit2, X, Save, Upload, ImageIcon } from "lucide-react";
+import { Play, Heart, Star, Send, Radio, Users, MessageCircle, Maximize2, ArrowLeft, Trash2, Edit2, X, Save, Upload, ImageIcon, ListPlus } from "lucide-react";
 import { RoleTag } from "@/components/role-badges";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
@@ -18,6 +18,7 @@ import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { UserLink } from "@/components/user-link";
 import { useUpload } from "@workspace/object-storage-web";
+import { usePlayer } from "@/lib/player";
 
 function formatTime(iso: string) {
   const d = new Date(iso);
@@ -35,6 +36,7 @@ export default function VideoDetail() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { addToQueue } = usePlayer();
 
   const { data: video, isLoading } = useGetVideo(videoId, {
     query: { enabled: !!videoId, queryKey: getGetVideoQueryKey(videoId) }
@@ -425,6 +427,30 @@ export default function VideoDetail() {
             <Heart className={`w-4 h-4 transition-all ${isFavorited ? "fill-current" : ""}`} />
             {isFavorited ? "Liked" : "Like"}
           </button>
+
+          {/* Add to queue */}
+          {video && (
+            <button
+              onClick={() => {
+                addToQueue([{
+                  id: video.id,
+                  title: video.title,
+                  artistName: video.artistName ?? "",
+                  artistId: video.artistId,
+                  artistIsVerified: video.artistIsVerified ?? false,
+                  coverUrl: video.thumbnailUrl,
+                  videoUrl: video.videoUrl,
+                  duration: video.duration,
+                }]);
+                toast({ title: "Added to queue", description: video.title });
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border text-muted-foreground hover:text-foreground hover:border-border/80 transition-all text-sm font-medium"
+              title="Add to queue"
+            >
+              <ListPlus className="w-4 h-4" />
+              Add to queue
+            </button>
+          )}
 
           {/* Stars */}
           <div className="flex items-center gap-1" onMouseLeave={() => setHoveredRating(null)}>

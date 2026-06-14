@@ -514,6 +514,15 @@ export function Player() {
 
             <Button
               variant="ghost" size="icon"
+              className="w-7 h-7 rounded bg-red-600 hover:bg-red-500 text-white flex items-center justify-center transition-colors disabled:opacity-30"
+              onClick={stop} disabled={!track}
+              title="Stop"
+            >
+              <Square className="w-3 h-3 fill-current" />
+            </Button>
+
+            <Button
+              variant="ghost" size="icon"
               className={`w-8 h-8 relative transition-colors ${repeat !== "none" ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
               onClick={cycleRepeat}
               title={repeatTitle}
@@ -541,7 +550,7 @@ export function Player() {
           </div>
         </div>
 
-        {/* Right: queue + volume + stop */}
+        {/* Right: queue + volume */}
         <div className="flex items-center justify-end gap-2 w-[30%]">
           <button
             onClick={() => setQueueOpen(v => !v)}
@@ -571,14 +580,6 @@ export function Player() {
             onValueChange={([v]) => setVolume(v / 100)}
             title={`Volume: ${Math.round(volume * 100)}%`}
           />
-
-          <button
-            onClick={stop} disabled={!track}
-            className="w-7 h-7 rounded bg-red-600 hover:bg-red-500 text-white flex items-center justify-center transition-colors disabled:opacity-30 flex-shrink-0 ml-1"
-            title="Stop"
-          >
-            <Square className="w-3 h-3 fill-current" />
-          </button>
         </div>
       </div>
 

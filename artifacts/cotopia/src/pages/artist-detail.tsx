@@ -86,7 +86,7 @@ export default function ArtistDetail() {
             src={(artist as any).profileVideoUrl}
             autoPlay
             loop
-            muted
+            muted={isMuted}
             playsInline
             className="w-full h-full object-cover"
           />

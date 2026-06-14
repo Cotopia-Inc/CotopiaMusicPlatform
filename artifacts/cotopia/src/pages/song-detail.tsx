@@ -276,6 +276,14 @@ export default function SongDetail() {
             {isFavorited ? "Liked" : "Like"}
           </button>
 
+          {/* Queue + Playlist menu */}
+          {song && (
+            <SongMenu
+              song={song}
+              className="border border-border text-muted-foreground hover:text-foreground hover:border-border/80 w-9 h-9 rounded-full"
+            />
+          )}
+
           {/* Star rating */}
           <div className="flex items-center gap-1" onMouseLeave={() => setHoveredRating(null)}>
             {[1, 2, 3, 4, 5].map((star) => {
