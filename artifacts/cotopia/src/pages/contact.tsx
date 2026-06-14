@@ -44,16 +44,6 @@ function ContactCard({ icon, label, value, href, description }: ContactCardProps
 export default function Contact() {
   return (
     <div className="max-w-2xl mx-auto space-y-10 pb-24">
-      <div className="flex items-center gap-3">
-        <button onClick={() => window.history.back()} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-          <ArrowLeft className="w-4 h-4" />Back
-        </button>
-        <span className="text-muted-foreground/30">·</span>
-        <Link href="/" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-          <Home className="w-4 h-4" />Home
-        </Link>
-      </div>
-
       {/* Header */}
       <div className="space-y-2">
         <div className="flex items-center gap-2 text-primary">

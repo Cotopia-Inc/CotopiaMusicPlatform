@@ -66,16 +66,6 @@ export default function Library() {
 
   return (
     <div className="space-y-8 pb-24">
-      <div className="flex items-center gap-3">
-        <button onClick={() => window.history.back()} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-          <ArrowLeft className="w-4 h-4" />Back
-        </button>
-        <span className="text-muted-foreground/30">·</span>
-        <Link href="/" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-          <Home className="w-4 h-4" />Home
-        </Link>
-      </div>
-
       <div className="flex items-center justify-between">
         <h1 className="text-4xl font-extrabold tracking-tight">Your Library</h1>
         <Button className="gap-2" onClick={() => setShowNewPlaylist(true)}>

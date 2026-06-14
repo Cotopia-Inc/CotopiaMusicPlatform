@@ -1,7 +1,10 @@
 import { useState, useRef, useCallback } from "react";
 import { Sidebar } from "./sidebar";
 import { Player } from "./player";
-import { ChevronLeft, ChevronRight, ChevronUp } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronUp, ArrowLeft, Home } from "lucide-react";
+import { useLocation, Link } from "wouter";
+
+const NO_NAV_PATHS = ["/", "/login", "/register", "/onboarding", "/verify-email"];
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -13,6 +16,9 @@ export function Layout({ children }: LayoutProps) {
   });
   const [showBackTop, setShowBackTop] = useState(false);
   const mainRef = useRef<HTMLElement>(null);
+  const [location] = useLocation();
+
+  const showNav = !NO_NAV_PATHS.includes(location) && !location.startsWith("/embed/");
 
   function toggleSidebar() {
     setSidebarOpen(v => {
@@ -52,6 +58,25 @@ export function Layout({ children }: LayoutProps) {
 
           <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-background to-background pointer-events-none -z-10" />
           <div className="p-4 pl-8 md:p-6 md:pl-9 lg:p-8 lg:pl-10">
+
+            {showNav && (
+              <div className="flex items-center gap-3 mb-5">
+                <button
+                  onClick={() => window.history.back()}
+                  className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <ArrowLeft className="w-4 h-4" />Back
+                </button>
+                <span className="text-muted-foreground/30">·</span>
+                <Link
+                  href="/"
+                  className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <Home className="w-4 h-4" />Home
+                </Link>
+              </div>
+            )}
+
             {children}
           </div>
 
