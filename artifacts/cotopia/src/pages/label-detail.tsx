@@ -19,9 +19,6 @@ export default function LabelDetail() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isMuted, setIsMuted] = useState(true);
 
-  useEffect(() => {
-    if (videoRef.current) videoRef.current.muted = isMuted;
-  }, [isMuted]);
 
   const { data: label, isLoading } = useGetLabel(labelId, {
     query: { enabled: !!labelId, queryKey: getGetLabelQueryKey(labelId) }
@@ -62,11 +59,11 @@ export default function LabelDetail() {
       <div className="w-full h-48 md:h-64 rounded-xl overflow-hidden bg-secondary border border-border relative">
         {(label as any).profileVideoUrl ? (
           <video
-            ref={videoRef}
+            ref={(el) => { videoRef.current = el; if (el) el.muted = isMuted; }}
             src={(label as any).profileVideoUrl}
             autoPlay
             loop
-            muted={isMuted}
+            muted
             playsInline
             className="w-full h-full object-cover"
           />
@@ -78,11 +75,7 @@ export default function LabelDetail() {
         <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
         {(label as any).profileVideoUrl && (
           <button
-            onClick={() => {
-              const next = !isMuted;
-              setIsMuted(next);
-              if (videoRef.current) videoRef.current.muted = next;
-            }}
+            onClick={() => setIsMuted(prev => !prev)}
             className="absolute bottom-3 right-3 z-10 bg-black/50 hover:bg-black/75 text-white rounded-full p-2 transition-colors"
           >
             {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}

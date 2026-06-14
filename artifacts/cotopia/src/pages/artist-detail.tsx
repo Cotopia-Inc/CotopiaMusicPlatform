@@ -35,9 +35,6 @@ export default function ArtistDetail() {
     }
   }, [artist?.id]);
 
-  useEffect(() => {
-    if (videoRef.current) videoRef.current.muted = isMuted;
-  }, [isMuted]);
 
   const handleFollowToggle = () => {
     if (!artist) return;
@@ -82,11 +79,11 @@ export default function ArtistDetail() {
       <div className="w-full h-64 md:h-80 rounded-xl overflow-hidden bg-secondary border border-border relative">
         {(artist as any).profileVideoUrl ? (
           <video
-            ref={videoRef}
+            ref={(el) => { videoRef.current = el; if (el) el.muted = isMuted; }}
             src={(artist as any).profileVideoUrl}
             autoPlay
             loop
-            muted={isMuted}
+            muted
             playsInline
             className="w-full h-full object-cover"
           />
@@ -98,11 +95,7 @@ export default function ArtistDetail() {
         <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
         {(artist as any).profileVideoUrl && (
           <button
-            onClick={() => {
-              const next = !isMuted;
-              setIsMuted(next);
-              if (videoRef.current) videoRef.current.muted = next;
-            }}
+            onClick={() => setIsMuted(prev => !prev)}
             className="absolute bottom-3 right-3 z-10 bg-black/50 hover:bg-black/75 text-white rounded-full p-2 transition-colors"
           >
             {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
