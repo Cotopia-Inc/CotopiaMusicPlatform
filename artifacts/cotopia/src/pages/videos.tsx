@@ -2,10 +2,100 @@ import { useListVideos, getListVideosQueryKey } from "@workspace/api-client-reac
 import { Skeleton } from "@/components/ui/skeleton";
 import { Play, Search, Video as VideoIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
 import { usePlayer } from "@/lib/player";
 import { UserLink } from "@/components/user-link";
+
+interface VideoItem {
+  id: number;
+  title: string;
+  artistName?: string | null;
+  artistId: number;
+  artistIsVerified?: boolean | null;
+  thumbnailUrl?: string | null;
+  videoUrl?: string | null;
+  duration: number;
+}
+
+function VideoHoverCard({ video, onPlay }: { video: VideoItem; onPlay: () => void }) {
+  const [hovering, setHovering] = useState(false);
+  const [videoReady, setVideoReady] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  function onEnter() {
+    timerRef.current = setTimeout(() => setHovering(true), 350);
+  }
+
+  function onLeave() {
+    clearTimeout(timerRef.current);
+    setHovering(false);
+    setVideoReady(false);
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.currentTime = 0;
+    }
+  }
+
+  useEffect(() => {
+    if (hovering && videoRef.current) {
+      videoRef.current.play().catch(() => {});
+    }
+  }, [hovering]);
+
+  return (
+    <div
+      className="aspect-video relative overflow-hidden rounded-md bg-secondary border border-border group cursor-pointer"
+      onMouseEnter={onEnter}
+      onMouseLeave={onLeave}
+    >
+      {/* Thumbnail */}
+      {video.thumbnailUrl ? (
+        <img
+          src={video.thumbnailUrl}
+          alt={video.title}
+          className={`object-cover w-full h-full transition-opacity duration-300 absolute inset-0 ${hovering && videoReady ? "opacity-0" : "opacity-100"}`}
+        />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center text-muted-foreground absolute inset-0">
+          <VideoIcon className="w-10 h-10 opacity-30" />
+        </div>
+      )}
+
+      {/* Hover video preview */}
+      {hovering && video.videoUrl && (
+        <video
+          ref={videoRef}
+          src={video.videoUrl}
+          muted
+          loop
+          playsInline
+          className={`w-full h-full object-cover absolute inset-0 transition-opacity duration-300 ${videoReady ? "opacity-100" : "opacity-0"}`}
+          onLoadedData={() => setVideoReady(true)}
+        />
+      )}
+
+      {/* Hover badge */}
+      {hovering && video.videoUrl && !videoReady && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-5 h-5 rounded-full border-2 border-white/50 border-t-white animate-spin" />
+        </div>
+      )}
+
+      {/* Play overlay */}
+      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+        <button
+          className="bg-primary text-primary-foreground rounded-full p-4 transform scale-90 group-hover:scale-100 transition-all duration-300 shadow-lg"
+          title={`Play ${video.title}`}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onPlay(); }}
+        >
+          <Play className="w-8 h-8 fill-current ml-1" />
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function Videos() {
   const [search, setSearch] = useState("");
@@ -48,26 +138,21 @@ export default function Videos() {
           ))
         ) : data?.items?.length ? (
           data.items.map((video) => (
-            <div key={video.id} className="group cursor-pointer space-y-3">
+            <div key={video.id} className="space-y-3">
               <Link href={`/videos/${video.id}`}>
-                <div className="aspect-video relative overflow-hidden rounded-md bg-secondary border border-border">
-                  {video.thumbnailUrl ? (
-                    <img src={video.thumbnailUrl} alt={video.title} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                      <VideoIcon className="w-10 h-10 opacity-30" />
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <button
-                      className="bg-primary text-primary-foreground rounded-full p-4 transform scale-90 group-hover:scale-100 transition-all duration-300 shadow-lg"
-                      title={`Play ${video.title}`}
-                      onClick={(e) => { e.preventDefault(); play({ id: video.id, title: video.title, artistName: video.artistName ?? "", artistId: video.artistId, artistIsVerified: video.artistIsVerified ?? false, coverUrl: video.thumbnailUrl, videoUrl: video.videoUrl, duration: video.duration }); }}
-                    >
-                      <Play className="w-8 h-8 fill-current ml-1" />
-                    </button>
-                  </div>
-                </div>
+                <VideoHoverCard
+                  video={video}
+                  onPlay={() => play({
+                    id: video.id,
+                    title: video.title,
+                    artistName: video.artistName ?? "",
+                    artistId: video.artistId,
+                    artistIsVerified: video.artistIsVerified ?? false,
+                    coverUrl: video.thumbnailUrl,
+                    videoUrl: video.videoUrl,
+                    duration: video.duration,
+                  })}
+                />
               </Link>
               <div>
                 <Link href={`/videos/${video.id}`}>

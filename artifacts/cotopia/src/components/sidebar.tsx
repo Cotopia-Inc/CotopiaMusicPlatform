@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import {
   Home, Compass, Music, Video, Users, Mic2, Library, Building2,
   LayoutDashboard, LogIn, LogOut, Settings, Send, Radio, Bell,
-  BarChart3, Upload, ListMusic, Shield,
+  BarChart3, Upload, ListMusic, Shield, Mail,
   MessageSquare, FileText, Eye, BookOpen, MessageCircle,
   AlertOctagon, ScrollText, Scale, ShieldOff, Search, X,
 } from "lucide-react";
@@ -156,6 +156,7 @@ export function Sidebar() {
     { href: "/artists", label: "Artists", icon: Mic2 },
     { href: "/labels", label: "Labels", icon: Users },
     { href: "/company", label: "Company Hub", icon: Building2 },
+    { href: "/contact", label: "Contact", icon: Mail },
   ];
 
   const userLinks = [

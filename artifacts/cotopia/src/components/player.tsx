@@ -109,6 +109,18 @@ export function Player() {
     e.stopPropagation();
   }, [overlayWidth]);
 
+  // Update page title so track is visible in background tabs
+  useEffect(() => {
+    if (track && isPlaying) {
+      document.title = `▶ ${track.title} — ${track.artistName} | Everyday Radio`;
+    } else if (track) {
+      document.title = `⏸ ${track.title} — ${track.artistName} | Everyday Radio`;
+    } else {
+      document.title = "Everyday Radio by Cotopia";
+    }
+    return () => { document.title = "Everyday Radio by Cotopia"; };
+  }, [track?.id, track?.title, track?.artistName, isPlaying]);
+
   // Reset position when closing
   const handleClose = () => {
     setNowPlayingOpen(false);
@@ -150,8 +162,8 @@ export function Player() {
                         "Repeat: all";
 
   const overlayStyle: React.CSSProperties = overlayPos
-    ? { position: "fixed", left: overlayPos.x, top: overlayPos.y, width: overlayWidth, zIndex: 40 }
-    : { position: "fixed", bottom: 84, right: 16, width: overlayWidth, zIndex: 40 };
+    ? { position: "fixed", left: overlayPos.x, top: overlayPos.y, width: overlayWidth, zIndex: 9999 }
+    : { position: "fixed", bottom: 84, right: 16, width: overlayWidth, zIndex: 9999 };
 
   // ── Now Playing Floating Window ───────────────────────────────────────────
   return (
@@ -161,24 +173,34 @@ export function Player() {
           style={{ ...overlayStyle, display: nowPlayingOpen ? undefined : "none" }}
           className="bg-card/98 backdrop-blur-xl border border-border/70 rounded-2xl shadow-2xl overflow-hidden select-none"
         >
-          {/* Drag handle header */}
+          {/* Drag handle / branded header */}
           <div
             onMouseDown={startDrag}
-            className="flex items-center justify-between px-4 pt-3 pb-2 border-b border-border/40 cursor-grab active:cursor-grabbing bg-black/20"
+            className="flex items-center justify-between px-4 pt-3 pb-2.5 border-b border-border/40 cursor-grab active:cursor-grabbing bg-gradient-to-r from-primary/15 via-primary/5 to-black/20"
           >
-            <div className="flex items-center gap-2">
-              <GripHorizontal className="w-3.5 h-3.5 text-muted-foreground/50" />
-              <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-                {isVideoTrack ? "Now Playing — Video" : "Now Playing"}
-              </span>
+            <div className="flex items-center gap-2.5">
+              <GripHorizontal className="w-3.5 h-3.5 text-muted-foreground/40" />
+              <Radio className="w-4 h-4 text-primary" />
+              <div className="flex flex-col leading-none">
+                <span className="text-[11px] font-extrabold tracking-tight text-foreground">Everyday Radio</span>
+                <span className="text-[9px] text-muted-foreground tracking-widest uppercase">{isVideoTrack ? "Video" : "Now Playing"}</span>
+              </div>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-0.5">
+              {/* Stop */}
+              <button
+                onClick={stop} disabled={!track}
+                className="w-6 h-6 rounded bg-red-600/80 hover:bg-red-500 text-white flex items-center justify-center transition-colors disabled:opacity-30 mr-1"
+                title="Stop"
+              >
+                <Square className="w-3 h-3 fill-current" />
+              </button>
               {isVideoTrack && (
                 <>
                   <button
                     onClick={() => requestPiP()}
                     className="text-muted-foreground hover:text-foreground transition-colors p-1"
-                    title="Picture in Picture — float video while browsing"
+                    title="Picture in Picture"
                   >
                     <PictureInPicture2 className="w-3.5 h-3.5" />
                   </button>
@@ -338,16 +360,8 @@ export function Player() {
               </button>
             </div>
 
-            {/* Secondary controls: stop + volume */}
-            <div className="flex items-center gap-3 px-1">
-              <button
-                onClick={stop}
-                disabled={!track}
-                className="w-7 h-7 rounded bg-red-600 hover:bg-red-500 text-white flex items-center justify-center transition-colors disabled:opacity-30 flex-shrink-0"
-                title="Stop"
-              >
-                <Square className="w-3.5 h-3.5 fill-current" />
-              </button>
+            {/* Volume row */}
+            <div className="flex items-center gap-2 px-1">
               <button
                 onClick={handleVolumeClick}
                 className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
@@ -360,9 +374,12 @@ export function Player() {
                 onValueChange={([v]) => setVolume(v / 100)}
                 title={`Volume: ${Math.round(volume * 100)}%`}
               />
+              <span className="text-[10px] text-muted-foreground tabular-nums w-7 text-right flex-shrink-0">
+                {Math.round(volume * 100)}%
+              </span>
               {queue.length > 1 && (
-                <span className="text-[10px] text-muted-foreground tabular-nums flex-shrink-0">
-                  {queueIndex + 1} / {queue.length}
+                <span className="text-[10px] text-muted-foreground tabular-nums flex-shrink-0 ml-1 border-l border-border pl-2">
+                  {queueIndex + 1}/{queue.length}
                 </span>
               )}
             </div>
@@ -495,16 +512,6 @@ export function Player() {
               <SkipForward className="w-4 h-4 fill-current" />
             </Button>
 
-            {/* Stop — square button, not circle */}
-            <Button
-              variant="ghost" size="icon"
-              className="w-8 h-8 text-white bg-red-600 hover:bg-red-500 disabled:opacity-30 rounded"
-              onClick={stop} disabled={!track}
-              title="Stop"
-            >
-              <Square className="w-3.5 h-3.5 fill-current" />
-            </Button>
-
             <Button
               variant="ghost" size="icon"
               className={`w-8 h-8 relative transition-colors ${repeat !== "none" ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
@@ -534,8 +541,16 @@ export function Player() {
           </div>
         </div>
 
-        {/* Right: queue + volume */}
+        {/* Right: stop + queue + volume */}
         <div className="flex items-center justify-end gap-2 w-[30%]">
+          <button
+            onClick={stop} disabled={!track}
+            className="w-7 h-7 rounded bg-red-600 hover:bg-red-500 text-white flex items-center justify-center transition-colors disabled:opacity-30 flex-shrink-0"
+            title="Stop"
+          >
+            <Square className="w-3 h-3 fill-current" />
+          </button>
+
           <button
             onClick={() => setQueueOpen(v => !v)}
             disabled={!track}
