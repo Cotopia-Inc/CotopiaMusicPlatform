@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
 import { db, editorPicksTable, songsTable, videosTable, artistsTable, albumsTable, usersTable } from "@workspace/db";
 import { requireAuth, requireRole, type AuthRequest } from "../lib/auth";
 import { z } from "zod";
@@ -63,7 +63,7 @@ async function expandPick(pick: typeof editorPicksTable.$inferSelect, editorUser
     const rows = await db
       .select({
         id: artistsTable.id, userId: artistsTable.userId, stageName: artistsTable.stageName,
-        bio: artistsTable.bio, avatarUrl: artistsTable.avatarUrl, bannerUrl: artistsTable.bannerUrl,
+        bio: artistsTable.bio, avatarUrl: sql<string | null>`COALESCE(${artistsTable.avatarUrl}, ${usersTable.avatarUrl})`, bannerUrl: artistsTable.bannerUrl,
         genre: artistsTable.genre, labelId: artistsTable.labelId, createdAt: artistsTable.createdAt,
         isVerified: usersTable.isVerified,
       })

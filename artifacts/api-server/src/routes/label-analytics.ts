@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { eq, desc, and, count, sql, inArray } from "drizzle-orm";
 import {
-  db, labelsTable, artistsTable, songsTable, videosTable, followsTable,
+  db, labelsTable, artistsTable, songsTable, videosTable, followsTable, usersTable,
 } from "@workspace/db";
 import { requireAuth, type AuthRequest } from "../lib/auth";
 
@@ -28,9 +28,10 @@ router.get("/label/analytics", requireAuth, async (req: AuthRequest, res): Promi
     .select({
       id: artistsTable.id,
       stageName: artistsTable.stageName,
-      avatarUrl: artistsTable.avatarUrl,
+      avatarUrl: sql<string | null>`COALESCE(${artistsTable.avatarUrl}, ${usersTable.avatarUrl})`,
     })
     .from(artistsTable)
+    .innerJoin(usersTable, eq(artistsTable.userId, usersTable.id))
     .where(eq(artistsTable.labelId, label.id))
     .orderBy(desc(artistsTable.createdAt));
 

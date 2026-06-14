@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { eq, desc, and, avg } from "drizzle-orm";
+import { eq, desc, and, avg, sql } from "drizzle-orm";
 import { db, songsTable, videosTable, artistsTable, labelsTable, albumsTable, companyPostsTable, followsTable, ratingsTable, editorPicksTable, usersTable } from "@workspace/db";
 import { count } from "drizzle-orm";
 
@@ -31,7 +31,7 @@ router.get("/home", async (_req, res): Promise<void> => {
   ]);
 
   const [rawArtists, rawLabels, announcements] = await Promise.all([
-    db.select({ id: artistsTable.id, userId: artistsTable.userId, stageName: artistsTable.stageName, bio: artistsTable.bio, avatarUrl: artistsTable.avatarUrl, bannerUrl: artistsTable.bannerUrl, genre: artistsTable.genre, labelId: artistsTable.labelId, createdAt: artistsTable.createdAt, isVerified: usersTable.isVerified }).from(artistsTable).leftJoin(usersTable, eq(artistsTable.userId, usersTable.id)).orderBy(desc(artistsTable.createdAt)).limit(6),
+    db.select({ id: artistsTable.id, userId: artistsTable.userId, stageName: artistsTable.stageName, bio: artistsTable.bio, avatarUrl: sql<string | null>`COALESCE(${artistsTable.avatarUrl}, ${usersTable.avatarUrl})`, bannerUrl: artistsTable.bannerUrl, genre: artistsTable.genre, labelId: artistsTable.labelId, createdAt: artistsTable.createdAt, isVerified: usersTable.isVerified }).from(artistsTable).leftJoin(usersTable, eq(artistsTable.userId, usersTable.id)).orderBy(desc(artistsTable.createdAt)).limit(6),
     db.select().from(labelsTable).orderBy(desc(labelsTable.createdAt)).limit(4),
     db.select().from(companyPostsTable).orderBy(desc(companyPostsTable.isPinned), desc(companyPostsTable.createdAt)).limit(3),
   ]);
@@ -106,7 +106,7 @@ router.get("/home", async (_req, res): Promise<void> => {
     } else if (p.contentType === "artist") {
       const rows = await db.select({
         id: artistsTable.id, userId: artistsTable.userId, stageName: artistsTable.stageName,
-        bio: artistsTable.bio, avatarUrl: artistsTable.avatarUrl, bannerUrl: artistsTable.bannerUrl,
+        bio: artistsTable.bio, avatarUrl: sql<string | null>`COALESCE(${artistsTable.avatarUrl}, ${usersTable.avatarUrl})`, bannerUrl: artistsTable.bannerUrl,
         genre: artistsTable.genre, labelId: artistsTable.labelId, createdAt: artistsTable.createdAt,
         isVerified: usersTable.isVerified,
       }).from(artistsTable)
