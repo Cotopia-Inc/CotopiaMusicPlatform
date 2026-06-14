@@ -1,10 +1,11 @@
 import { useParams, Link, useLocation } from "wouter";
+import { useRef, useState } from "react";
 import { useGetPublicUser } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RoleBadges } from "@/components/role-badges";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
-import { ArrowLeft, CalendarDays, Music, MessageCircle } from "lucide-react";
+import { ArrowLeft, CalendarDays, Music, MessageCircle, Volume2, VolumeX } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 
 export default function UserProfile() {
@@ -12,6 +13,8 @@ export default function UserProfile() {
   const { data: user, isLoading } = useGetPublicUser(Number(id));
   const { user: me } = useAuth();
   const [, navigate] = useLocation();
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isMuted, setIsMuted] = useState(true);
 
   if (isLoading) {
     return (
@@ -51,9 +54,11 @@ export default function UserProfile() {
       <div className="w-full h-48 md:h-64 rounded-xl overflow-hidden bg-secondary border border-border relative mt-2">
         {(user as any).profileVideoUrl ? (
           <video
+            ref={videoRef}
             src={(user as any).profileVideoUrl}
             autoPlay
             loop
+            muted
             playsInline
             className="w-full h-full object-cover"
           />
@@ -63,6 +68,18 @@ export default function UserProfile() {
           <div className="w-full h-full bg-gradient-to-r from-primary/20 to-secondary" />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
+        {(user as any).profileVideoUrl && (
+          <button
+            onClick={() => {
+              const next = !isMuted;
+              setIsMuted(next);
+              if (videoRef.current) videoRef.current.muted = next;
+            }}
+            className="absolute bottom-3 right-3 z-10 bg-black/50 hover:bg-black/75 text-white rounded-full p-2 transition-colors"
+          >
+            {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+          </button>
+        )}
       </div>
 
       {/* Avatar + info */}

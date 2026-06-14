@@ -1,7 +1,8 @@
 import { useParams, Link, useLocation } from "wouter";
+import { useRef, useState } from "react";
 import { useGetLabel, getGetLabelQueryKey, useFollowLabel, useUnfollowLabel } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, Music, Play } from "lucide-react";
+import { Users, Music, Play, Volume2, VolumeX } from "lucide-react";
 import { UserLink } from "@/components/user-link";
 import { RoleBadges } from "@/components/role-badges";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,8 @@ export default function LabelDetail() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [, navigate] = useLocation();
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isMuted, setIsMuted] = useState(true);
 
   const { data: label, isLoading } = useGetLabel(labelId, {
     query: { enabled: !!labelId, queryKey: getGetLabelQueryKey(labelId) }
@@ -55,9 +58,11 @@ export default function LabelDetail() {
       <div className="w-full h-48 md:h-64 rounded-xl overflow-hidden bg-secondary border border-border relative">
         {(label as any).profileVideoUrl ? (
           <video
+            ref={videoRef}
             src={(label as any).profileVideoUrl}
             autoPlay
             loop
+            muted
             playsInline
             className="w-full h-full object-cover"
           />
@@ -67,6 +72,18 @@ export default function LabelDetail() {
           <div className="w-full h-full bg-gradient-to-r from-primary/10 to-primary/5" />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
+        {(label as any).profileVideoUrl && (
+          <button
+            onClick={() => {
+              const next = !isMuted;
+              setIsMuted(next);
+              if (videoRef.current) videoRef.current.muted = next;
+            }}
+            className="absolute bottom-3 right-3 z-10 bg-black/50 hover:bg-black/75 text-white rounded-full p-2 transition-colors"
+          >
+            {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+          </button>
+        )}
       </div>
 
       {/* Header Info */}
