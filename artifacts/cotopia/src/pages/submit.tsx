@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useCreateBulkSubmission, useInitiatePayment, useCapturePayment } from "@workspace/api-client-react";
 import { useUpload } from "@workspace/object-storage-web";
 import { useToast } from "@/hooks/use-toast";
@@ -355,7 +355,12 @@ export default function Submit() {
   const songAllUploaded = songFiles.length > 0 && songUrls.every(u => u !== null);
   const videoAllUploaded = videoFiles.length > 0 && videoUrls.every(u => u !== null);
   const allUploaded = tab === "song" ? songAllUploaded : videoAllUploaded;
-  const anyFiles = songFiles.length > 0 || videoFiles.length > 0;
+
+  // Auto-snap plan to the only valid tier whenever file count changes (tab switch, add, remove)
+  useEffect(() => {
+    if (activeFiles.length === 1) setPlan("single");
+    else if (activeFiles.length > 1) setPlan("basic");
+  }, [activeFiles.length]);
   const price = PLAN_PRICES[tab][plan];
   const effectiveSongType = songReleaseType || detectReleaseType(songFiles.length, "song");
   const effectiveVideoType = videoReleaseType || detectReleaseType(videoFiles.length, "video");
@@ -717,7 +722,7 @@ export default function Submit() {
           </Tabs>
 
           <div className="flex justify-end pt-2">
-            <Button onClick={handleStep0Next} className="gap-2 px-6" disabled={!anyFiles}>
+            <Button onClick={handleStep0Next} className="gap-2 px-6" disabled={activeFiles.length === 0}>
               Next: Choose Plan <ChevronRight className="w-4 h-4" />
             </Button>
           </div>
