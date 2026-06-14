@@ -3,6 +3,7 @@ import { useRef, useState, useEffect } from "react";
 import { useGetLabel, getGetLabelQueryKey, useFollowLabel, useUnfollowLabel } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Users, Music, Play, Volume2, VolumeX } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
 import { UserLink } from "@/components/user-link";
 import { RoleBadges } from "@/components/role-badges";
 import { Button } from "@/components/ui/button";
@@ -17,7 +18,7 @@ export default function LabelDetail() {
   const queryClient = useQueryClient();
   const [, navigate] = useLocation();
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [volume, setVolume] = useState(0);
+  const [volume, setVolume] = useState(0.8);
 
 
   const { data: label, isLoading } = useGetLabel(labelId, {
@@ -78,14 +79,9 @@ export default function LabelDetail() {
             <button onClick={() => setVolume(v => v === 0 ? 0.8 : 0)} className="text-white flex-shrink-0" title={volume === 0 ? "Unmute" : "Mute"}>
               {volume === 0 ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
             </button>
-            <input
-              type="range" min={0} max={100} step={1}
-              value={Math.round(volume * 100)}
-              onChange={(e) => setVolume(Number(e.target.value) / 100)}
-              onClick={(e) => e.stopPropagation()}
-              className="w-20 cursor-pointer accent-white"
-              style={{ height: "4px" }}
-            />
+            <div onPointerDown={(e) => e.stopPropagation()} className="w-24">
+              <Slider value={[Math.round(volume * 100)]} max={100} step={1} onValueChange={([v]) => setVolume(v / 100)} />
+            </div>
           </div>
         )}
       </div>
