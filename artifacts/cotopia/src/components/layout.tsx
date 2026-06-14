@@ -36,16 +36,19 @@ export function Layout({ children }: LayoutProps) {
           <Sidebar />
         </div>
 
+        {/* Sidebar toggle — fixed so it's always visible regardless of scroll */}
+        <button
+          onClick={toggleSidebar}
+          style={{ left: sidebarOpen ? 244 : 4 }}
+          className="fixed top-1/2 -translate-y-1/2 z-40 w-5 h-10 bg-card border border-border rounded-r-md flex items-center justify-center hover:bg-secondary transition-all duration-300 shadow-sm"
+          title={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+        >
+          {sidebarOpen
+            ? <ChevronLeft className="w-3 h-3" />
+            : <ChevronRight className="w-3 h-3" />}
+        </button>
+
         <main ref={mainRef} onScroll={handleScroll} className="flex-1 overflow-y-auto relative min-w-0">
-          <button
-            onClick={toggleSidebar}
-            className="absolute top-4 left-2 z-30 w-6 h-6 bg-card border border-border rounded-full flex items-center justify-center hover:bg-secondary transition-colors shadow-sm"
-            title={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
-          >
-            {sidebarOpen
-              ? <ChevronLeft className="w-3 h-3" />
-              : <ChevronRight className="w-3 h-3" />}
-          </button>
 
           <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-background to-background pointer-events-none -z-10" />
           <div className="p-4 pl-8 md:p-6 md:pl-9 lg:p-8 lg:pl-10">
