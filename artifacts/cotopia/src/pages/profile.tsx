@@ -6,12 +6,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Upload, X, Loader2, Lock, User, MailCheck, CheckCircle, Mail, RefreshCw, Film } from "lucide-react";
+import { Upload, X, Loader2, Lock, User, MailCheck, CheckCircle, Mail, RefreshCw, Film, Camera } from "lucide-react";
 import { useUpload } from "@workspace/object-storage-web";
 import { RoleBadges, VerifiedBadge } from "@/components/role-badges";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Badge } from "@/components/ui/badge";
+import { ImageCropModal } from "@/components/image-crop-modal";
 
 export default function Profile() {
   const { user } = useAuth();
@@ -30,10 +31,12 @@ export default function Profile() {
   const [bio, setBio] = useState("");
   const [bannerUrl, setBannerUrl] = useState("");
   const [profileVideoUrl, setProfileVideoUrl] = useState("");
+  const [cropModal, setCropModal] = useState<{ url: string; mode: "avatar" | "banner" } | null>(null);
   const initialized = useRef(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
+  const videoPreviewRef = useRef<HTMLVideoElement>(null);
 
   // Username change
   const [newUsername, setNewUsername] = useState("");
@@ -90,17 +93,53 @@ export default function Profile() {
     e.target.value = "";
   };
 
-  const handleAvatarFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setAvatarFilename(file.name);
-    await uploadAvatar(file);
+    setCropModal({ url: URL.createObjectURL(file), mode: "avatar" });
+    e.target.value = "";
   };
 
-  const handleBannerFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBannerFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    await uploadBanner(file);
+    setCropModal({ url: URL.createObjectURL(file), mode: "banner" });
+    e.target.value = "";
+  };
+
+  const handleCropConfirm = async (blob: Blob) => {
+    if (!cropModal) return;
+    const { mode, url } = cropModal;
+    URL.revokeObjectURL(url);
+    setCropModal(null);
+    const file = new File([blob], mode === "avatar" ? "avatar.jpg" : "banner.jpg", { type: "image/jpeg" });
+    if (mode === "avatar") {
+      await uploadAvatar(file);
+    } else {
+      await uploadBanner(file);
+    }
+  };
+
+  const handleCapturePosterFrame = () => {
+    const video = videoPreviewRef.current;
+    if (!video || !video.videoWidth) return;
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.drawImage(video, 0, 0);
+    canvas.toBlob(
+      async (blob) => {
+        if (!blob) return;
+        const file = new File([blob], "poster.jpg", { type: "image/jpeg" });
+        await uploadBanner(file);
+        toast({ title: "Frame captured", description: "Set as your profile banner." });
+      },
+      "image/jpeg",
+      0.92,
+    );
   };
 
   const clearAvatar = () => {
@@ -383,13 +422,25 @@ export default function Profile() {
           </div>
           {/* Video preview */}
           {profileVideoUrl && (
-            <div className="aspect-video rounded-lg overflow-hidden bg-black border border-border">
-              <video
-                key={profileVideoUrl}
-                src={profileVideoUrl}
-                controls
-                className="w-full h-full object-contain"
-              />
+            <div className="space-y-2">
+              <div className="aspect-video rounded-lg overflow-hidden bg-black border border-border relative group">
+                <video
+                  ref={videoPreviewRef}
+                  key={profileVideoUrl}
+                  src={profileVideoUrl}
+                  controls
+                  className="w-full h-full object-contain"
+                />
+                <button
+                  type="button"
+                  onClick={handleCapturePosterFrame}
+                  title="Capture current frame as banner"
+                  className="absolute bottom-3 right-3 flex items-center gap-1.5 px-3 py-1.5 bg-black/70 hover:bg-black/90 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity border border-white/20"
+                >
+                  <Camera className="w-3.5 h-3.5" />Capture frame as banner
+                </button>
+              </div>
+              <p className="text-xs text-muted-foreground">Pause the video on any frame and click "Capture frame as banner" to use it as your profile banner.</p>
             </div>
           )}
         </div>
@@ -557,6 +608,21 @@ export default function Profile() {
           </div>
         )}
       </div>
+
+      {cropModal && (
+        <ImageCropModal
+          imageUrl={cropModal.url}
+          aspectRatio={cropModal.mode === "avatar" ? 1 : 4}
+          circular={cropModal.mode === "avatar"}
+          title={cropModal.mode === "avatar" ? "Crop Profile Picture" : "Crop Banner Image"}
+          outputSize={cropModal.mode === "avatar" ? 400 : 1200}
+          onConfirm={handleCropConfirm}
+          onCancel={() => {
+            URL.revokeObjectURL(cropModal.url);
+            setCropModal(null);
+          }}
+        />
+      )}
     </div>
   );
 }
