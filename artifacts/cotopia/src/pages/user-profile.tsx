@@ -57,6 +57,7 @@ export default function UserProfile() {
         {(user as any).profileVideoUrl ? (
           <video
             ref={(el) => { videoRef.current = el; if (el) { el.volume = volume; el.muted = volume === 0; } }}
+            style={{ pointerEvents: 'none' }}
             src={(user as any).profileVideoUrl}
             autoPlay
             loop
@@ -75,7 +76,7 @@ export default function UserProfile() {
             <button onClick={() => setVolume(v => v === 0 ? 0.8 : 0)} className="text-white flex-shrink-0" title={volume === 0 ? "Unmute" : "Mute"}>
               {volume === 0 ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
             </button>
-            <div onPointerDown={(e) => e.stopPropagation()} className="w-24">
+            <div className="w-24" style={{ pointerEvents: 'auto' }}>
               <Slider value={[Math.round(volume * 100)]} max={100} step={1} onValueChange={([v]) => setVolume(v / 100)} />
             </div>
           </div>
