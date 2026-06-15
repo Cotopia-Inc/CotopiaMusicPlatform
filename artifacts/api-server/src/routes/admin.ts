@@ -756,8 +756,21 @@ router.post("/admin/strikes", requireAuth, requireRole(...ADMIN_ROLES), async (r
     return;
   }
 
-  // Resolve userId from content if not provided directly
-  let resolvedUserId = userId ? Number(userId) : 0;
+  // Resolve userId — accept numeric id, username, or email
+  let resolvedUserId = 0;
+  if (userId !== undefined && userId !== null) {
+    const numId = Number(userId);
+    if (!isNaN(numId) && numId > 0) {
+      resolvedUserId = numId;
+    } else if (typeof userId === "string" && userId.trim()) {
+      const term = userId.trim();
+      const [found] = await db.select({ id: usersTable.id })
+        .from(usersTable)
+        .where(or(eq(usersTable.username, term), eq(usersTable.email, term)))
+        .limit(1);
+      if (found) resolvedUserId = found.id;
+    }
+  }
   if (!resolvedUserId && contentId) {
     if (contentType === "song") {
       const [song] = await db.select({ artistId: songsTable.artistId }).from(songsTable).where(eq(songsTable.id, Number(contentId))).limit(1);

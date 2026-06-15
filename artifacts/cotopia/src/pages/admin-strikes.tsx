@@ -347,7 +347,7 @@ function ManualStrikeForm({ onClose, onSuccess }: { onClose: () => void; onSucce
           Authorization: `Bearer ${localStorage.getItem("cotopia_token")}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ userId: Number(userId), contentType, contentTitle: contentTitle || undefined, strikeReason: reason, internalNotes: notes || undefined }),
+        body: JSON.stringify({ userId, contentType, contentTitle: contentTitle || undefined, strikeReason: reason, internalNotes: notes || undefined }),
       });
       if (!res.ok) throw new Error((await res.json()).error ?? "Failed");
       toast({ title: "Strike issued" });
@@ -369,8 +369,8 @@ function ManualStrikeForm({ onClose, onSuccess }: { onClose: () => void; onSucce
         </DialogHeader>
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <label className="text-xs text-muted-foreground">User ID <span className="text-red-400">*</span></label>
-            <Input placeholder="User ID" value={userId} onChange={e => setUserId(e.target.value)} className="bg-secondary/50 border-secondary text-sm" />
+            <label className="text-xs text-muted-foreground">User ID, username, or email <span className="text-red-400">*</span></label>
+            <Input placeholder="e.g. nova@example.com or nova_sounds" value={userId} onChange={e => setUserId(e.target.value)} className="bg-secondary/50 border-secondary text-sm" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
