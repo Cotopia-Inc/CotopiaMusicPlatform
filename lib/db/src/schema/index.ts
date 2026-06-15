@@ -29,3 +29,4 @@ export * from "./admin_audit_logs";
 export * from "./email_otps";
 export * from "./user_blocks";
 export * from "./broadcasts";
+export * from "./copyright_concerns";

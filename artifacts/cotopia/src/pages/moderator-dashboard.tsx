@@ -3,7 +3,7 @@ import { useAuth } from "@/lib/auth";
 import { useLocation, Link } from "wouter";
 import { useEffect, useState } from "react";
 import {
-  ShieldCheck, FileText, MessageSquare, MessageCircle, ShieldOff,
+  ShieldCheck, FileText, MessageSquare, MessageCircle, Flag,
   ArrowRight, Clock,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,7 +20,7 @@ const authHeaders = () => ({
 export default function ModeratorDashboard() {
   const { user } = useAuth();
   const [, navigate] = useLocation();
-  const [openStrikes, setOpenStrikes] = useState<number | null>(null);
+  const [pendingConcerns, setPendingConcerns] = useState<number | null>(null);
 
   useEffect(() => {
     if (user && !MOD_ROLES.includes(user.role)) navigate("/");
@@ -34,26 +34,24 @@ export default function ModeratorDashboard() {
     let active = true;
     (async () => {
       try {
-        const res = await fetch(`${import.meta.env.BASE_URL}api/admin/strikes?status=active&limit=100`, { headers: authHeaders() });
+        const res = await fetch(`${import.meta.env.BASE_URL}api/admin/copyright-concerns?status=pending`, { headers: authHeaders() });
         if (!res.ok) return;
         const data = await res.json();
-        const list = Array.isArray(data) ? data : (data.items ?? []);
-        if (active) setOpenStrikes(list.length);
+        if (active) setPendingConcerns(Array.isArray(data) ? data.length : 0);
       } catch { /* ignore */ }
     })();
     return () => { active = false; };
   }, []);
 
   const actions = [
-    { href: "/moderator/submissions", icon: FileText, color: "text-amber-400", border: "hover:border-amber-400/40", title: "Review Submissions", desc: "Approve or reject pending content" },
-    { href: "/moderator/comments", icon: MessageSquare, color: "text-primary", border: "hover:border-primary/50", title: "Moderate Comments", desc: "Review and remove flagged comments" },
+    { href: "/moderator/submissions", icon: FileText, color: "text-amber-400", border: "hover:border-amber-400/40", title: "Review Submissions", desc: "Flag or escalate policy-violating content" },
+    { href: "/moderator/comments", icon: MessageSquare, color: "text-primary", border: "hover:border-primary/50", title: "Moderate Comments", desc: "Hide or remove flagged comments" },
     { href: "/moderator/messages", icon: MessageCircle, color: "text-blue-400", border: "hover:border-blue-400/40", title: "DM Feed", desc: "Monitor and moderate direct messages" },
-    { href: "/moderator/strikes", icon: ShieldOff, color: "text-red-400", border: "hover:border-red-400/40", title: "Copyright Strikes", desc: "Issue and resolve copyright strikes" },
+    { href: "/moderator/copyright-concerns", icon: Flag, color: "text-amber-400", border: "hover:border-amber-400/40", title: "Copyright Concerns", desc: "Escalate copyright issues to admins" },
   ];
 
   return (
     <div className="p-8 max-w-5xl mx-auto space-y-8">
-      {/* Header */}
       <div className="flex items-center gap-3">
         <ShieldCheck className="w-6 h-6 text-primary" />
         <div>
@@ -62,7 +60,6 @@ export default function ModeratorDashboard() {
         </div>
       </div>
 
-      {/* Quick stats */}
       <div className="grid grid-cols-2 gap-4">
         <Card>
           <CardContent className="pt-6">
@@ -79,16 +76,15 @@ export default function ModeratorDashboard() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Active Strikes</p>
-                <p className="text-2xl font-bold mt-1">{openStrikes ?? "—"}</p>
+                <p className="text-sm text-muted-foreground">My Pending Concerns</p>
+                <p className="text-2xl font-bold mt-1">{pendingConcerns ?? "—"}</p>
               </div>
-              <ShieldOff className="w-8 h-8 text-red-400/40" />
+              <Flag className="w-8 h-8 text-amber-400/40" />
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Quick actions */}
       <div>
         <h2 className="text-base font-semibold mb-3">Moderation Tools</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -109,7 +105,6 @@ export default function ModeratorDashboard() {
         </div>
       </div>
 
-      {/* Recent pending submissions */}
       <div>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-base font-semibold">Awaiting Review</h2>

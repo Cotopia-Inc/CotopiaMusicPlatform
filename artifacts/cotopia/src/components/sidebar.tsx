@@ -6,7 +6,7 @@ import {
   BarChart3, Upload, ListMusic, Shield, Mail, Sparkles,
   MessageSquare, FileText, Eye, BookOpen, MessageCircle,
   AlertOctagon, ScrollText, Scale, ShieldOff, Search, X,
-  Megaphone, ShieldCheck,
+  Megaphone, ShieldCheck, Flag,
 } from "lucide-react";
 import { RoleBadges } from "@/components/role-badges";
 import { useAuth } from "@/lib/auth";
@@ -183,6 +183,7 @@ export function Sidebar() {
     { href: "/admin/broadcast", label: "Broadcast", icon: Megaphone },
     { href: "/admin/dmca", label: "DMCA Claims", icon: AlertOctagon },
     { href: "/admin/strikes", label: "Copyright Strikes", icon: ShieldOff },
+    { href: "/admin/copyright-concerns", label: "Copyright Concerns", icon: Flag },
     { href: "/admin/settings", label: "Settings", icon: Settings },
   ];
 
@@ -197,6 +198,7 @@ export function Sidebar() {
     { href: "/moderator/submissions", label: "Submissions", icon: FileText },
     { href: "/moderator/comments", label: "Comments", icon: MessageSquare },
     { href: "/moderator/messages", label: "DM Feed", icon: MessageCircle },
+    { href: "/moderator/copyright-concerns", label: "Copyright Concerns", icon: Flag },
   ];
 
   const isActive = (href: string) =>
@@ -401,8 +403,8 @@ export function Sidebar() {
               </>
             )}
 
-            {/* Moderation section — moderator + editor (admins use the Admin section) */}
-            {(isModerator || isEditor) && (
+            {/* Moderation section — moderator only (admins use the Admin section) */}
+            {isModerator && (
               <>
                 <div className="pt-4 pb-1">
                   <p className="px-3 text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Moderation</p>

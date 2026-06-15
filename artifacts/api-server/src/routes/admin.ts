@@ -6,7 +6,7 @@ import {
   appSettingsTable, followsTable, chatMessagesTable, favoritesTable,
   playlistsTable, playlistItemsTable, conversationsTable, directMessagesTable,
   dmcaClaimsTable, copyrightStrikesTable, adminAuditLogsTable, notificationsTable,
-  agreementAcceptancesTable, broadcastsTable,
+  agreementAcceptancesTable, broadcastsTable, copyrightConcernsTable,
 } from "@workspace/db";
 import {
   AdminListUsersQueryParams, AdminUpdateUserBody,
@@ -120,7 +120,7 @@ router.patch("/admin/users/:id/role", requireAuth, requireRole(...ADMIN_ROLES), 
 
 // ── Submissions ──────────────────────────────────────────────────────────
 
-router.get("/admin/submissions", requireAuth, requireRole(...ADMIN_ROLES, "moderator"), async (req: AuthRequest, res): Promise<void> => {
+router.get("/admin/submissions", requireAuth, requireRole(...ADMIN_ROLES, "moderator", "editor"), async (req: AuthRequest, res): Promise<void> => {
   const params = AdminListSubmissionsQueryParams.safeParse(req.query);
   if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
 
@@ -964,6 +964,108 @@ router.post("/admin/broadcast", requireAuth, requireRole(...ADMIN_ROLES), async 
   req.log.info({ broadcastId: broadcast.id, recipientCount: recipients.length }, "broadcast sent");
   res.status(201).json(broadcast);
 });
+
+// ── Copyright Concerns ────────────────────────────────────────────────────────
+
+router.post("/admin/copyright-concerns", requireAuth, requireRole(...ADMIN_ROLES, "moderator"), async (req: AuthRequest, res): Promise<void> => {
+  const { contentType, contentId, contentTitle, concern } = req.body as Record<string, unknown>;
+  if (!concern || typeof concern !== "string" || !concern.trim()) {
+    res.status(400).json({ error: "concern is required" }); return;
+  }
+  const [row] = await db.insert(copyrightConcernsTable).values({
+    reporterId: req.user!.userId,
+    contentType: contentType ? String(contentType) : null,
+    contentId: contentId ? Number(contentId) : null,
+    contentTitle: contentTitle ? String(contentTitle) : null,
+    concern: concern.trim(),
+  }).returning();
+
+  const admins = await db.select({ id: usersTable.id }).from(usersTable)
+    .where(or(eq(usersTable.role, "admin"), eq(usersTable.role, "master_admin")));
+  if (admins.length > 0) {
+    await db.insert(notificationsTable).values(admins.map(a => ({
+      userId: a.id,
+      type: "system",
+      title: "Copyright concern escalated",
+      message: `A moderator escalated a copyright concern${contentTitle ? ` about "${String(contentTitle)}"` : ""}. Review it in the admin panel.`,
+    })));
+  }
+  req.log.info({ concernId: row.id }, "copyright concern escalated");
+  res.status(201).json(row);
+});
+
+router.get("/admin/copyright-concerns", requireAuth, requireRole(...ADMIN_ROLES, "moderator"), async (req: AuthRequest, res): Promise<void> => {
+  const isAdmin = ADMIN_ROLES.includes(req.user!.role as "admin" | "master_admin");
+  const statusFilter = req.query.status ? String(req.query.status) : undefined;
+
+  const conditions: ReturnType<typeof eq>[] = [];
+  if (!isAdmin) conditions.push(eq(copyrightConcernsTable.reporterId, req.user!.userId));
+  if (statusFilter && statusFilter !== "all") conditions.push(eq(copyrightConcernsTable.status, statusFilter));
+
+  const rows = await db
+    .select({
+      id: copyrightConcernsTable.id,
+      reporterId: copyrightConcernsTable.reporterId,
+      contentType: copyrightConcernsTable.contentType,
+      contentId: copyrightConcernsTable.contentId,
+      contentTitle: copyrightConcernsTable.contentTitle,
+      concern: copyrightConcernsTable.concern,
+      status: copyrightConcernsTable.status,
+      adminNotes: copyrightConcernsTable.adminNotes,
+      reviewedBy: copyrightConcernsTable.reviewedBy,
+      reviewedAt: copyrightConcernsTable.reviewedAt,
+      strikeId: copyrightConcernsTable.strikeId,
+      createdAt: copyrightConcernsTable.createdAt,
+      reporterUsername: usersTable.username,
+    })
+    .from(copyrightConcernsTable)
+    .leftJoin(usersTable, eq(copyrightConcernsTable.reporterId, usersTable.id))
+    .where(conditions.length > 0 ? and(...conditions) : undefined)
+    .orderBy(desc(copyrightConcernsTable.createdAt));
+
+  res.json(rows);
+});
+
+router.patch("/admin/copyright-concerns/:id", requireAuth, requireRole(...ADMIN_ROLES), async (req: AuthRequest, res): Promise<void> => {
+  const id = parseInt(String(req.params["id"] ?? "0"), 10);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+
+  const { status, adminNotes } = req.body as Record<string, unknown>;
+  const validStatuses = ["dismissed", "strike_issued", "reviewed"];
+  if (!status || !validStatuses.includes(String(status))) {
+    res.status(400).json({ error: "status must be one of: dismissed | strike_issued | reviewed" }); return;
+  }
+
+  const [concern] = await db.select().from(copyrightConcernsTable).where(eq(copyrightConcernsTable.id, id)).limit(1);
+  if (!concern) { res.status(404).json({ error: "Concern not found" }); return; }
+
+  const [updated] = await db.update(copyrightConcernsTable)
+    .set({
+      status: String(status),
+      adminNotes: adminNotes ? String(adminNotes) : null,
+      reviewedBy: req.user!.userId,
+      reviewedAt: new Date(),
+    })
+    .where(eq(copyrightConcernsTable.id, id))
+    .returning();
+
+  const statusMessages: Record<string, string> = {
+    dismissed: "Your copyright concern was reviewed and dismissed by an admin.",
+    strike_issued: "Your escalated concern has been reviewed. An admin has decided to issue a copyright strike.",
+    reviewed: "Your copyright concern has been reviewed by an admin.",
+  };
+  await db.insert(notificationsTable).values({
+    userId: concern.reporterId,
+    type: "system",
+    title: "Copyright concern update",
+    message: statusMessages[String(status)] ?? "Your concern has been updated.",
+  });
+
+  req.log.info({ concernId: id, status }, "copyright concern resolved");
+  res.json(updated);
+});
+
+// ── Broadcasts ───────────────────────────────────────────────────────────────
 
 router.get("/admin/broadcasts", requireAuth, requireRole(...ADMIN_ROLES), async (_req, res): Promise<void> => {
   const rows = await db

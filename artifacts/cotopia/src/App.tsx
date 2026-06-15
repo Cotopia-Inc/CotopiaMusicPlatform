@@ -52,6 +52,8 @@ import EditorDashboard from "@/pages/editor-dashboard";
 import EditorPlaylists from "@/pages/editor-playlists";
 import EditorPicks from "@/pages/editor-picks";
 import ModeratorDashboard from "@/pages/moderator-dashboard";
+import ModeratorCopyrightConcerns from "@/pages/moderator-copyright-concerns";
+import AdminCopyrightConcerns from "@/pages/admin-copyright-concerns";
 import AdminBroadcast from "@/pages/admin-broadcast";
 import ArtistAnalytics from "@/pages/artist-analytics";
 import LabelAnalytics from "@/pages/label-analytics";
@@ -114,7 +116,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 const ADMIN_ROLES = ["admin", "master_admin"];
 const MASTER_ROLES = ["master_admin"];
-const MOD_ROLES = ["moderator", "editor", "admin", "master_admin"];
+const MOD_ROLES = ["moderator", "admin", "master_admin"];
 const EDITOR_ROLES = ["editor", "admin", "master_admin"];
 const ARTIST_ROLES = ["artist", "admin", "master_admin"];
 const LABEL_ROLES = ["label", "admin", "master_admin"];
@@ -346,6 +348,12 @@ function Router() {
       </Route>
       <Route path="/moderator/messages">
         <RoleRoute roles={MOD_ROLES}><AdminMessages /></RoleRoute>
+      </Route>
+      <Route path="/moderator/copyright-concerns">
+        <RoleRoute roles={MOD_ROLES}><ModeratorCopyrightConcerns /></RoleRoute>
+      </Route>
+      <Route path="/admin/copyright-concerns">
+        <RoleRoute roles={ADMIN_ROLES}><AdminCopyrightConcerns /></RoleRoute>
       </Route>
 
       {/* Artist + Label tools */}

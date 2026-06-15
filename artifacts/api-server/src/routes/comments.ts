@@ -19,7 +19,7 @@ router.delete("/comments/:id", requireAuth, async (req: AuthRequest, res): Promi
     return;
   }
 
-  const moderatorRoles = ["admin", "master_admin", "moderator", "editor"];
+  const moderatorRoles = ["admin", "master_admin", "moderator"];
   if (comment.userId !== req.user!.userId && !moderatorRoles.includes(req.user!.role)) {
     res.status(403).json({ error: "Forbidden" });
     return;
