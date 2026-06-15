@@ -10,6 +10,7 @@ import {
   RecordVideoViewParams, GetVideoCommentsParams, CreateVideoCommentParams,
   CreateVideoCommentBody, RateVideoParams, RateVideoBody,
 } from "@workspace/api-zod";
+import { isFeatureRotationEnabled, rotateFeatured, FEATURED_POOL_SIZE } from "../lib/featured";
 import { requireAuth, optionalAuth, type AuthRequest } from "../lib/auth";
 
 const router = Router();
@@ -137,9 +138,12 @@ router.get("/videos/featured", async (_req, res): Promise<void> => {
     .leftJoin(usersTable, eq(artistsTable.userId, usersTable.id))
     .where(and(eq(videosTable.isFeatured, true), eq(videosTable.status, "published")))
     .orderBy(desc(videosTable.createdAt))
-    .limit(6);
+    .limit(FEATURED_POOL_SIZE);
 
-  const withRatings = await Promise.all(videos.map(async (v) => {
+  const rotation = await isFeatureRotationEnabled();
+  const rotated = rotateFeatured(videos, 6, rotation);
+
+  const withRatings = await Promise.all(rotated.map(async (v) => {
     const [r] = await db.select({ avg: avg(ratingsTable.rating) }).from(ratingsTable)
       .where(and(eq(ratingsTable.contentType, "video"), eq(ratingsTable.contentId, v.id)));
     return { ...v, avgRating: r?.avg ? parseFloat(r.avg) : null };

@@ -852,6 +852,7 @@ export interface AppSettings {
   videoSubmissionFee?: number;
   maintenanceMode?: boolean;
   requireEmailVerification?: boolean;
+  featureRotation?: boolean;
 }
 
 export interface AppSettingsUpdate {
@@ -865,6 +866,35 @@ export interface AppSettingsUpdate {
   videoSubmissionFee?: number;
   maintenanceMode?: boolean;
   requireEmailVerification?: boolean;
+  featureRotation?: boolean;
+}
+
+export interface Broadcast {
+  id: number;
+  senderId: number;
+  title: string;
+  message: string;
+  excludedUserIds: number[];
+  recipientCount: number;
+  createdAt: string;
+  /** @nullable */
+  senderUsername?: string | null;
+  /** @nullable */
+  senderDisplayName?: string | null;
+}
+
+export interface BroadcastInput {
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  title: string;
+  /**
+     * @minLength 1
+     * @maxLength 2000
+     */
+  message: string;
+  excludedUserIds?: number[];
 }
 
 export interface ConversationUser {
@@ -923,6 +953,7 @@ export const NotificationType = {
   new_release: 'new_release',
   general: 'general',
   message: 'message',
+  announcement: 'announcement',
 } as const;
 
 export interface Notification {

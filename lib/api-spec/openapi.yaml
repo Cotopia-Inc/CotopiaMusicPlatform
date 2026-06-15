@@ -1890,6 +1890,40 @@ paths:
               schema:
                 $ref: "#/components/schemas/User"
 
+  /admin/broadcast:
+    post:
+      operationId: sendBroadcast
+      tags: [admin]
+      summary: Send a broadcast announcement to all users (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BroadcastInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Broadcast"
+
+  /admin/broadcasts:
+    get:
+      operationId: adminListBroadcasts
+      tags: [admin]
+      summary: List broadcast history (admin)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Broadcast"
+
   # ── Analytics Events ─────────────────────────────────────────────────────
   /analytics/events:
     post:
@@ -3533,6 +3567,8 @@ components:
           type: boolean
         requireEmailVerification:
           type: boolean
+        featureRotation:
+          type: boolean
 
     AppSettingsUpdate:
       type: object
@@ -3557,6 +3593,51 @@ components:
           type: boolean
         requireEmailVerification:
           type: boolean
+        featureRotation:
+          type: boolean
+
+    # ── Broadcasts ────────────────────────────────────────────────────────────
+    Broadcast:
+      type: object
+      required: [id, senderId, title, message, excludedUserIds, recipientCount, createdAt]
+      properties:
+        id:
+          type: integer
+        senderId:
+          type: integer
+        title:
+          type: string
+        message:
+          type: string
+        excludedUserIds:
+          type: array
+          items:
+            type: integer
+        recipientCount:
+          type: integer
+        createdAt:
+          type: string
+        senderUsername:
+          type: ["string", "null"]
+        senderDisplayName:
+          type: ["string", "null"]
+
+    BroadcastInput:
+      type: object
+      required: [title, message]
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        message:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        excludedUserIds:
+          type: array
+          items:
+            type: integer
 
     # ── Messages ──────────────────────────────────────────────────────────────
     ConversationUser:
@@ -3648,7 +3729,7 @@ components:
           type: integer
         type:
           type: string
-          enum: [submission_approved, submission_rejected, new_release, general, message]
+          enum: [submission_approved, submission_rejected, new_release, general, message, announcement]
         title:
           type: string
         message:

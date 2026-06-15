@@ -15,4 +15,5 @@ export const NotificationType = {
   new_release: 'new_release',
   general: 'general',
   message: 'message',
+  announcement: 'announcement',
 } as const;

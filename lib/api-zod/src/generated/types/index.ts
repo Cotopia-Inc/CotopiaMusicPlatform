@@ -43,6 +43,8 @@ export * from './artistAnalyticsRecentActivityItem';
 export * from './artistProfile';
 export * from './artistUpdate';
 export * from './authResponse';
+export * from './broadcast';
+export * from './broadcastInput';
 export * from './bulkSubmissionInput';
 export * from './bulkSubmissionInputFilesItem';
 export * from './bulkSubmissionInputPlan';

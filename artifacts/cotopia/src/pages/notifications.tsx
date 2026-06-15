@@ -16,6 +16,7 @@ import { formatDistanceToNow } from "date-fns";
 function typeIcon(type: string) {
   if (type === "submission_approved") return <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />;
   if (type === "submission_rejected") return <XCircle className="w-4 h-4 text-red-400 flex-shrink-0" />;
+  if (type === "announcement") return <Megaphone className="w-4 h-4 text-amber-400 flex-shrink-0" />;
   return <Megaphone className="w-4 h-4 text-primary flex-shrink-0" />;
 }
 

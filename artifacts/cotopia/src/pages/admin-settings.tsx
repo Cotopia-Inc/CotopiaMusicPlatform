@@ -40,6 +40,7 @@ export default function AdminSettings() {
     videoSubmissionFee: 0,
     maintenanceMode: false,
     requireEmailVerification: true,
+    featureRotation: true,
   });
 
   useEffect(() => {
@@ -52,6 +53,7 @@ export default function AdminSettings() {
         videoSubmissionFee: settings.videoSubmissionFee || 0,
         maintenanceMode: settings.maintenanceMode || false,
         requireEmailVerification: settings.requireEmailVerification ?? true,
+        featureRotation: settings.featureRotation ?? true,
       });
     }
   }, [settings]);
@@ -231,6 +233,17 @@ export default function AdminSettings() {
             <Switch
               checked={formData.requireEmailVerification}
               onCheckedChange={(checked) => setFormData({...formData, requireEmailVerification: checked})}
+            />
+          </div>
+
+          <div className="flex items-center justify-between p-4 bg-secondary/30 rounded-lg border border-border">
+            <div className="space-y-1">
+              <Label className="font-bold text-base">Featured Rotation</Label>
+              <p className="text-sm text-muted-foreground">Automatically rotate featured songs and videos across the home and discover pages over time. When off, the most recent featured items stay fixed.</p>
+            </div>
+            <Switch
+              checked={formData.featureRotation}
+              onCheckedChange={(checked) => setFormData({...formData, featureRotation: checked})}
             />
           </div>
         </div>

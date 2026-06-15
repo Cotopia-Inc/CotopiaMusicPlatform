@@ -224,6 +224,11 @@ router.get("/submissions/:id", requireAuth, async (req: AuthRequest, res): Promi
 });
 
 router.patch("/submissions/:id", requireAuth, async (req: AuthRequest, res): Promise<void> => {
+  const reviewerRoles = ["admin", "master_admin", "moderator"];
+  if (!reviewerRoles.includes(req.user!.role)) {
+    res.status(403).json({ error: "Forbidden" });
+    return;
+  }
   const params = UpdateSubmissionParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });

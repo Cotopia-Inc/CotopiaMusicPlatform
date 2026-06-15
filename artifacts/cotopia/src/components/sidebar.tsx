@@ -6,6 +6,7 @@ import {
   BarChart3, Upload, ListMusic, Shield, Mail, Sparkles,
   MessageSquare, FileText, Eye, BookOpen, MessageCircle,
   AlertOctagon, ScrollText, Scale, ShieldOff, Search, X,
+  Megaphone, ShieldCheck,
 } from "lucide-react";
 import { RoleBadges } from "@/components/role-badges";
 import { useAuth } from "@/lib/auth";
@@ -179,6 +180,7 @@ export function Sidebar() {
     { href: "/admin/videos", label: "Videos", icon: Video },
     { href: "/admin/comments", label: "Comments", icon: MessageSquare },
     { href: "/admin/messages", label: "DM Feed", icon: MessageCircle },
+    { href: "/admin/broadcast", label: "Broadcast", icon: Megaphone },
     { href: "/admin/dmca", label: "DMCA Claims", icon: AlertOctagon },
     { href: "/admin/strikes", label: "Copyright Strikes", icon: ShieldOff },
     { href: "/admin/settings", label: "Settings", icon: Settings },
@@ -188,6 +190,14 @@ export function Sidebar() {
     { href: "/editor", label: "Editor Dashboard", icon: BookOpen },
     { href: "/editor/playlists", label: "Editorial Playlists", icon: ListMusic },
     { href: "/admin/discover", label: "Discover Curation", icon: Sparkles },
+  ];
+
+  const moderationLinks = [
+    { href: "/moderator", label: "Mod Dashboard", icon: ShieldCheck },
+    { href: "/moderator/submissions", label: "Submissions", icon: FileText },
+    { href: "/moderator/comments", label: "Comments", icon: MessageSquare },
+    { href: "/moderator/messages", label: "DM Feed", icon: MessageCircle },
+    { href: "/moderator/strikes", label: "Copyright Strikes", icon: ShieldOff },
   ];
 
   const isActive = (href: string) =>
@@ -392,8 +402,35 @@ export function Sidebar() {
               </>
             )}
 
-            {/* Admin section */}
-            {(isAdmin || isMasterAdmin || isModerator) && (
+            {/* Moderation section — moderator only (admins use the Admin section) */}
+            {isModerator && (
+              <>
+                <div className="pt-4 pb-1">
+                  <p className="px-3 text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Moderation</p>
+                </div>
+                {moderationLinks.map((link) => {
+                  const Icon = link.icon;
+                  const active = isAdminActive(link.href);
+                  return (
+                    <Link key={link.href} href={link.href}>
+                      <Button
+                        variant={active ? "secondary" : "ghost"}
+                        className={cn(
+                          "w-full justify-start gap-3 text-sm h-9",
+                          active ? "font-semibold text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        <Icon className="w-4 h-4 flex-shrink-0" />
+                        {link.label}
+                      </Button>
+                    </Link>
+                  );
+                })}
+              </>
+            )}
+
+            {/* Admin section — admin + master_admin only */}
+            {isAdmin && (
               <>
                 <div className="pt-4 pb-1">
                   <div className="flex items-center gap-2 px-3">

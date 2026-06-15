@@ -51,6 +51,8 @@ import AdminStrikes from "@/pages/admin-strikes";
 import EditorDashboard from "@/pages/editor-dashboard";
 import EditorPlaylists from "@/pages/editor-playlists";
 import EditorPicks from "@/pages/editor-picks";
+import ModeratorDashboard from "@/pages/moderator-dashboard";
+import AdminBroadcast from "@/pages/admin-broadcast";
 import ArtistAnalytics from "@/pages/artist-analytics";
 import LabelAnalytics from "@/pages/label-analytics";
 import Contact from "@/pages/contact";
@@ -108,6 +110,38 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (!user) return null;
   if ((user as any).demographicsCompleted === false) return null;
   return <>{children}</>;
+}
+
+const ADMIN_ROLES = ["admin", "master_admin"];
+const MASTER_ROLES = ["master_admin"];
+const MOD_ROLES = ["moderator", "admin", "master_admin"];
+const EDITOR_ROLES = ["editor", "admin", "master_admin"];
+const ARTIST_ROLES = ["artist", "admin", "master_admin"];
+const LABEL_ROLES = ["label", "admin", "master_admin"];
+
+function RoleRoute({ roles, children }: { roles: string[]; children: React.ReactNode }) {
+  const { user, isLoading } = useAuth();
+  const [location, navigate] = useLocation();
+
+  useEffect(() => {
+    if (isLoading) return;
+    if (!user) { navigate("/login"); return; }
+    const demographicsCompleted = (user as any).demographicsCompleted;
+    if (demographicsCompleted === false && location !== "/onboarding") { navigate("/onboarding"); return; }
+    if (!roles.includes(user.role)) { navigate("/"); }
+  }, [user, isLoading, navigate, location, roles]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+  if (!user) return null;
+  if ((user as any).demographicsCompleted === false) return null;
+  if (!roles.includes(user.role)) return null;
+  return <Layout>{children}</Layout>;
 }
 
 function AuthRoute({ children }: { children: React.ReactNode }) {
@@ -224,88 +258,108 @@ function Router() {
       <Route path="/legal/submission-agreement" component={LegalSubmissionAgreement} />
       <Route path="/legal/copyright-complaint" component={LegalCopyrightComplaint} />
 
-      {/* Admin routes */}
+      {/* Admin routes — admin + master_admin only */}
       <Route path="/admin">
-        <ProtectedRoute><Layout><AdminDashboard /></Layout></ProtectedRoute>
+        <RoleRoute roles={ADMIN_ROLES}><AdminDashboard /></RoleRoute>
       </Route>
       <Route path="/admin/analytics">
-        <ProtectedRoute><Layout><AdminAnalytics /></Layout></ProtectedRoute>
+        <RoleRoute roles={ADMIN_ROLES}><AdminAnalytics /></RoleRoute>
       </Route>
       <Route path="/admin/users">
-        <ProtectedRoute><Layout><AdminUsers /></Layout></ProtectedRoute>
+        <RoleRoute roles={ADMIN_ROLES}><AdminUsers /></RoleRoute>
       </Route>
       <Route path="/admin/roles">
-        <ProtectedRoute><Layout><AdminRoles /></Layout></ProtectedRoute>
+        <RoleRoute roles={ADMIN_ROLES}><AdminRoles /></RoleRoute>
       </Route>
       <Route path="/admin/listeners">
-        <ProtectedRoute><Layout><AdminListeners /></Layout></ProtectedRoute>
+        <RoleRoute roles={ADMIN_ROLES}><AdminListeners /></RoleRoute>
       </Route>
       <Route path="/admin/upload-song">
-        <ProtectedRoute><Layout><AdminUploadSong /></Layout></ProtectedRoute>
+        <RoleRoute roles={ADMIN_ROLES}><AdminUploadSong /></RoleRoute>
       </Route>
       <Route path="/admin/upload-video">
-        <ProtectedRoute><Layout><AdminUploadVideo /></Layout></ProtectedRoute>
+        <RoleRoute roles={ADMIN_ROLES}><AdminUploadVideo /></RoleRoute>
       </Route>
       <Route path="/admin/submissions">
-        <ProtectedRoute><Layout><AdminSubmissions /></Layout></ProtectedRoute>
+        <RoleRoute roles={ADMIN_ROLES}><AdminSubmissions /></RoleRoute>
       </Route>
       <Route path="/admin/songs">
-        <ProtectedRoute><Layout><AdminSongs /></Layout></ProtectedRoute>
+        <RoleRoute roles={ADMIN_ROLES}><AdminSongs /></RoleRoute>
       </Route>
       <Route path="/admin/videos">
-        <ProtectedRoute><Layout><AdminVideos /></Layout></ProtectedRoute>
+        <RoleRoute roles={ADMIN_ROLES}><AdminVideos /></RoleRoute>
       </Route>
       <Route path="/admin/company">
-        <ProtectedRoute><Layout><AdminCompany /></Layout></ProtectedRoute>
+        <RoleRoute roles={ADMIN_ROLES}><AdminCompany /></RoleRoute>
       </Route>
       <Route path="/admin/comments">
-        <ProtectedRoute><Layout><AdminComments /></Layout></ProtectedRoute>
+        <RoleRoute roles={ADMIN_ROLES}><AdminComments /></RoleRoute>
       </Route>
       <Route path="/admin/messages">
-        <ProtectedRoute><Layout><AdminMessages /></Layout></ProtectedRoute>
+        <RoleRoute roles={ADMIN_ROLES}><AdminMessages /></RoleRoute>
+      </Route>
+      <Route path="/admin/broadcast">
+        <RoleRoute roles={ADMIN_ROLES}><AdminBroadcast /></RoleRoute>
       </Route>
       <Route path="/admin/settings">
-        <ProtectedRoute><Layout><AdminSettings /></Layout></ProtectedRoute>
+        <RoleRoute roles={ADMIN_ROLES}><AdminSettings /></RoleRoute>
       </Route>
       <Route path="/admin/dmca/:id">
-        <ProtectedRoute><Layout><AdminDmcaDetail /></Layout></ProtectedRoute>
+        <RoleRoute roles={ADMIN_ROLES}><AdminDmcaDetail /></RoleRoute>
       </Route>
       <Route path="/admin/dmca">
-        <ProtectedRoute><Layout><AdminDmca /></Layout></ProtectedRoute>
+        <RoleRoute roles={ADMIN_ROLES}><AdminDmca /></RoleRoute>
       </Route>
       <Route path="/admin/audit-logs">
-        <ProtectedRoute><Layout><AdminAuditLogs /></Layout></ProtectedRoute>
+        <RoleRoute roles={MASTER_ROLES}><AdminAuditLogs /></RoleRoute>
       </Route>
       <Route path="/admin/legal">
-        <ProtectedRoute><Layout><AdminLegal /></Layout></ProtectedRoute>
+        <RoleRoute roles={MASTER_ROLES}><AdminLegal /></RoleRoute>
       </Route>
       <Route path="/admin/strikes">
-        <ProtectedRoute><Layout><AdminStrikes /></Layout></ProtectedRoute>
+        <RoleRoute roles={ADMIN_ROLES}><AdminStrikes /></RoleRoute>
+      </Route>
+      <Route path="/admin/discover">
+        <RoleRoute roles={EDITOR_ROLES}><AdminDiscover /></RoleRoute>
       </Route>
 
-      {/* Editor routes */}
+      {/* Editor routes — editor + admin + master_admin */}
       <Route path="/editor">
-        <ProtectedRoute><Layout><EditorDashboard /></Layout></ProtectedRoute>
+        <RoleRoute roles={EDITOR_ROLES}><EditorDashboard /></RoleRoute>
       </Route>
       <Route path="/editor/playlists">
-        <ProtectedRoute><Layout><EditorPlaylists /></Layout></ProtectedRoute>
+        <RoleRoute roles={EDITOR_ROLES}><EditorPlaylists /></RoleRoute>
       </Route>
       <Route path="/editor/picks">
-        <ProtectedRoute><Layout><EditorPicks /></Layout></ProtectedRoute>
+        <RoleRoute roles={EDITOR_ROLES}><EditorPicks /></RoleRoute>
       </Route>
 
-      {/* Artist routes */}
+      {/* Moderator routes — moderator + admin + master_admin */}
+      <Route path="/moderator">
+        <RoleRoute roles={MOD_ROLES}><ModeratorDashboard /></RoleRoute>
+      </Route>
+      <Route path="/moderator/submissions">
+        <RoleRoute roles={MOD_ROLES}><AdminSubmissions /></RoleRoute>
+      </Route>
+      <Route path="/moderator/comments">
+        <RoleRoute roles={MOD_ROLES}><AdminComments /></RoleRoute>
+      </Route>
+      <Route path="/moderator/messages">
+        <RoleRoute roles={MOD_ROLES}><AdminMessages /></RoleRoute>
+      </Route>
+      <Route path="/moderator/strikes">
+        <RoleRoute roles={MOD_ROLES}><AdminStrikes /></RoleRoute>
+      </Route>
+
+      {/* Artist + Label tools */}
       <Route path="/artist/analytics">
-        <ProtectedRoute><Layout><ArtistAnalytics /></Layout></ProtectedRoute>
+        <RoleRoute roles={ARTIST_ROLES}><ArtistAnalytics /></RoleRoute>
       </Route>
       <Route path="/label/analytics">
-        <ProtectedRoute><Layout><LabelAnalytics /></Layout></ProtectedRoute>
+        <RoleRoute roles={LABEL_ROLES}><LabelAnalytics /></RoleRoute>
       </Route>
       <Route path="/contact">
         <ProtectedRoute><Layout><Contact /></Layout></ProtectedRoute>
-      </Route>
-      <Route path="/admin/discover">
-        <ProtectedRoute><Layout><AdminDiscover /></Layout></ProtectedRoute>
       </Route>
 
       <Route component={NotFound} />

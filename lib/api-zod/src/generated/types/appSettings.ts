@@ -23,4 +23,5 @@ export interface AppSettings {
   videoSubmissionFee?: number;
   maintenanceMode?: boolean;
   requireEmailVerification?: boolean;
+  featureRotation?: boolean;
 }

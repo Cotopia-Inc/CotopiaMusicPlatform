@@ -14,6 +14,7 @@ export const appSettingsTable = pgTable("app_settings", {
   videoSubmissionFee: text("video_submission_fee").notNull().default("19.99"),
   maintenanceMode: boolean("maintenance_mode").notNull().default(false),
   requireEmailVerification: boolean("require_email_verification").notNull().default(true),
+  featureRotation: boolean("feature_rotation").notNull().default(true),
   termsVersion: text("terms_version").default("1.0"),
   privacyVersion: text("privacy_version").default("1.0"),
   submissionAgreementVersion: text("submission_agreement_version").default("1.0"),

@@ -2224,7 +2224,8 @@ export const GetAppSettingsResponse = zod.object({
   "songSubmissionFee": zod.number().optional(),
   "videoSubmissionFee": zod.number().optional(),
   "maintenanceMode": zod.boolean().optional(),
-  "requireEmailVerification": zod.boolean().optional()
+  "requireEmailVerification": zod.boolean().optional(),
+  "featureRotation": zod.boolean().optional()
 })
 
 
@@ -2241,7 +2242,8 @@ export const UpdateAppSettingsBody = zod.object({
   "songSubmissionFee": zod.number().optional(),
   "videoSubmissionFee": zod.number().optional(),
   "maintenanceMode": zod.boolean().optional(),
-  "requireEmailVerification": zod.boolean().optional()
+  "requireEmailVerification": zod.boolean().optional(),
+  "featureRotation": zod.boolean().optional()
 })
 
 export const UpdateAppSettingsResponse = zod.object({
@@ -2255,7 +2257,8 @@ export const UpdateAppSettingsResponse = zod.object({
   "songSubmissionFee": zod.number().optional(),
   "videoSubmissionFee": zod.number().optional(),
   "maintenanceMode": zod.boolean().optional(),
-  "requireEmailVerification": zod.boolean().optional()
+  "requireEmailVerification": zod.boolean().optional(),
+  "featureRotation": zod.boolean().optional()
 })
 
 
@@ -2440,6 +2443,39 @@ export const AdminChangeUserRoleResponse = zod.object({
   "isSuspended": zod.boolean().optional(),
   "createdAt": zod.string()
 })
+
+
+/**
+ * @summary Send a broadcast announcement to all users (admin)
+ */
+export const sendBroadcastBodyTitleMax = 200;
+
+export const sendBroadcastBodyMessageMax = 2000;
+
+
+
+export const SendBroadcastBody = zod.object({
+  "title": zod.string().min(1).max(sendBroadcastBodyTitleMax),
+  "message": zod.string().min(1).max(sendBroadcastBodyMessageMax),
+  "excludedUserIds": zod.array(zod.number()).optional()
+})
+
+
+/**
+ * @summary List broadcast history (admin)
+ */
+export const AdminListBroadcastsResponseItem = zod.object({
+  "id": zod.number(),
+  "senderId": zod.number(),
+  "title": zod.string(),
+  "message": zod.string(),
+  "excludedUserIds": zod.array(zod.number()),
+  "recipientCount": zod.number(),
+  "createdAt": zod.string(),
+  "senderUsername": zod.string().nullish(),
+  "senderDisplayName": zod.string().nullish()
+})
+export const AdminListBroadcastsResponse = zod.array(AdminListBroadcastsResponseItem)
 
 
 /**
@@ -2672,7 +2708,7 @@ export const ListNotificationsQueryParams = zod.object({
 export const ListNotificationsResponseItem = zod.object({
   "id": zod.number(),
   "userId": zod.number(),
-  "type": zod.enum(['submission_approved', 'submission_rejected', 'new_release', 'general', 'message']),
+  "type": zod.enum(['submission_approved', 'submission_rejected', 'new_release', 'general', 'message', 'announcement']),
   "title": zod.string(),
   "message": zod.string(),
   "isRead": zod.boolean(),
@@ -2708,7 +2744,7 @@ export const MarkNotificationReadParams = zod.object({
 export const MarkNotificationReadResponse = zod.object({
   "id": zod.number(),
   "userId": zod.number(),
-  "type": zod.enum(['submission_approved', 'submission_rejected', 'new_release', 'general', 'message']),
+  "type": zod.enum(['submission_approved', 'submission_rejected', 'new_release', 'general', 'message', 'announcement']),
   "title": zod.string(),
   "message": zod.string(),
   "isRead": zod.boolean(),

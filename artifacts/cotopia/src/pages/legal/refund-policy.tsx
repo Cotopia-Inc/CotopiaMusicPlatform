@@ -38,13 +38,13 @@ export default function RefundPolicy() {
       <Section title="1. Submission Fees">
         <p>Submission fees are charged to cover the cost of review, processing, and platform hosting services associated with your content batch.</p>
         <p><strong className="text-foreground">Submission fees are non-refundable once review has begun.</strong> Review begins immediately or within 24 hours of successful payment capture.</p>
-        <p>In the event of a technical payment error that results in a double charge, please contact us within 7 days at <a href="mailto:legal@cotopia.org" className="text-primary hover:underline">legal@cotopia.org</a> and we will investigate and issue a correction where verified.</p>
+        <p>In the event of a technical payment error that results in a double charge, please contact us within 7 days at <a href="mailto:support@cotopia.org" className="text-primary hover:underline">support@cotopia.org</a> and we will investigate and issue a correction where verified.</p>
       </Section>
 
       <Section title="2. Promotion Fees">
         <p>Promotion fees are charged for campaign services including featured placement, radio scheduling, social media spotlights, and related promotional activities.</p>
         <p><strong className="text-foreground">Promotion fees are non-refundable once campaign work has begun.</strong> Campaign work begins within the timeframe specified in your promotion package.</p>
-        <p>If your campaign has not yet started, please contact us at <a href="mailto:legal@cotopia.org" className="text-primary hover:underline">legal@cotopia.org</a> within 24 hours of payment to request a cancellation review.</p>
+        <p>If your campaign has not yet started, please contact us at <a href="mailto:support@cotopia.org" className="text-primary hover:underline">support@cotopia.org</a> within 24 hours of payment to request a cancellation review.</p>
       </Section>
 
       <Section title="3. Rejected Submissions">
@@ -61,16 +61,16 @@ export default function RefundPolicy() {
           <li>Loss of all platform access and any approved content</li>
           <li>Referral to collections or legal action</li>
         </ul>
-        <p>If you believe a charge was made in error, contact us at <a href="mailto:legal@cotopia.org" className="text-primary hover:underline">legal@cotopia.org</a> before filing a dispute with your payment provider.</p>
+        <p>If you believe a charge was made in error, contact us at <a href="mailto:support@cotopia.org" className="text-primary hover:underline">support@cotopia.org</a> before filing a dispute with your payment provider.</p>
       </Section>
 
       <Section title="5. Contact for Billing Issues">
-        <p>For all billing inquiries, potential errors, or refund requests, contact us at <a href="mailto:legal@cotopia.org" className="text-primary hover:underline">legal@cotopia.org</a> with your account email, transaction reference, and a description of the issue.</p>
+        <p>For all billing inquiries, potential errors, or refund requests, contact us at <a href="mailto:support@cotopia.org" className="text-primary hover:underline">support@cotopia.org</a> with your account email, transaction reference, and a description of the issue.</p>
         <p>We aim to respond to billing inquiries within 3 business days.</p>
       </Section>
 
       <div className="pt-4 border-t border-border">
-        <p className="text-xs text-muted-foreground">Billing questions: <a href="mailto:legal@cotopia.org" className="text-primary hover:underline">legal@cotopia.org</a></p>
+        <p className="text-xs text-muted-foreground">Billing questions: <a href="mailto:support@cotopia.org" className="text-primary hover:underline">support@cotopia.org</a></p>
       </div>
     </div>
   );

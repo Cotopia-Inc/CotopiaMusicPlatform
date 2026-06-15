@@ -1,18 +1,18 @@
 import { Router } from "express";
-import { eq, desc, ilike, and, count, avg, sql, or } from "drizzle-orm";
+import { eq, desc, ilike, and, count, avg, sql, or, notInArray } from "drizzle-orm";
 import {
   db, usersTable, submissionsTable, songsTable, videosTable, artistsTable,
   labelsTable, albumsTable, commentsTable, ratingsTable, analyticsEventsTable,
   appSettingsTable, followsTable, chatMessagesTable, favoritesTable,
   playlistsTable, playlistItemsTable, conversationsTable, directMessagesTable,
   dmcaClaimsTable, copyrightStrikesTable, adminAuditLogsTable, notificationsTable,
-  agreementAcceptancesTable,
+  agreementAcceptancesTable, broadcastsTable,
 } from "@workspace/db";
 import {
   AdminListUsersQueryParams, AdminUpdateUserBody,
   AdminListSubmissionsQueryParams, UpdateAppSettingsBody,
   AdminUploadSongBody, AdminUploadVideoBody, AdminChangeUserRoleBody,
-  AdminBulkUploadSongsBody, AdminBulkUploadVideosBody,
+  AdminBulkUploadSongsBody, AdminBulkUploadVideosBody, SendBroadcastBody,
 } from "@workspace/api-zod";
 import { requireAuth, requireRole, type AuthRequest } from "../lib/auth";
 
@@ -22,7 +22,7 @@ const ADMIN_ROLES = ["admin", "master_admin"] as const;
 
 // ── Users ─────────────────────────────────────────────────────────────────
 
-router.get("/admin/users", requireAuth, requireRole(...ADMIN_ROLES, "moderator"), async (req: AuthRequest, res): Promise<void> => {
+router.get("/admin/users", requireAuth, requireRole(...ADMIN_ROLES), async (req: AuthRequest, res): Promise<void> => {
   const params = AdminListUsersQueryParams.safeParse(req.query);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -917,6 +917,71 @@ router.get("/admin/users/:id/agreements", requireAuth, requireRole(...ADMIN_ROLE
     .orderBy(desc(agreementAcceptancesTable.acceptedAt));
 
   res.json(records);
+});
+
+// ── Broadcasts / PA announcements (admin) ──────────────────────────────────
+router.post("/admin/broadcast", requireAuth, requireRole(...ADMIN_ROLES), async (req: AuthRequest, res): Promise<void> => {
+  const parsed = SendBroadcastBody.safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+
+  const senderId = req.user!.userId;
+  const requestedExclusions = parsed.data.excludedUserIds ?? [];
+  // Always exclude the sender so admins don't notify themselves.
+  const excluded = Array.from(new Set([...requestedExclusions, senderId]));
+
+  const conditions = [eq(usersTable.isActive, true)];
+  if (excluded.length) conditions.push(notInArray(usersTable.id, excluded));
+
+  const recipients = await db
+    .select({ id: usersTable.id })
+    .from(usersTable)
+    .where(and(...conditions));
+
+  // Deliver notifications and record history atomically so we never end up
+  // with delivered announcements that have no corresponding history row.
+  const broadcast = await db.transaction(async (tx) => {
+    if (recipients.length > 0) {
+      await tx.insert(notificationsTable).values(
+        recipients.map((r) => ({
+          userId: r.id,
+          type: "announcement",
+          title: parsed.data.title,
+          message: parsed.data.message,
+        }))
+      );
+    }
+
+    const [row] = await tx.insert(broadcastsTable).values({
+      senderId,
+      title: parsed.data.title,
+      message: parsed.data.message,
+      excludedUserIds: requestedExclusions,
+      recipientCount: recipients.length,
+    }).returning();
+    return row;
+  });
+
+  req.log.info({ broadcastId: broadcast.id, recipientCount: recipients.length }, "broadcast sent");
+  res.status(201).json(broadcast);
+});
+
+router.get("/admin/broadcasts", requireAuth, requireRole(...ADMIN_ROLES), async (_req, res): Promise<void> => {
+  const rows = await db
+    .select({
+      id: broadcastsTable.id,
+      senderId: broadcastsTable.senderId,
+      title: broadcastsTable.title,
+      message: broadcastsTable.message,
+      excludedUserIds: broadcastsTable.excludedUserIds,
+      recipientCount: broadcastsTable.recipientCount,
+      createdAt: broadcastsTable.createdAt,
+      senderUsername: usersTable.username,
+      senderDisplayName: usersTable.displayName,
+    })
+    .from(broadcastsTable)
+    .leftJoin(usersTable, eq(broadcastsTable.senderId, usersTable.id))
+    .orderBy(desc(broadcastsTable.createdAt));
+  res.json(rows);
 });
 
 export default router;

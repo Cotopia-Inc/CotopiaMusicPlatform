@@ -10,6 +10,7 @@ import {
   RecordSongPlayParams, GetSongCommentsParams, CreateSongCommentParams,
   CreateSongCommentBody, RateSongParams, RateSongBody,
 } from "@workspace/api-zod";
+import { isFeatureRotationEnabled, rotateFeatured, FEATURED_POOL_SIZE } from "../lib/featured";
 import { requireAuth, optionalAuth, type AuthRequest } from "../lib/auth";
 
 const router = Router();
@@ -171,9 +172,12 @@ router.get("/songs/featured", async (_req, res): Promise<void> => {
     .leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id))
     .where(and(eq(songsTable.isFeatured, true), eq(songsTable.status, "published")))
     .orderBy(desc(songsTable.createdAt))
-    .limit(8);
+    .limit(FEATURED_POOL_SIZE);
 
-  const withRatings = await Promise.all(songs.map(async (s) => {
+  const rotation = await isFeatureRotationEnabled();
+  const rotated = rotateFeatured(songs, 8, rotation);
+
+  const withRatings = await Promise.all(rotated.map(async (s) => {
     const [r] = await db.select({ avg: avg(ratingsTable.rating) }).from(ratingsTable)
       .where(and(eq(ratingsTable.contentType, "song"), eq(ratingsTable.contentId, s.id)));
     return { ...s, avgRating: r?.avg ? parseFloat(r.avg) : null };
