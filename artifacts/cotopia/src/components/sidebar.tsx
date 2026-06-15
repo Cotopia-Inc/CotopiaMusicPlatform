@@ -197,7 +197,6 @@ export function Sidebar() {
     { href: "/moderator/submissions", label: "Submissions", icon: FileText },
     { href: "/moderator/comments", label: "Comments", icon: MessageSquare },
     { href: "/moderator/messages", label: "DM Feed", icon: MessageCircle },
-    { href: "/moderator/strikes", label: "Copyright Strikes", icon: ShieldOff },
   ];
 
   const isActive = (href: string) =>
@@ -402,8 +401,8 @@ export function Sidebar() {
               </>
             )}
 
-            {/* Moderation section — moderator only (admins use the Admin section) */}
-            {isModerator && (
+            {/* Moderation section — moderator + editor (admins use the Admin section) */}
+            {(isModerator || isEditor) && (
               <>
                 <div className="pt-4 pb-1">
                   <p className="px-3 text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Moderation</p>

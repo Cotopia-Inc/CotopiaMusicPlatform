@@ -707,7 +707,7 @@ router.patch("/admin/legal-settings", requireAuth, requireRole("master_admin"), 
 
 // ── Copyright Strikes ─────────────────────────────────────────────────────────
 
-router.get("/admin/strikes", requireAuth, requireRole(...ADMIN_ROLES, "moderator"), async (req: AuthRequest, res): Promise<void> => {
+router.get("/admin/strikes", requireAuth, requireRole(...ADMIN_ROLES), async (req: AuthRequest, res): Promise<void> => {
   const limit = Math.min(Number(req.query.limit ?? 50), 100);
   const offset = Number(req.query.offset ?? 0);
   const userId = req.query.userId ? Number(req.query.userId) : undefined;
@@ -748,7 +748,7 @@ router.get("/admin/strikes", requireAuth, requireRole(...ADMIN_ROLES, "moderator
   res.json({ items: strikes, total: totalRow?.count ?? 0 });
 });
 
-router.post("/admin/strikes", requireAuth, requireRole(...ADMIN_ROLES, "moderator"), async (req: AuthRequest, res): Promise<void> => {
+router.post("/admin/strikes", requireAuth, requireRole(...ADMIN_ROLES), async (req: AuthRequest, res): Promise<void> => {
   const { userId, contentType, contentId, contentTitle, strikeReason, internalNotes, dmcaClaimId } = req.body as Record<string, unknown>;
 
   if (!contentType || !strikeReason) {
@@ -836,7 +836,7 @@ router.post("/admin/strikes", requireAuth, requireRole(...ADMIN_ROLES, "moderato
   res.status(201).json({ strike, activeStrikeCount: activeCount });
 });
 
-router.patch("/admin/strikes/:id/resolve", requireAuth, requireRole(...ADMIN_ROLES, "moderator"), async (req: AuthRequest, res): Promise<void> => {
+router.patch("/admin/strikes/:id/resolve", requireAuth, requireRole(...ADMIN_ROLES), async (req: AuthRequest, res): Promise<void> => {
   const id = parseInt(String(req.params["id"] ?? "0"), 10);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
 
@@ -863,7 +863,7 @@ router.patch("/admin/strikes/:id/resolve", requireAuth, requireRole(...ADMIN_ROL
   res.json(strike);
 });
 
-router.get("/admin/users/:id/strikes", requireAuth, requireRole(...ADMIN_ROLES, "moderator"), async (req: AuthRequest, res): Promise<void> => {
+router.get("/admin/users/:id/strikes", requireAuth, requireRole(...ADMIN_ROLES), async (req: AuthRequest, res): Promise<void> => {
   const idRaw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const id = parseInt(idRaw, 10);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }

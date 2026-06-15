@@ -114,7 +114,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 const ADMIN_ROLES = ["admin", "master_admin"];
 const MASTER_ROLES = ["master_admin"];
-const MOD_ROLES = ["moderator", "admin", "master_admin"];
+const MOD_ROLES = ["moderator", "editor", "admin", "master_admin"];
 const EDITOR_ROLES = ["editor", "admin", "master_admin"];
 const ARTIST_ROLES = ["artist", "admin", "master_admin"];
 const LABEL_ROLES = ["label", "admin", "master_admin"];
@@ -347,9 +347,6 @@ function Router() {
       <Route path="/moderator/messages">
         <RoleRoute roles={MOD_ROLES}><AdminMessages /></RoleRoute>
       </Route>
-      <Route path="/moderator/strikes">
-        <RoleRoute roles={MOD_ROLES}><AdminStrikes /></RoleRoute>
-      </Route>
 
       {/* Artist + Label tools */}
       <Route path="/artist/analytics">
@@ -359,7 +356,7 @@ function Router() {
         <RoleRoute roles={LABEL_ROLES}><LabelAnalytics /></RoleRoute>
       </Route>
       <Route path="/contact">
-        <ProtectedRoute><Layout><Contact /></Layout></ProtectedRoute>
+        <Layout><Contact /></Layout>
       </Route>
 
       <Route component={NotFound} />

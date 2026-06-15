@@ -224,7 +224,7 @@ router.get("/submissions/:id", requireAuth, async (req: AuthRequest, res): Promi
 });
 
 router.patch("/submissions/:id", requireAuth, async (req: AuthRequest, res): Promise<void> => {
-  const reviewerRoles = ["admin", "master_admin", "moderator"];
+  const reviewerRoles = ["admin", "master_admin", "moderator", "editor"];
   if (!reviewerRoles.includes(req.user!.role)) {
     res.status(403).json({ error: "Forbidden" });
     return;
