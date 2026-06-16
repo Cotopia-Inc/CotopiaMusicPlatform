@@ -164,18 +164,20 @@ router.get("/artists/:id", optionalAuth, async (req: AuthRequest, res): Promise<
   }
 
   const songs = await db
-    .select({ id: songsTable.id, title: songsTable.title, artistId: songsTable.artistId, artistName: artistsTable.stageName, albumId: songsTable.albumId, albumName: albumsTable.title, genre: songsTable.genre, duration: songsTable.duration, coverUrl: songsTable.coverUrl, streamUrl: songsTable.streamUrl, playCount: songsTable.playCount, status: songsTable.status, createdAt: songsTable.createdAt })
+    .select({ id: songsTable.id, title: songsTable.title, artistId: songsTable.artistId, artistName: artistsTable.stageName, artistUserRole: usersTable.role, artistIsVerified: usersTable.isVerified, albumId: songsTable.albumId, albumName: albumsTable.title, genre: songsTable.genre, duration: songsTable.duration, coverUrl: songsTable.coverUrl, streamUrl: songsTable.streamUrl, playCount: songsTable.playCount, status: songsTable.status, createdAt: songsTable.createdAt })
     .from(songsTable)
     .leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id))
+    .leftJoin(usersTable, eq(artistsTable.userId, usersTable.id))
     .leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id))
     .where(and(eq(songsTable.artistId, params.data.id), eq(songsTable.status, "published")))
     .orderBy(desc(songsTable.createdAt))
     .limit(10);
 
   const videos = await db
-    .select({ id: videosTable.id, title: videosTable.title, artistId: videosTable.artistId, artistName: artistsTable.stageName, genre: videosTable.genre, duration: videosTable.duration, thumbnailUrl: videosTable.thumbnailUrl, videoUrl: videosTable.videoUrl, viewCount: videosTable.viewCount, status: videosTable.status, createdAt: videosTable.createdAt })
+    .select({ id: videosTable.id, title: videosTable.title, artistId: videosTable.artistId, artistName: artistsTable.stageName, artistUserRole: usersTable.role, artistIsVerified: usersTable.isVerified, genre: videosTable.genre, duration: videosTable.duration, thumbnailUrl: videosTable.thumbnailUrl, videoUrl: videosTable.videoUrl, viewCount: videosTable.viewCount, status: videosTable.status, createdAt: videosTable.createdAt })
     .from(videosTable)
     .leftJoin(artistsTable, eq(videosTable.artistId, artistsTable.id))
+    .leftJoin(usersTable, eq(artistsTable.userId, usersTable.id))
     .where(and(eq(videosTable.artistId, params.data.id), eq(videosTable.status, "published")))
     .orderBy(desc(videosTable.createdAt))
     .limit(10);

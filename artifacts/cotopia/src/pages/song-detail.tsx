@@ -255,7 +255,7 @@ export default function SongDetail() {
             size="icon"
             className="w-14 h-14 rounded-full bg-primary text-primary-foreground hover:scale-105 transition-transform shadow-lg shadow-primary/30"
             title={isThisSongPlaying ? `Pause ${song.title}` : `Play ${song.title}`}
-            onClick={() => song && playerPlay({ id: song.id, title: song.title, artistName: song.artistName ?? "", coverUrl: song.coverUrl, streamUrl: song.streamUrl, duration: song.duration, isFavorited })}
+            onClick={() => song && playerPlay({ id: song.id, title: song.title, artistName: song.artistName ?? "", artistId: song.artistId, artistUserRole: (song as any).artistUserRole ?? null, artistIsVerified: (song as any).artistIsVerified ?? false, coverUrl: song.coverUrl, streamUrl: song.streamUrl, duration: song.duration, isFavorited })}
           >
             {isThisSongPlaying
               ? <Pause className="w-6 h-6 fill-current" />

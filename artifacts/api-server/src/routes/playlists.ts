@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { eq, desc, and, count } from "drizzle-orm";
-import { db, playlistsTable, playlistItemsTable, songsTable, artistsTable, albumsTable, ratingsTable } from "@workspace/db";
+import { db, playlistsTable, playlistItemsTable, songsTable, artistsTable, albumsTable, ratingsTable, usersTable } from "@workspace/db";
 import {
   GetPlaylistParams, UpdatePlaylistParams, UpdatePlaylistBody, DeletePlaylistParams,
   CreatePlaylistBody, AddSongToPlaylistParams, AddSongToPlaylistBody,
@@ -58,6 +58,7 @@ router.get("/playlists/:id", requireAuth, async (req: AuthRequest, res): Promise
       title: songsTable.title,
       artistId: songsTable.artistId,
       artistName: artistsTable.stageName,
+      artistUserRole: usersTable.role,
       albumId: songsTable.albumId,
       albumName: albumsTable.title,
       genre: songsTable.genre,
@@ -71,6 +72,7 @@ router.get("/playlists/:id", requireAuth, async (req: AuthRequest, res): Promise
     .from(playlistItemsTable)
     .leftJoin(songsTable, eq(playlistItemsTable.songId, songsTable.id))
     .leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id))
+    .leftJoin(usersTable, eq(artistsTable.userId, usersTable.id))
     .leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id))
     .where(eq(playlistItemsTable.playlistId, params.data.id))
     .orderBy(playlistItemsTable.position);

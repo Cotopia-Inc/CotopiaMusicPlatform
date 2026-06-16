@@ -8,6 +8,7 @@ import { Slider } from "@/components/ui/slider";
 import { usePlayer, formatDuration } from "@/lib/player";
 import { useAuth } from "@/lib/auth";
 import { UserLink } from "@/components/user-link";
+import { RoleBadges } from "@/components/role-badges";
 import {
   useFavoriteSong, useUnfavoriteSong, getGetSongQueryKey, useTrackAnalyticsEvent,
   useRecordSongPlay, useRecordVideoView,
@@ -634,7 +635,7 @@ export function Player() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className={`text-sm font-medium truncate ${isActive ? "text-primary" : ""}`}>{t.title}</p>
-                          <p className="text-xs text-muted-foreground truncate">{t.artistName}</p>
+                          <p className="text-xs text-muted-foreground truncate inline-flex items-center gap-0.5">{t.artistName}<RoleBadges role={t.artistUserRole} size="sm" isVerified={t.artistIsVerified ?? false} /></p>
                         </div>
                         <span className="text-xs text-muted-foreground tabular-nums flex-shrink-0">
                           {formatDuration(t.duration ?? 0)}
