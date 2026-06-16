@@ -66,11 +66,14 @@ router.get("/artists", optionalAuth, async (req: AuthRequest, res): Promise<void
   }
   const { q, limit = 20, offset = 0 } = params.data;
 
-  // Only return profiles tied to actual artist-role accounts
-  const roleCondition = eq(usersTable.role, "artist");
-  const conditions = q
-    ? [roleCondition, ilike(artistsTable.stageName, `%${q}%`)]
-    : [roleCondition];
+  // Admin/editor upload forms need ALL artist profiles (including admin-owned ones).
+  // Public listing only shows profiles tied to actual artist-role accounts.
+  const isAdminOrEditor = req.user && ["admin", "master_admin", "editor"].includes(req.user.role);
+  const roleCondition = isAdminOrEditor ? undefined : eq(usersTable.role, "artist");
+
+  const baseConditions = [];
+  if (roleCondition) baseConditions.push(roleCondition);
+  if (q) baseConditions.push(ilike(artistsTable.stageName, `%${q}%`));
 
   const artists = await db
     .select({
@@ -87,14 +90,14 @@ router.get("/artists", optionalAuth, async (req: AuthRequest, res): Promise<void
     })
     .from(artistsTable)
     .innerJoin(usersTable, eq(artistsTable.userId, usersTable.id))
-    .where(and(...conditions))
+    .where(baseConditions.length ? and(...baseConditions) : undefined)
     .orderBy(desc(artistsTable.createdAt))
-    .limit(limit * 10) // over-fetch to allow deduplication
+    .limit(limit)
     .offset(offset);
 
-  // Deduplicate — multiple artist records per user can exist after seed re-runs
+  // Deduplicate — guard against any stale duplicate artist records per user
   const seen = new Set<number>();
-  const unique = artists.filter(a => { if (seen.has(a.userId)) return false; seen.add(a.userId); return true; }).slice(0, limit);
+  const unique = artists.filter(a => { if (seen.has(a.userId)) return false; seen.add(a.userId); return true; });
 
   const withCounts = await Promise.all(unique.map(async (a) => {
     const [fc] = await db.select({ count: count() }).from(followsTable)
