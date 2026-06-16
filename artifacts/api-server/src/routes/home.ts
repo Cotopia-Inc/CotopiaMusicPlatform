@@ -14,6 +14,7 @@ router.get("/home", async (_req, res): Promise<void> => {
     coverUrl: songsTable.coverUrl, streamUrl: songsTable.streamUrl, isFeatured: songsTable.isFeatured,
     playCount: songsTable.playCount, status: songsTable.status, createdAt: songsTable.createdAt,
     artistIsVerified: usersTable.isVerified,
+      artistUserRole: usersTable.role,
   };
 
   const videoSelect = {
@@ -22,6 +23,7 @@ router.get("/home", async (_req, res): Promise<void> => {
     thumbnailUrl: videosTable.thumbnailUrl, videoUrl: videosTable.videoUrl, isFeatured: videosTable.isFeatured,
     viewCount: videosTable.viewCount, status: videosTable.status, createdAt: videosTable.createdAt,
     artistIsVerified: usersTable.isVerified,
+      artistUserRole: usersTable.role,
   };
 
   const [featuredSongs, featuredVideos, trendingSongs, newReleases] = await Promise.all([
@@ -89,6 +91,7 @@ router.get("/home", async (_req, res): Promise<void> => {
         playCount: songsTable.playCount, status: songsTable.status,
         isFeatured: songsTable.isFeatured, createdAt: songsTable.createdAt,
         artistIsVerified: usersTable.isVerified,
+      artistUserRole: usersTable.role,
       }).from(songsTable)
         .leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id))
         .leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id))
@@ -103,6 +106,7 @@ router.get("/home", async (_req, res): Promise<void> => {
         viewCount: videosTable.viewCount, status: videosTable.status,
         isFeatured: videosTable.isFeatured, createdAt: videosTable.createdAt,
         artistIsVerified: usersTable.isVerified,
+      artistUserRole: usersTable.role,
       }).from(videosTable)
         .leftJoin(artistsTable, eq(videosTable.artistId, artistsTable.id))
         .leftJoin(usersTable, eq(artistsTable.userId, usersTable.id))

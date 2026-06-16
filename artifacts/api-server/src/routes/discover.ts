@@ -13,6 +13,7 @@ router.get("/discover", async (_req, res): Promise<void> => {
     coverUrl: songsTable.coverUrl, streamUrl: songsTable.streamUrl,
     playCount: songsTable.playCount, status: songsTable.status, createdAt: songsTable.createdAt,
     artistIsVerified: usersTable.isVerified,
+      artistUserRole: usersTable.role,
   };
 
   const videoSelect = {
@@ -21,6 +22,7 @@ router.get("/discover", async (_req, res): Promise<void> => {
     thumbnailUrl: videosTable.thumbnailUrl, videoUrl: videosTable.videoUrl,
     viewCount: videosTable.viewCount, status: videosTable.status, createdAt: videosTable.createdAt,
     artistIsVerified: usersTable.isVerified,
+      artistUserRole: usersTable.role,
   };
 
   const [trendingSongs, trendingVideos, featuredSongs, featuredVideos] = await Promise.all([

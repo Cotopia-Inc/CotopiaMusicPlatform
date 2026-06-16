@@ -35,6 +35,7 @@ async function expandPick(pick: typeof editorPicksTable.$inferSelect, editorUser
         playCount: songsTable.playCount, status: songsTable.status,
         isFeatured: songsTable.isFeatured, createdAt: songsTable.createdAt,
         artistIsVerified: usersTable.isVerified,
+      artistUserRole: usersTable.role,
       })
       .from(songsTable)
       .leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id))
@@ -52,6 +53,7 @@ async function expandPick(pick: typeof editorPicksTable.$inferSelect, editorUser
         viewCount: videosTable.viewCount, status: videosTable.status,
         isFeatured: videosTable.isFeatured, createdAt: videosTable.createdAt,
         artistIsVerified: usersTable.isVerified,
+      artistUserRole: usersTable.role,
       })
       .from(videosTable)
       .leftJoin(artistsTable, eq(videosTable.artistId, artistsTable.id))
