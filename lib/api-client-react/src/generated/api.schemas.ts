@@ -1019,7 +1019,8 @@ export const AdminUploadSongInputReleaseType = {
 
 export interface AdminUploadSongInput {
   title: string;
-  artistId: number;
+  userId?: number;
+  artistId?: number;
   albumId?: number;
   genre?: string;
   duration?: number;
@@ -1048,7 +1049,8 @@ export type AdminBulkUploadSongsInputSongsItem = {
 };
 
 export interface AdminBulkUploadSongsInput {
-  artistId: number;
+  userId?: number;
+  artistId?: number;
   releaseName?: string;
   releaseType?: AdminBulkUploadSongsInputReleaseType;
   genre?: string;
@@ -1060,7 +1062,8 @@ export interface AdminBulkUploadSongsInput {
 
 export interface AdminUploadVideoInput {
   title: string;
-  artistId: number;
+  userId?: number;
+  artistId?: number;
   genre?: string;
   description?: string;
   duration?: number;
@@ -1079,7 +1082,8 @@ export type AdminBulkUploadVideosInputVideosItem = {
 };
 
 export interface AdminBulkUploadVideosInput {
-  artistId: number;
+  userId?: number;
+  artistId?: number;
   genre?: string;
   description?: string;
   thumbnailUrl?: string;
@@ -1281,6 +1285,21 @@ export interface AgreementRecord {
   /** @nullable */
   paymentId?: number | null;
   metadata?: unknown | null;
+}
+
+export interface UploadAccount {
+  userId: number;
+  username: string;
+  /** @nullable */
+  displayName?: string | null;
+  email?: string;
+  role: string;
+  /** @nullable */
+  avatarUrl?: string | null;
+  /** @nullable */
+  artistId?: number | null;
+  /** @nullable */
+  artistStageName?: string | null;
 }
 
 export interface CeoMessageInput {

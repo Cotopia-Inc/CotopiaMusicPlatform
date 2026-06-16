@@ -142,6 +142,7 @@ export * from './submissionStatus';
 export * from './submissionType';
 export * from './submissionUpdate';
 export * from './submissionUpdateStatus';
+export * from './uploadAccount';
 export * from './uploadUrlRequest';
 export * from './uploadUrlResponse';
 export * from './user';

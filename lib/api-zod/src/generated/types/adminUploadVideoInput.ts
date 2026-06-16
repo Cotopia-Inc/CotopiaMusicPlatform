@@ -8,7 +8,8 @@
 
 export interface AdminUploadVideoInput {
   title: string;
-  artistId: number;
+  userId?: number;
+  artistId?: number;
   genre?: string;
   description?: string;
   duration?: number;

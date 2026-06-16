@@ -8,7 +8,8 @@
 import type { AdminBulkUploadVideosInputVideosItem } from './adminBulkUploadVideosInputVideosItem';
 
 export interface AdminBulkUploadVideosInput {
-  artistId: number;
+  userId?: number;
+  artistId?: number;
   genre?: string;
   description?: string;
   thumbnailUrl?: string;

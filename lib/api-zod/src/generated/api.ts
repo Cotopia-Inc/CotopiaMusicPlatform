@@ -2098,6 +2098,22 @@ export const SetCeoMessageResponse = zod.object({
 
 
 /**
+ * @summary List all user accounts available for admin upload (all roles)
+ */
+export const AdminGetUploadAccountsResponseItem = zod.object({
+  "userId": zod.number(),
+  "username": zod.string(),
+  "displayName": zod.string().nullish(),
+  "email": zod.string().optional(),
+  "role": zod.string(),
+  "avatarUrl": zod.string().nullish(),
+  "artistId": zod.number().nullish(),
+  "artistStageName": zod.string().nullish()
+})
+export const AdminGetUploadAccountsResponse = zod.array(AdminGetUploadAccountsResponseItem)
+
+
+/**
  * @summary List all users (admin)
  */
 export const adminListUsersQueryLimitDefault = 50;
@@ -2327,7 +2343,8 @@ export const AdminListChatMessagesResponse = zod.array(AdminListChatMessagesResp
  */
 export const AdminUploadSongBody = zod.object({
   "title": zod.string(),
-  "artistId": zod.number(),
+  "userId": zod.number().optional(),
+  "artistId": zod.number().optional(),
   "albumId": zod.number().optional(),
   "genre": zod.string().optional(),
   "duration": zod.number().optional(),
@@ -2344,7 +2361,8 @@ export const AdminUploadSongBody = zod.object({
  * @summary Bulk upload songs (auto-labels as single/EP/album)
  */
 export const AdminBulkUploadSongsBody = zod.object({
-  "artistId": zod.number(),
+  "userId": zod.number().optional(),
+  "artistId": zod.number().optional(),
   "releaseName": zod.string().optional(),
   "releaseType": zod.enum(['single', 'ep', 'album']).optional(),
   "genre": zod.string().optional(),
@@ -2364,7 +2382,8 @@ export const AdminBulkUploadSongsBody = zod.object({
  * @summary Bulk upload videos (direct publish, no limit)
  */
 export const AdminBulkUploadVideosBody = zod.object({
-  "artistId": zod.number(),
+  "userId": zod.number().optional(),
+  "artistId": zod.number().optional(),
   "genre": zod.string().optional(),
   "description": zod.string().optional(),
   "thumbnailUrl": zod.string().optional(),
@@ -2384,7 +2403,8 @@ export const AdminBulkUploadVideosBody = zod.object({
  */
 export const AdminUploadVideoBody = zod.object({
   "title": zod.string(),
-  "artistId": zod.number(),
+  "userId": zod.number().optional(),
+  "artistId": zod.number().optional(),
   "genre": zod.string().optional(),
   "description": zod.string().optional(),
   "duration": zod.number().optional(),

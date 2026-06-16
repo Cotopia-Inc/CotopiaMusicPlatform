@@ -20,6 +20,39 @@ const router = Router();
 
 const ADMIN_ROLES = ["admin", "master_admin"] as const;
 
+// ── Helpers ───────────────────────────────────────────────────────────────
+
+/** Finds or auto-creates an artist profile for any user. Returns the artistId. */
+async function findOrCreateArtistProfile(userId: number): Promise<number | null> {
+  const [user] = await db.select({ id: usersTable.id, username: usersTable.username, displayName: usersTable.displayName })
+    .from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+  if (!user) return null;
+  const [existing] = await db.select({ id: artistsTable.id }).from(artistsTable).where(eq(artistsTable.userId, userId)).limit(1);
+  if (existing) return existing.id;
+  const [created] = await db.insert(artistsTable).values({ userId, stageName: user.displayName ?? user.username }).returning({ id: artistsTable.id });
+  return created.id;
+}
+
+// ── Admin Upload Accounts ─────────────────────────────────────────────────
+
+router.get("/admin/upload-accounts", requireAuth, requireRole(...ADMIN_ROLES, "editor"), async (_req, res): Promise<void> => {
+  const rows = await db
+    .select({
+      userId: usersTable.id,
+      username: usersTable.username,
+      displayName: usersTable.displayName,
+      email: usersTable.email,
+      role: usersTable.role,
+      avatarUrl: usersTable.avatarUrl,
+      artistId: artistsTable.id,
+      artistStageName: artistsTable.stageName,
+    })
+    .from(usersTable)
+    .leftJoin(artistsTable, eq(artistsTable.userId, usersTable.id))
+    .orderBy(usersTable.role, usersTable.username);
+  res.json(rows);
+});
+
 // ── Users ─────────────────────────────────────────────────────────────────
 
 router.get("/admin/users", requireAuth, requireRole(...ADMIN_ROLES), async (req: AuthRequest, res): Promise<void> => {
@@ -266,13 +299,17 @@ router.post("/admin/upload-song", requireAuth, requireRole(...ADMIN_ROLES, "edit
   const parsed = AdminUploadSongBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
 
-  const { title, artistId, albumId, genre, duration, streamUrl, coverUrl, releaseDate, releaseType, isFeatured } = parsed.data;
+  const { title, artistId: rawArtistId, userId: rawUserId, albumId, genre, duration, streamUrl, coverUrl, releaseDate, releaseType, isFeatured } = parsed.data;
+
+  const resolvedArtistId = rawArtistId ?? (rawUserId ? await findOrCreateArtistProfile(rawUserId) : null);
+  if (!resolvedArtistId) { res.status(400).json({ error: "Must provide artistId or a valid userId" }); return; }
 
   // Verify artist exists
   const [artist] = await db.select({ id: artistsTable.id, stageName: artistsTable.stageName })
-    .from(artistsTable).where(eq(artistsTable.id, artistId)).limit(1);
+    .from(artistsTable).where(eq(artistsTable.id, resolvedArtistId)).limit(1);
   if (!artist) { res.status(400).json({ error: "Artist not found" }); return; }
 
+  const artistId = resolvedArtistId;
   const [song] = await db.insert(songsTable).values({
     title,
     artistId,
@@ -300,8 +337,12 @@ router.post("/admin/bulk-upload-songs", requireAuth, requireRole(...ADMIN_ROLES,
   const parsed = AdminBulkUploadSongsBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
 
-  const { artistId, releaseName, releaseType: inputReleaseType, genre, coverUrl, releaseDate, isFeatured, songs } = parsed.data;
+  const { artistId: rawArtistId2, userId: rawUserId2, releaseName, releaseType: inputReleaseType, genre, coverUrl, releaseDate, isFeatured, songs } = parsed.data;
 
+  const resolvedArtistId2 = rawArtistId2 ?? (rawUserId2 ? await findOrCreateArtistProfile(rawUserId2) : null);
+  if (!resolvedArtistId2) { res.status(400).json({ error: "Must provide artistId or a valid userId" }); return; }
+
+  const artistId = resolvedArtistId2;
   const [artist] = await db.select({ id: artistsTable.id, stageName: artistsTable.stageName })
     .from(artistsTable).where(eq(artistsTable.id, artistId)).limit(1);
   if (!artist) { res.status(400).json({ error: "Artist not found" }); return; }
@@ -353,8 +394,12 @@ router.post("/admin/upload-video", requireAuth, requireRole(...ADMIN_ROLES, "edi
   const parsed = AdminUploadVideoBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
 
-  const { title, artistId, genre, description, duration, videoUrl, thumbnailUrl, releaseDate, isFeatured } = parsed.data;
+  const { title, artistId: rawArtistId3, userId: rawUserId3, genre, description, duration, videoUrl, thumbnailUrl, releaseDate, isFeatured } = parsed.data;
 
+  const resolvedArtistId3 = rawArtistId3 ?? (rawUserId3 ? await findOrCreateArtistProfile(rawUserId3) : null);
+  if (!resolvedArtistId3) { res.status(400).json({ error: "Must provide artistId or a valid userId" }); return; }
+
+  const artistId = resolvedArtistId3;
   const [artist] = await db.select({ id: artistsTable.id, stageName: artistsTable.stageName })
     .from(artistsTable).where(eq(artistsTable.id, artistId)).limit(1);
   if (!artist) { res.status(400).json({ error: "Artist not found" }); return; }
@@ -383,8 +428,12 @@ router.post("/admin/bulk-upload-videos", requireAuth, requireRole(...ADMIN_ROLES
   const parsed = AdminBulkUploadVideosBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
 
-  const { artistId, genre, description, thumbnailUrl, releaseDate, isFeatured, videos } = parsed.data;
+  const { artistId: rawArtistId4, userId: rawUserId4, genre, description, thumbnailUrl, releaseDate, isFeatured, videos } = parsed.data;
 
+  const resolvedArtistId4 = rawArtistId4 ?? (rawUserId4 ? await findOrCreateArtistProfile(rawUserId4) : null);
+  if (!resolvedArtistId4) { res.status(400).json({ error: "Must provide artistId or a valid userId" }); return; }
+
+  const artistId = resolvedArtistId4;
   const [artist] = await db.select({ id: artistsTable.id, stageName: artistsTable.stageName })
     .from(artistsTable).where(eq(artistsTable.id, artistId)).limit(1);
   if (!artist) { res.status(400).json({ error: "Artist not found" }); return; }

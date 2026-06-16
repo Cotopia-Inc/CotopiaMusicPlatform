@@ -1587,6 +1587,21 @@ paths:
                 $ref: "#/components/schemas/CeoMessage"
 
   # ── Admin ─────────────────────────────────────────────────────────────────
+  /admin/upload-accounts:
+    get:
+      operationId: adminGetUploadAccounts
+      tags: [admin]
+      summary: List all user accounts available for admin upload (all roles)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UploadAccount"
+
   /admin/users:
     get:
       operationId: adminListUsers
@@ -3810,10 +3825,12 @@ components:
     # ── Admin Upload ────────────────────────────────────────────────────────
     AdminUploadSongInput:
       type: object
-      required: [title, artistId, streamUrl]
+      required: [title, streamUrl]
       properties:
         title:
           type: string
+        userId:
+          type: integer
         artistId:
           type: integer
         albumId:
@@ -3838,8 +3855,10 @@ components:
 
     AdminBulkUploadSongsInput:
       type: object
-      required: [artistId, songs]
+      required: [songs]
       properties:
+        userId:
+          type: integer
         artistId:
           type: integer
         releaseName:
@@ -3872,10 +3891,12 @@ components:
 
     AdminUploadVideoInput:
       type: object
-      required: [title, artistId, videoUrl]
+      required: [title, videoUrl]
       properties:
         title:
           type: string
+        userId:
+          type: integer
         artistId:
           type: integer
         genre:
@@ -3897,8 +3918,10 @@ components:
 
     AdminBulkUploadVideosInput:
       type: object
-      required: [artistId, videos]
+      required: [videos]
       properties:
+        userId:
+          type: integer
         artistId:
           type: integer
         genre:
@@ -4193,6 +4216,27 @@ components:
           type: ["integer", "null"]
         metadata:
           nullable: true
+
+    UploadAccount:
+      type: object
+      required: [userId, username, role]
+      properties:
+        userId:
+          type: integer
+        username:
+          type: string
+        displayName:
+          type: ["string", "null"]
+        email:
+          type: string
+        role:
+          type: string
+        avatarUrl:
+          type: ["string", "null"]
+        artistId:
+          type: ["integer", "null"]
+        artistStageName:
+          type: ["string", "null"]
 
     CeoMessageInput:
       type: object

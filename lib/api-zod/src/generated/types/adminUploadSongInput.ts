@@ -9,7 +9,8 @@ import type { AdminUploadSongInputReleaseType } from './adminUploadSongInputRele
 
 export interface AdminUploadSongInput {
   title: string;
-  artistId: number;
+  userId?: number;
+  artistId?: number;
   albumId?: number;
   genre?: string;
   duration?: number;

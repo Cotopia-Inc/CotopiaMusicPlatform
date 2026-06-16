@@ -9,7 +9,8 @@ import type { AdminBulkUploadSongsInputReleaseType } from './adminBulkUploadSong
 import type { AdminBulkUploadSongsInputSongsItem } from './adminBulkUploadSongsInputSongsItem';
 
 export interface AdminBulkUploadSongsInput {
-  artistId: number;
+  userId?: number;
+  artistId?: number;
   releaseName?: string;
   releaseType?: AdminBulkUploadSongsInputReleaseType;
   genre?: string;

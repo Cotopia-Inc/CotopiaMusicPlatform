@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { useAdminUploadVideo, useAdminBulkUploadVideos, useListArtists } from "@workspace/api-client-react";
+import { useAdminUploadVideo, useAdminBulkUploadVideos, useAdminGetUploadAccounts } from "@workspace/api-client-react";
 import { useUpload } from "@workspace/object-storage-web";
 import { useAuth } from "@/lib/auth";
 import { useLocation, Link } from "wouter";
@@ -14,7 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 
-const GENRES = ["Electronic", "Synthwave", "Indie Pop", "Hip Hop", "R&B", "Jazz", "Classical", "Rock", "Pop", "Ambient", "Lo-fi", "Other"];
+const GENRES = ["Electronic", "Synthwave", "Indie Pop", "Hip Hop", "R&B", "Jazz", "Classical", "Rock", "Pop", "Ambient", "Lo-fi", "Alternative", "Other"];
 
 // Per-row upload component — each row has its own hook instance
 function VideoUploadRow({
@@ -75,11 +75,11 @@ export default function AdminUploadVideo() {
     if (user && user.role !== "admin" && user.role !== "master_admin" && user.role !== "editor") navigate("/");
   }, [user, navigate]);
 
-  const { data: artistsData } = useListArtists({});
-  const artists = artistsData ?? [];
+  const { data: accountsData } = useAdminGetUploadAccounts();
+  const accounts = accountsData ?? [];
 
   // ── Single video state ────────────────────────────────────────
-  const [form, setForm] = useState({ title: "", artistId: 0, genre: "", description: "", credits: "", duration: 0, videoUrl: "", thumbnailUrl: "", releaseDate: "", isFeatured: false });
+  const [form, setForm] = useState({ title: "", userId: 0, genre: "", description: "", credits: "", duration: 0, videoUrl: "", thumbnailUrl: "", releaseDate: "", isFeatured: false });
   const [singleDone, setSingleDone] = useState<{ id: number; title: string } | null>(null);
 
   const videoUpload = useUpload({ onSuccess: (res) => setForm(f => ({ ...f, videoUrl: `/api/storage${res.objectPath}` })) });
@@ -88,13 +88,13 @@ export default function AdminUploadVideo() {
 
   async function handleSingleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.title || !form.artistId || !form.videoUrl) {
+    if (!form.title || !form.userId || !form.videoUrl) {
       toast({ title: "Missing required fields", description: "Title, artist, and video file are required", variant: "destructive" });
       return;
     }
     try {
       const video = await uploadVideo.mutateAsync({
-        data: { title: form.title, artistId: form.artistId, genre: form.genre || undefined, description: form.description || undefined, credits: form.credits || undefined, duration: form.duration || undefined, videoUrl: form.videoUrl, thumbnailUrl: form.thumbnailUrl || undefined, releaseDate: form.releaseDate || undefined, isFeatured: form.isFeatured },
+        data: { title: form.title, userId: form.userId, genre: form.genre || undefined, description: form.description || undefined, credits: form.credits || undefined, duration: form.duration || undefined, videoUrl: form.videoUrl, thumbnailUrl: form.thumbnailUrl || undefined, releaseDate: form.releaseDate || undefined, isFeatured: form.isFeatured },
       });
       setSingleDone({ id: video.id, title: video.title });
       toast({ title: "Video published!", description: `"${video.title}" is now live on Everyday Radio` });
@@ -107,7 +107,7 @@ export default function AdminUploadVideo() {
   const [bulkFiles, setBulkFiles] = useState<File[]>([]);
   const [bulkTitles, setBulkTitles] = useState<string[]>([]);
   const [bulkUrls, setBulkUrls] = useState<(string | null)[]>([]);
-  const [bulkShared, setBulkShared] = useState({ artistId: 0, genre: "", description: "", thumbnailUrl: "", releaseDate: "", isFeatured: false });
+  const [bulkShared, setBulkShared] = useState({ userId: 0, genre: "", description: "", thumbnailUrl: "", releaseDate: "", isFeatured: false });
   const [bulkThumbDone, setBulkThumbDone] = useState(false);
   const [bulkDone, setBulkDone] = useState<{ id: number; title: string }[] | null>(null);
 
@@ -134,8 +134,8 @@ export default function AdminUploadVideo() {
 
   async function handleBulkSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!bulkShared.artistId || bulkFiles.length === 0) {
-      toast({ title: "Missing fields", description: "Select an artist and at least one video", variant: "destructive" });
+    if (!bulkShared.userId || bulkFiles.length === 0) {
+      toast({ title: "Missing fields", description: "Select an account and at least one video", variant: "destructive" });
       return;
     }
     if (!allUploaded) {
@@ -145,7 +145,7 @@ export default function AdminUploadVideo() {
     try {
       const videos = await bulkUpload.mutateAsync({
         data: {
-          artistId: bulkShared.artistId,
+          userId: bulkShared.userId,
           genre: bulkShared.genre || undefined,
           description: bulkShared.description || undefined,
           thumbnailUrl: bulkShared.thumbnailUrl || undefined,
@@ -169,7 +169,7 @@ export default function AdminUploadVideo() {
         <div><h2 className="text-xl font-bold">Video Published!</h2><p className="text-muted-foreground mt-1">"{singleDone.title}" is now live.</p></div>
         <div className="flex gap-3">
           <Link href={`/videos/${singleDone.id}`}><Button variant="outline">View Video</Button></Link>
-          <Button onClick={() => { setSingleDone(null); setForm({ title: "", artistId: 0, genre: "", description: "", credits: "", duration: 0, videoUrl: "", thumbnailUrl: "", releaseDate: "", isFeatured: false }); }}>Upload Another</Button>
+          <Button onClick={() => { setSingleDone(null); setForm({ title: "", userId: 0, genre: "", description: "", credits: "", duration: 0, videoUrl: "", thumbnailUrl: "", releaseDate: "", isFeatured: false }); }}>Upload Another</Button>
         </div>
       </div>
     );
@@ -189,7 +189,7 @@ export default function AdminUploadVideo() {
             </Link>
           ))}
         </div>
-        <Button onClick={() => { setBulkDone(null); setBulkFiles([]); setBulkTitles([]); setBulkUrls([]); setBulkShared({ artistId: 0, genre: "", description: "", thumbnailUrl: "", releaseDate: "", isFeatured: false }); setBulkThumbDone(false); }}>
+        <Button onClick={() => { setBulkDone(null); setBulkFiles([]); setBulkTitles([]); setBulkUrls([]); setBulkShared({ userId: 0, genre: "", description: "", thumbnailUrl: "", releaseDate: "", isFeatured: false }); setBulkThumbDone(false); }}>
           Upload More
         </Button>
       </div>
@@ -225,10 +225,10 @@ export default function AdminUploadVideo() {
             </div>
 
             <div className="space-y-2">
-              <Label>Artist *</Label>
-              <select className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.artistId} onChange={e => setForm(f => ({ ...f, artistId: parseInt(e.target.value) }))} required>
-                <option value={0}>Select artist...</option>
-                {artists.map((a: any) => <option key={a.id} value={a.id}>{a.stageName}</option>)}
+              <Label>Account *</Label>
+              <select className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.userId} onChange={e => setForm(f => ({ ...f, userId: parseInt(e.target.value) }))} required>
+                <option value={0}>Select account...</option>
+                {accounts.map((a) => <option key={a.userId} value={a.userId}>{a.artistStageName ?? a.displayName ?? a.username} ({a.role})</option>)}
               </select>
             </div>
 
@@ -327,9 +327,9 @@ export default function AdminUploadVideo() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Artist *</Label>
-                    <select className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" value={bulkShared.artistId} onChange={e => setBulkShared(f => ({ ...f, artistId: parseInt(e.target.value) }))} required>
-                      <option value={0}>Select artist...</option>
-                      {artists.map((a: any) => <option key={a.id} value={a.id}>{a.stageName}</option>)}
+                    <select className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" value={bulkShared.userId} onChange={e => setBulkShared(f => ({ ...f, userId: parseInt(e.target.value) }))} required>
+                      <option value={0}>Select account...</option>
+                      {accounts.map((a) => <option key={a.userId} value={a.userId}>{a.artistStageName ?? a.displayName ?? a.username} ({a.role})</option>)}
                     </select>
                   </div>
                   <div className="space-y-2">

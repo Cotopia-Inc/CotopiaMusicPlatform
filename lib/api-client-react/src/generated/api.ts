@@ -115,6 +115,7 @@ import type {
   Submission,
   SubmissionInput,
   SubmissionUpdate,
+  UploadAccount,
   UploadUrlRequest,
   UploadUrlResponse,
   User,
@@ -6140,6 +6141,83 @@ export const useSetCeoMessage = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getSetCeoMessageMutationOptions(options));
     }
+
+export const getAdminGetUploadAccountsUrl = () => {
+
+
+
+
+  return `/api/admin/upload-accounts`
+}
+
+/**
+ * @summary List all user accounts available for admin upload (all roles)
+ */
+export const adminGetUploadAccounts = async ( options?: RequestInit): Promise<UploadAccount[]> => {
+
+  return customFetch<UploadAccount[]>(getAdminGetUploadAccountsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getAdminGetUploadAccountsQueryKey = () => {
+    return [
+    `/api/admin/upload-accounts`
+    ] as const;
+    }
+
+
+export const getAdminGetUploadAccountsQueryOptions = <TData = Awaited<ReturnType<typeof adminGetUploadAccounts>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof adminGetUploadAccounts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminGetUploadAccountsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminGetUploadAccounts>>> = ({ signal }) => adminGetUploadAccounts({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminGetUploadAccounts>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type AdminGetUploadAccountsQueryResult = NonNullable<Awaited<ReturnType<typeof adminGetUploadAccounts>>>
+export type AdminGetUploadAccountsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List all user accounts available for admin upload (all roles)
+ */
+
+export function useAdminGetUploadAccounts<TData = Awaited<ReturnType<typeof adminGetUploadAccounts>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof adminGetUploadAccounts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getAdminGetUploadAccountsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 
 export const getAdminListUsersUrl = (params?: AdminListUsersParams,) => {
   const normalizedParams = new URLSearchParams();

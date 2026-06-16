@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { useAdminUploadSong, useAdminBulkUploadSongs, useListArtists } from "@workspace/api-client-react";
+import { useAdminUploadSong, useAdminBulkUploadSongs, useAdminGetUploadAccounts } from "@workspace/api-client-react";
 import { useUpload } from "@workspace/object-storage-web";
 import { useAuth } from "@/lib/auth";
 import { useLocation, Link } from "wouter";
@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 
-const GENRES = ["Electronic", "Synthwave", "Indie Pop", "Hip Hop", "R&B", "Jazz", "Classical", "Rock", "Pop", "Ambient", "Lo-fi", "Other"];
+const GENRES = ["Electronic", "Synthwave", "Indie Pop", "Hip Hop", "R&B", "Jazz", "Classical", "Rock", "Pop", "Ambient", "Lo-fi", "Alternative", "Other"];
 
 function getReleaseType(count: number): "single" | "ep" | "album" {
   if (count === 1) return "single";
@@ -103,7 +103,7 @@ export default function AdminUploadSong() {
   // ── Single song form ─────────────────────────────────────────────
   const [form, setForm] = useState({
     title: "",
-    artistId: 0,
+    userId: 0,
     genre: "",
     duration: 0,
     streamUrl: "",
@@ -125,7 +125,7 @@ export default function AdminUploadSong() {
 
   async function handleSingleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.title || !form.artistId || !form.streamUrl) {
+    if (!form.title || !form.userId || !form.streamUrl) {
       toast({ title: "Missing required fields", description: "Title, artist, and audio file are required", variant: "destructive" });
       return;
     }
@@ -133,7 +133,7 @@ export default function AdminUploadSong() {
       const song = await uploadSong.mutateAsync({
         data: {
           title: form.title,
-          artistId: form.artistId,
+          userId: form.userId,
           genre: form.genre || undefined,
           duration: form.duration || undefined,
           streamUrl: form.streamUrl,
@@ -156,7 +156,7 @@ export default function AdminUploadSong() {
   const [bulkTitles, setBulkTitles] = useState<string[]>([]);
   const [bulkUrls, setBulkUrls] = useState<(string | null)[]>([]);
   const [bulkShared, setBulkShared] = useState({
-    artistId: 0,
+    userId: 0,
     genre: "",
     coverUrl: "",
     releaseName: "",
@@ -198,8 +198,8 @@ export default function AdminUploadSong() {
 
   async function handleBulkSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!bulkShared.artistId || bulkFiles.length === 0) {
-      toast({ title: "Missing fields", description: "Select an artist and at least one song", variant: "destructive" });
+    if (!bulkShared.userId || bulkFiles.length === 0) {
+      toast({ title: "Missing fields", description: "Select an account and at least one song", variant: "destructive" });
       return;
     }
     if (!allUploaded) {
@@ -213,7 +213,7 @@ export default function AdminUploadSong() {
     try {
       const songs = await bulkUpload.mutateAsync({
         data: {
-          artistId: bulkShared.artistId,
+          userId: bulkShared.userId,
           releaseName: bulkShared.releaseName || undefined,
           releaseType,
           genre: bulkShared.genre || undefined,
@@ -233,8 +233,8 @@ export default function AdminUploadSong() {
     }
   }
 
-  const { data: artistsData } = useListArtists({});
-  const artists = artistsData ?? [];
+  const { data: accountsData } = useAdminGetUploadAccounts();
+  const accounts = accountsData ?? [];
 
   // ── Success screens ────────────────────────────────────────────
   if (singleDone) {
@@ -247,7 +247,7 @@ export default function AdminUploadSong() {
         </div>
         <div className="flex gap-3">
           <Link href={`/songs/${singleDone.id}`}><Button variant="outline">View Song</Button></Link>
-          <Button onClick={() => { setSingleDone(null); setForm({ title: "", artistId: 0, genre: "", duration: 0, streamUrl: "", coverUrl: "", releaseDate: "", isFeatured: false, credits: "" }); }}>
+          <Button onClick={() => { setSingleDone(null); setForm({ title: "", userId: 0, genre: "", duration: 0, streamUrl: "", coverUrl: "", releaseDate: "", isFeatured: false, credits: "" }); }}>
             Upload Another
           </Button>
         </div>
@@ -273,7 +273,7 @@ export default function AdminUploadSong() {
             </Link>
           ))}
         </div>
-        <Button onClick={() => { setBulkDone(null); setBulkFiles([]); setBulkTitles([]); setBulkUrls([]); setBulkShared({ artistId: 0, genre: "", coverUrl: "", releaseName: "", releaseDate: "", isFeatured: false }); setBulkCoverDone(false); }}>
+        <Button onClick={() => { setBulkDone(null); setBulkFiles([]); setBulkTitles([]); setBulkUrls([]); setBulkShared({ userId: 0, genre: "", coverUrl: "", releaseName: "", releaseDate: "", isFeatured: false }); setBulkCoverDone(false); }}>
           Upload More
         </Button>
       </div>
@@ -313,10 +313,10 @@ export default function AdminUploadSong() {
             </div>
 
             <div className="space-y-2">
-              <Label>Artist *</Label>
-              <select className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.artistId} onChange={e => setForm(f => ({ ...f, artistId: parseInt(e.target.value) }))} required>
-                <option value={0}>Select artist...</option>
-                {artists.map((a: any) => <option key={a.id} value={a.id}>{a.stageName}</option>)}
+              <Label>Account *</Label>
+              <select className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.userId} onChange={e => setForm(f => ({ ...f, userId: parseInt(e.target.value) }))} required>
+                <option value={0}>Select account...</option>
+                {accounts.map((a) => <option key={a.userId} value={a.userId}>{a.artistStageName ?? a.displayName ?? a.username} ({a.role})</option>)}
               </select>
             </div>
 
@@ -420,9 +420,9 @@ export default function AdminUploadSong() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Artist *</Label>
-                    <select className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" value={bulkShared.artistId} onChange={e => setBulkShared(f => ({ ...f, artistId: parseInt(e.target.value) }))} required>
-                      <option value={0}>Select artist...</option>
-                      {artists.map((a: any) => <option key={a.id} value={a.id}>{a.stageName}</option>)}
+                    <select className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" value={bulkShared.userId} onChange={e => setBulkShared(f => ({ ...f, userId: parseInt(e.target.value) }))} required>
+                      <option value={0}>Select account...</option>
+                      {accounts.map((a) => <option key={a.userId} value={a.userId}>{a.artistStageName ?? a.displayName ?? a.username} ({a.role})</option>)}
                     </select>
                   </div>
                   <div className="space-y-2">
