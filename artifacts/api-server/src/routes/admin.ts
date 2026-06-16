@@ -104,6 +104,19 @@ router.patch("/admin/users/:id/role", requireAuth, requireRole(...ADMIN_ROLES), 
   const [user] = await db.update(usersTable).set(updateData).where(eq(usersTable.id, id)).returning();
   if (!user) { res.status(404).json({ error: "User not found" }); return; }
 
+  // Auto-create profile record when assigning artist or label role
+  if (parsed.data.role === "artist") {
+    const [existing] = await db.select({ id: artistsTable.id }).from(artistsTable).where(eq(artistsTable.userId, id)).limit(1);
+    if (!existing) {
+      await db.insert(artistsTable).values({ userId: id, stageName: user.displayName ?? user.username });
+    }
+  } else if (parsed.data.role === "label") {
+    const [existing] = await db.select({ id: labelsTable.id }).from(labelsTable).where(eq(labelsTable.userId, id)).limit(1);
+    if (!existing) {
+      await db.insert(labelsTable).values({ userId: id, name: user.displayName ?? user.username });
+    }
+  }
+
   // Log analytics event
   await db.insert(analyticsEventsTable).values({
     eventType: "admin",

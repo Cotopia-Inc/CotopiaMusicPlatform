@@ -104,7 +104,7 @@ export default function UserProfile() {
             <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">{user.role?.replace("_", " ")}</p>
           </div>
           <div className="flex gap-3 flex-wrap">
-            {user.artistId && (
+            {user.role === "artist" && user.artistId && (
               <Link href={`/artists/${user.artistId}`}>
                 <Button variant="outline" size="sm" className="gap-1.5">
                   <Music className="w-4 h-4" />

@@ -66,7 +66,11 @@ router.get("/artists", optionalAuth, async (req: AuthRequest, res): Promise<void
   }
   const { q, limit = 20, offset = 0 } = params.data;
 
-  const conditions = q ? [ilike(artistsTable.stageName, `%${q}%`)] : [];
+  // Only return profiles tied to actual artist-role accounts
+  const roleCondition = eq(usersTable.role, "artist");
+  const conditions = q
+    ? [roleCondition, ilike(artistsTable.stageName, `%${q}%`)]
+    : [roleCondition];
 
   const artists = await db
     .select({
@@ -83,12 +87,16 @@ router.get("/artists", optionalAuth, async (req: AuthRequest, res): Promise<void
     })
     .from(artistsTable)
     .innerJoin(usersTable, eq(artistsTable.userId, usersTable.id))
-    .where(conditions.length ? and(...conditions) : undefined)
+    .where(and(...conditions))
     .orderBy(desc(artistsTable.createdAt))
-    .limit(limit)
+    .limit(limit * 10) // over-fetch to allow deduplication
     .offset(offset);
 
-  const withCounts = await Promise.all(artists.map(async (a) => {
+  // Deduplicate — multiple artist records per user can exist after seed re-runs
+  const seen = new Set<number>();
+  const unique = artists.filter(a => { if (seen.has(a.userId)) return false; seen.add(a.userId); return true; }).slice(0, limit);
+
+  const withCounts = await Promise.all(unique.map(async (a) => {
     const [fc] = await db.select({ count: count() }).from(followsTable)
       .where(and(eq(followsTable.targetType, "artist"), eq(followsTable.targetId, a.id)));
     const [sc] = await db.select({ count: count() }).from(songsTable)

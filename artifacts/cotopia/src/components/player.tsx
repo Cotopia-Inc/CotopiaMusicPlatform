@@ -585,9 +585,9 @@ export function Player() {
 
       {/* ── Queue Panel ─────────────────────────────────────────────────────────── */}
       {queueOpen && (
-        <div className="fixed bottom-20 right-4 z-30 w-80">
-          <div className="bg-card border border-border/60 rounded-2xl shadow-2xl overflow-hidden">
-            <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-border/40">
+        <div className="fixed bottom-20 right-4 z-30 w-80 flex flex-col" style={{ maxHeight: "calc(100vh - 7rem)" }}>
+          <div className="bg-card border border-border/60 rounded-2xl shadow-2xl flex flex-col min-h-0">
+            <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-border/40 flex-shrink-0">
               <div className="flex items-center gap-2">
                 <ListMusic className="w-4 h-4 text-primary" />
                 <span className="text-sm font-semibold">Queue</span>
@@ -600,7 +600,7 @@ export function Player() {
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <div className="overflow-y-auto max-h-72 py-1">
+            <div className="overflow-y-auto py-1" style={{ maxHeight: "min(18rem, calc(100vh - 12rem))" }}>
               {queue.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-10 gap-2 text-muted-foreground">
                   <Music className="w-8 h-8 opacity-30" />
