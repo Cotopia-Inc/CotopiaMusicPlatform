@@ -158,7 +158,7 @@ export default function Videos() {
                 <Link href={`/videos/${video.id}`}>
                   <h4 className="font-semibold text-sm truncate hover:text-primary transition-colors">{video.title}</h4>
                 </Link>
-                <UserLink username={video.artistName ?? ""} artistId={video.artistId} role={video.artistUserRole === "artist" ? "artist" : undefined} isVerified={video.artistIsVerified ?? false} className="text-xs text-muted-foreground" />
+                <UserLink username={video.artistName ?? ""} artistId={video.artistId} role={video.artistUserRole} isVerified={video.artistIsVerified ?? false} className="text-xs text-muted-foreground" />
               </div>
             </div>
           ))

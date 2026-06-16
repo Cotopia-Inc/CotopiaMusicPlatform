@@ -288,10 +288,10 @@ export default function EditorPicksPage() {
                       <p className="text-sm font-semibold truncate">{contentLabel(pick)}</p>
                     </div>
                     {pick.contentType === "song" && pick.song?.artistName && (
-                      <UserLink username={pick.song.artistName} artistId={pick.song.artistId} role="artist" isVerified={(pick.song as any).artistIsVerified ?? false} className="text-xs text-muted-foreground mt-0.5" />
+                      <UserLink username={pick.song.artistName} artistId={pick.song.artistId} role={(pick.song as any).artistUserRole} isVerified={(pick.song as any).artistIsVerified ?? false} className="text-xs text-muted-foreground mt-0.5" />
                     )}
                     {pick.contentType === "video" && pick.video?.artistName && (
-                      <UserLink username={pick.video.artistName} artistId={pick.video.artistId} role="artist" isVerified={(pick.video as any).artistIsVerified ?? false} className="text-xs text-muted-foreground mt-0.5" />
+                      <UserLink username={pick.video.artistName} artistId={pick.video.artistId} role={(pick.video as any).artistUserRole} isVerified={(pick.video as any).artistIsVerified ?? false} className="text-xs text-muted-foreground mt-0.5" />
                     )}
                     {pick.contentType === "artist" && (pick.artist as any)?.genre && (
                       <p className="text-xs text-muted-foreground truncate mt-0.5">{(pick.artist as any).genre}</p>

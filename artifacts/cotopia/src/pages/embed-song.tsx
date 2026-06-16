@@ -48,7 +48,7 @@ export default function EmbedSong() {
           {/* Info */}
           <div className="flex-1 min-w-0">
             <p className="font-bold text-sm truncate">{song.title}</p>
-            <p className="text-xs text-muted-foreground truncate flex items-center gap-1">{song.artistName}<RoleTag role="artist" size="sm" /></p>
+            <p className="text-xs text-muted-foreground truncate flex items-center gap-1">{song.artistName}<RoleTag role={song.artistUserRole} size="sm" /></p>
           </div>
 
           {/* Play */}

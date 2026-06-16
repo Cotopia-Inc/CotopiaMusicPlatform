@@ -236,7 +236,7 @@ export default function SongDetail() {
               <UserLink
                 username={song.artistName}
                 artistId={song.artistId}
-                role="artist"
+                role={song.artistUserRole}
                 isVerified={song.artistIsVerified ?? false}
                 className="font-semibold text-foreground"
               />
@@ -423,7 +423,7 @@ export default function SongDetail() {
               <UserLink
                 username={song.artistName}
                 artistId={song.artistId}
-                role="artist"
+                role={song.artistUserRole}
                 isVerified={song.artistIsVerified ?? false}
                 className="text-[10px] text-muted-foreground"
               />

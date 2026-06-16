@@ -199,7 +199,7 @@ export default function LabelDetail() {
                       <UserLink
                         username={song.artistName}
                         artistId={song.artistId}
-                        role="artist"
+                        role={(song as any).artistUserRole}
                         isVerified={(song as any).artistIsVerified ?? false}
                         className="text-xs text-muted-foreground"
                         onClick={e => e.stopPropagation()}

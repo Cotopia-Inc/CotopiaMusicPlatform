@@ -297,7 +297,7 @@ export default function VideoDetail() {
               <UserLink
                 username={video.artistName}
                 artistId={video.artistId}
-                role="artist"
+                role={video.artistUserRole}
                 isVerified={video.artistIsVerified ?? false}
                 className="text-[9px] text-white/50"
               />
@@ -400,7 +400,7 @@ export default function VideoDetail() {
             <UserLink
               username={video.artistName}
               artistId={video.artistId}
-              role="artist"
+              role={video.artistUserRole}
               isVerified={video.artistIsVerified ?? false}
               className="font-semibold text-foreground"
             />

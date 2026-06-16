@@ -138,7 +138,7 @@ export default function Library() {
                     <UserLink
                       username={song.artistName}
                       artistId={song.artistId}
-                      role="artist"
+                      role={song.artistUserRole}
                       isVerified={song.artistIsVerified ?? false}
                       className="text-sm text-muted-foreground"
                     />
@@ -212,7 +212,7 @@ export default function Library() {
                     </div>
                     <div className="flex-1">
                       <div className="font-semibold">{item.contentTitle}</div>
-                      <div className="text-sm text-muted-foreground flex items-center gap-1"><span className="truncate">{item.artistName}</span><RoleTag role="artist" size="sm" /><span>•</span> <span className="uppercase text-[10px] tracking-wider text-primary">{item.type}</span></div>
+                      <div className="text-sm text-muted-foreground flex items-center gap-1"><span className="truncate">{item.artistName}</span><RoleTag role={(item as any).artistUserRole} size="sm" /><span>•</span> <span className="uppercase text-[10px] tracking-wider text-primary">{item.type}</span></div>
                     </div>
                     <div className="text-muted-foreground text-xs text-right">
                       {new Date(item.playedAt).toLocaleDateString()}

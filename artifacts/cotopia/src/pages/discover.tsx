@@ -75,7 +75,7 @@ export default function Discover() {
                         </Link>
                         <SongMenu song={song} className="flex-shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition-opacity" />
                       </div>
-                      <UserLink username={song.artistName} artistId={song.artistId} role={song.artistUserRole === "artist" ? "artist" : undefined} isVerified={song.artistIsVerified ?? false} className="text-xs text-muted-foreground" />
+                      <UserLink username={song.artistName} artistId={song.artistId} role={song.artistUserRole} isVerified={song.artistIsVerified ?? false} className="text-xs text-muted-foreground" />
                     </div>
                   </div>
                 ))}
@@ -117,7 +117,7 @@ export default function Discover() {
                       <Link href={`/videos/${video.id}`}>
                         <h4 className="font-semibold text-sm truncate hover:text-primary transition-colors">{video.title}</h4>
                       </Link>
-                      <UserLink username={video.artistName ?? ""} artistId={video.artistId} role="artist" isVerified={video.artistIsVerified ?? false} className="text-xs text-muted-foreground" />
+                      <UserLink username={video.artistName ?? ""} artistId={video.artistId} role={video.artistUserRole} isVerified={video.artistIsVerified ?? false} className="text-xs text-muted-foreground" />
                     </div>
                   </div>
                 ))}
@@ -166,7 +166,7 @@ export default function Discover() {
                     </Link>
                     <SongMenu song={song} className="flex-shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition-opacity" />
                   </div>
-                  <UserLink username={song.artistName} artistId={song.artistId} role={song.artistUserRole === "artist" ? "artist" : undefined} isVerified={song.artistIsVerified ?? false} className="text-xs text-muted-foreground" />
+                  <UserLink username={song.artistName} artistId={song.artistId} role={song.artistUserRole} isVerified={song.artistIsVerified ?? false} className="text-xs text-muted-foreground" />
                 </div>
               </div>
             ))
@@ -215,7 +215,7 @@ export default function Discover() {
                     </Link>
                     <SongMenu song={song} className="flex-shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition-opacity" />
                   </div>
-                  <UserLink username={song.artistName} artistId={song.artistId} role={song.artistUserRole === "artist" ? "artist" : undefined} isVerified={song.artistIsVerified ?? false} className="text-xs text-muted-foreground" />
+                  <UserLink username={song.artistName} artistId={song.artistId} role={song.artistUserRole} isVerified={song.artistIsVerified ?? false} className="text-xs text-muted-foreground" />
                 </div>
               </div>
             ))

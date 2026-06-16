@@ -126,7 +126,7 @@ export default function AdminSongs() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <UserLink username={song.artistName ?? ""} artistId={song.artistId} role={song.artistUserRole === "artist" ? "artist" : undefined} isVerified={song.artistIsVerified ?? false} className="text-sm text-muted-foreground" />
+                      <UserLink username={song.artistName ?? ""} artistId={song.artistId} role={song.artistUserRole} isVerified={song.artistIsVerified ?? false} className="text-sm text-muted-foreground" />
                     </TableCell>
                     <TableCell>
                       {song.genre

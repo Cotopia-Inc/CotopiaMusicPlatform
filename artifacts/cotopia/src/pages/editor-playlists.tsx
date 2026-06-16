@@ -339,7 +339,7 @@ export default function EditorPlaylists() {
                         : <div className="w-8 h-8 rounded bg-muted flex-shrink-0" />}
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-medium truncate">{song.title}</p>
-                        <p className="text-[10px] text-muted-foreground flex items-center gap-0.5"><span className="truncate">{song.artistName}</span><RoleTag role="artist" size="sm" /></p>
+                        <p className="text-[10px] text-muted-foreground flex items-center gap-0.5"><span className="truncate">{song.artistName}</span><RoleTag role={(song as any).artistUserRole} size="sm" /></p>
                       </div>
                       <Button variant="ghost" size="icon" className="h-7 w-7 text-red-400 hover:text-red-300" title="Remove from playlist" onClick={() => handleRemoveSong(song.id)}>
                         <X className="w-3.5 h-3.5" />
@@ -368,7 +368,7 @@ export default function EditorPlaylists() {
                         : <div className="w-8 h-8 rounded bg-muted flex-shrink-0" />}
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-medium truncate">{song.title}</p>
-                        <p className="text-[10px] text-muted-foreground flex items-center gap-0.5"><span className="truncate">{song.artistName}</span><RoleTag role="artist" size="sm" /></p>
+                        <p className="text-[10px] text-muted-foreground flex items-center gap-0.5"><span className="truncate">{song.artistName}</span><RoleTag role={(song as any).artistUserRole} size="sm" /></p>
                       </div>
                       {inPlaylist
                         ? <Check className="w-4 h-4 text-green-400 flex-shrink-0" />

@@ -185,7 +185,7 @@ export default function PlaylistDetail() {
                   <UserLink
                     username={song.artistName}
                     artistId={song.artistId}
-                    role="artist"
+                    role={(song as any).artistUserRole}
                     isVerified={(song as any).artistIsVerified ?? false}
                     className="text-sm text-muted-foreground truncate"
                   />

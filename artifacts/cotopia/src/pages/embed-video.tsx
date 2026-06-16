@@ -51,7 +51,7 @@ export default function EmbedVideo() {
       <div className="absolute bottom-0 left-0 right-0 p-4 flex items-end justify-between">
         <div className="space-y-0.5">
           <p className="font-bold text-white">{video.title}</p>
-          <p className="text-sm text-white/70 flex items-center gap-1">{video.artistName}<RoleTag role="artist" size="sm" /></p>
+          <p className="text-sm text-white/70 flex items-center gap-1">{video.artistName}<RoleTag role={video.artistUserRole} size="sm" /></p>
         </div>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1.5 bg-black/60 backdrop-blur px-2.5 py-1.5 rounded-full">

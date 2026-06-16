@@ -124,7 +124,7 @@ export default function AdminAnalytics() {
                     : <div className="w-8 h-8 rounded bg-muted flex-shrink-0" />}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{song.title}</p>
-                    <p className="text-xs text-muted-foreground flex items-center gap-0.5"><span className="truncate">{song.artistName}</span><RoleTag role="artist" size="sm" /></p>
+                    <p className="text-xs text-muted-foreground flex items-center gap-0.5"><span className="truncate">{song.artistName}</span><RoleTag role={(song as any).artistUserRole} size="sm" /></p>
                   </div>
                   <div className="text-right flex-shrink-0">
                     <p className="text-xs font-bold">{(song.playCount ?? 0).toLocaleString()}</p>
@@ -157,7 +157,7 @@ export default function AdminAnalytics() {
                     : <div className="w-8 h-8 rounded bg-muted flex-shrink-0" />}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{video.title}</p>
-                    <p className="text-xs text-muted-foreground flex items-center gap-0.5"><span className="truncate">{video.artistName}</span><RoleTag role="artist" size="sm" /></p>
+                    <p className="text-xs text-muted-foreground flex items-center gap-0.5"><span className="truncate">{video.artistName}</span><RoleTag role={(video as any).artistUserRole} size="sm" /></p>
                   </div>
                   <div className="text-right flex-shrink-0">
                     <p className="text-xs font-bold">{(video.viewCount ?? 0).toLocaleString()}</p>

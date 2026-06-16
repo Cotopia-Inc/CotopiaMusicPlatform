@@ -117,10 +117,10 @@ export default function Home() {
                         </Link>
                       )}
                       {isSong && pick.song?.artistName && (
-                        <UserLink username={pick.song.artistName} artistId={pick.song.artistId} role="artist" isVerified={(pick.song as any).artistIsVerified ?? false} className="text-xs text-muted-foreground mt-0.5" />
+                        <UserLink username={pick.song.artistName} artistId={pick.song.artistId} role={(pick.song as any).artistUserRole} isVerified={(pick.song as any).artistIsVerified ?? false} className="text-xs text-muted-foreground mt-0.5" />
                       )}
                       {isVideo && pick.video?.artistName && (
-                        <UserLink username={pick.video.artistName} artistId={pick.video.artistId} role="artist" isVerified={(pick.video as any).artistIsVerified ?? false} className="text-xs text-muted-foreground mt-0.5" />
+                        <UserLink username={pick.video.artistName} artistId={pick.video.artistId} role={(pick.video as any).artistUserRole} isVerified={(pick.video as any).artistIsVerified ?? false} className="text-xs text-muted-foreground mt-0.5" />
                       )}
                       {isArtist && (pick.artist as any)?.genre && (
                         <p className="text-xs text-muted-foreground truncate mt-0.5">{(pick.artist as any).genre}</p>
@@ -212,7 +212,7 @@ export default function Home() {
                   <UserLink
                     username={song.artistName}
                     artistId={song.artistId}
-                    role="artist"
+                    role={song.artistUserRole}
                     isVerified={song.artistIsVerified ?? false}
                     className="text-xs text-muted-foreground mt-0.5"
                   />
@@ -278,7 +278,7 @@ export default function Home() {
                   <UserLink
                     username={song.artistName}
                     artistId={song.artistId}
-                    role="artist"
+                    role={song.artistUserRole}
                     isVerified={song.artistIsVerified ?? false}
                     className="text-[10px] text-muted-foreground"
                   />
@@ -344,7 +344,7 @@ export default function Home() {
                   <UserLink
                     username={video.artistName}
                     artistId={video.artistId}
-                    role="artist"
+                    role={video.artistUserRole}
                     isVerified={video.artistIsVerified ?? false}
                     className="text-xs text-muted-foreground"
                   />

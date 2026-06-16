@@ -78,7 +78,7 @@ export default function Songs() {
                 <UserLink
                   username={song.artistName}
                   artistId={song.artistId}
-                  role="artist"
+                  role={song.artistUserRole}
                   isVerified={song.artistIsVerified ?? false}
                   className="text-xs text-muted-foreground truncate"
                 />

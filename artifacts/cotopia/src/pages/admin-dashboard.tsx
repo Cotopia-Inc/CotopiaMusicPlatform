@@ -123,7 +123,7 @@ export default function AdminDashboard() {
                     <span className="font-bold text-muted-foreground text-sm w-5 text-center">{i + 1}</span>
                     <div>
                       <p className="font-semibold text-sm">{song.title}</p>
-                      <p className="text-xs text-muted-foreground flex items-center gap-0.5"><span className="truncate">{song.artistName}</span><RoleTag role="artist" size="sm" /></p>
+                      <p className="text-xs text-muted-foreground flex items-center gap-0.5"><span className="truncate">{song.artistName}</span><RoleTag role={(song as any).artistUserRole} size="sm" /></p>
                     </div>
                   </div>
                   <span className="text-xs text-muted-foreground">{song.playCount?.toLocaleString()} plays</span>
@@ -152,7 +152,7 @@ export default function AdminDashboard() {
                     <span className="font-bold text-muted-foreground text-sm w-5 text-center">{i + 1}</span>
                     <div>
                       <p className="font-semibold text-sm">{video.title}</p>
-                      <p className="text-xs text-muted-foreground flex items-center gap-0.5"><span className="truncate">{video.artistName}</span><RoleTag role="artist" size="sm" /></p>
+                      <p className="text-xs text-muted-foreground flex items-center gap-0.5"><span className="truncate">{video.artistName}</span><RoleTag role={(video as any).artistUserRole} size="sm" /></p>
                     </div>
                   </div>
                   <span className="text-xs text-muted-foreground">{video.viewCount?.toLocaleString()} views</span>
