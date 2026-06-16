@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { RoleBadges } from "@/components/role-badges";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
@@ -142,7 +143,7 @@ export default function AdminBroadcastPage() {
                         className="w-full flex items-center justify-between gap-2 px-3 py-2 hover:bg-secondary/60 transition-colors text-left"
                       >
                         <span className="min-w-0">
-                          <span className="text-sm font-medium truncate block">{u.displayName || u.username}</span>
+                          <span className="text-sm font-medium truncate flex items-center gap-0.5">{u.displayName || u.username}<RoleBadges role={u.role} size="sm" isVerified={false} /></span>
                           <span className="text-xs text-muted-foreground truncate block">@{u.username} · {u.email}</span>
                         </span>
                         <Badge variant="outline" className="text-[10px] shrink-0 capitalize">{u.role}</Badge>
@@ -157,7 +158,7 @@ export default function AdminBroadcastPage() {
               <div className="flex flex-wrap gap-2 pt-1">
                 {excluded.map((u) => (
                   <Badge key={u.id} variant="secondary" className="gap-1.5 pl-2.5 pr-1 py-1">
-                    {u.displayName || u.username}
+                    <span className="inline-flex items-center gap-0.5">{u.displayName || u.username}<RoleBadges role={u.role} size="sm" isVerified={false} /></span>
                     <button
                       onClick={() => removeExcluded(u.id)}
                       className="rounded-full hover:bg-foreground/10 p-0.5"
@@ -211,7 +212,7 @@ export default function AdminBroadcastPage() {
                     </span>
                   )}
                   {(b.senderDisplayName || b.senderUsername) && (
-                    <span className="ml-auto truncate">by {b.senderDisplayName || b.senderUsername}</span>
+                    <span className="ml-auto truncate inline-flex items-center gap-0.5">by {b.senderDisplayName || b.senderUsername}<RoleBadges role={b.senderRole} size="sm" isVerified={false} /></span>
                   )}
                 </div>
               </div>

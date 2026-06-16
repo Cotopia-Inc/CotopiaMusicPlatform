@@ -18,4 +18,6 @@ export interface Broadcast {
   senderUsername?: string | null;
   /** @nullable */
   senderDisplayName?: string | null;
+  /** @nullable */
+  senderRole?: string | null;
 }

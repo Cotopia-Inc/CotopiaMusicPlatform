@@ -2507,7 +2507,8 @@ export const AdminListBroadcastsResponseItem = zod.object({
   "recipientCount": zod.number(),
   "createdAt": zod.string(),
   "senderUsername": zod.string().nullish(),
-  "senderDisplayName": zod.string().nullish()
+  "senderDisplayName": zod.string().nullish(),
+  "senderRole": zod.string().nullish()
 })
 export const AdminListBroadcastsResponse = zod.array(AdminListBroadcastsResponseItem)
 

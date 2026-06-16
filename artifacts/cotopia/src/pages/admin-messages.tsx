@@ -196,8 +196,12 @@ export default function AdminMessages() {
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-1">
-                      <span className="text-sm font-semibold truncate">
-                        {p1?.displayName ?? p1?.username} ↔ {p2?.displayName ?? p2?.username}
+                      <span className="text-sm font-semibold truncate inline-flex items-center gap-0.5 min-w-0">
+                        <span className="truncate">{p1?.displayName ?? p1?.username}</span>
+                        <RoleBadges role={p1?.role ?? ""} size="sm" isVerified={false} />
+                        <span className="mx-0.5 flex-shrink-0">↔</span>
+                        <span className="truncate">{p2?.displayName ?? p2?.username}</span>
+                        <RoleBadges role={p2?.role ?? ""} size="sm" isVerified={false} />
                       </span>
                       <span className="text-[10px] text-muted-foreground flex-shrink-0 bg-secondary rounded px-1">{conv.messageCount}</span>
                     </div>
@@ -277,8 +281,9 @@ export default function AdminMessages() {
                         </div>
                       )}
                       <div className={cn("max-w-[70%] flex flex-col", isP1 ? "items-start" : "items-end")}>
-                        <p className="text-[10px] text-muted-foreground mb-0.5 px-1">
+                        <p className="text-[10px] text-muted-foreground mb-0.5 px-1 inline-flex items-center gap-0.5">
                           {msg.senderDisplayName ?? msg.senderUsername}
+                          <RoleBadges role={msg.senderRole} size="sm" isVerified={false} />
                         </p>
                         {isEditing ? (
                           <div className="flex flex-col gap-2 w-72">

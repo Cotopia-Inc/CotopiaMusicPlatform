@@ -653,6 +653,7 @@ router.get("/admin/audit-logs", requireAuth, requireRole("master_admin"), async 
       id: adminAuditLogsTable.id,
       adminUserId: adminAuditLogsTable.adminUserId,
       adminUsername: usersTable.username,
+      adminRole: usersTable.role,
       action: adminAuditLogsTable.action,
       targetType: adminAuditLogsTable.targetType,
       targetId: adminAuditLogsTable.targetId,
@@ -735,6 +736,7 @@ router.get("/admin/strikes", requireAuth, requireRole(...ADMIN_ROLES), async (re
         username: sql<string>`u.username`,
         email: sql<string>`u.email`,
         displayName: sql<string>`u.display_name`,
+        userRole: sql<string>`u.role`,
         contentType: copyrightStrikesTable.contentType,
         contentId: copyrightStrikesTable.contentId,
         contentTitle: copyrightStrikesTable.contentTitle,
@@ -743,6 +745,7 @@ router.get("/admin/strikes", requireAuth, requireRole(...ADMIN_ROLES), async (re
         internalNotes: copyrightStrikesTable.internalNotes,
         issuedByUserId: copyrightStrikesTable.issuedByUserId,
         issuedByUsername: sql<string>`ib.username`,
+        issuedByRole: sql<string>`ib.role`,
         status: copyrightStrikesTable.status,
         createdAt: copyrightStrikesTable.createdAt,
         resolvedAt: copyrightStrikesTable.resolvedAt,
@@ -907,6 +910,7 @@ router.get("/admin/users/:id/strikes", requireAuth, requireRole(...ADMIN_ROLES),
       resolvedAt: copyrightStrikesTable.resolvedAt,
       resolvedReason: copyrightStrikesTable.resolvedReason,
       issuedByUsername: sql<string>`ib.username`,
+      issuedByRole: sql<string>`ib.role`,
     })
     .from(copyrightStrikesTable)
     .leftJoin(sql`users ib`, sql`${copyrightStrikesTable.issuedByUserId} = ib.id`)
@@ -1043,9 +1047,13 @@ router.get("/admin/copyright-concerns", requireAuth, requireRole(...ADMIN_ROLES,
       strikeId: copyrightConcernsTable.strikeId,
       createdAt: copyrightConcernsTable.createdAt,
       reporterUsername: usersTable.username,
+      reporterRole: usersTable.role,
+      reviewerUsername: sql<string | null>`rv.username`,
+      reviewerRole: sql<string | null>`rv.role`,
     })
     .from(copyrightConcernsTable)
     .leftJoin(usersTable, eq(copyrightConcernsTable.reporterId, usersTable.id))
+    .leftJoin(sql`users rv`, sql`${copyrightConcernsTable.reviewedBy} = rv.id`)
     .where(conditions.length > 0 ? and(...conditions) : undefined)
     .orderBy(desc(copyrightConcernsTable.createdAt));
 
@@ -1105,6 +1113,7 @@ router.get("/admin/broadcasts", requireAuth, requireRole(...ADMIN_ROLES), async 
       createdAt: broadcastsTable.createdAt,
       senderUsername: usersTable.username,
       senderDisplayName: usersTable.displayName,
+      senderRole: usersTable.role,
     })
     .from(broadcastsTable)
     .leftJoin(usersTable, eq(broadcastsTable.senderId, usersTable.id))

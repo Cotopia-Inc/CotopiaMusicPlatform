@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { CopyrightStrikeModal, type StrikeTarget } from "@/components/copyright-strike-modal";
+import { RoleBadges } from "@/components/role-badges";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
@@ -21,12 +22,14 @@ interface StrikeRecord {
   username: string;
   email: string;
   displayName: string | null;
+  userRole: string | null;
   contentType: string;
   contentId: number | null;
   contentTitle: string | null;
   strikeReason: string;
   internalNotes: string | null;
   issuedByUsername: string | null;
+  issuedByRole: string | null;
   dmcaClaimId: number | null;
   status: string;
   createdAt: string;
@@ -193,7 +196,7 @@ export default function AdminStrikes() {
                           <User className="w-3.5 h-3.5 text-muted-foreground" />
                         </div>
                         <div>
-                          <p className="font-semibold text-sm">@{s.username}</p>
+                          <p className="font-semibold text-sm inline-flex items-center gap-0.5">@{s.username}<RoleBadges role={s.userRole} isVerified={false} /></p>
                           <p className="text-xs text-muted-foreground truncate max-w-[130px]">{s.email}</p>
                         </div>
                       </div>
@@ -218,7 +221,7 @@ export default function AdminStrikes() {
                         </p>
                       )}
                       {s.issuedByUsername && (
-                        <p className="text-[10px] text-muted-foreground/60 mt-0.5">by @{s.issuedByUsername}</p>
+                        <p className="text-[10px] text-muted-foreground/60 mt-0.5 inline-flex items-center gap-0.5">by @{s.issuedByUsername}<RoleBadges role={s.issuedByRole} isVerified={false} /></p>
                       )}
                     </td>
                     <td className="px-4 py-3">

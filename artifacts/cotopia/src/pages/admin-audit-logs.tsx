@@ -3,11 +3,13 @@ import { useQuery } from "@tanstack/react-query";
 import { ScrollText, RefreshCw, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { RoleBadges } from "@/components/role-badges";
 
 interface AuditLog {
   id: number;
   adminUserId: number;
   adminUsername?: string;
+  adminRole?: string | null;
   action: string;
   targetType?: string;
   targetId?: number;
@@ -94,7 +96,10 @@ export default function AdminAuditLogs() {
                     {new Date(log.createdAt).toLocaleString()}
                   </td>
                   <td className="px-4 py-3 text-xs font-medium">
-                    {log.adminUsername ?? `User #${log.adminUserId}`}
+                    <span className="inline-flex items-center gap-0.5">
+                      {log.adminUsername ?? `User #${log.adminUserId}`}
+                      <RoleBadges role={log.adminRole} isVerified={false} />
+                    </span>
                   </td>
                   <td className="px-4 py-3">
                     <Badge className={`text-[10px] border ${ACTION_COLORS[log.action] ?? "bg-secondary text-muted-foreground border-border"}`}>

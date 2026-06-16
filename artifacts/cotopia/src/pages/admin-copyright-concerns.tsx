@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { RoleBadges } from "@/components/role-badges";
 import { formatDistanceToNow } from "date-fns";
 
 const ADMIN_ROLES = ["admin", "master_admin"];
@@ -131,7 +132,7 @@ export default function AdminCopyrightConcerns() {
                         {c.contentTitle && <span className="text-xs font-medium">"{c.contentTitle}"</span>}
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        Escalated by <span className="font-medium text-foreground">{c.reporterUsername ?? `User #${c.reporterId}`}</span>
+                        Escalated by <span className="font-medium text-foreground inline-flex items-center gap-0.5">{c.reporterUsername ?? `User #${c.reporterId}`}<RoleBadges role={c.reporterRole} isVerified={false} /></span>
                         {" · "}{c.createdAt ? formatDistanceToNow(new Date(c.createdAt), { addSuffix: true }) : ""}
                       </p>
                     </div>
@@ -148,7 +149,7 @@ export default function AdminCopyrightConcerns() {
                   {c.adminNotes && !isPending && (
                     <div className="text-xs bg-blue-500/5 border border-blue-500/20 rounded p-2.5 text-muted-foreground">
                       <span className="font-medium text-foreground">Admin notes:</span> {c.adminNotes}
-                      {c.reviewerUsername && <span className="ml-1">— {c.reviewerUsername}</span>}
+                      {c.reviewerUsername && <span className="ml-1 inline-flex items-center gap-0.5">— {c.reviewerUsername}<RoleBadges role={c.reviewerRole} isVerified={false} /></span>}
                     </div>
                   )}
 

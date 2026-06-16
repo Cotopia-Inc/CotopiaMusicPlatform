@@ -177,7 +177,7 @@ export default function EditorPicksPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{s.title}</p>
-                    <p className="text-xs text-muted-foreground truncate">{s.artistName ?? ""}</p>
+                    <p className="text-xs text-muted-foreground truncate inline-flex items-center gap-0.5">{s.artistName ?? ""}<RoleBadges role={s.artistUserRole} size="sm" isVerified={false} /></p>
                   </div>
                   <Plus className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                 </button>
@@ -194,7 +194,7 @@ export default function EditorPicksPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{v.title}</p>
-                    <p className="text-xs text-muted-foreground truncate">{v.artistName ?? ""}</p>
+                    <p className="text-xs text-muted-foreground truncate inline-flex items-center gap-0.5">{v.artistName ?? ""}<RoleBadges role={v.artistUserRole} size="sm" isVerified={false} /></p>
                   </div>
                   <Plus className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                 </button>

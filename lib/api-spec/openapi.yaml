@@ -3625,6 +3625,8 @@ components:
           type: ["string", "null"]
         senderDisplayName:
           type: ["string", "null"]
+        senderRole:
+          type: ["string", "null"]
 
     BroadcastInput:
       type: object
