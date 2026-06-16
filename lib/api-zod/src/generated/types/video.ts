@@ -14,6 +14,8 @@ export interface Video {
   /** @nullable */
   artistUserId?: number | null;
   artistName: string;
+  /** @nullable */
+  artistUserRole?: string | null;
   artistIsVerified?: boolean;
   /** @nullable */
   genre?: string | null;

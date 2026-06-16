@@ -23,6 +23,7 @@ interface SongMenuSong {
   title: string;
   artistName?: string | null;
   artistId?: number | null;
+  artistUserRole?: string | null;
   artistIsVerified?: boolean | null;
   coverUrl?: string | null;
   streamUrl?: string | null;
@@ -53,6 +54,7 @@ export function SongMenu({ song, className }: SongMenuProps) {
       title: song.title,
       artistName: song.artistName ?? "",
       artistId: song.artistId,
+      artistUserRole: song.artistUserRole ?? null,
       artistIsVerified: song.artistIsVerified ?? false,
       coverUrl: song.coverUrl,
       streamUrl: song.streamUrl,

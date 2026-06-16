@@ -126,7 +126,7 @@ export default function Library() {
                 <div
                   key={song.id}
                   className="flex items-center gap-4 p-3 rounded-md hover:bg-secondary/50 group cursor-pointer transition-colors"
-                  onClick={() => play({ id: song.id, title: song.title, artistName: song.artistName ?? "", artistId: song.artistId, artistIsVerified: song.artistIsVerified ?? false, coverUrl: song.coverUrl, streamUrl: song.streamUrl, duration: song.duration, isFavorited: true })}
+                  onClick={() => play({ id: song.id, title: song.title, artistName: song.artistName ?? "", artistId: song.artistId, artistUserRole: song.artistUserRole ?? null, artistIsVerified: song.artistIsVerified ?? false, coverUrl: song.coverUrl, streamUrl: song.streamUrl, duration: song.duration, isFavorited: true })}
                 >
                   <span className="w-6 text-center text-muted-foreground text-sm group-hover:hidden">{idx + 1}</span>
                   <Play className="w-4 h-4 fill-current text-primary hidden group-hover:block ml-1 mr-1" />

@@ -5,6 +5,7 @@ export interface Track {
   title: string;
   artistName: string;
   artistId?: number | null;
+  artistUserRole?: string | null;
   artistIsVerified?: boolean;
   coverUrl?: string | null;
   streamUrl?: string | null;

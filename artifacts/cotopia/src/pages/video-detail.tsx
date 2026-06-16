@@ -437,7 +437,7 @@ export default function VideoDetail() {
                   title: video.title,
                   artistName: video.artistName ?? "",
                   artistId: video.artistId,
-                  artistIsVerified: video.artistIsVerified ?? false,
+                  artistUserRole: video.artistUserRole ?? null, artistIsVerified: video.artistIsVerified ?? false,
                   coverUrl: video.thumbnailUrl,
                   videoUrl: video.videoUrl,
                   duration: video.duration,

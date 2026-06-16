@@ -138,7 +138,7 @@ export default function ArtistDetail() {
             </div>
           </div>
           <div className="flex gap-3">
-            <Button size="lg" className="rounded-full px-8 font-bold" onClick={() => { if (artist.songs?.[0]) play({ id: artist.songs[0].id, title: artist.songs[0].title, artistName: artist.songs[0].artistName ?? "", artistId: artist.songs[0].artistId, artistIsVerified: (artist.songs[0] as any).artistIsVerified ?? false, coverUrl: artist.songs[0].coverUrl, streamUrl: artist.songs[0].streamUrl, duration: artist.songs[0].duration }); }}>
+            <Button size="lg" className="rounded-full px-8 font-bold" onClick={() => { if (artist.songs?.[0]) play({ id: artist.songs[0].id, title: artist.songs[0].title, artistName: artist.songs[0].artistName ?? "", artistId: artist.songs[0].artistId, artistUserRole: (artist.songs[0] as any).artistUserRole ?? null, artistIsVerified: (artist.songs[0] as any).artistIsVerified ?? false, coverUrl: artist.songs[0].coverUrl, streamUrl: artist.songs[0].streamUrl, duration: artist.songs[0].duration }); }}>
               <Play className="w-5 h-5 mr-2 fill-current" /> Play
             </Button>
             {user && (
@@ -182,7 +182,7 @@ export default function ArtistDetail() {
                   <div
                     key={song.id}
                     className="flex items-center gap-4 p-3 rounded-md hover:bg-secondary/50 group cursor-pointer transition-colors"
-                    onClick={() => play({ id: song.id, title: song.title, artistName: song.artistName ?? "", artistId: song.artistId, artistIsVerified: (song as any).artistIsVerified ?? false, coverUrl: song.coverUrl, streamUrl: song.streamUrl, duration: song.duration })}
+                    onClick={() => play({ id: song.id, title: song.title, artistName: song.artistName ?? "", artistId: song.artistId, artistUserRole: (song as any).artistUserRole ?? null, artistIsVerified: (song as any).artistIsVerified ?? false, coverUrl: song.coverUrl, streamUrl: song.streamUrl, duration: song.duration })}
                   >
                     <span className="w-6 text-center text-muted-foreground text-sm group-hover:hidden">{idx + 1}</span>
                     <Play className="w-4 h-4 fill-current text-primary hidden group-hover:block ml-1 mr-1" />

@@ -261,7 +261,7 @@ export function Player() {
                     <UserLink
                       username={track.artistName}
                       artistId={track.artistId}
-                      role="artist"
+                      role={track.artistUserRole === "artist" ? "artist" : undefined}
                       isVerified={track.artistIsVerified}
                       className="text-sm text-muted-foreground"
                       badgeSize="sm"
@@ -441,7 +441,7 @@ export function Player() {
                 <UserLink
                   username={track.artistName}
                   artistId={track.artistId}
-                  role="artist"
+                  role={track.artistUserRole === "artist" ? "artist" : undefined}
                   isVerified={track.artistIsVerified}
                   className="text-xs text-muted-foreground"
                   badgeSize="sm"

@@ -123,7 +123,7 @@ export default function AdminVideos() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <UserLink username={video.artistName ?? ""} artistId={video.artistId} role="artist" isVerified={video.artistIsVerified ?? false} className="text-sm text-muted-foreground" />
+                      <UserLink username={video.artistName ?? ""} artistId={video.artistId} role={video.artistUserRole === "artist" ? "artist" : undefined} isVerified={video.artistIsVerified ?? false} className="text-sm text-muted-foreground" />
                     </TableCell>
                     <TableCell>
                       <Badge variant="secondary" className="text-xs capitalize">{video.genre || "—"}</Badge>

@@ -163,7 +163,7 @@ export default function AdminDiscover() {
                     </TableCell>
                     <TableCell className="font-medium max-w-[180px] truncate">{song.title}</TableCell>
                     <TableCell>
-                      <UserLink username={song.artistName ?? ""} artistId={song.artistId} role="artist" isVerified={song.artistIsVerified ?? false} className="text-xs text-muted-foreground" />
+                      <UserLink username={song.artistName ?? ""} artistId={song.artistId} role={song.artistUserRole === "artist" ? "artist" : undefined} isVerified={song.artistIsVerified ?? false} className="text-xs text-muted-foreground" />
                     </TableCell>
                     <TableCell className="text-muted-foreground text-xs">{song.genre ?? "—"}</TableCell>
                     <TableCell className="text-muted-foreground text-xs tabular-nums">{song.playCount ?? 0}</TableCell>
@@ -229,7 +229,7 @@ export default function AdminDiscover() {
                     </TableCell>
                     <TableCell className="font-medium max-w-[180px] truncate">{video.title}</TableCell>
                     <TableCell>
-                      <UserLink username={video.artistName ?? ""} artistId={video.artistId} role="artist" isVerified={video.artistIsVerified ?? false} className="text-xs text-muted-foreground" />
+                      <UserLink username={video.artistName ?? ""} artistId={video.artistId} role={video.artistUserRole === "artist" ? "artist" : undefined} isVerified={video.artistIsVerified ?? false} className="text-xs text-muted-foreground" />
                     </TableCell>
                     <TableCell className="text-muted-foreground text-xs">{video.genre ?? "—"}</TableCell>
                     <TableCell className="text-muted-foreground text-xs tabular-nums">{video.viewCount ?? 0}</TableCell>
