@@ -238,6 +238,19 @@ router.patch("/admin/reports/:id", requireAuth, requireRole(...MOD_ROLES), async
   const [report] = await db.update(reportsTable).set(updateData).where(eq(reportsTable.id, id)).returning();
   if (!report) { res.status(404).json({ error: "Report not found" }); return; }
 
+  if ((status === "resolved" || status === "dismissed") && report.reporterId) {
+    const resolved = status === "resolved";
+    await db.insert(notificationsTable).values({
+      userId: report.reporterId,
+      type: "report_update",
+      title: resolved ? "✅ Your report was reviewed" : "Your report was reviewed",
+      message: resolved
+        ? "Thanks for helping keep Cotopia safe. Our team reviewed your report and took action."
+        : "Our team reviewed your report and did not find a violation of our guidelines. Thanks for helping keep Cotopia safe.",
+      isRead: false,
+    });
+  }
+
   await db.insert(adminAuditLogsTable).values({
     adminUserId: req.user!.userId,
     action: "report_triage",
