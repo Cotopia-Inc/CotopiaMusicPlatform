@@ -1,4 +1,4 @@
-import { useGetMe, getGetMeQueryKey, useUpdateMe, useChangePassword, useChangeUsername, useSendOtp, useVerifyOtp } from "@workspace/api-client-react";
+import { useGetMe, getGetMeQueryKey, useUpdateMe, useChangePassword, useChangeUsername, useSendOtp, useVerifyOtp, useGetMySettings, getGetMySettingsQueryKey, useUpdateMySettings, type UserSettingsUpdate } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,13 +14,7 @@ import { useLocation } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { ImageCropModal } from "@/components/image-crop-modal";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useQuery } from "@tanstack/react-query";
 import { MessageSquare } from "lucide-react";
-
-const authHeaders = () => ({
-  Authorization: `Bearer ${localStorage.getItem("cotopia_token")}`,
-  "Content-Type": "application/json",
-});
 
 export default function Profile() {
   const { user } = useAuth();
@@ -77,35 +71,25 @@ export default function Profile() {
   }, [profile]);
 
   const [messagePolicy, setMessagePolicy] = useState<string>("followers_only");
-  const [savingPolicy, setSavingPolicy] = useState(false);
-  const { data: pmSettings } = useQuery({
-    queryKey: ["my-message-settings"],
-    queryFn: async () => {
-      const res = await fetch(`${import.meta.env.BASE_URL}api/users/me/settings`, { headers: authHeaders() });
-      if (!res.ok) return { messagePolicy: "followers_only" };
-      return res.json() as Promise<{ messagePolicy: string }>;
-    },
-    enabled: !!user,
+  const { data: pmSettings } = useGetMySettings({
+    query: { enabled: !!user, queryKey: getGetMySettingsQueryKey() },
   });
   useEffect(() => {
     if (pmSettings?.messagePolicy) setMessagePolicy(pmSettings.messagePolicy);
   }, [pmSettings]);
 
-  const handleSavePolicy = async () => {
-    setSavingPolicy(true);
-    try {
-      const res = await fetch(`${import.meta.env.BASE_URL}api/users/me/settings`, {
-        method: "PATCH",
-        headers: authHeaders(),
-        body: JSON.stringify({ messagePolicy }),
-      });
-      if (!res.ok) throw new Error("Failed");
-      toast({ title: "Message settings saved" });
-    } catch {
-      toast({ variant: "destructive", title: "Could not save settings" });
-    } finally {
-      setSavingPolicy(false);
-    }
+  const savePolicyMutation = useUpdateMySettings({
+    mutation: {
+      onSuccess: () => toast({ title: "Message settings saved" }),
+      onError: () => toast({ variant: "destructive", title: "Could not save settings" }),
+    },
+  });
+  const savingPolicy = savePolicyMutation.isPending;
+
+  const handleSavePolicy = () => {
+    savePolicyMutation.mutate({
+      data: { messagePolicy: messagePolicy as UserSettingsUpdate["messagePolicy"] },
+    });
   };
 
   const updateMutation = useUpdateMe();

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
+import { useCreateFeedback, useListMyFeedback, getListMyFeedbackQueryKey, type FeedbackInput } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -9,23 +10,9 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Bug, Lightbulb, MessageSquare, Send, Loader2, Sparkles, Inbox } from "lucide-react";
+import { Bug, Lightbulb, MessageSquare, Send, Loader2, Sparkles, Inbox, ImagePlus, X } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-
-interface MyFeedback {
-  id: number;
-  type: string;
-  title: string;
-  description: string;
-  status: string;
-  adminNotes: string | null;
-  createdAt: string;
-}
-
-const authHeaders = () => ({
-  Authorization: `Bearer ${localStorage.getItem("cotopia_token")}`,
-  "Content-Type": "application/json",
-});
+import { useUpload } from "@workspace/object-storage-web";
 
 const TYPE_META: Record<string, { label: string; icon: React.ElementType; className: string }> = {
   bug: { label: "Bug Report", icon: Bug, className: "bg-red-500/15 text-red-400 border-red-500/30" },
@@ -47,42 +34,38 @@ export default function Feedback() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [screenshotUrl, setScreenshotUrl] = useState("");
+  const { uploadFile: uploadScreenshot, isUploading: isUploadingScreenshot, progress: screenshotProgress } = useUpload({
+    onSuccess: (res) => setScreenshotUrl(`/api/storage${res.objectPath}`),
+    onError: () => toast({ variant: "destructive", title: "Screenshot upload failed" }),
+  });
 
-  const { data: mine, isLoading } = useQuery<MyFeedback[]>({
-    queryKey: ["feedback-mine"],
-    queryFn: async () => {
-      const res = await fetch(`${import.meta.env.BASE_URL}api/feedback/mine`, { headers: authHeaders() });
-      if (!res.ok) throw new Error("Failed to load");
-      return res.json();
+  const { data: mine, isLoading } = useListMyFeedback();
+
+  const submitMutation = useCreateFeedback({
+    mutation: {
+      onSuccess: () => {
+        toast({ title: "Feedback submitted", description: "Thank you for helping shape Cotopia!" });
+        setType("bug");
+        setTitle("");
+        setDescription("");
+        setScreenshotUrl("");
+        qc.invalidateQueries({ queryKey: getListMyFeedbackQueryKey() });
+      },
+      onError: (err) =>
+        toast({ variant: "destructive", title: err instanceof Error ? err.message : "Could not submit feedback" }),
     },
   });
 
-  const submitMutation = useMutation({
-    mutationFn: async () => {
-      const res = await fetch(`${import.meta.env.BASE_URL}api/feedback`, {
-        method: "POST",
-        headers: authHeaders(),
-        body: JSON.stringify({
-          type,
-          title,
-          description,
-          screenshotUrl: screenshotUrl.trim() || undefined,
-        }),
-      });
-      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? "Failed to submit");
-      return res.json();
-    },
-    onSuccess: () => {
-      toast({ title: "Feedback submitted", description: "Thank you for helping shape Cotopia!" });
-      setType("bug");
-      setTitle("");
-      setDescription("");
-      setScreenshotUrl("");
-      qc.invalidateQueries({ queryKey: ["feedback-mine"] });
-    },
-    onError: (err: unknown) =>
-      toast({ variant: "destructive", title: err instanceof Error ? err.message : "Could not submit feedback" }),
-  });
+  const handleSubmit = () => {
+    submitMutation.mutate({
+      data: {
+        type: type as FeedbackInput["type"],
+        title,
+        description,
+        screenshotUrl: screenshotUrl.trim() || undefined,
+      },
+    });
+  };
 
   const canSubmit = title.trim().length > 0 && description.trim().length > 0 && !submitMutation.isPending;
   const submissions = mine ?? [];
@@ -142,21 +125,57 @@ export default function Feedback() {
 
         <div className="space-y-1.5">
           <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
-            Screenshot URL <span className="normal-case text-muted-foreground/60">(optional)</span>
+            Screenshot <span className="normal-case text-muted-foreground/60">(optional)</span>
           </label>
-          <Input
-            placeholder="https://…"
-            value={screenshotUrl}
-            onChange={(e) => setScreenshotUrl(e.target.value)}
-            className="bg-secondary/50 border-secondary"
-          />
+          {screenshotUrl ? (
+            <div className="relative inline-block">
+              <img
+                src={screenshotUrl}
+                alt="Screenshot preview"
+                className="max-h-48 rounded-lg border border-border object-contain bg-secondary/30"
+              />
+              <button
+                type="button"
+                onClick={() => setScreenshotUrl("")}
+                className="absolute -top-2 -right-2 rounded-full bg-background border border-border p-1 text-muted-foreground hover:text-destructive shadow-sm"
+                title="Remove screenshot"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ) : (
+            <label className="flex items-center justify-center gap-2 h-24 rounded-lg border border-dashed border-border bg-secondary/30 text-sm text-muted-foreground cursor-pointer hover:border-primary/50 hover:text-foreground transition-colors">
+              {isUploadingScreenshot ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Uploading… {screenshotProgress}%
+                </>
+              ) : (
+                <>
+                  <ImagePlus className="w-4 h-4" />
+                  Click to attach a screenshot
+                </>
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                disabled={isUploadingScreenshot}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) uploadScreenshot(file);
+                  e.target.value = "";
+                }}
+              />
+            </label>
+          )}
         </div>
 
         <div className="flex justify-end">
           <Button
             className="gap-1.5"
             disabled={!canSubmit}
-            onClick={() => submitMutation.mutate()}
+            onClick={handleSubmit}
           >
             {submitMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             Submit Feedback

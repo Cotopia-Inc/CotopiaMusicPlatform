@@ -53,6 +53,8 @@ tags:
     description: Analytics event tracking
   - name: editorial
     description: Editorial playlist management
+  - name: safety
+    description: User-facing safety, reporting, feedback, and messaging settings
 
 paths:
   /healthz:
@@ -2522,6 +2524,106 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
 
+  # ── Safety ───────────────────────────────────────────────────────────────
+  /reports:
+    post:
+      operationId: createReport
+      tags: [safety]
+      summary: Report a song, video, profile, comment, chat message, or private message
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReportInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Report"
+        "400":
+          description: Validation error
+        "401":
+          description: Unauthenticated
+
+  /feedback:
+    post:
+      operationId: createFeedback
+      tags: [safety]
+      summary: Submit beta feedback (bug, feature request, or general)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FeedbackInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Feedback"
+        "400":
+          description: Validation error
+        "401":
+          description: Unauthenticated
+
+  /feedback/mine:
+    get:
+      operationId: listMyFeedback
+      tags: [safety]
+      summary: List feedback submitted by the current user
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Feedback"
+        "401":
+          description: Unauthenticated
+
+  /users/me/settings:
+    get:
+      operationId: getMySettings
+      tags: [safety]
+      summary: Get current user's safety and messaging settings
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserSettings"
+        "401":
+          description: Unauthenticated
+    patch:
+      operationId: updateMySettings
+      tags: [safety]
+      summary: Update current user's messaging policy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserSettingsUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserSettingsUpdate"
+        "400":
+          description: Validation error
+        "401":
+          description: Unauthenticated
+
 components:
   schemas:
     HealthStatus:
@@ -2530,6 +2632,108 @@ components:
       properties:
         status:
           type: string
+
+    # ── Safety ────────────────────────────────────────────────────────────────
+    ReportInput:
+      type: object
+      required: [targetType, targetId, reason]
+      properties:
+        targetType:
+          type: string
+          enum: [song, video, profile, comment, chat_message, private_message]
+        targetId:
+          type: integer
+        reason:
+          type: string
+          enum: [copyright, harassment, spam, fake_profile, illegal_content, other]
+        details:
+          type: string
+
+    Report:
+      type: object
+      required: [id, reporterId, targetType, targetId, reason, status, createdAt]
+      properties:
+        id:
+          type: integer
+        reporterId:
+          type: integer
+        targetType:
+          type: string
+        targetId:
+          type: integer
+        reason:
+          type: string
+        details:
+          type: ["string", "null"]
+        status:
+          type: string
+        adminNotes:
+          type: ["string", "null"]
+        reviewedBy:
+          type: ["integer", "null"]
+        reviewedAt:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    FeedbackInput:
+      type: object
+      required: [type, title, description]
+      properties:
+        type:
+          type: string
+          enum: [bug, feature, general]
+        title:
+          type: string
+        description:
+          type: string
+        screenshotUrl:
+          type: string
+
+    Feedback:
+      type: object
+      required: [id, type, title, description, status, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        userRole:
+          type: ["string", "null"]
+        type:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        screenshotUrl:
+          type: ["string", "null"]
+        status:
+          type: string
+        adminNotes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: ["string", "null"]
+
+    UserSettings:
+      type: object
+      required: [messagePolicy]
+      properties:
+        messagePolicy:
+          type: string
+          enum: [everyone, followers_only, verified_only, nobody]
+        emailVerified:
+          type: boolean
+
+    UserSettingsUpdate:
+      type: object
+      required: [messagePolicy]
+      properties:
+        messagePolicy:
+          type: string
+          enum: [everyone, followers_only, verified_only, nobody]
 
     # ── Auth ────────────────────────────────────────────────────────────────
     RegisterInput:

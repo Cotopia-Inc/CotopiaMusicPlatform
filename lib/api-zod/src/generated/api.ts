@@ -3104,3 +3104,65 @@ export const GetStorageObjectParams = zod.object({
 })
 
 
+/**
+ * @summary Report a song, video, profile, comment, chat message, or private message
+ */
+export const CreateReportBody = zod.object({
+  "targetType": zod.enum(['song', 'video', 'profile', 'comment', 'chat_message', 'private_message']),
+  "targetId": zod.number(),
+  "reason": zod.enum(['copyright', 'harassment', 'spam', 'fake_profile', 'illegal_content', 'other']),
+  "details": zod.string().optional()
+})
+
+
+/**
+ * @summary Submit beta feedback (bug, feature request, or general)
+ */
+export const CreateFeedbackBody = zod.object({
+  "type": zod.enum(['bug', 'feature', 'general']),
+  "title": zod.string(),
+  "description": zod.string(),
+  "screenshotUrl": zod.string().optional()
+})
+
+
+/**
+ * @summary List feedback submitted by the current user
+ */
+export const ListMyFeedbackResponseItem = zod.object({
+  "id": zod.number(),
+  "userId": zod.number().optional(),
+  "userRole": zod.string().nullish(),
+  "type": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "screenshotUrl": zod.string().nullish(),
+  "status": zod.string(),
+  "adminNotes": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().nullish()
+})
+export const ListMyFeedbackResponse = zod.array(ListMyFeedbackResponseItem)
+
+
+/**
+ * @summary Get current user's safety and messaging settings
+ */
+export const GetMySettingsResponse = zod.object({
+  "messagePolicy": zod.enum(['everyone', 'followers_only', 'verified_only', 'nobody']),
+  "emailVerified": zod.boolean().optional()
+})
+
+
+/**
+ * @summary Update current user's messaging policy
+ */
+export const UpdateMySettingsBody = zod.object({
+  "messagePolicy": zod.enum(['everyone', 'followers_only', 'verified_only', 'nobody'])
+})
+
+export const UpdateMySettingsResponse = zod.object({
+  "messagePolicy": zod.enum(['everyone', 'followers_only', 'verified_only', 'nobody'])
+})
+
+

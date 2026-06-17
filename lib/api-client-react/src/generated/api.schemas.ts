@@ -9,6 +9,118 @@ export interface HealthStatus {
   status: string;
 }
 
+export type ReportInputTargetType = typeof ReportInputTargetType[keyof typeof ReportInputTargetType];
+
+
+export const ReportInputTargetType = {
+  song: 'song',
+  video: 'video',
+  profile: 'profile',
+  comment: 'comment',
+  chat_message: 'chat_message',
+  private_message: 'private_message',
+} as const;
+
+export type ReportInputReason = typeof ReportInputReason[keyof typeof ReportInputReason];
+
+
+export const ReportInputReason = {
+  copyright: 'copyright',
+  harassment: 'harassment',
+  spam: 'spam',
+  fake_profile: 'fake_profile',
+  illegal_content: 'illegal_content',
+  other: 'other',
+} as const;
+
+export interface ReportInput {
+  targetType: ReportInputTargetType;
+  targetId: number;
+  reason: ReportInputReason;
+  details?: string;
+}
+
+export interface Report {
+  id: number;
+  reporterId: number;
+  targetType: string;
+  targetId: number;
+  reason: string;
+  /** @nullable */
+  details?: string | null;
+  status: string;
+  /** @nullable */
+  adminNotes?: string | null;
+  /** @nullable */
+  reviewedBy?: number | null;
+  /** @nullable */
+  reviewedAt?: string | null;
+  createdAt: string;
+}
+
+export type FeedbackInputType = typeof FeedbackInputType[keyof typeof FeedbackInputType];
+
+
+export const FeedbackInputType = {
+  bug: 'bug',
+  feature: 'feature',
+  general: 'general',
+} as const;
+
+export interface FeedbackInput {
+  type: FeedbackInputType;
+  title: string;
+  description: string;
+  screenshotUrl?: string;
+}
+
+export interface Feedback {
+  id: number;
+  userId?: number;
+  /** @nullable */
+  userRole?: string | null;
+  type: string;
+  title: string;
+  description: string;
+  /** @nullable */
+  screenshotUrl?: string | null;
+  status: string;
+  /** @nullable */
+  adminNotes?: string | null;
+  createdAt: string;
+  /** @nullable */
+  updatedAt?: string | null;
+}
+
+export type UserSettingsMessagePolicy = typeof UserSettingsMessagePolicy[keyof typeof UserSettingsMessagePolicy];
+
+
+export const UserSettingsMessagePolicy = {
+  everyone: 'everyone',
+  followers_only: 'followers_only',
+  verified_only: 'verified_only',
+  nobody: 'nobody',
+} as const;
+
+export interface UserSettings {
+  messagePolicy: UserSettingsMessagePolicy;
+  emailVerified?: boolean;
+}
+
+export type UserSettingsUpdateMessagePolicy = typeof UserSettingsUpdateMessagePolicy[keyof typeof UserSettingsUpdateMessagePolicy];
+
+
+export const UserSettingsUpdateMessagePolicy = {
+  everyone: 'everyone',
+  followers_only: 'followers_only',
+  verified_only: 'verified_only',
+  nobody: 'nobody',
+} as const;
+
+export interface UserSettingsUpdate {
+  messagePolicy: UserSettingsUpdateMessagePolicy;
+}
+
 export type RegisterInputRole = typeof RegisterInputRole[keyof typeof RegisterInputRole];
 
 

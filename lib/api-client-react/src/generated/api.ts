@@ -69,6 +69,8 @@ import type {
   EditorialPlaylistDetail,
   EditorialPlaylistInput,
   ErrorEnvelope,
+  Feedback,
+  FeedbackInput,
   GetChatMessagesParams,
   GetHistoryParams,
   GetTrendingSongsParams,
@@ -104,6 +106,8 @@ import type {
   RatingInput,
   RatingResult,
   RegisterInput,
+  Report,
+  ReportInput,
   SendDirectMessageBody,
   SendOtp200,
   SendOtpInput,
@@ -120,6 +124,8 @@ import type {
   UploadUrlRequest,
   UploadUrlResponse,
   User,
+  UserSettings,
+  UserSettingsUpdate,
   UserUpdate,
   VerifyOtp200,
   VerifyOtpInput,
@@ -9449,4 +9455,371 @@ export function useGetStorageObject<TData = Awaited<ReturnType<typeof getStorage
 
 
 
+
+export const getCreateReportUrl = () => {
+
+
+
+
+  return `/api/reports`
+}
+
+/**
+ * @summary Report a song, video, profile, comment, chat message, or private message
+ */
+export const createReport = async (reportInput: ReportInput, options?: RequestInit): Promise<Report> => {
+
+  return customFetch<Report>(getCreateReportUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      reportInput,)
+  }
+);}
+
+
+
+
+export const getCreateReportMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createReport>>, TError,{data: BodyType<ReportInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createReport>>, TError,{data: BodyType<ReportInput>}, TContext> => {
+
+const mutationKey = ['createReport'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createReport>>, {data: BodyType<ReportInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createReport(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateReportMutationResult = NonNullable<Awaited<ReturnType<typeof createReport>>>
+    export type CreateReportMutationBody = BodyType<ReportInput>
+    export type CreateReportMutationError = ErrorType<void>
+
+    /**
+ * @summary Report a song, video, profile, comment, chat message, or private message
+ */
+export const useCreateReport = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createReport>>, TError,{data: BodyType<ReportInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createReport>>,
+        TError,
+        {data: BodyType<ReportInput>},
+        TContext
+      > => {
+      return useMutation(getCreateReportMutationOptions(options));
+    }
+
+export const getCreateFeedbackUrl = () => {
+
+
+
+
+  return `/api/feedback`
+}
+
+/**
+ * @summary Submit beta feedback (bug, feature request, or general)
+ */
+export const createFeedback = async (feedbackInput: FeedbackInput, options?: RequestInit): Promise<Feedback> => {
+
+  return customFetch<Feedback>(getCreateFeedbackUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      feedbackInput,)
+  }
+);}
+
+
+
+
+export const getCreateFeedbackMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createFeedback>>, TError,{data: BodyType<FeedbackInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createFeedback>>, TError,{data: BodyType<FeedbackInput>}, TContext> => {
+
+const mutationKey = ['createFeedback'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createFeedback>>, {data: BodyType<FeedbackInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createFeedback(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateFeedbackMutationResult = NonNullable<Awaited<ReturnType<typeof createFeedback>>>
+    export type CreateFeedbackMutationBody = BodyType<FeedbackInput>
+    export type CreateFeedbackMutationError = ErrorType<void>
+
+    /**
+ * @summary Submit beta feedback (bug, feature request, or general)
+ */
+export const useCreateFeedback = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createFeedback>>, TError,{data: BodyType<FeedbackInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createFeedback>>,
+        TError,
+        {data: BodyType<FeedbackInput>},
+        TContext
+      > => {
+      return useMutation(getCreateFeedbackMutationOptions(options));
+    }
+
+export const getListMyFeedbackUrl = () => {
+
+
+
+
+  return `/api/feedback/mine`
+}
+
+/**
+ * @summary List feedback submitted by the current user
+ */
+export const listMyFeedback = async ( options?: RequestInit): Promise<Feedback[]> => {
+
+  return customFetch<Feedback[]>(getListMyFeedbackUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListMyFeedbackQueryKey = () => {
+    return [
+    `/api/feedback/mine`
+    ] as const;
+    }
+
+
+export const getListMyFeedbackQueryOptions = <TData = Awaited<ReturnType<typeof listMyFeedback>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMyFeedback>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListMyFeedbackQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMyFeedback>>> = ({ signal }) => listMyFeedback({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMyFeedback>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListMyFeedbackQueryResult = NonNullable<Awaited<ReturnType<typeof listMyFeedback>>>
+export type ListMyFeedbackQueryError = ErrorType<void>
+
+
+/**
+ * @summary List feedback submitted by the current user
+ */
+
+export function useListMyFeedback<TData = Awaited<ReturnType<typeof listMyFeedback>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMyFeedback>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListMyFeedbackQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetMySettingsUrl = () => {
+
+
+
+
+  return `/api/users/me/settings`
+}
+
+/**
+ * @summary Get current user's safety and messaging settings
+ */
+export const getMySettings = async ( options?: RequestInit): Promise<UserSettings> => {
+
+  return customFetch<UserSettings>(getGetMySettingsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMySettingsQueryKey = () => {
+    return [
+    `/api/users/me/settings`
+    ] as const;
+    }
+
+
+export const getGetMySettingsQueryOptions = <TData = Awaited<ReturnType<typeof getMySettings>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMySettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMySettingsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMySettings>>> = ({ signal }) => getMySettings({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMySettings>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMySettingsQueryResult = NonNullable<Awaited<ReturnType<typeof getMySettings>>>
+export type GetMySettingsQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get current user's safety and messaging settings
+ */
+
+export function useGetMySettings<TData = Awaited<ReturnType<typeof getMySettings>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMySettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMySettingsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getUpdateMySettingsUrl = () => {
+
+
+
+
+  return `/api/users/me/settings`
+}
+
+/**
+ * @summary Update current user's messaging policy
+ */
+export const updateMySettings = async (userSettingsUpdate: UserSettingsUpdate, options?: RequestInit): Promise<UserSettingsUpdate> => {
+
+  return customFetch<UserSettingsUpdate>(getUpdateMySettingsUrl(),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      userSettingsUpdate,)
+  }
+);}
+
+
+
+
+export const getUpdateMySettingsMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMySettings>>, TError,{data: BodyType<UserSettingsUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateMySettings>>, TError,{data: BodyType<UserSettingsUpdate>}, TContext> => {
+
+const mutationKey = ['updateMySettings'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateMySettings>>, {data: BodyType<UserSettingsUpdate>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateMySettings(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateMySettingsMutationResult = NonNullable<Awaited<ReturnType<typeof updateMySettings>>>
+    export type UpdateMySettingsMutationBody = BodyType<UserSettingsUpdate>
+    export type UpdateMySettingsMutationError = ErrorType<void>
+
+    /**
+ * @summary Update current user's messaging policy
+ */
+export const useUpdateMySettings = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMySettings>>, TError,{data: BodyType<UserSettingsUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateMySettings>>,
+        TError,
+        {data: BodyType<UserSettingsUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateMySettingsMutationOptions(options));
+    }
 

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useCreateReport, type ReportInput } from "@workspace/api-client-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger,
 } from "@/components/ui/dialog";
@@ -32,11 +32,6 @@ const TARGET_LABELS: Record<ReportTargetType, string> = {
   private_message: "private message",
 };
 
-const authHeaders = () => ({
-  Authorization: `Bearer ${localStorage.getItem("cotopia_token")}`,
-  "Content-Type": "application/json",
-});
-
 interface ReportModalProps {
   targetType: ReportTargetType;
   targetId: number;
@@ -62,24 +57,28 @@ export function ReportModal({ targetType, targetId, trigger, variant = "icon", c
   const [reason, setReason] = useState("");
   const [details, setDetails] = useState("");
 
-  const mutation = useMutation({
-    mutationFn: async () => {
-      const res = await fetch(`${import.meta.env.BASE_URL}api/reports`, {
-        method: "POST",
-        headers: authHeaders(),
-        body: JSON.stringify({ targetType, targetId, reason, details: details.trim() || undefined }),
-      });
-      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? "Failed to submit report");
-      return res.json();
+  const mutation = useCreateReport({
+    mutation: {
+      onSuccess: () => {
+        toast({ title: "Report submitted", description: "Thanks — our moderation team will review it." });
+        setOpen(false);
+        setReason("");
+        setDetails("");
+      },
+      onError: (err) => toast({ variant: "destructive", title: "Could not submit report", description: err instanceof Error ? err.message : "Please try again" }),
     },
-    onSuccess: () => {
-      toast({ title: "Report submitted", description: "Thanks — our moderation team will review it." });
-      setOpen(false);
-      setReason("");
-      setDetails("");
-    },
-    onError: (err: Error) => toast({ variant: "destructive", title: "Could not submit report", description: err.message }),
   });
+
+  const submitReport = () => {
+    mutation.mutate({
+      data: {
+        targetType: targetType as ReportInput["targetType"],
+        targetId,
+        reason: reason as ReportInput["reason"],
+        details: details.trim() || undefined,
+      },
+    });
+  };
 
   const defaultTrigger =
     variant === "button" ? (
@@ -141,7 +140,7 @@ export function ReportModal({ targetType, targetId, trigger, variant = "icon", c
           <Button
             variant="destructive"
             disabled={!reason || mutation.isPending}
-            onClick={() => mutation.mutate()}
+            onClick={submitReport}
           >
             {mutation.isPending ? "Submitting…" : "Submit report"}
           </Button>
