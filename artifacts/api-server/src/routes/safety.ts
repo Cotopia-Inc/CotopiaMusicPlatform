@@ -9,7 +9,7 @@ import { requireAuth, requireRole, type AuthRequest } from "../lib/auth";
 const router = Router();
 
 const ADMIN_ROLES = ["admin", "master_admin"] as const;
-const MOD_ROLES = ["admin", "master_admin", "moderator", "editor"] as const;
+const MOD_ROLES = ["admin", "master_admin", "moderator"] as const;
 
 const REPORT_TARGET_TYPES = ["song", "video", "profile", "comment", "chat_message", "private_message"];
 const REPORT_REASONS = ["copyright", "harassment", "spam", "fake_profile", "illegal_content", "other"];
@@ -200,7 +200,7 @@ router.patch("/admin/feedback/:id", requireAuth, requireRole(...ADMIN_ROLES), as
 
 // Role gating: warning → moderator+, strike/suspension → admin+, ban → master_admin only.
 function canIssue(role: string, actionType: string): boolean {
-  if (actionType === "warning") return ["moderator", "editor", "admin", "master_admin"].includes(role);
+  if (actionType === "warning") return ["moderator", "admin", "master_admin"].includes(role);
   if (actionType === "strike" || actionType === "suspension") return ["admin", "master_admin"].includes(role);
   if (actionType === "ban") return role === "master_admin";
   return false;

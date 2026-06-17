@@ -462,6 +462,16 @@ export default function VideoDetail() {
             </button>
           )}
 
+          {/* Report video */}
+          {user && (
+            <ReportModal
+              targetType="video"
+              targetId={video.id}
+              variant="button"
+              className="px-3 py-1.5 rounded-full border border-border text-muted-foreground hover:text-destructive hover:border-destructive/50 transition-all text-sm font-medium"
+            />
+          )}
+
           {/* Stars */}
           <div className="flex items-center gap-1" onMouseLeave={() => setHoveredRating(null)}>
             {[1, 2, 3, 4, 5].map((star) => {

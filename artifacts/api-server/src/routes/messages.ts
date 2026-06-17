@@ -175,50 +175,39 @@ router.post("/messages", requireAuth, requireVerifiedEmail, async (req: AuthRequ
   ).limit(1);
   if (blockRow) { res.status(403).json({ error: "Cannot message this user" }); return; }
 
-  const p1policy = Math.min(userId, toUserId);
-  const p2policy = Math.max(userId, toUserId);
-
-  // Enforce recipient's message policy on NEW conversations only (existing threads stay open).
+  // Enforce recipient's message policy on every send (staff bypass; existing threads also respect policy changes).
   const isStaff = ["master_admin", "admin", "editor", "moderator"].includes(senderRole);
   if (!isStaff) {
-    const [existingConv] = await db
-      .select({ id: conversationsTable.id })
-      .from(conversationsTable)
-      .where(and(eq(conversationsTable.participant1Id, p1policy), eq(conversationsTable.participant2Id, p2policy)))
-      .limit(1);
-
-    if (!existingConv) {
-      const policy = targetUser.messagePolicy ?? "followers_only";
-      if (policy === "nobody") {
-        res.status(403).json({ error: "This user is not accepting new messages" });
+    const policy = targetUser.messagePolicy ?? "followers_only";
+    if (policy === "nobody") {
+      res.status(403).json({ error: "This user is not accepting messages" });
+      return;
+    }
+    if (policy === "verified_only") {
+      const [sender] = await db.select({ isVerified: usersTable.isVerified }).from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+      if (!sender?.isVerified) {
+        res.status(403).json({ error: "Only verified users can message this user" });
         return;
       }
-      if (policy === "verified_only") {
-        const [sender] = await db.select({ isVerified: usersTable.isVerified }).from(usersTable).where(eq(usersTable.id, userId)).limit(1);
-        if (!sender?.isVerified) {
-          res.status(403).json({ error: "Only verified users can message this user" });
-          return;
-        }
+    }
+    if (policy === "followers_only") {
+      // sender must follow the recipient's artist or label profile
+      const recipientArtist = await db.select({ id: artistsTable.id }).from(artistsTable).where(eq(artistsTable.userId, toUserId));
+      const recipientLabel = await db.select({ id: labelsTable.id }).from(labelsTable).where(eq(labelsTable.userId, toUserId));
+      let follows = false;
+      for (const a of recipientArtist) {
+        const [f] = await db.select({ id: followsTable.id }).from(followsTable).where(and(eq(followsTable.followerId, userId), eq(followsTable.targetType, "artist"), eq(followsTable.targetId, a.id))).limit(1);
+        if (f) { follows = true; break; }
       }
-      if (policy === "followers_only") {
-        // sender must follow the recipient's artist or label profile
-        const recipientArtist = await db.select({ id: artistsTable.id }).from(artistsTable).where(eq(artistsTable.userId, toUserId));
-        const recipientLabel = await db.select({ id: labelsTable.id }).from(labelsTable).where(eq(labelsTable.userId, toUserId));
-        let follows = false;
-        for (const a of recipientArtist) {
-          const [f] = await db.select({ id: followsTable.id }).from(followsTable).where(and(eq(followsTable.followerId, userId), eq(followsTable.targetType, "artist"), eq(followsTable.targetId, a.id))).limit(1);
+      if (!follows) {
+        for (const l of recipientLabel) {
+          const [f] = await db.select({ id: followsTable.id }).from(followsTable).where(and(eq(followsTable.followerId, userId), eq(followsTable.targetType, "label"), eq(followsTable.targetId, l.id))).limit(1);
           if (f) { follows = true; break; }
         }
-        if (!follows) {
-          for (const l of recipientLabel) {
-            const [f] = await db.select({ id: followsTable.id }).from(followsTable).where(and(eq(followsTable.followerId, userId), eq(followsTable.targetType, "label"), eq(followsTable.targetId, l.id))).limit(1);
-            if (f) { follows = true; break; }
-          }
-        }
-        if (!follows) {
-          res.status(403).json({ error: "This user only accepts messages from followers" });
-          return;
-        }
+      }
+      if (!follows) {
+        res.status(403).json({ error: "This user only accepts messages from followers" });
+        return;
       }
     }
   }
