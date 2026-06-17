@@ -6,3 +6,4 @@
 - [Cotopia RBAC role separation](cotopia-rbac-roles.md) — MOD_ROLES excludes editor; editor≠moderator by design; copyright concerns use escalation flow not direct strikes
 - [Cotopia role badges everywhere](cotopia-role-badges-everywhere.md) — global invariant: every rendered user name needs RoleBadges from a real backend role field; second user refs need aliased self-join; external free-text names stay unbadged
 - [Cotopia api-server has no HMR](cotopia-api-server-no-hmr.md) — api-server is a one-time esbuild bundle; new/changed routes 404 until you restart the API Server workflow (frontend Vite does hot-reload)
+- [Cotopia enforcement attribution](cotopia-enforcement-attribution.md) — automated actions use issuedByUserId=null + isAutomated=true; admin_audit_logs.adminUserId is NOT nullable so attribute system audit logs to the triggering admin

@@ -18,4 +18,11 @@ export interface AppSettingsUpdate {
   maintenanceMode?: boolean;
   requireEmailVerification?: boolean;
   featureRotation?: boolean;
+  autoEscalationEnabled?: boolean;
+  /** @minimum 1 */
+  strikesUntilSuspension?: number;
+  /** @minimum 1 */
+  autoSuspensionDays?: number;
+  /** @minimum 1 */
+  suspensionsUntilBanReview?: number;
 }

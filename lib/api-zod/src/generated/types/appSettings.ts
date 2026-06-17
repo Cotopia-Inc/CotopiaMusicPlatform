@@ -24,4 +24,8 @@ export interface AppSettings {
   maintenanceMode?: boolean;
   requireEmailVerification?: boolean;
   featureRotation?: boolean;
+  autoEscalationEnabled?: boolean;
+  strikesUntilSuspension?: number;
+  autoSuspensionDays?: number;
+  suspensionsUntilBanReview?: number;
 }

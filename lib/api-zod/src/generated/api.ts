@@ -2352,13 +2352,22 @@ export const GetAppSettingsResponse = zod.object({
   "videoSubmissionFee": zod.number().optional(),
   "maintenanceMode": zod.boolean().optional(),
   "requireEmailVerification": zod.boolean().optional(),
-  "featureRotation": zod.boolean().optional()
+  "featureRotation": zod.boolean().optional(),
+  "autoEscalationEnabled": zod.boolean().optional(),
+  "strikesUntilSuspension": zod.number().optional(),
+  "autoSuspensionDays": zod.number().optional(),
+  "suspensionsUntilBanReview": zod.number().optional()
 })
 
 
 /**
  * @summary Update app settings (admin)
  */
+
+
+
+
+
 export const UpdateAppSettingsBody = zod.object({
   "appName": zod.string().optional(),
   "logoUrl": zod.string().optional(),
@@ -2370,7 +2379,11 @@ export const UpdateAppSettingsBody = zod.object({
   "videoSubmissionFee": zod.number().optional(),
   "maintenanceMode": zod.boolean().optional(),
   "requireEmailVerification": zod.boolean().optional(),
-  "featureRotation": zod.boolean().optional()
+  "featureRotation": zod.boolean().optional(),
+  "autoEscalationEnabled": zod.boolean().optional(),
+  "strikesUntilSuspension": zod.number().min(1).optional(),
+  "autoSuspensionDays": zod.number().min(1).optional(),
+  "suspensionsUntilBanReview": zod.number().min(1).optional()
 })
 
 export const UpdateAppSettingsResponse = zod.object({
@@ -2385,7 +2398,11 @@ export const UpdateAppSettingsResponse = zod.object({
   "videoSubmissionFee": zod.number().optional(),
   "maintenanceMode": zod.boolean().optional(),
   "requireEmailVerification": zod.boolean().optional(),
-  "featureRotation": zod.boolean().optional()
+  "featureRotation": zod.boolean().optional(),
+  "autoEscalationEnabled": zod.boolean().optional(),
+  "strikesUntilSuspension": zod.number().optional(),
+  "autoSuspensionDays": zod.number().optional(),
+  "suspensionsUntilBanReview": zod.number().optional()
 })
 
 

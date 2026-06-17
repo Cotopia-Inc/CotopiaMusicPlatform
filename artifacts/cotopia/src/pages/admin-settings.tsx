@@ -41,6 +41,10 @@ export default function AdminSettings() {
     maintenanceMode: false,
     requireEmailVerification: true,
     featureRotation: true,
+    autoEscalationEnabled: true,
+    strikesUntilSuspension: 3,
+    autoSuspensionDays: 7,
+    suspensionsUntilBanReview: 3,
   });
 
   useEffect(() => {
@@ -54,6 +58,10 @@ export default function AdminSettings() {
         maintenanceMode: settings.maintenanceMode || false,
         requireEmailVerification: settings.requireEmailVerification ?? true,
         featureRotation: settings.featureRotation ?? true,
+        autoEscalationEnabled: settings.autoEscalationEnabled ?? true,
+        strikesUntilSuspension: settings.strikesUntilSuspension ?? 3,
+        autoSuspensionDays: settings.autoSuspensionDays ?? 7,
+        suspensionsUntilBanReview: settings.suspensionsUntilBanReview ?? 3,
       });
     }
   }, [settings]);
@@ -245,6 +253,57 @@ export default function AdminSettings() {
               checked={formData.featureRotation}
               onCheckedChange={(checked) => setFormData({...formData, featureRotation: checked})}
             />
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <h3 className="text-lg font-bold border-b border-border pb-2">Enforcement &amp; Auto-Escalation</h3>
+
+          <div className="flex items-center justify-between p-4 bg-secondary/30 rounded-lg border border-border">
+            <div className="space-y-1">
+              <Label className="font-bold text-base">Auto-Escalation</Label>
+              <p className="text-sm text-muted-foreground">Automatically suspend users who accumulate enough active strikes, and flag repeat offenders for ban review. When off, all enforcement stays manual.</p>
+            </div>
+            <Switch
+              checked={formData.autoEscalationEnabled}
+              onCheckedChange={(checked) => setFormData({...formData, autoEscalationEnabled: checked})}
+            />
+          </div>
+
+          <div className={`grid sm:grid-cols-3 gap-4 ${formData.autoEscalationEnabled ? "" : "opacity-50 pointer-events-none"}`}>
+            <div className="space-y-2">
+              <Label>Strikes → Suspension</Label>
+              <Input
+                type="number"
+                min={1}
+                value={formData.strikesUntilSuspension}
+                onChange={(e) => setFormData({...formData, strikesUntilSuspension: Math.max(1, Number(e.target.value))})}
+                className="bg-secondary/50 border-secondary"
+              />
+              <p className="text-xs text-muted-foreground">Active strikes that trigger an automatic suspension.</p>
+            </div>
+            <div className="space-y-2">
+              <Label>Suspension Length (days)</Label>
+              <Input
+                type="number"
+                min={1}
+                value={formData.autoSuspensionDays}
+                onChange={(e) => setFormData({...formData, autoSuspensionDays: Math.max(1, Number(e.target.value))})}
+                className="bg-secondary/50 border-secondary"
+              />
+              <p className="text-xs text-muted-foreground">Duration of each automatic suspension.</p>
+            </div>
+            <div className="space-y-2">
+              <Label>Suspensions → Ban Review</Label>
+              <Input
+                type="number"
+                min={1}
+                value={formData.suspensionsUntilBanReview}
+                onChange={(e) => setFormData({...formData, suspensionsUntilBanReview: Math.max(1, Number(e.target.value))})}
+                className="bg-secondary/50 border-secondary"
+              />
+              <p className="text-xs text-muted-foreground">Total suspensions that flag a user for ban review.</p>
+            </div>
           </div>
         </div>
 

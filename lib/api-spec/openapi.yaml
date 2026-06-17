@@ -3853,6 +3853,14 @@ components:
           type: boolean
         featureRotation:
           type: boolean
+        autoEscalationEnabled:
+          type: boolean
+        strikesUntilSuspension:
+          type: integer
+        autoSuspensionDays:
+          type: integer
+        suspensionsUntilBanReview:
+          type: integer
 
     AppSettingsUpdate:
       type: object
@@ -3879,6 +3887,17 @@ components:
           type: boolean
         featureRotation:
           type: boolean
+        autoEscalationEnabled:
+          type: boolean
+        strikesUntilSuspension:
+          type: integer
+          minimum: 1
+        autoSuspensionDays:
+          type: integer
+          minimum: 1
+        suspensionsUntilBanReview:
+          type: integer
+          minimum: 1
 
     # ── Broadcasts ────────────────────────────────────────────────────────────
     Broadcast:

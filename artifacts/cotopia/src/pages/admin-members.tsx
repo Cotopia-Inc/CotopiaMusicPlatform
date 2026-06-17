@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import {
-  ShieldAlert, BadgeCheck, Loader2, Gavel, RotateCcw, ShieldOff, AlertTriangle,
+  ShieldAlert, BadgeCheck, Loader2, Gavel, RotateCcw, ShieldOff, AlertTriangle, Bot,
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 
@@ -35,6 +35,7 @@ interface EnforcementAction {
   reason: string;
   notes: string | null;
   issuedByUserId: number | null;
+  isAutomated: boolean;
   status: "active" | "lifted";
   expiresAt: string | null;
   createdAt: string;
@@ -362,6 +363,11 @@ export default function AdminMembers() {
                         <Badge className="bg-red-500/20 text-red-400 border-red-500/30 border text-[10px] uppercase">Active</Badge>
                       ) : (
                         <Badge className="bg-green-500/20 text-green-400 border-green-500/30 border text-[10px] uppercase">Lifted</Badge>
+                      )}
+                      {a.isAutomated && (
+                        <Badge className="bg-sky-500/20 text-sky-400 border-sky-500/30 border text-[10px] uppercase tracking-wide gap-1">
+                          <Bot className="w-2.5 h-2.5" /> System
+                        </Badge>
                       )}
                     </div>
                     <p className="text-sm truncate" title={a.reason}>{a.reason}</p>

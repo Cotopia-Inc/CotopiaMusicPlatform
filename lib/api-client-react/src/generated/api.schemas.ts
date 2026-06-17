@@ -1014,6 +1014,10 @@ export interface AppSettings {
   maintenanceMode?: boolean;
   requireEmailVerification?: boolean;
   featureRotation?: boolean;
+  autoEscalationEnabled?: boolean;
+  strikesUntilSuspension?: number;
+  autoSuspensionDays?: number;
+  suspensionsUntilBanReview?: number;
 }
 
 export interface AppSettingsUpdate {
@@ -1028,6 +1032,13 @@ export interface AppSettingsUpdate {
   maintenanceMode?: boolean;
   requireEmailVerification?: boolean;
   featureRotation?: boolean;
+  autoEscalationEnabled?: boolean;
+  /** @minimum 1 */
+  strikesUntilSuspension?: number;
+  /** @minimum 1 */
+  autoSuspensionDays?: number;
+  /** @minimum 1 */
+  suspensionsUntilBanReview?: number;
 }
 
 export interface Broadcast {

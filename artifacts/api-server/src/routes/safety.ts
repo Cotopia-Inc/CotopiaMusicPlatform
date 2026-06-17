@@ -1,12 +1,146 @@
 import { Router } from "express";
-import { eq, and, desc, count, sql } from "drizzle-orm";
+import { eq, and, desc, count, sql, inArray } from "drizzle-orm";
 import {
-  db, reportsTable, feedbackTable, enforcementActionsTable,
+  db, reportsTable, feedbackTable, enforcementActionsTable, appSettingsTable,
   usersTable, notificationsTable, adminAuditLogsTable, analyticsEventsTable,
 } from "@workspace/db";
 import { requireAuth, requireRole, type AuthRequest } from "../lib/auth";
 
 const router = Router();
+
+async function getEscalationConfig() {
+  let [settings] = await db
+    .select({
+      autoEscalationEnabled: appSettingsTable.autoEscalationEnabled,
+      strikesUntilSuspension: appSettingsTable.strikesUntilSuspension,
+      autoSuspensionDays: appSettingsTable.autoSuspensionDays,
+      suspensionsUntilBanReview: appSettingsTable.suspensionsUntilBanReview,
+    })
+    .from(appSettingsTable).limit(1);
+  if (!settings) {
+    [settings] = await db.insert(appSettingsTable).values({}).returning({
+      autoEscalationEnabled: appSettingsTable.autoEscalationEnabled,
+      strikesUntilSuspension: appSettingsTable.strikesUntilSuspension,
+      autoSuspensionDays: appSettingsTable.autoSuspensionDays,
+      suspensionsUntilBanReview: appSettingsTable.suspensionsUntilBanReview,
+    });
+  }
+  return settings;
+}
+
+// Auto-escalation: when a user accumulates enough active strikes, the system
+// applies a temporary suspension; repeated suspensions are flagged for ban review.
+// Returns the auto-generated suspension action when one is created, else null.
+async function maybeAutoEscalate(
+  target: { id: number; username: string; role: string },
+  actingAdminId: number,
+): Promise<typeof enforcementActionsTable.$inferSelect | null> {
+  const cfg = await getEscalationConfig();
+  if (!cfg.autoEscalationEnabled) return null;
+  // Never auto-action staff accounts.
+  if (["admin", "master_admin"].includes(target.role)) return null;
+
+  // Don't stack on an already suspended/banned account.
+  const [{ activeSuspensions }] = await db
+    .select({ activeSuspensions: count() })
+    .from(enforcementActionsTable)
+    .where(and(
+      eq(enforcementActionsTable.userId, target.id),
+      eq(enforcementActionsTable.status, "active"),
+      inArray(enforcementActionsTable.actionType, ["suspension", "ban"]),
+    ));
+  if (Number(activeSuspensions) > 0) return null;
+
+  const [{ activeStrikes }] = await db
+    .select({ activeStrikes: count() })
+    .from(enforcementActionsTable)
+    .where(and(
+      eq(enforcementActionsTable.userId, target.id),
+      eq(enforcementActionsTable.status, "active"),
+      eq(enforcementActionsTable.actionType, "strike"),
+    ));
+
+  if (Number(activeStrikes) < cfg.strikesUntilSuspension) return null;
+
+  const expiresAt = new Date(Date.now() + cfg.autoSuspensionDays * 24 * 60 * 60 * 1000);
+  const reason = `Automatic suspension: reached ${cfg.strikesUntilSuspension} active strikes.`;
+
+  const [suspension] = await db.insert(enforcementActionsTable).values({
+    userId: target.id,
+    actionType: "suspension",
+    reason,
+    notes: `System-generated escalation after ${Number(activeStrikes)} active strikes.`,
+    issuedByUserId: null,
+    isAutomated: true,
+    status: "active",
+    expiresAt,
+  }).returning();
+
+  await db.update(usersTable)
+    .set({ isSuspended: true, suspendedUntil: expiresAt })
+    .where(eq(usersTable.id, target.id));
+
+  await db.insert(notificationsTable).values({
+    userId: target.id,
+    type: "enforcement",
+    title: "⛔ Account Suspended",
+    message: `${reason} Your suspension lasts until ${expiresAt.toISOString().slice(0, 10)}.`,
+    isRead: false,
+  });
+
+  await db.insert(adminAuditLogsTable).values({
+    adminUserId: actingAdminId,
+    action: "enforcement_suspension_auto",
+    targetType: "user",
+    targetId: target.id,
+    description: `Automatic suspension issued to @${target.username} after reaching ${cfg.strikesUntilSuspension} active strikes.`,
+    metadata: { actionType: "suspension", automated: true, activeStrikes: Number(activeStrikes), durationDays: cfg.autoSuspensionDays } as unknown,
+  });
+
+  await db.insert(analyticsEventsTable).values({
+    eventType: "admin",
+    eventName: "enforcement_action_auto",
+    userId: null,
+    contentType: "user",
+    contentId: target.id,
+    metadata: JSON.stringify({ actionType: "suspension", automated: true }),
+  });
+
+  // Repeated suspensions → flag for ban review (does not auto-ban).
+  const [{ totalSuspensions }] = await db
+    .select({ totalSuspensions: count() })
+    .from(enforcementActionsTable)
+    .where(and(
+      eq(enforcementActionsTable.userId, target.id),
+      eq(enforcementActionsTable.actionType, "suspension"),
+    ));
+
+  if (Number(totalSuspensions) >= cfg.suspensionsUntilBanReview) {
+    await db.insert(adminAuditLogsTable).values({
+      adminUserId: actingAdminId,
+      action: "ban_review_flagged",
+      targetType: "user",
+      targetId: target.id,
+      description: `@${target.username} flagged for ban review after ${Number(totalSuspensions)} suspensions.`,
+      metadata: { suspensions: Number(totalSuspensions), threshold: cfg.suspensionsUntilBanReview, automated: true } as unknown,
+    });
+
+    const masterAdmins = await db
+      .select({ id: usersTable.id })
+      .from(usersTable).where(eq(usersTable.role, "master_admin"));
+    if (masterAdmins.length) {
+      await db.insert(notificationsTable).values(masterAdmins.map(a => ({
+        userId: a.id,
+        type: "admin" as const,
+        title: "🚩 Ban Review Recommended",
+        message: `@${target.username} has reached ${Number(totalSuspensions)} suspensions and is flagged for ban review.`,
+        isRead: false,
+      })));
+    }
+  }
+
+  return suspension ?? null;
+}
 
 const ADMIN_ROLES = ["admin", "master_admin"] as const;
 const MOD_ROLES = ["admin", "master_admin", "moderator"] as const;
@@ -307,7 +441,13 @@ router.post("/admin/enforcement", requireAuth, requireRole(...MOD_ROLES), async 
     metadata: JSON.stringify({ actionType }),
   });
 
-  res.status(201).json(action);
+  // Auto-escalate when a strike pushes the user over the configured threshold.
+  let autoSuspension: typeof enforcementActionsTable.$inferSelect | null = null;
+  if (actionType === "strike") {
+    autoSuspension = await maybeAutoEscalate(target, req.user!.userId);
+  }
+
+  res.status(201).json(autoSuspension ? { ...action, autoSuspension } : action);
 });
 
 router.get("/admin/enforcement", requireAuth, requireRole(...MOD_ROLES), async (req: AuthRequest, res): Promise<void> => {
@@ -324,6 +464,7 @@ router.get("/admin/enforcement", requireAuth, requireRole(...MOD_ROLES), async (
       reason: enforcementActionsTable.reason,
       notes: enforcementActionsTable.notes,
       issuedByUserId: enforcementActionsTable.issuedByUserId,
+      isAutomated: enforcementActionsTable.isAutomated,
       status: enforcementActionsTable.status,
       expiresAt: enforcementActionsTable.expiresAt,
       createdAt: enforcementActionsTable.createdAt,

@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, boolean, integer } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -15,6 +15,10 @@ export const appSettingsTable = pgTable("app_settings", {
   maintenanceMode: boolean("maintenance_mode").notNull().default(false),
   requireEmailVerification: boolean("require_email_verification").notNull().default(true),
   featureRotation: boolean("feature_rotation").notNull().default(true),
+  autoEscalationEnabled: boolean("auto_escalation_enabled").notNull().default(true),
+  strikesUntilSuspension: integer("strikes_until_suspension").notNull().default(3),
+  autoSuspensionDays: integer("auto_suspension_days").notNull().default(7),
+  suspensionsUntilBanReview: integer("suspensions_until_ban_review").notNull().default(3),
   termsVersion: text("terms_version").default("1.0"),
   privacyVersion: text("privacy_version").default("1.0"),
   submissionAgreementVersion: text("submission_agreement_version").default("1.0"),
