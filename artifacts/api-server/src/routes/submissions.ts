@@ -48,13 +48,6 @@ router.post("/submissions", requireAuth, async (req: AuthRequest, res): Promise<
 
   const d = parsed.data;
 
-  // Staff accounts must not submit content via this form
-  const STAFF_ROLES = ["admin", "master_admin", "editor", "moderator"];
-  if (STAFF_ROLES.includes(req.user!.role)) {
-    res.status(403).json({ error: "Staff accounts cannot submit content through this form. Use the admin panel to add content directly." });
-    return;
-  }
-
   // Find or create artist profile for this user
   let [artist] = await db.select().from(artistsTable).where(eq(artistsTable.userId, req.user!.userId)).limit(1);
   if (!artist) {
@@ -128,13 +121,6 @@ router.post("/submissions/bulk", requireAuth, async (req: AuthRequest, res): Pro
   }
 
   const d = parsed.data;
-
-  // Staff accounts must not submit content via this form
-  const STAFF_ROLES_BULK = ["admin", "master_admin", "editor", "moderator"];
-  if (STAFF_ROLES_BULK.includes(req.user!.role)) {
-    res.status(403).json({ error: "Staff accounts cannot submit content through this form. Use the admin panel to add content directly." });
-    return;
-  }
 
   // Find or create artist profile for this user
   let [artist] = await db.select().from(artistsTable).where(eq(artistsTable.userId, req.user!.userId)).limit(1);
