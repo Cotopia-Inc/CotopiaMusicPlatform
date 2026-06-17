@@ -1,4 +1,6 @@
-import { describe, it, expect, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { db, appSettingsTable } from "@workspace/db";
+import { eq } from "drizzle-orm";
 import {
   api,
   bearer,
@@ -9,8 +11,28 @@ import {
 } from "./helpers";
 
 const created: number[] = [];
+
+let originalRequireEmailVerification: boolean | null = null;
+
+beforeAll(async () => {
+  let [settings] = await db.select({ requireEmailVerification: appSettingsTable.requireEmailVerification, id: appSettingsTable.id }).from(appSettingsTable).limit(1);
+  if (!settings) {
+    [settings] = await db.insert(appSettingsTable).values({}).returning({ requireEmailVerification: appSettingsTable.requireEmailVerification, id: appSettingsTable.id });
+  }
+  originalRequireEmailVerification = settings.requireEmailVerification;
+  if (!settings.requireEmailVerification) {
+    await db.update(appSettingsTable).set({ requireEmailVerification: true }).where(eq(appSettingsTable.id, settings.id));
+  }
+});
+
 afterAll(async () => {
   await cleanupUsers(created);
+  if (originalRequireEmailVerification === false) {
+    const [settings] = await db.select({ id: appSettingsTable.id }).from(appSettingsTable).limit(1);
+    if (settings) {
+      await db.update(appSettingsTable).set({ requireEmailVerification: false }).where(eq(appSettingsTable.id, settings.id));
+    }
+  }
 });
 
 async function unverified(): Promise<TestUser> {
