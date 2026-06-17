@@ -299,7 +299,7 @@ router.post("/admin/upload-song", requireAuth, requireRole(...ADMIN_ROLES, "edit
   const parsed = AdminUploadSongBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
 
-  const { title, artistId: rawArtistId, userId: rawUserId, albumId, genre, duration, streamUrl, coverUrl, releaseDate, releaseType, isFeatured } = parsed.data;
+  const { title, artistId: rawArtistId, userId: rawUserId, albumId, genre, mood, isExplicit, duration, streamUrl, coverUrl, releaseDate, releaseType, isFeatured } = parsed.data;
 
   const resolvedArtistId = rawArtistId ?? (rawUserId ? await findOrCreateArtistProfile(rawUserId) : null);
   if (!resolvedArtistId) { res.status(400).json({ error: "Must provide artistId or a valid userId" }); return; }
@@ -315,6 +315,8 @@ router.post("/admin/upload-song", requireAuth, requireRole(...ADMIN_ROLES, "edit
     artistId,
     albumId: albumId ?? null,
     genre: genre ?? null,
+    mood: mood ?? null,
+    isExplicit: isExplicit ?? false,
     duration: duration ?? 0,
     streamUrl,
     coverUrl: coverUrl ?? null,
@@ -337,7 +339,7 @@ router.post("/admin/bulk-upload-songs", requireAuth, requireRole(...ADMIN_ROLES,
   const parsed = AdminBulkUploadSongsBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
 
-  const { artistId: rawArtistId2, userId: rawUserId2, releaseName, releaseType: inputReleaseType, genre, coverUrl, releaseDate, isFeatured, songs } = parsed.data;
+  const { artistId: rawArtistId2, userId: rawUserId2, releaseName, releaseType: inputReleaseType, genre, mood: bulkMood, isExplicit: bulkIsExplicit, coverUrl, releaseDate, isFeatured, songs } = parsed.data;
 
   const resolvedArtistId2 = rawArtistId2 ?? (rawUserId2 ? await findOrCreateArtistProfile(rawUserId2) : null);
   if (!resolvedArtistId2) { res.status(400).json({ error: "Must provide artistId or a valid userId" }); return; }
@@ -371,6 +373,8 @@ router.post("/admin/bulk-upload-songs", requireAuth, requireRole(...ADMIN_ROLES,
       artistId,
       albumId,
       genre: genre ?? null,
+      mood: bulkMood ?? null,
+      isExplicit: bulkIsExplicit ?? false,
       duration: s.duration ?? 0,
       streamUrl: s.streamUrl,
       coverUrl: s.coverUrl ?? coverUrl ?? null,
@@ -394,7 +398,7 @@ router.post("/admin/upload-video", requireAuth, requireRole(...ADMIN_ROLES, "edi
   const parsed = AdminUploadVideoBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
 
-  const { title, artistId: rawArtistId3, userId: rawUserId3, genre, description, duration, videoUrl, thumbnailUrl, releaseDate, isFeatured } = parsed.data;
+  const { title, artistId: rawArtistId3, userId: rawUserId3, genre: videoGenre, mood: videoMood, isExplicit: videoIsExplicit, description, duration, videoUrl, thumbnailUrl, releaseDate, isFeatured } = parsed.data;
 
   const resolvedArtistId3 = rawArtistId3 ?? (rawUserId3 ? await findOrCreateArtistProfile(rawUserId3) : null);
   if (!resolvedArtistId3) { res.status(400).json({ error: "Must provide artistId or a valid userId" }); return; }
@@ -407,7 +411,9 @@ router.post("/admin/upload-video", requireAuth, requireRole(...ADMIN_ROLES, "edi
   const [video] = await db.insert(videosTable).values({
     title,
     artistId,
-    genre: genre ?? null,
+    genre: videoGenre ?? null,
+    mood: videoMood ?? null,
+    isExplicit: videoIsExplicit ?? false,
     description: description ?? null,
     duration: duration ?? 0,
     videoUrl,
@@ -428,7 +434,7 @@ router.post("/admin/bulk-upload-videos", requireAuth, requireRole(...ADMIN_ROLES
   const parsed = AdminBulkUploadVideosBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
 
-  const { artistId: rawArtistId4, userId: rawUserId4, genre, description, thumbnailUrl, releaseDate, isFeatured, videos } = parsed.data;
+  const { artistId: rawArtistId4, userId: rawUserId4, genre: bulkVideoGenre, mood: bulkVideoMood, isExplicit: bulkVideoIsExplicit, description, thumbnailUrl, releaseDate, isFeatured, videos } = parsed.data;
 
   const resolvedArtistId4 = rawArtistId4 ?? (rawUserId4 ? await findOrCreateArtistProfile(rawUserId4) : null);
   if (!resolvedArtistId4) { res.status(400).json({ error: "Must provide artistId or a valid userId" }); return; }
@@ -442,7 +448,9 @@ router.post("/admin/bulk-upload-videos", requireAuth, requireRole(...ADMIN_ROLES
     videos.map((v: { title: string; videoUrl: string; duration?: number; thumbnailUrl?: string }) => ({
       title: v.title,
       artistId,
-      genre: genre ?? null,
+      genre: bulkVideoGenre ?? null,
+      mood: bulkVideoMood ?? null,
+      isExplicit: bulkVideoIsExplicit ?? false,
       description: description ?? null,
       duration: v.duration ?? 0,
       videoUrl: v.videoUrl,

@@ -11,6 +11,8 @@ export interface AdminUploadVideoInput {
   userId?: number;
   artistId?: number;
   genre?: string;
+  mood?: string;
+  isExplicit?: boolean;
   description?: string;
   duration?: number;
   videoUrl: string;

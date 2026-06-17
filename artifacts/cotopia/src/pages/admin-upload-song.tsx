@@ -15,7 +15,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 
-const GENRES = ["Electronic", "Synthwave", "Indie Pop", "Hip Hop", "R&B", "Jazz", "Classical", "Rock", "Pop", "Ambient", "Lo-fi", "Alternative", "Other"];
+const GENRES = ["Pop", "Hip-Hop", "R&B", "Electronic", "Rock", "Jazz", "Classical", "Country", "Reggae", "Latin", "Afrobeats", "Indie", "Alternative", "Metal", "Folk", "Soul", "Blues", "Other"];
+const MOODS = ["Energetic", "Chill", "Romantic", "Dark", "Happy", "Melancholic", "Motivational", "Party", "Peaceful", "Nostalgic", "Intense", "Dreamy"];
 
 function getReleaseType(count: number): "single" | "ep" | "album" {
   if (count === 1) return "single";
@@ -105,6 +106,8 @@ export default function AdminUploadSong() {
     title: "",
     userId: 0,
     genre: "",
+    mood: "",
+    isExplicit: false,
     duration: 0,
     streamUrl: "",
     coverUrl: "",
@@ -135,6 +138,8 @@ export default function AdminUploadSong() {
           title: form.title,
           userId: form.userId,
           genre: form.genre || undefined,
+          mood: form.mood || undefined,
+          isExplicit: form.isExplicit,
           duration: form.duration || undefined,
           streamUrl: form.streamUrl,
           coverUrl: form.coverUrl || undefined,
@@ -158,6 +163,8 @@ export default function AdminUploadSong() {
   const [bulkShared, setBulkShared] = useState({
     userId: 0,
     genre: "",
+    mood: "",
+    isExplicit: false,
     coverUrl: "",
     releaseName: "",
     releaseDate: "",
@@ -217,6 +224,8 @@ export default function AdminUploadSong() {
           releaseName: bulkShared.releaseName || undefined,
           releaseType,
           genre: bulkShared.genre || undefined,
+          mood: bulkShared.mood || undefined,
+          isExplicit: bulkShared.isExplicit,
           coverUrl: bulkShared.coverUrl || undefined,
           releaseDate: bulkShared.releaseDate || undefined,
           isFeatured: bulkShared.isFeatured,
@@ -247,7 +256,7 @@ export default function AdminUploadSong() {
         </div>
         <div className="flex gap-3">
           <Link href={`/songs/${singleDone.id}`}><Button variant="outline">View Song</Button></Link>
-          <Button onClick={() => { setSingleDone(null); setForm({ title: "", userId: 0, genre: "", duration: 0, streamUrl: "", coverUrl: "", releaseDate: "", isFeatured: false, credits: "" }); }}>
+          <Button onClick={() => { setSingleDone(null); setForm({ title: "", userId: 0, genre: "", mood: "", isExplicit: false, duration: 0, streamUrl: "", coverUrl: "", releaseDate: "", isFeatured: false, credits: "" }); }}>
             Upload Another
           </Button>
         </div>
@@ -273,7 +282,7 @@ export default function AdminUploadSong() {
             </Link>
           ))}
         </div>
-        <Button onClick={() => { setBulkDone(null); setBulkFiles([]); setBulkTitles([]); setBulkUrls([]); setBulkShared({ userId: 0, genre: "", coverUrl: "", releaseName: "", releaseDate: "", isFeatured: false }); setBulkCoverDone(false); }}>
+        <Button onClick={() => { setBulkDone(null); setBulkFiles([]); setBulkTitles([]); setBulkUrls([]); setBulkShared({ userId: 0, genre: "", mood: "", isExplicit: false, coverUrl: "", releaseName: "", releaseDate: "", isFeatured: false }); setBulkCoverDone(false); }}>
           Upload More
         </Button>
       </div>
@@ -320,12 +329,21 @@ export default function AdminUploadSong() {
               </select>
             </div>
 
-            <div className="space-y-2">
-              <Label>Genre</Label>
-              <select className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.genre} onChange={e => setForm(f => ({ ...f, genre: e.target.value }))}>
-                <option value="">Select genre...</option>
-                {GENRES.map(g => <option key={g} value={g}>{g}</option>)}
-              </select>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Genre</Label>
+                <select className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.genre} onChange={e => setForm(f => ({ ...f, genre: e.target.value }))}>
+                  <option value="">Select genre...</option>
+                  {GENRES.map(g => <option key={g} value={g}>{g}</option>)}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label>Mood</Label>
+                <select className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.mood} onChange={e => setForm(f => ({ ...f, mood: e.target.value }))}>
+                  <option value="">Select mood...</option>
+                  {MOODS.map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -389,6 +407,14 @@ export default function AdminUploadSong() {
               <Switch checked={form.isFeatured} onCheckedChange={v => setForm(f => ({ ...f, isFeatured: v }))} />
             </div>
 
+            <div className="flex items-center justify-between p-4 rounded-lg border border-border">
+              <div>
+                <p className="text-sm font-medium">Explicit Content</p>
+                <p className="text-xs text-muted-foreground">Mark this song as containing explicit lyrics</p>
+              </div>
+              <Switch checked={form.isExplicit} onCheckedChange={v => setForm(f => ({ ...f, isExplicit: v }))} />
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="credits">Credits <span className="text-muted-foreground text-xs">(optional)</span></Label>
               <Textarea
@@ -417,19 +443,27 @@ export default function AdminUploadSong() {
                 <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Release Metadata (shared across all songs)</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Artist *</Label>
+                  <select className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" value={bulkShared.userId} onChange={e => setBulkShared(f => ({ ...f, userId: parseInt(e.target.value) }))} required>
+                    <option value={0}>Select account...</option>
+                    {accounts.map((a) => <option key={a.userId} value={a.userId}>{a.artistStageName ?? a.displayName ?? a.username} ({a.role})</option>)}
+                  </select>
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Artist *</Label>
-                    <select className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" value={bulkShared.userId} onChange={e => setBulkShared(f => ({ ...f, userId: parseInt(e.target.value) }))} required>
-                      <option value={0}>Select account...</option>
-                      {accounts.map((a) => <option key={a.userId} value={a.userId}>{a.artistStageName ?? a.displayName ?? a.username} ({a.role})</option>)}
-                    </select>
-                  </div>
                   <div className="space-y-2">
                     <Label>Genre</Label>
                     <select className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" value={bulkShared.genre} onChange={e => setBulkShared(f => ({ ...f, genre: e.target.value }))}>
                       <option value="">Select genre...</option>
                       {GENRES.map(g => <option key={g} value={g}>{g}</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Mood</Label>
+                    <select className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" value={bulkShared.mood} onChange={e => setBulkShared(f => ({ ...f, mood: e.target.value }))}>
+                      <option value="">Select mood...</option>
+                      {MOODS.map(m => <option key={m} value={m}>{m}</option>)}
                     </select>
                   </div>
                 </div>
@@ -448,10 +482,20 @@ export default function AdminUploadSong() {
                     <Label>Release Date</Label>
                     <Input type="date" value={bulkShared.releaseDate} onChange={e => setBulkShared(f => ({ ...f, releaseDate: e.target.value }))} />
                   </div>
-                  <div className="flex items-center justify-between p-3 rounded-lg border border-border mt-6">
-                    <p className="text-sm font-medium">Featured</p>
-                    <Switch checked={bulkShared.isFeatured} onCheckedChange={v => setBulkShared(f => ({ ...f, isFeatured: v }))} />
+                  <div className="space-y-1 pt-6">
+                    <div className="flex items-center justify-between p-3 rounded-lg border border-border">
+                      <p className="text-sm font-medium">Featured</p>
+                      <Switch checked={bulkShared.isFeatured} onCheckedChange={v => setBulkShared(f => ({ ...f, isFeatured: v }))} />
+                    </div>
                   </div>
+                </div>
+
+                <div className="flex items-center justify-between p-3 rounded-lg border border-border">
+                  <div>
+                    <p className="text-sm font-medium">Explicit Content</p>
+                    <p className="text-xs text-muted-foreground">Mark all songs in this release as explicit</p>
+                  </div>
+                  <Switch checked={bulkShared.isExplicit} onCheckedChange={v => setBulkShared(f => ({ ...f, isExplicit: v }))} />
                 </div>
 
                 {/* Shared cover art */}

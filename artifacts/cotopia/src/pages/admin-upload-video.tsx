@@ -14,7 +14,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 
-const GENRES = ["Electronic", "Synthwave", "Indie Pop", "Hip Hop", "R&B", "Jazz", "Classical", "Rock", "Pop", "Ambient", "Lo-fi", "Alternative", "Other"];
+const GENRES = ["Pop", "Hip-Hop", "R&B", "Electronic", "Rock", "Jazz", "Classical", "Country", "Reggae", "Latin", "Afrobeats", "Indie", "Alternative", "Metal", "Folk", "Soul", "Blues", "Other"];
+const MOODS = ["Energetic", "Chill", "Romantic", "Dark", "Happy", "Melancholic", "Motivational", "Party", "Peaceful", "Nostalgic", "Intense", "Dreamy"];
 
 // Per-row upload component — each row has its own hook instance
 function VideoUploadRow({
@@ -79,7 +80,7 @@ export default function AdminUploadVideo() {
   const accounts = accountsData ?? [];
 
   // ── Single video state ────────────────────────────────────────
-  const [form, setForm] = useState({ title: "", userId: 0, genre: "", description: "", credits: "", duration: 0, videoUrl: "", thumbnailUrl: "", releaseDate: "", isFeatured: false });
+  const [form, setForm] = useState({ title: "", userId: 0, genre: "", mood: "", isExplicit: false, description: "", credits: "", duration: 0, videoUrl: "", thumbnailUrl: "", releaseDate: "", isFeatured: false });
   const [singleDone, setSingleDone] = useState<{ id: number; title: string } | null>(null);
 
   const videoUpload = useUpload({ onSuccess: (res) => setForm(f => ({ ...f, videoUrl: `/api/storage${res.objectPath}` })) });
@@ -94,7 +95,7 @@ export default function AdminUploadVideo() {
     }
     try {
       const video = await uploadVideo.mutateAsync({
-        data: { title: form.title, userId: form.userId, genre: form.genre || undefined, description: form.description || undefined, credits: form.credits || undefined, duration: form.duration || undefined, videoUrl: form.videoUrl, thumbnailUrl: form.thumbnailUrl || undefined, releaseDate: form.releaseDate || undefined, isFeatured: form.isFeatured },
+        data: { title: form.title, userId: form.userId, genre: form.genre || undefined, mood: form.mood || undefined, isExplicit: form.isExplicit, description: form.description || undefined, credits: form.credits || undefined, duration: form.duration || undefined, videoUrl: form.videoUrl, thumbnailUrl: form.thumbnailUrl || undefined, releaseDate: form.releaseDate || undefined, isFeatured: form.isFeatured },
       });
       setSingleDone({ id: video.id, title: video.title });
       toast({ title: "Video published!", description: `"${video.title}" is now live on Everyday Radio` });
@@ -107,7 +108,7 @@ export default function AdminUploadVideo() {
   const [bulkFiles, setBulkFiles] = useState<File[]>([]);
   const [bulkTitles, setBulkTitles] = useState<string[]>([]);
   const [bulkUrls, setBulkUrls] = useState<(string | null)[]>([]);
-  const [bulkShared, setBulkShared] = useState({ userId: 0, genre: "", description: "", thumbnailUrl: "", releaseDate: "", isFeatured: false });
+  const [bulkShared, setBulkShared] = useState({ userId: 0, genre: "", mood: "", isExplicit: false, description: "", thumbnailUrl: "", releaseDate: "", isFeatured: false });
   const [bulkThumbDone, setBulkThumbDone] = useState(false);
   const [bulkDone, setBulkDone] = useState<{ id: number; title: string }[] | null>(null);
 
@@ -147,6 +148,8 @@ export default function AdminUploadVideo() {
         data: {
           userId: bulkShared.userId,
           genre: bulkShared.genre || undefined,
+          mood: bulkShared.mood || undefined,
+          isExplicit: bulkShared.isExplicit,
           description: bulkShared.description || undefined,
           thumbnailUrl: bulkShared.thumbnailUrl || undefined,
           releaseDate: bulkShared.releaseDate || undefined,
@@ -169,7 +172,7 @@ export default function AdminUploadVideo() {
         <div><h2 className="text-xl font-bold">Video Published!</h2><p className="text-muted-foreground mt-1">"{singleDone.title}" is now live.</p></div>
         <div className="flex gap-3">
           <Link href={`/videos/${singleDone.id}`}><Button variant="outline">View Video</Button></Link>
-          <Button onClick={() => { setSingleDone(null); setForm({ title: "", userId: 0, genre: "", description: "", credits: "", duration: 0, videoUrl: "", thumbnailUrl: "", releaseDate: "", isFeatured: false }); }}>Upload Another</Button>
+          <Button onClick={() => { setSingleDone(null); setForm({ title: "", userId: 0, genre: "", mood: "", isExplicit: false, description: "", credits: "", duration: 0, videoUrl: "", thumbnailUrl: "", releaseDate: "", isFeatured: false }); }}>Upload Another</Button>
         </div>
       </div>
     );
@@ -189,7 +192,7 @@ export default function AdminUploadVideo() {
             </Link>
           ))}
         </div>
-        <Button onClick={() => { setBulkDone(null); setBulkFiles([]); setBulkTitles([]); setBulkUrls([]); setBulkShared({ userId: 0, genre: "", description: "", thumbnailUrl: "", releaseDate: "", isFeatured: false }); setBulkThumbDone(false); }}>
+        <Button onClick={() => { setBulkDone(null); setBulkFiles([]); setBulkTitles([]); setBulkUrls([]); setBulkShared({ userId: 0, genre: "", mood: "", isExplicit: false, description: "", thumbnailUrl: "", releaseDate: "", isFeatured: false }); setBulkThumbDone(false); }}>
           Upload More
         </Button>
       </div>
@@ -232,12 +235,21 @@ export default function AdminUploadVideo() {
               </select>
             </div>
 
-            <div className="space-y-2">
-              <Label>Genre</Label>
-              <select className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.genre} onChange={e => setForm(f => ({ ...f, genre: e.target.value }))}>
-                <option value="">Select genre...</option>
-                {GENRES.map(g => <option key={g} value={g}>{g}</option>)}
-              </select>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Genre</Label>
+                <select className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.genre} onChange={e => setForm(f => ({ ...f, genre: e.target.value }))}>
+                  <option value="">Select genre...</option>
+                  {GENRES.map(g => <option key={g} value={g}>{g}</option>)}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label>Mood</Label>
+                <select className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.mood} onChange={e => setForm(f => ({ ...f, mood: e.target.value }))}>
+                  <option value="">Select mood...</option>
+                  {MOODS.map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -309,6 +321,11 @@ export default function AdminUploadVideo() {
               <Switch checked={form.isFeatured} onCheckedChange={v => setForm(f => ({ ...f, isFeatured: v }))} />
             </div>
 
+            <div className="flex items-center justify-between p-4 rounded-lg border border-border">
+              <div><p className="text-sm font-medium">Explicit Content</p><p className="text-xs text-muted-foreground">Mark this video as containing explicit content</p></div>
+              <Switch checked={form.isExplicit} onCheckedChange={v => setForm(f => ({ ...f, isExplicit: v }))} />
+            </div>
+
             <Button type="submit" className="w-full gap-2" disabled={uploadVideo.isPending || videoUpload.isUploading}>
               {uploadVideo.isPending ? <><Loader2 className="w-4 h-4 animate-spin" />Publishing...</> : <><Upload className="w-4 h-4" />Publish Video</>}
             </Button>
@@ -324,19 +341,27 @@ export default function AdminUploadVideo() {
                 <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Shared Metadata</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Artist *</Label>
+                  <select className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" value={bulkShared.userId} onChange={e => setBulkShared(f => ({ ...f, userId: parseInt(e.target.value) }))} required>
+                    <option value={0}>Select account...</option>
+                    {accounts.map((a) => <option key={a.userId} value={a.userId}>{a.artistStageName ?? a.displayName ?? a.username} ({a.role})</option>)}
+                  </select>
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Artist *</Label>
-                    <select className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" value={bulkShared.userId} onChange={e => setBulkShared(f => ({ ...f, userId: parseInt(e.target.value) }))} required>
-                      <option value={0}>Select account...</option>
-                      {accounts.map((a) => <option key={a.userId} value={a.userId}>{a.artistStageName ?? a.displayName ?? a.username} ({a.role})</option>)}
-                    </select>
-                  </div>
                   <div className="space-y-2">
                     <Label>Genre</Label>
                     <select className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" value={bulkShared.genre} onChange={e => setBulkShared(f => ({ ...f, genre: e.target.value }))}>
                       <option value="">Select genre...</option>
                       {GENRES.map(g => <option key={g} value={g}>{g}</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Mood</Label>
+                    <select className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" value={bulkShared.mood} onChange={e => setBulkShared(f => ({ ...f, mood: e.target.value }))}>
+                      <option value="">Select mood...</option>
+                      {MOODS.map(m => <option key={m} value={m}>{m}</option>)}
                     </select>
                   </div>
                 </div>
@@ -351,10 +376,20 @@ export default function AdminUploadVideo() {
                     <Label>Release Date</Label>
                     <Input type="date" value={bulkShared.releaseDate} onChange={e => setBulkShared(f => ({ ...f, releaseDate: e.target.value }))} />
                   </div>
-                  <div className="flex items-center justify-between p-3 rounded-lg border border-border mt-6">
-                    <p className="text-sm font-medium">Featured</p>
-                    <Switch checked={bulkShared.isFeatured} onCheckedChange={v => setBulkShared(f => ({ ...f, isFeatured: v }))} />
+                  <div className="space-y-1 pt-6">
+                    <div className="flex items-center justify-between p-3 rounded-lg border border-border">
+                      <p className="text-sm font-medium">Featured</p>
+                      <Switch checked={bulkShared.isFeatured} onCheckedChange={v => setBulkShared(f => ({ ...f, isFeatured: v }))} />
+                    </div>
                   </div>
+                </div>
+
+                <div className="flex items-center justify-between p-3 rounded-lg border border-border">
+                  <div>
+                    <p className="text-sm font-medium">Explicit Content</p>
+                    <p className="text-xs text-muted-foreground">Mark all videos in this batch as explicit</p>
+                  </div>
+                  <Switch checked={bulkShared.isExplicit} onCheckedChange={v => setBulkShared(f => ({ ...f, isExplicit: v }))} />
                 </div>
 
                 {/* Shared thumbnail */}

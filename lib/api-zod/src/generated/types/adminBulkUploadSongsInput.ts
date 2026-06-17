@@ -14,6 +14,8 @@ export interface AdminBulkUploadSongsInput {
   releaseName?: string;
   releaseType?: AdminBulkUploadSongsInputReleaseType;
   genre?: string;
+  mood?: string;
+  isExplicit?: boolean;
   coverUrl?: string;
   releaseDate?: string;
   isFeatured?: boolean;

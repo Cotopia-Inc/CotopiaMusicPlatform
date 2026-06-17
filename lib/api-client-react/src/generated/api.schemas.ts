@@ -1023,6 +1023,8 @@ export interface AdminUploadSongInput {
   artistId?: number;
   albumId?: number;
   genre?: string;
+  mood?: string;
+  isExplicit?: boolean;
   duration?: number;
   streamUrl: string;
   coverUrl?: string;
@@ -1054,6 +1056,8 @@ export interface AdminBulkUploadSongsInput {
   releaseName?: string;
   releaseType?: AdminBulkUploadSongsInputReleaseType;
   genre?: string;
+  mood?: string;
+  isExplicit?: boolean;
   coverUrl?: string;
   releaseDate?: string;
   isFeatured?: boolean;
@@ -1065,6 +1069,8 @@ export interface AdminUploadVideoInput {
   userId?: number;
   artistId?: number;
   genre?: string;
+  mood?: string;
+  isExplicit?: boolean;
   description?: string;
   duration?: number;
   videoUrl: string;
@@ -1085,6 +1091,8 @@ export interface AdminBulkUploadVideosInput {
   userId?: number;
   artistId?: number;
   genre?: string;
+  mood?: string;
+  isExplicit?: boolean;
   description?: string;
   thumbnailUrl?: string;
   releaseDate?: string;

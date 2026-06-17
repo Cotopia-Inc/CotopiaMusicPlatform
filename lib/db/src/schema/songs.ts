@@ -13,6 +13,8 @@ export const songsTable = pgTable("songs", {
   duration: integer("duration").notNull().default(0), // seconds
   coverUrl: text("cover_url"),
   streamUrl: text("stream_url"),
+  mood: text("mood"),
+  isExplicit: boolean("is_explicit").notNull().default(false),
   lyrics: text("lyrics"),
   credits: text("credits"),
   playCount: integer("play_count").notNull().default(0),

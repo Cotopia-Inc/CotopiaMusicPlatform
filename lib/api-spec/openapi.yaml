@@ -3837,6 +3837,10 @@ components:
           type: integer
         genre:
           type: string
+        mood:
+          type: string
+        isExplicit:
+          type: boolean
         duration:
           type: integer
         streamUrl:
@@ -3868,6 +3872,10 @@ components:
           enum: [single, ep, album]
         genre:
           type: string
+        mood:
+          type: string
+        isExplicit:
+          type: boolean
         coverUrl:
           type: string
         releaseDate:
@@ -3901,6 +3909,10 @@ components:
           type: integer
         genre:
           type: string
+        mood:
+          type: string
+        isExplicit:
+          type: boolean
         description:
           type: string
         duration:
@@ -3926,6 +3938,10 @@ components:
           type: integer
         genre:
           type: string
+        mood:
+          type: string
+        isExplicit:
+          type: boolean
         description:
           type: string
         thumbnailUrl:

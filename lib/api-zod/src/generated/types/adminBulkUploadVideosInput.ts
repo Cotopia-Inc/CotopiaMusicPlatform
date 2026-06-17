@@ -11,6 +11,8 @@ export interface AdminBulkUploadVideosInput {
   userId?: number;
   artistId?: number;
   genre?: string;
+  mood?: string;
+  isExplicit?: boolean;
   description?: string;
   thumbnailUrl?: string;
   releaseDate?: string;

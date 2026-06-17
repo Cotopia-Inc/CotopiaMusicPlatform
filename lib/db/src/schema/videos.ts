@@ -10,6 +10,8 @@ export const videosTable = pgTable("videos", {
   description: text("description"),
   credits: text("credits"),
   genre: text("genre"),
+  mood: text("mood"),
+  isExplicit: boolean("is_explicit").notNull().default(false),
   duration: integer("duration").notNull().default(0),
   thumbnailUrl: text("thumbnail_url"),
   videoUrl: text("video_url"),

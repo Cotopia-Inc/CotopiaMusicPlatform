@@ -13,6 +13,8 @@ export interface AdminUploadSongInput {
   artistId?: number;
   albumId?: number;
   genre?: string;
+  mood?: string;
+  isExplicit?: boolean;
   duration?: number;
   streamUrl: string;
   coverUrl?: string;
