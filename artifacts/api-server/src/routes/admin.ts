@@ -1054,6 +1054,17 @@ router.post("/admin/broadcast", requireAuth, requireRole(...ADMIN_ROLES), async 
 
 // ── Copyright Concerns ────────────────────────────────────────────────────────
 
+// Lightweight user directory for populating the copyright-concern "User Name" picker.
+// Moderators need this to escalate concerns, so it is intentionally broader than the
+// admin-only GET /admin/users (which exposes more sensitive fields).
+router.get("/admin/user-directory", requireAuth, requireRole(...ADMIN_ROLES, "moderator"), async (_req: AuthRequest, res): Promise<void> => {
+  const rows = await db
+    .select({ id: usersTable.id, username: usersTable.username, role: usersTable.role })
+    .from(usersTable)
+    .orderBy(usersTable.username);
+  res.json(rows);
+});
+
 router.post("/admin/copyright-concerns", requireAuth, requireRole(...ADMIN_ROLES, "moderator"), async (req: AuthRequest, res): Promise<void> => {
   const { contentType, contentId, contentTitle, concern } = req.body as Record<string, unknown>;
   if (!concern || typeof concern !== "string" || !concern.trim()) {
@@ -1107,10 +1118,12 @@ router.get("/admin/copyright-concerns", requireAuth, requireRole(...ADMIN_ROLES,
       reporterRole: usersTable.role,
       reviewerUsername: sql<string | null>`rv.username`,
       reviewerRole: sql<string | null>`rv.role`,
+      contentUsername: sql<string | null>`cu.username`,
     })
     .from(copyrightConcernsTable)
     .leftJoin(usersTable, eq(copyrightConcernsTable.reporterId, usersTable.id))
     .leftJoin(sql`users rv`, sql`${copyrightConcernsTable.reviewedBy} = rv.id`)
+    .leftJoin(sql`users cu`, sql`${copyrightConcernsTable.contentId} = cu.id`)
     .where(conditions.length > 0 ? and(...conditions) : undefined)
     .orderBy(desc(copyrightConcernsTable.createdAt));
 

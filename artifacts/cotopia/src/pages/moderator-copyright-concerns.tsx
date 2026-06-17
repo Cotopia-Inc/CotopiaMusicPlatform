@@ -36,10 +36,20 @@ export default function ModeratorCopyrightConcerns() {
   const [submitting, setSubmitting] = useState(false);
   const [concerns, setConcerns] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState<{ id: number; username: string; role: string }[]>([]);
 
   useEffect(() => {
     if (user && !MOD_ROLES.includes(user.role)) navigate("/");
   }, [user, navigate]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch(`${import.meta.env.BASE_URL}api/admin/user-directory`, { headers: authHeaders() });
+        if (res.ok) setUsers(await res.json());
+      } catch { /* ignore */ }
+    })();
+  }, []);
 
   const loadConcerns = async () => {
     setLoading(true);
@@ -122,13 +132,17 @@ export default function ModeratorCopyrightConcerns() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Content ID <span className="text-muted-foreground">(optional)</span></Label>
-              <Input
-                type="number"
-                placeholder="e.g. 42"
-                value={form.contentId}
-                onChange={(e) => setForm(f => ({ ...f, contentId: e.target.value }))}
-              />
+              <Label>User Name <span className="text-muted-foreground">(optional)</span></Label>
+              <Select value={form.contentId} onValueChange={(v) => setForm(f => ({ ...f, contentId: v }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select user…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {users.map((u) => (
+                    <SelectItem key={u.id} value={String(u.id)}>{u.username}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-1.5">
               <Label>Content Title <span className="text-muted-foreground">(optional)</span></Label>
@@ -183,8 +197,8 @@ export default function ModeratorCopyrightConcerns() {
                           {c.contentTitle && (
                             <span className="text-sm font-medium truncate">{c.contentTitle}</span>
                           )}
-                          {c.contentId && !c.contentTitle && (
-                            <span className="text-sm text-muted-foreground">ID #{c.contentId}</span>
+                          {c.contentUsername && (
+                            <span className="text-sm text-muted-foreground">@{c.contentUsername}</span>
                           )}
                         </div>
                         <p className="text-sm text-muted-foreground leading-relaxed">{c.concern}</p>

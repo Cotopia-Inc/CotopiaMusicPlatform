@@ -128,7 +128,7 @@ export default function AdminCopyrightConcerns() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <CardTitle className="text-sm">Concern #{c.id}</CardTitle>
                         {c.contentType && <Badge variant="outline" className="capitalize text-xs">{c.contentType}</Badge>}
-                        {c.contentId && <span className="text-xs text-muted-foreground">ID #{c.contentId}</span>}
+                        {c.contentUsername && <span className="text-xs text-muted-foreground">@{c.contentUsername}</span>}
                         {c.contentTitle && <span className="text-xs font-medium">"{c.contentTitle}"</span>}
                       </div>
                       <p className="text-xs text-muted-foreground">
