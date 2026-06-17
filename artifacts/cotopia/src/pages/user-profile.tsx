@@ -1,21 +1,58 @@
 import { useParams, Link, useLocation } from "wouter";
 import { useRef, useState, useEffect } from "react";
 import { useGetPublicUser } from "@workspace/api-client-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RoleBadges } from "@/components/role-badges";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
-import { ArrowLeft, CalendarDays, Music, MessageCircle, Volume2, VolumeX } from "lucide-react";
+import { ArrowLeft, CalendarDays, Music, MessageCircle, Volume2, VolumeX, Ban } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { useAuth } from "@/lib/auth";
+import { ReportModal } from "@/components/report-modal";
+import { useToast } from "@/hooks/use-toast";
+
+const authHeaders = () => ({
+  Authorization: `Bearer ${localStorage.getItem("cotopia_token")}`,
+  "Content-Type": "application/json",
+});
 
 export default function UserProfile() {
   const { id } = useParams<{ id: string }>();
   const { data: user, isLoading } = useGetPublicUser(Number(id));
   const { user: me } = useAuth();
   const [, navigate] = useLocation();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [volume, setVolume] = useState(0);
+
+  const targetId = Number(id);
+  const { data: blockedIds } = useQuery({
+    queryKey: ["user-blocks"],
+    queryFn: async () => {
+      const res = await fetch(`${import.meta.env.BASE_URL}api/users/blocks`, { headers: authHeaders() });
+      if (!res.ok) return [] as number[];
+      return res.json() as Promise<number[]>;
+    },
+    enabled: !!me,
+  });
+  const isBlocked = !!blockedIds?.includes(targetId);
+
+  const blockMutation = useMutation({
+    mutationFn: async (block: boolean) => {
+      if (block) {
+        await fetch(`${import.meta.env.BASE_URL}api/users/block`, { method: "POST", headers: authHeaders(), body: JSON.stringify({ userId: targetId }) });
+      } else {
+        await fetch(`${import.meta.env.BASE_URL}api/users/block/${targetId}`, { method: "DELETE", headers: authHeaders() });
+      }
+    },
+    onSuccess: (_d, block) => {
+      queryClient.invalidateQueries({ queryKey: ["user-blocks"] });
+      toast({ title: block ? "User blocked" : "User unblocked" });
+    },
+    onError: () => toast({ variant: "destructive", title: "Action failed", description: "Please try again." }),
+  });
 
 
   if (isLoading) {
@@ -96,7 +133,7 @@ export default function UserProfile() {
           <div className="space-y-1">
             <h1 className="text-3xl font-extrabold tracking-tight flex items-center gap-2 flex-wrap">
               {user.displayName || user.username}
-              <RoleBadges role={user.role} isVerified={user.isVerified} size="md" />
+              <RoleBadges role={user.role} isVerified={user.isVerified} verificationType={(user as any).verificationType} size="md" />
             </h1>
             {user.displayName && (
               <p className="text-sm text-muted-foreground">@{user.username}</p>
@@ -113,10 +150,23 @@ export default function UserProfile() {
               </Link>
             )}
             {me && !isMe && (
-              <Button size="sm" className="gap-1.5" onClick={() => navigate(`/messages?new=${user.id}`)}>
-                <MessageCircle className="w-4 h-4" />
-                Message
-              </Button>
+              <>
+                <Button size="sm" className="gap-1.5" onClick={() => navigate(`/messages?new=${user.id}`)}>
+                  <MessageCircle className="w-4 h-4" />
+                  Message
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5"
+                  disabled={blockMutation.isPending}
+                  onClick={() => blockMutation.mutate(!isBlocked)}
+                >
+                  <Ban className="w-4 h-4" />
+                  {isBlocked ? "Unblock" : "Block"}
+                </Button>
+                <ReportModal targetType="profile" targetId={user.id} variant="button" />
+              </>
             )}
           </div>
         </div>

@@ -32,10 +32,27 @@ export async function requireAuth(req: AuthRequest, res: Response, next: NextFun
   try {
     const payload = verifyToken(token);
     const [fresh] = await db
-      .select({ role: usersTable.role })
+      .select({
+        role: usersTable.role,
+        isBanned: usersTable.isBanned,
+        isSuspended: usersTable.isSuspended,
+        suspendedUntil: usersTable.suspendedUntil,
+      })
       .from(usersTable)
       .where(eq(usersTable.id, payload.userId))
       .limit(1);
+    if (fresh?.isBanned) {
+      res.status(403).json({ error: "Your account has been permanently banned.", code: "banned" });
+      return;
+    }
+    if (fresh?.isSuspended) {
+      const expiry = fresh.suspendedUntil ? new Date(fresh.suspendedUntil) : null;
+      const stillActive = !expiry || expiry.getTime() > Date.now();
+      if (stillActive) {
+        res.status(403).json({ error: "Your account is suspended.", code: "suspended" });
+        return;
+      }
+    }
     req.user = { userId: payload.userId, role: fresh?.role ?? payload.role };
     next();
   } catch {
@@ -57,6 +74,23 @@ export async function optionalAuth(req: AuthRequest, _res: Response, next: NextF
     } catch {
       // ignore invalid token in optional auth
     }
+  }
+  next();
+}
+
+export async function requireVerifiedEmail(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+  if (!req.user) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+  const [user] = await db
+    .select({ emailVerified: usersTable.emailVerified })
+    .from(usersTable)
+    .where(eq(usersTable.id, req.user.userId))
+    .limit(1);
+  if (!user?.emailVerified) {
+    res.status(403).json({ error: "Email verification required", code: "email_not_verified" });
+    return;
   }
   next();
 }

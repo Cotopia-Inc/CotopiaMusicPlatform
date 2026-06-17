@@ -8,6 +8,8 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Play, Heart, Star, Send, Radio, Users, MessageCircle, Maximize2, ArrowLeft, Trash2, Edit2, X, Save, Upload, ImageIcon, ListPlus } from "lucide-react";
 import { RoleTag } from "@/components/role-badges";
+import { ReportModal } from "@/components/report-modal";
+import { VerifyEmailBanner } from "@/components/verify-email-banner";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { useState, useEffect, useRef, useCallback } from "react";
@@ -350,6 +352,11 @@ export default function VideoDetail() {
                               <Trash2 className="w-3 h-3" />
                             </button>
                           )}
+                          {!isOwn && user && (
+                            <div className="opacity-0 group-hover:opacity-100 transition-opacity ml-auto flex-shrink-0">
+                              <ReportModal targetType="chat_message" targetId={msg.id} />
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -367,6 +374,9 @@ export default function VideoDetail() {
 
           {/* Input */}
           <div className="p-2 border-t border-white/10 flex-shrink-0 bg-black/30">
+            {user && !(user as any).emailVerified && (
+              <VerifyEmailBanner action="join the chat" className="mb-2" />
+            )}
             {user ? (
               <form onSubmit={handleChat} className="flex gap-1.5">
                 <Input

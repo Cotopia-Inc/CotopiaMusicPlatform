@@ -1,4 +1,5 @@
-import { MoreHorizontal, ListMusic, ListPlus, Check, Plus, Music } from "lucide-react";
+import { MoreHorizontal, ListMusic, ListPlus, Check, Plus, Music, Flag } from "lucide-react";
+import { ReportModal } from "@/components/report-modal";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,6 +42,7 @@ export function SongMenu({ song, className }: SongMenuProps) {
   const queryClient = useQueryClient();
   const { addToQueue } = usePlayer();
   const [addedIds, setAddedIds] = useState<number[]>([]);
+  const [reportOpen, setReportOpen] = useState(false);
 
   const { data: playlists } = useListPlaylists(
     { query: { queryKey: getListPlaylistsQueryKey(), enabled: !!user } }
@@ -130,9 +132,18 @@ export function SongMenu({ song, className }: SongMenuProps) {
                 )}
               </DropdownMenuSubContent>
             </DropdownMenuSub>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="cursor-pointer text-destructive focus:text-destructive"
+              onSelect={(e) => { e.preventDefault(); setReportOpen(true); }}
+            >
+              <Flag className="w-4 h-4 mr-2 flex-shrink-0" />
+              Report
+            </DropdownMenuItem>
           </>
         )}
       </DropdownMenuContent>
+      <ReportModal targetType="song" targetId={song.id} open={reportOpen} onOpenChange={setReportOpen} />
     </DropdownMenu>
   );
 }

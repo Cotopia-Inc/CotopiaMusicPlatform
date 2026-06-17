@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { eq, desc, ilike, and, count, sql } from "drizzle-orm";
+import { eq, desc, ilike, and, count, sql, or } from "drizzle-orm";
 import {
   db, artistsTable, usersTable, songsTable, videosTable,
-  followsTable, ratingsTable, albumsTable, labelsTable,
+  followsTable, ratingsTable, albumsTable, labelsTable, userBlocksTable,
 } from "@workspace/db";
 import {
   ListArtistsQueryParams, GetArtistParams, UpdateArtistParams, UpdateArtistBody,
@@ -218,8 +218,19 @@ router.post("/artists/:id/follow", requireAuth, async (req: AuthRequest, res): P
     res.status(400).json({ error: params.error.message });
     return;
   }
+  const me = req.user!.userId;
+  const [owner] = await db.select({ userId: artistsTable.userId }).from(artistsTable).where(eq(artistsTable.id, params.data.id)).limit(1);
+  if (owner?.userId) {
+    const [blocked] = await db.select({ id: userBlocksTable.id }).from(userBlocksTable).where(
+      or(
+        and(eq(userBlocksTable.blockerId, me), eq(userBlocksTable.blockedId, owner.userId)),
+        and(eq(userBlocksTable.blockerId, owner.userId), eq(userBlocksTable.blockedId, me)),
+      )
+    ).limit(1);
+    if (blocked) { res.status(403).json({ error: "Cannot follow this user" }); return; }
+  }
   await db.insert(followsTable).values({
-    followerId: req.user!.userId,
+    followerId: me,
     targetType: "artist",
     targetId: params.data.id,
   }).onConflictDoNothing();

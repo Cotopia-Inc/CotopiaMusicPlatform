@@ -26,6 +26,7 @@ import editorPicksRouter from "./editor-picks";
 import messagesRouter from "./messages";
 import legalRouter from "./legal";
 import blocksRouter from "./blocks";
+import safetyRouter from "./safety";
 
 const router: IRouter = Router();
 
@@ -56,5 +57,6 @@ router.use(editorPicksRouter);
 router.use(messagesRouter);
 router.use(legalRouter);
 router.use(blocksRouter);
+router.use(safetyRouter);
 
 export default router;

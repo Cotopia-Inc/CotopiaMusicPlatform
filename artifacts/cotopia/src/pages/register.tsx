@@ -17,6 +17,7 @@ const formSchema = z.object({
   email: z.string().email("Please enter a valid email"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   role: z.nativeEnum(RegisterInputRole),
+  ageConfirmed: z.boolean().refine(v => v === true, { message: "You must confirm you meet the age requirement to continue" }),
   tosAccepted: z.boolean().refine(v => v === true, { message: "You must accept the Terms of Service to continue" }),
 });
 
@@ -28,11 +29,11 @@ export default function Register() {
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { username: "", email: "", password: "", role: RegisterInputRole.listener, tosAccepted: false },
+    defaultValues: { username: "", email: "", password: "", role: RegisterInputRole.listener, ageConfirmed: false, tosAccepted: false },
   });
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    registerMutation.mutate({ data: { username: values.username, email: values.email, password: values.password, role: values.role } }, {
+    registerMutation.mutate({ data: { username: values.username, email: values.email, password: values.password, role: values.role, ageConfirmed: values.ageConfirmed } }, {
       onSuccess: (res) => {
         login(res.user, res.token);
         toast({ title: "Account created!", description: "Check your email to verify your address." });
@@ -124,6 +125,24 @@ export default function Register() {
                 </FormItem>
               )} />
 
+              <FormField control={form.control} name="ageConfirmed" render={({ field }) => (
+                <FormItem>
+                  <div className="flex items-start gap-3 p-3 rounded-lg border border-border bg-secondary/20">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        className="mt-0.5"
+                      />
+                    </FormControl>
+                    <FormLabel className="text-xs text-muted-foreground leading-relaxed cursor-pointer font-normal">
+                      I confirm I am at least 18 years old or the age of legal majority in my jurisdiction.
+                    </FormLabel>
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )} />
+
               <FormField control={form.control} name="tosAccepted" render={({ field }) => (
                 <FormItem>
                   <div className="flex items-start gap-3 p-3 rounded-lg border border-border bg-secondary/20">
@@ -141,7 +160,6 @@ export default function Register() {
                       <Link href="/legal/community-guidelines" className="text-primary hover:underline font-medium" onClick={e => e.stopPropagation()}>Community Guidelines</Link>,{" "}
                       and{" "}
                       <Link href="/legal/ai-policy" className="text-primary hover:underline font-medium" onClick={e => e.stopPropagation()}>AI Content Policy</Link>.
-                      {" "}I confirm I am 18 years of age or older.
                     </FormLabel>
                   </div>
                   <FormMessage />

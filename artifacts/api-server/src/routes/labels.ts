@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { eq, desc, ilike, and, count, avg, sql } from "drizzle-orm";
+import { eq, desc, ilike, and, count, avg, sql, or } from "drizzle-orm";
 import {
   db, labelsTable, artistsTable, songsTable, videosTable,
-  followsTable, ratingsTable, albumsTable, usersTable,
+  followsTable, ratingsTable, albumsTable, usersTable, userBlocksTable,
 } from "@workspace/db";
 import {
   ListLabelsQueryParams, GetLabelParams, UpdateLabelParams, UpdateLabelBody,
@@ -194,7 +194,18 @@ router.post("/labels/:id/follow", requireAuth, async (req: AuthRequest, res): Pr
     res.status(400).json({ error: params.error.message });
     return;
   }
-  await db.insert(followsTable).values({ followerId: req.user!.userId, targetType: "label", targetId: params.data.id }).onConflictDoNothing();
+  const me = req.user!.userId;
+  const [owner] = await db.select({ userId: labelsTable.userId }).from(labelsTable).where(eq(labelsTable.id, params.data.id)).limit(1);
+  if (owner?.userId) {
+    const [blocked] = await db.select({ id: userBlocksTable.id }).from(userBlocksTable).where(
+      or(
+        and(eq(userBlocksTable.blockerId, me), eq(userBlocksTable.blockedId, owner.userId)),
+        and(eq(userBlocksTable.blockerId, owner.userId), eq(userBlocksTable.blockedId, me)),
+      )
+    ).limit(1);
+    if (blocked) { res.status(403).json({ error: "Cannot follow this user" }); return; }
+  }
+  await db.insert(followsTable).values({ followerId: me, targetType: "label", targetId: params.data.id }).onConflictDoNothing();
   res.json({ ok: true });
 });
 

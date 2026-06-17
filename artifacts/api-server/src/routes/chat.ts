@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { eq, and, desc } from "drizzle-orm";
 import { db, chatMessagesTable, usersTable, artistsTable } from "@workspace/db";
-import { requireAuth, optionalAuth, type AuthRequest } from "../lib/auth";
+import { requireAuth, requireVerifiedEmail, optionalAuth, type AuthRequest } from "../lib/auth";
 import { GetChatMessagesParams, PostChatMessageParams, PostChatMessageBody } from "@workspace/api-zod";
 
 const router = Router();
@@ -46,7 +46,7 @@ router.get("/chat/:contentType/:contentId", optionalAuth, async (req: AuthReques
   res.json(deduped.reverse());
 });
 
-router.post("/chat/:contentType/:contentId", requireAuth, async (req: AuthRequest, res): Promise<void> => {
+router.post("/chat/:contentType/:contentId", requireAuth, requireVerifiedEmail, async (req: AuthRequest, res): Promise<void> => {
   const params = PostChatMessageParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: "Invalid parameters" });

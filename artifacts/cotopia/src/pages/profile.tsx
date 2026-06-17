@@ -13,6 +13,14 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { ImageCropModal } from "@/components/image-crop-modal";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useQuery } from "@tanstack/react-query";
+import { MessageSquare } from "lucide-react";
+
+const authHeaders = () => ({
+  Authorization: `Bearer ${localStorage.getItem("cotopia_token")}`,
+  "Content-Type": "application/json",
+});
 
 export default function Profile() {
   const { user } = useAuth();
@@ -67,6 +75,38 @@ export default function Profile() {
       initialized.current = true;
     }
   }, [profile]);
+
+  const [messagePolicy, setMessagePolicy] = useState<string>("followers_only");
+  const [savingPolicy, setSavingPolicy] = useState(false);
+  const { data: pmSettings } = useQuery({
+    queryKey: ["my-message-settings"],
+    queryFn: async () => {
+      const res = await fetch(`${import.meta.env.BASE_URL}api/users/me/settings`, { headers: authHeaders() });
+      if (!res.ok) return { messagePolicy: "followers_only" };
+      return res.json() as Promise<{ messagePolicy: string }>;
+    },
+    enabled: !!user,
+  });
+  useEffect(() => {
+    if (pmSettings?.messagePolicy) setMessagePolicy(pmSettings.messagePolicy);
+  }, [pmSettings]);
+
+  const handleSavePolicy = async () => {
+    setSavingPolicy(true);
+    try {
+      const res = await fetch(`${import.meta.env.BASE_URL}api/users/me/settings`, {
+        method: "PATCH",
+        headers: authHeaders(),
+        body: JSON.stringify({ messagePolicy }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      toast({ title: "Message settings saved" });
+    } catch {
+      toast({ variant: "destructive", title: "Could not save settings" });
+    } finally {
+      setSavingPolicy(false);
+    }
+  };
 
   const updateMutation = useUpdateMe();
   const changePasswordMutation = useChangePassword();
@@ -459,6 +499,36 @@ export default function Profile() {
 
         <Button onClick={handleSave} disabled={updateMutation.isPending} className="w-full">
           {updateMutation.isPending ? "Saving…" : "Save Changes"}
+        </Button>
+      </div>
+
+      {/* Private Message Settings */}
+      <div className="bg-card p-6 rounded-xl border border-border space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+            <MessageSquare className="w-4 h-4 text-primary" />
+          </div>
+          <div>
+            <p className="font-semibold text-sm">Private Messages</p>
+            <p className="text-xs text-muted-foreground">Choose who is allowed to send you direct messages.</p>
+          </div>
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Who can message me</label>
+          <Select value={messagePolicy} onValueChange={setMessagePolicy}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="everyone">Everyone</SelectItem>
+              <SelectItem value="followers_only">Followers only</SelectItem>
+              <SelectItem value="verified_only">Verified users only</SelectItem>
+              <SelectItem value="nobody">No one</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <Button onClick={handleSavePolicy} disabled={savingPolicy} variant="outline" className="w-full">
+          {savingPolicy ? "Saving…" : "Save Message Settings"}
         </Button>
       </div>
 

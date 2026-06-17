@@ -14,7 +14,11 @@ export const usersTable = pgTable("users", {
   bio: text("bio"),
   role: text("role").notNull().default("listener"), // listener | artist | label | business | admin | moderator | editor | master_admin
   isVerified: boolean("is_verified").notNull().default(false),
+  verificationType: text("verification_type"), // null | artist | label (set when admin grants verified status)
   isSuspended: boolean("is_suspended").notNull().default(false),
+  suspendedUntil: timestamp("suspended_until", { withTimezone: true }), // temporary suspension expiry; null = indefinite/none
+  isBanned: boolean("is_banned").notNull().default(false), // permanent ban
+  messagePolicy: text("message_policy").notNull().default("followers_only"), // everyone | followers_only | verified_only | nobody
   isActive: boolean("is_active").notNull().default(true),
   emailVerified: boolean("email_verified").notNull().default(false),
   // Demographics (collected after signup)

@@ -24,7 +24,8 @@ export const RegisterBody = zod.object({
   "password": zod.string(),
   "username": zod.string(),
   "displayName": zod.string().optional(),
-  "role": zod.enum(['listener', 'artist', 'label', 'business'])
+  "role": zod.enum(['listener', 'artist', 'label', 'business']),
+  "ageConfirmed": zod.boolean().describe('User confirms they are at least 18 or the age of legal majority in their jurisdiction.')
 })
 
 

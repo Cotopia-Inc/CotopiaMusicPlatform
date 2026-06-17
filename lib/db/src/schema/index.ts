@@ -30,3 +30,6 @@ export * from "./email_otps";
 export * from "./user_blocks";
 export * from "./broadcasts";
 export * from "./copyright_concerns";
+export * from "./reports";
+export * from "./enforcement_actions";
+export * from "./feedback";

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { eq, or, and, desc, ne } from "drizzle-orm";
-import { db, conversationsTable, directMessagesTable, usersTable, notificationsTable, artistsTable, followsTable, userBlocksTable } from "@workspace/db";
-import { requireAuth, type AuthRequest } from "../lib/auth";
+import { db, conversationsTable, directMessagesTable, usersTable, notificationsTable, artistsTable, labelsTable, followsTable, userBlocksTable } from "@workspace/db";
+import { requireAuth, requireVerifiedEmail, type AuthRequest } from "../lib/auth";
 import { count } from "drizzle-orm";
 
 const router = Router();
@@ -152,14 +152,19 @@ router.get("/messages/:id", requireAuth, async (req: AuthRequest, res): Promise<
 });
 
 // POST /messages — send DM (finds or creates conversation)
-router.post("/messages", requireAuth, async (req: AuthRequest, res): Promise<void> => {
+router.post("/messages", requireAuth, requireVerifiedEmail, async (req: AuthRequest, res): Promise<void> => {
   const userId = req.user!.userId;
+  const senderRole = req.user!.role;
   const { toUserId, body } = req.body as { toUserId: number; body: string };
 
   if (!toUserId || !body?.trim()) { res.status(400).json({ error: "toUserId and body are required" }); return; }
   if (toUserId === userId) { res.status(400).json({ error: "Cannot message yourself" }); return; }
 
-  const [targetUser] = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.id, toUserId)).limit(1);
+  const [targetUser] = await db
+    .select({ id: usersTable.id, messagePolicy: usersTable.messagePolicy })
+    .from(usersTable)
+    .where(eq(usersTable.id, toUserId))
+    .limit(1);
   if (!targetUser) { res.status(404).json({ error: "User not found" }); return; }
 
   const [blockRow] = await db.select({ id: userBlocksTable.id }).from(userBlocksTable).where(
@@ -169,6 +174,54 @@ router.post("/messages", requireAuth, async (req: AuthRequest, res): Promise<voi
     )
   ).limit(1);
   if (blockRow) { res.status(403).json({ error: "Cannot message this user" }); return; }
+
+  const p1policy = Math.min(userId, toUserId);
+  const p2policy = Math.max(userId, toUserId);
+
+  // Enforce recipient's message policy on NEW conversations only (existing threads stay open).
+  const isStaff = ["master_admin", "admin", "editor", "moderator"].includes(senderRole);
+  if (!isStaff) {
+    const [existingConv] = await db
+      .select({ id: conversationsTable.id })
+      .from(conversationsTable)
+      .where(and(eq(conversationsTable.participant1Id, p1policy), eq(conversationsTable.participant2Id, p2policy)))
+      .limit(1);
+
+    if (!existingConv) {
+      const policy = targetUser.messagePolicy ?? "followers_only";
+      if (policy === "nobody") {
+        res.status(403).json({ error: "This user is not accepting new messages" });
+        return;
+      }
+      if (policy === "verified_only") {
+        const [sender] = await db.select({ isVerified: usersTable.isVerified }).from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+        if (!sender?.isVerified) {
+          res.status(403).json({ error: "Only verified users can message this user" });
+          return;
+        }
+      }
+      if (policy === "followers_only") {
+        // sender must follow the recipient's artist or label profile
+        const recipientArtist = await db.select({ id: artistsTable.id }).from(artistsTable).where(eq(artistsTable.userId, toUserId));
+        const recipientLabel = await db.select({ id: labelsTable.id }).from(labelsTable).where(eq(labelsTable.userId, toUserId));
+        let follows = false;
+        for (const a of recipientArtist) {
+          const [f] = await db.select({ id: followsTable.id }).from(followsTable).where(and(eq(followsTable.followerId, userId), eq(followsTable.targetType, "artist"), eq(followsTable.targetId, a.id))).limit(1);
+          if (f) { follows = true; break; }
+        }
+        if (!follows) {
+          for (const l of recipientLabel) {
+            const [f] = await db.select({ id: followsTable.id }).from(followsTable).where(and(eq(followsTable.followerId, userId), eq(followsTable.targetType, "label"), eq(followsTable.targetId, l.id))).limit(1);
+            if (f) { follows = true; break; }
+          }
+        }
+        if (!follows) {
+          res.status(403).json({ error: "This user only accepts messages from followers" });
+          return;
+        }
+      }
+    }
+  }
 
   const p1 = Math.min(userId, toUserId);
   const p2 = Math.max(userId, toUserId);

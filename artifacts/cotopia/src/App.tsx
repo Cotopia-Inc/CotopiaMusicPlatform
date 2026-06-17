@@ -48,6 +48,11 @@ import AdminDmcaDetail from "@/pages/admin-dmca-detail";
 import AdminAuditLogs from "@/pages/admin-audit-logs";
 import AdminLegal from "@/pages/admin-legal";
 import AdminStrikes from "@/pages/admin-strikes";
+import AdminReports from "@/pages/admin-reports";
+import Feedback from "@/pages/feedback";
+import AdminFeedback from "@/pages/admin-feedback";
+import AdminMembers from "@/pages/admin-members";
+import AdminBetaAnalytics from "@/pages/admin-beta-analytics";
 import EditorDashboard from "@/pages/editor-dashboard";
 import EditorPlaylists from "@/pages/editor-playlists";
 import EditorPicks from "@/pages/editor-picks";
@@ -248,6 +253,9 @@ function Router() {
       <Route path="/messages">
         <ProtectedRoute><Layout><Messages /></Layout></ProtectedRoute>
       </Route>
+      <Route path="/feedback">
+        <ProtectedRoute><Layout><Feedback /></Layout></ProtectedRoute>
+      </Route>
 
       {/* Legal Center — public routes */}
       <Route path="/legal" component={LegalCenter} />
@@ -320,6 +328,18 @@ function Router() {
       </Route>
       <Route path="/admin/strikes">
         <RoleRoute roles={ADMIN_ROLES}><AdminStrikes /></RoleRoute>
+      </Route>
+      <Route path="/admin/reports">
+        <RoleRoute roles={MOD_ROLES}><AdminReports /></RoleRoute>
+      </Route>
+      <Route path="/admin/members">
+        <RoleRoute roles={MOD_ROLES}><AdminMembers /></RoleRoute>
+      </Route>
+      <Route path="/admin/feedback">
+        <RoleRoute roles={ADMIN_ROLES}><AdminFeedback /></RoleRoute>
+      </Route>
+      <Route path="/admin/beta-analytics">
+        <RoleRoute roles={ADMIN_ROLES}><AdminBetaAnalytics /></RoleRoute>
       </Route>
       <Route path="/admin/discover">
         <RoleRoute roles={EDITOR_ROLES}><AdminDiscover /></RoleRoute>

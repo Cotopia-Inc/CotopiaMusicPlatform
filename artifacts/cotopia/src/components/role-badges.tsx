@@ -16,31 +16,37 @@ interface RoleBadgesProps {
   role: UserRole;
   size?: "sm" | "md" | "lg";
   isVerified?: boolean;
+  verificationType?: string | null;
 }
 
-export function VerifiedBadge({ role, size = "sm", isVerified }: RoleBadgesProps) {
+export function VerifiedBadge({ role, size = "sm", isVerified, verificationType }: RoleBadgesProps) {
   const isStaff = role === "master_admin" || role === "admin" || role === "editor" || role === "moderator";
   if (!isVerified && !isStaff) return null;
 
   const iconSize =
     size === "lg" ? "w-6 h-6" : size === "md" ? "w-4 h-4" : "w-3 h-3";
 
+  // Staff badges take precedence and reflect the staff role.
   if (role === "master_admin" || role === "admin") {
-    return <BadgeCheck className={`${iconSize} text-red-500 flex-shrink-0`} />;
+    return <BadgeCheck className={`${iconSize} text-red-500 flex-shrink-0`} aria-label="Verified staff" />;
   }
   if (role === "editor") {
-    return <BadgeCheck className={`${iconSize} text-blue-500 flex-shrink-0`} />;
-  }
-  if (role === "artist") {
-    return <BadgeCheck className={`${iconSize} text-yellow-400 flex-shrink-0`} />;
-  }
-  if (role === "label") {
-    return <BadgeCheck className={`${iconSize} text-sky-400 flex-shrink-0`} />;
+    return <BadgeCheck className={`${iconSize} text-blue-500 flex-shrink-0`} aria-label="Verified editor" />;
   }
   if (role === "moderator") {
-    return <BadgeCheck className={`${iconSize} text-violet-400 flex-shrink-0`} />;
+    return <BadgeCheck className={`${iconSize} text-violet-400 flex-shrink-0`} aria-label="Verified moderator" />;
   }
-  return <BadgeCheck className={`${iconSize} text-emerald-400 flex-shrink-0`} />;
+
+  // Verified members: distinguish artist vs label using the admin-granted verificationType,
+  // falling back to the account role for older records.
+  const verifiedAs = verificationType ?? (role === "artist" || role === "label" ? role : null);
+  if (verifiedAs === "artist") {
+    return <BadgeCheck className={`${iconSize} text-yellow-400 flex-shrink-0`} aria-label="Verified Artist" />;
+  }
+  if (verifiedAs === "label") {
+    return <BadgeCheck className={`${iconSize} text-sky-400 flex-shrink-0`} aria-label="Verified Label" />;
+  }
+  return <BadgeCheck className={`${iconSize} text-emerald-400 flex-shrink-0`} aria-label="Verified" />;
 }
 
 export function RoleTag({ role, size = "sm" }: RoleBadgesProps) {
@@ -92,8 +98,8 @@ export function RoleTag({ role, size = "sm" }: RoleBadgesProps) {
   return null;
 }
 
-export function RoleBadges({ role, size = "sm", isVerified }: RoleBadgesProps) {
-  const verified = <VerifiedBadge role={role} size={size} isVerified={isVerified} />;
+export function RoleBadges({ role, size = "sm", isVerified, verificationType }: RoleBadgesProps) {
+  const verified = <VerifiedBadge role={role} size={size} isVerified={isVerified} verificationType={verificationType} />;
   const tag = <RoleTag role={role} size={size} />;
   if (!verified && !tag) return null;
   return (

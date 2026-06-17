@@ -20,6 +20,8 @@ import { useToast } from "@/hooks/use-toast";
 import { UserLink } from "@/components/user-link";
 import { useUpload } from "@workspace/object-storage-web";
 import { SongMenu } from "@/components/song-menu";
+import { ReportModal } from "@/components/report-modal";
+import { VerifyEmailBanner } from "@/components/verify-email-banner";
 
 function formatTime(iso: string) {
   const d = new Date(iso);
@@ -475,6 +477,11 @@ export default function SongDetail() {
                             <Trash2 className="w-3 h-3" />
                           </button>
                         )}
+                        {!isOwn && user && (
+                          <div className="opacity-0 group-hover:opacity-100 transition-opacity ml-auto flex-shrink-0">
+                            <ReportModal targetType="chat_message" targetId={msg.id} />
+                          </div>
+                        )}
                       </div>
                       <div className={`bg-secondary/60 rounded-lg px-3 py-2 mt-0.5 ${isDeleting ? "opacity-40" : ""}`}>
                         <p className="text-xs leading-relaxed break-words text-foreground/90">{isDeleting ? "Deleting…" : msg.message}</p>
@@ -500,6 +507,9 @@ export default function SongDetail() {
 
         {/* Input */}
         <div className="p-3 border-t border-border bg-card/80 flex-shrink-0">
+          {user && !(user as any).emailVerified && (
+            <VerifyEmailBanner action="join the chat" className="mb-3" />
+          )}
           {user ? (
             <form onSubmit={handleChat} className="flex gap-2">
               <Input

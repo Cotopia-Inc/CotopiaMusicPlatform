@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { VerifyEmailBanner } from "@/components/verify-email-banner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useLocation, Link } from "wouter";
 import { useAuth } from "@/lib/auth";
@@ -573,6 +574,9 @@ export default function Submit() {
         <h1 className="text-4xl font-extrabold tracking-tight">Submit Your Content</h1>
         <p className="text-muted-foreground">Get your music or video in front of our audience. One flat fee covers your entire batch.</p>
       </div>
+
+      <VerifyEmailBanner action="submit content" />
+
 
       {/* Step indicator */}
       <div className="flex items-center gap-0">

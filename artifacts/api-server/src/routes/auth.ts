@@ -55,7 +55,12 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const { email, password, username, displayName, role } = parsed.data;
+  const { email, password, username, displayName, role, ageConfirmed } = parsed.data;
+
+  if (ageConfirmed !== true) {
+    res.status(400).json({ error: "You must confirm you meet the age requirement to register." });
+    return;
+  }
 
   const existingEmail = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1);
   if (existingEmail.length > 0) {
@@ -94,6 +99,7 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     { userId: user.id, agreementType: "privacy", agreementVersion: "1.0", ipAddress, userAgent, metadata: { source: "registration" } },
     { userId: user.id, agreementType: "community_guidelines", agreementVersion: "1.0", ipAddress, userAgent, metadata: { source: "registration" } },
     { userId: user.id, agreementType: "ai_policy", agreementVersion: "1.0", ipAddress, userAgent, metadata: { source: "registration" } },
+    { userId: user.id, agreementType: "age_confirmation", agreementVersion: "1.0", ipAddress, userAgent, metadata: { source: "registration", statement: "Confirmed at least 18 years old or the age of legal majority in their jurisdiction." } },
   ]);
 
   // Check if email verification is required by platform settings
@@ -147,6 +153,25 @@ router.post("/auth/login", async (req, res): Promise<void> => {
   if (!user.isActive) {
     res.status(403).json({ error: "Account is deactivated" });
     return;
+  }
+
+  if (user.isBanned) {
+    res.status(403).json({ error: "Your account has been permanently banned." });
+    return;
+  }
+
+  if (user.isSuspended) {
+    const expiry = user.suspendedUntil ? new Date(user.suspendedUntil) : null;
+    if (expiry && expiry.getTime() <= Date.now()) {
+      // Temporary suspension has expired — auto-lift it.
+      await db.update(usersTable).set({ isSuspended: false, suspendedUntil: null }).where(eq(usersTable.id, user.id));
+      user.isSuspended = false;
+      user.suspendedUntil = null;
+    } else {
+      const until = expiry ? ` until ${expiry.toISOString().slice(0, 10)}` : "";
+      res.status(403).json({ error: `Your account is suspended${until}.` });
+      return;
+    }
   }
 
   const token = signToken({ userId: user.id, role: user.role });

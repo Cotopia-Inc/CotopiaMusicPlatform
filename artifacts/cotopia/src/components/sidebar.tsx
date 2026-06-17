@@ -164,6 +164,7 @@ export function Sidebar() {
     { href: "/library", label: "My Library", icon: Library },
     { href: "/submit", label: "Submit Music", icon: Send },
     { href: "/submissions", label: "My Submissions", icon: Radio },
+    { href: "/feedback", label: "Beta Feedback", icon: MessageSquare },
     { href: "/profile", label: "Profile", icon: Settings },
   ];
 
@@ -184,6 +185,10 @@ export function Sidebar() {
     { href: "/admin/dmca", label: "DMCA Claims", icon: AlertOctagon },
     { href: "/admin/strikes", label: "Copyright Strikes", icon: ShieldOff },
     { href: "/admin/copyright-concerns", label: "Copyright Concerns", icon: Flag },
+    { href: "/admin/reports", label: "Reports", icon: Flag },
+    { href: "/admin/members", label: "Member Actions", icon: ShieldOff },
+    { href: "/admin/feedback", label: "Beta Feedback", icon: MessageSquare },
+    { href: "/admin/beta-analytics", label: "Beta Analytics", icon: BarChart3 },
     { href: "/admin/settings", label: "Settings", icon: Settings },
   ];
 
@@ -199,6 +204,8 @@ export function Sidebar() {
     { href: "/moderator/comments", label: "Comments", icon: MessageSquare },
     { href: "/moderator/messages", label: "DM Feed", icon: MessageCircle },
     { href: "/moderator/copyright-concerns", label: "Copyright Concerns", icon: Flag },
+    { href: "/admin/reports", label: "Reports", icon: Flag },
+    { href: "/admin/members", label: "Member Actions", icon: ShieldOff },
   ];
 
   const isActive = (href: string) =>

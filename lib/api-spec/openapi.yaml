@@ -2534,7 +2534,7 @@ components:
     # ── Auth ────────────────────────────────────────────────────────────────
     RegisterInput:
       type: object
-      required: [email, password, username, role]
+      required: [email, password, username, role, ageConfirmed]
       properties:
         email:
           type: string
@@ -2547,6 +2547,9 @@ components:
         role:
           type: string
           enum: [listener, artist, label, business]
+        ageConfirmed:
+          type: boolean
+          description: User confirms they are at least 18 or the age of legal majority in their jurisdiction.
 
     LoginInput:
       type: object

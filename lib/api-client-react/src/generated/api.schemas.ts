@@ -25,6 +25,8 @@ export interface RegisterInput {
   username: string;
   displayName?: string;
   role: RegisterInputRole;
+  /** User confirms they are at least 18 or the age of legal majority in their jurisdiction. */
+  ageConfirmed: boolean;
 }
 
 export interface LoginInput {

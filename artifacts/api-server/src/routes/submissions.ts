@@ -7,7 +7,7 @@ import {
   CreateBulkSubmissionBody,
   ReviewSubmissionParams, ReviewSubmissionBody,
 } from "@workspace/api-zod";
-import { requireAuth, type AuthRequest } from "../lib/auth";
+import { requireAuth, requireVerifiedEmail, type AuthRequest } from "../lib/auth";
 import { publishContent } from "../lib/publisher";
 
 const router = Router();
@@ -40,7 +40,7 @@ router.get("/submissions", requireAuth, async (req: AuthRequest, res): Promise<v
   res.json(enriched);
 });
 
-router.post("/submissions", requireAuth, async (req: AuthRequest, res): Promise<void> => {
+router.post("/submissions", requireAuth, requireVerifiedEmail, async (req: AuthRequest, res): Promise<void> => {
   const parsed = CreateSubmissionBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -114,7 +114,7 @@ router.post("/submissions", requireAuth, async (req: AuthRequest, res): Promise<
   res.status(201).json(enriched);
 });
 
-router.post("/submissions/bulk", requireAuth, async (req: AuthRequest, res): Promise<void> => {
+router.post("/submissions/bulk", requireAuth, requireVerifiedEmail, async (req: AuthRequest, res): Promise<void> => {
   const parsed = CreateBulkSubmissionBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });

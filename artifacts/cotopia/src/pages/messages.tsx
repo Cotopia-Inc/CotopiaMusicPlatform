@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Send, MessageCircle, ArrowLeft, Search, Plus, X, Star, UserRound, Pencil, Trash2, MoreVertical, BellOff, Bell, Shield, ShieldOff } from "lucide-react";
+import { ReportModal } from "@/components/report-modal";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -568,6 +569,11 @@ export default function MessagesPage() {
                               <div className={cn("px-3 py-2 rounded-2xl text-sm leading-relaxed", isMe ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-secondary text-foreground rounded-bl-sm", isDeleting && "opacity-40")}>
                                 {isDeleting ? "Deleting…" : msg.body}
                               </div>
+                              {!isMe && !isDeleting && (
+                                <div className="hidden group-hover:flex items-center mb-1">
+                                  <ReportModal targetType="private_message" targetId={msg.id} />
+                                </div>
+                              )}
                             </div>
                             <span className="text-[10px] text-muted-foreground mt-0.5 px-1 flex items-center gap-1">
                               {formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })}
