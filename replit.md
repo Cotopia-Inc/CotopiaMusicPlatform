@@ -9,6 +9,7 @@ A full-stack music and video streaming platform with role-based access, content 
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
+- `pnpm --filter @workspace/api-server run test` — run the safety/enforcement API regression tests (vitest + supertest; requires `DATABASE_URL`)
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
 - `pnpm --filter @workspace/scripts run seed` — seed the database with demo data
 - Required env: `DATABASE_URL` — Postgres connection string, `SESSION_SECRET` — JWT signing secret
