@@ -1,10 +1,11 @@
 import { Router } from "express";
 import { eq, desc, and } from "drizzle-orm";
-import { db, submissionsTable, usersTable, songsTable, videosTable, artistsTable, notificationsTable } from "@workspace/db";
+import { db, submissionsTable, usersTable, songsTable, videosTable, artistsTable, notificationsTable, adminAuditLogsTable } from "@workspace/db";
 import {
   CreateSubmissionBody, GetSubmissionParams,
   UpdateSubmissionParams, UpdateSubmissionBody,
   CreateBulkSubmissionBody,
+  ReviewSubmissionParams, ReviewSubmissionBody,
 } from "@workspace/api-zod";
 import { requireAuth, type AuthRequest } from "../lib/auth";
 import { publishContent } from "../lib/publisher";
@@ -210,7 +211,9 @@ router.get("/submissions/:id", requireAuth, async (req: AuthRequest, res): Promi
 });
 
 router.patch("/submissions/:id", requireAuth, async (req: AuthRequest, res): Promise<void> => {
-  const reviewerRoles = ["admin", "master_admin", "moderator", "editor"];
+  // Legacy admin path. Publish/approve/reject for moderators & editors is gated
+  // through POST /submissions/:id/review — keep this admin-only to avoid bypass.
+  const reviewerRoles = ["admin", "master_admin"];
   if (!reviewerRoles.includes(req.user!.role)) {
     res.status(403).json({ error: "Forbidden" });
     return;
@@ -321,6 +324,211 @@ router.delete("/submissions/:id", requireAuth, async (req: AuthRequest, res): Pr
 
   await db.delete(submissionsTable).where(eq(submissionsTable.id, params.data.id));
   res.sendStatus(204);
+});
+
+// ── Role-based review workflow ───────────────────────────────────────────────
+const MODERATOR_ACTIONS = ["moderator_approve", "moderator_reject", "escalate", "moderator_note"] as const;
+const ADMIN_ACTIONS = ["admin_publish", "admin_reject", "return_to_moderator", "flag_legal", "admin_note"] as const;
+const EDITOR_ACTIONS = ["editor_recommend", "editor_note"] as const;
+
+const ADMIN_ROLES = ["admin", "master_admin"];
+
+function rolesForAction(action: string): string[] {
+  if ((MODERATOR_ACTIONS as readonly string[]).includes(action)) return ["moderator", ...ADMIN_ROLES];
+  if ((ADMIN_ACTIONS as readonly string[]).includes(action)) return ADMIN_ROLES;
+  if ((EDITOR_ACTIONS as readonly string[]).includes(action)) return ["editor", ...ADMIN_ROLES];
+  return [];
+}
+
+router.post("/submissions/:id/review", requireAuth, async (req: AuthRequest, res): Promise<void> => {
+  const params = ReviewSubmissionParams.safeParse(req.params);
+  if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
+  const parsed = ReviewSubmissionBody.safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+
+  const { action } = parsed.data;
+  const notes = parsed.data.notes?.trim() || undefined;
+  const role = req.user!.role;
+
+  const allowedRoles = rolesForAction(action);
+  if (!allowedRoles.includes(role)) {
+    res.status(403).json({ error: "Your role cannot perform this action." });
+    return;
+  }
+
+  const [submission] = await db.select().from(submissionsTable).where(eq(submissionsTable.id, params.data.id)).limit(1);
+  if (!submission) { res.status(404).json({ error: "Submission not found" }); return; }
+
+  // State-machine guards: prevent acting on submissions in the wrong stage.
+  const TERMINAL = ["published", "rejected", "moderator_rejected"];
+  const MOD_STATE_CHANGING = ["moderator_approve", "moderator_reject", "escalate"];
+  const ADMIN_STATE_CHANGING = ["admin_publish", "admin_reject", "return_to_moderator"];
+  if (MOD_STATE_CHANGING.includes(action) && submission.status !== "pending_moderator_review") {
+    res.status(409).json({ error: "This submission is no longer awaiting moderator review." });
+    return;
+  }
+  if (ADMIN_STATE_CHANGING.includes(action) && TERMINAL.includes(submission.status)) {
+    res.status(409).json({ error: "This submission has already been finalized." });
+    return;
+  }
+
+  const enrichedBefore = await enrichSubmission(submission);
+  const title = enrichedBefore.title || `Submission #${submission.id}`;
+
+  // Resolve scheduled release date from submitter metadata (for publishing)
+  let releaseDate: string | null = null;
+  try {
+    const meta = JSON.parse(submission.submitterNotes ?? "{}");
+    if (meta.releaseDate) releaseDate = meta.releaseDate as string;
+  } catch { /* ignore */ }
+  const today = new Date().toISOString().slice(0, 10);
+  const hasFutureDate = !!releaseDate && releaseDate > today;
+
+  const update: Partial<typeof submissionsTable.$inferInsert> = {};
+  let auditAction = "";
+  let auditDescription = "";
+  let notification: { type: string; title: string; message: string } | null = null;
+
+  switch (action) {
+    case "moderator_approve":
+      update.status = "pending_admin_final_review";
+      if (notes) update.moderatorNotes = notes;
+      auditAction = "submission_moderator_approved";
+      auditDescription = `Moderator approved "${title}" for admin final review`;
+      break;
+
+    case "moderator_reject":
+      update.status = "moderator_rejected";
+      if (notes) update.moderatorNotes = notes;
+      auditAction = "submission_moderator_rejected";
+      auditDescription = `Moderator rejected "${title}" as spam/policy violation`;
+      notification = {
+        type: "submission_rejected",
+        title: `"${title}" was not approved`,
+        message: notes
+          ? `Moderator note: ${notes}`
+          : "Your submission was rejected for a community guideline or spam violation.",
+      };
+      break;
+
+    case "escalate":
+      update.status = "escalated_to_admin";
+      if (notes) update.moderatorNotes = notes;
+      auditAction = "submission_escalated";
+      auditDescription = `Moderator escalated "${title}" to admin`;
+      break;
+
+    case "moderator_note":
+      update.moderatorNotes = notes ?? "";
+      auditAction = "submission_moderator_note";
+      auditDescription = `Moderator added a note to "${title}"`;
+      break;
+
+    case "admin_publish":
+      if (!submission.contentId) { res.status(400).json({ error: "Submission has no content to publish" }); return; }
+      if (notes) update.adminNotes = notes;
+      auditAction = "submission_published";
+      if (hasFutureDate) {
+        update.status = "admin_approved";
+        if (submission.type === "song") {
+          await db.update(songsTable).set({ status: "approved", releaseDate }).where(eq(songsTable.id, submission.contentId));
+        } else {
+          await db.update(videosTable).set({ status: "approved", releaseDate }).where(eq(videosTable.id, submission.contentId));
+        }
+        auditDescription = `Admin approved "${title}" — scheduled to publish on ${releaseDate}`;
+        notification = {
+          type: "submission_approved",
+          title: `"${title}" approved — scheduled for ${releaseDate}`,
+          message: notes
+            ? `Admin note: ${notes}. Your content will go live on ${releaseDate}.`
+            : `Your content is approved and will be published automatically on ${releaseDate}.`,
+        };
+      } else {
+        await publishContent(submission.type as "song" | "video", submission.contentId, { submissionId: submission.id });
+        // publishContent already set status to "published"; keep update consistent
+        update.status = "published";
+        auditDescription = `Admin published "${title}"`;
+        notification = {
+          type: "submission_approved",
+          title: `"${title}" is now live!`,
+          message: notes ? `Admin note: ${notes}` : "Your submission has been approved and published. Thanks!",
+        };
+      }
+      break;
+
+    case "admin_reject":
+      update.status = "rejected";
+      if (notes) update.adminNotes = notes;
+      auditAction = "submission_admin_rejected";
+      auditDescription = `Admin rejected "${title}"`;
+      notification = {
+        type: "submission_rejected",
+        title: `"${title}" was not approved`,
+        message: notes ? `Admin note: ${notes}` : "Your submission did not meet our requirements. You're welcome to revise and resubmit.",
+      };
+      break;
+
+    case "return_to_moderator":
+      update.status = "pending_moderator_review";
+      if (notes) update.adminNotes = notes;
+      auditAction = "submission_returned_to_moderator";
+      auditDescription = `Admin returned "${title}" to the moderation queue`;
+      break;
+
+    case "flag_legal":
+      update.status = "escalated_to_admin";
+      if (notes) update.adminNotes = notes;
+      auditAction = "submission_legal_flag";
+      auditDescription = `Admin flagged a legal/copyright concern on "${title}"`;
+      break;
+
+    case "admin_note":
+      update.adminNotes = notes ?? "";
+      auditAction = "submission_admin_note";
+      auditDescription = `Admin added a note to "${title}"`;
+      break;
+
+    case "editor_recommend":
+      if (notes) update.adminNotes = notes;
+      auditAction = "submission_editor_recommend";
+      auditDescription = `Editor recommended "${title}" for featured/playlist placement`;
+      break;
+
+    case "editor_note":
+      if (notes) update.adminNotes = notes;
+      auditAction = "submission_editor_note";
+      auditDescription = `Editor left an editorial note on "${title}"`;
+      break;
+  }
+
+  const [updated] = Object.keys(update).length
+    ? await db.update(submissionsTable).set(update).where(eq(submissionsTable.id, submission.id)).returning()
+    : [submission];
+
+  await db.insert(adminAuditLogsTable).values({
+    adminUserId: req.user!.userId,
+    action: auditAction,
+    targetType: "submission",
+    targetId: submission.id,
+    description: auditDescription,
+    metadata: { action, notes, role, newStatus: update.status ?? submission.status } as unknown,
+  });
+
+  if (notification) {
+    await db.insert(notificationsTable).values({
+      userId: submission.userId,
+      type: notification.type,
+      title: notification.title,
+      message: notification.message,
+      submissionId: submission.id,
+      isRead: false,
+    });
+  }
+
+  req.log.info({ submissionId: submission.id, action, role }, "Submission review action");
+
+  const enriched = await enrichSubmission(updated);
+  res.json(enriched);
 });
 
 export default router;

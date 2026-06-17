@@ -114,6 +114,7 @@ import type {
   SongUpdate,
   Submission,
   SubmissionInput,
+  SubmissionReviewInput,
   SubmissionUpdate,
   UploadAccount,
   UploadUrlRequest,
@@ -5090,6 +5091,78 @@ export const useDeleteSubmission = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getDeleteSubmissionMutationOptions(options));
+    }
+
+export const getReviewSubmissionUrl = (id: number,) => {
+
+
+
+
+  return `/api/submissions/${id}/review`
+}
+
+/**
+ * @summary Perform a role-based review action on a submission
+ */
+export const reviewSubmission = async (id: number,
+    submissionReviewInput: SubmissionReviewInput, options?: RequestInit): Promise<Submission> => {
+
+  return customFetch<Submission>(getReviewSubmissionUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      submissionReviewInput,)
+  }
+);}
+
+
+
+
+export const getReviewSubmissionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviewSubmission>>, TError,{id: number;data: BodyType<SubmissionReviewInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reviewSubmission>>, TError,{id: number;data: BodyType<SubmissionReviewInput>}, TContext> => {
+
+const mutationKey = ['reviewSubmission'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reviewSubmission>>, {id: number;data: BodyType<SubmissionReviewInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  reviewSubmission(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReviewSubmissionMutationResult = NonNullable<Awaited<ReturnType<typeof reviewSubmission>>>
+    export type ReviewSubmissionMutationBody = BodyType<SubmissionReviewInput>
+    export type ReviewSubmissionMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Perform a role-based review action on a submission
+ */
+export const useReviewSubmission = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviewSubmission>>, TError,{id: number;data: BodyType<SubmissionReviewInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof reviewSubmission>>,
+        TError,
+        {id: number;data: BodyType<SubmissionReviewInput>},
+        TContext
+      > => {
+      return useMutation(getReviewSubmissionMutationOptions(options));
     }
 
 export const getGetHistoryUrl = (params?: GetHistoryParams,) => {

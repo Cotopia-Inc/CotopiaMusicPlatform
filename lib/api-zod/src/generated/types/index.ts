@@ -138,6 +138,8 @@ export * from './submissionInput';
 export * from './submissionInputPlan';
 export * from './submissionInputType';
 export * from './submissionPaymentStatus';
+export * from './submissionReviewInput';
+export * from './submissionReviewInputAction';
 export * from './submissionStatus';
 export * from './submissionType';
 export * from './submissionUpdate';

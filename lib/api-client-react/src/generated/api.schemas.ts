@@ -521,7 +521,15 @@ export type SubmissionStatus = typeof SubmissionStatus[keyof typeof SubmissionSt
 
 export const SubmissionStatus = {
   draft: 'draft',
+  pending_payment: 'pending_payment',
+  paid: 'paid',
   pending_review: 'pending_review',
+  pending_moderator_review: 'pending_moderator_review',
+  moderator_approved: 'moderator_approved',
+  moderator_rejected: 'moderator_rejected',
+  escalated_to_admin: 'escalated_to_admin',
+  pending_admin_final_review: 'pending_admin_final_review',
+  admin_approved: 'admin_approved',
   approved: 'approved',
   rejected: 'rejected',
   published: 'published',
@@ -546,6 +554,8 @@ export interface Submission {
   contentId?: number | null;
   status: SubmissionStatus;
   paymentStatus?: SubmissionPaymentStatus;
+  /** @nullable */
+  moderatorNotes?: string | null;
   /** @nullable */
   adminNotes?: string | null;
   /** @nullable */
@@ -632,7 +642,15 @@ export type SubmissionUpdateStatus = typeof SubmissionUpdateStatus[keyof typeof 
 
 export const SubmissionUpdateStatus = {
   draft: 'draft',
+  pending_payment: 'pending_payment',
+  paid: 'paid',
   pending_review: 'pending_review',
+  pending_moderator_review: 'pending_moderator_review',
+  moderator_approved: 'moderator_approved',
+  moderator_rejected: 'moderator_rejected',
+  escalated_to_admin: 'escalated_to_admin',
+  pending_admin_final_review: 'pending_admin_final_review',
+  admin_approved: 'admin_approved',
   approved: 'approved',
   rejected: 'rejected',
   published: 'published',
@@ -641,6 +659,29 @@ export const SubmissionUpdateStatus = {
 export interface SubmissionUpdate {
   status?: SubmissionUpdateStatus;
   adminNotes?: string;
+  moderatorNotes?: string;
+}
+
+export type SubmissionReviewInputAction = typeof SubmissionReviewInputAction[keyof typeof SubmissionReviewInputAction];
+
+
+export const SubmissionReviewInputAction = {
+  moderator_approve: 'moderator_approve',
+  moderator_reject: 'moderator_reject',
+  escalate: 'escalate',
+  moderator_note: 'moderator_note',
+  admin_publish: 'admin_publish',
+  admin_reject: 'admin_reject',
+  return_to_moderator: 'return_to_moderator',
+  flag_legal: 'flag_legal',
+  admin_note: 'admin_note',
+  editor_recommend: 'editor_recommend',
+  editor_note: 'editor_note',
+} as const;
+
+export interface SubmissionReviewInput {
+  action: SubmissionReviewInputAction;
+  notes?: string;
 }
 
 export type HistoryItemType = typeof HistoryItemType[keyof typeof HistoryItemType];
@@ -1405,7 +1446,15 @@ export type AdminListSubmissionsStatus = typeof AdminListSubmissionsStatus[keyof
 
 export const AdminListSubmissionsStatus = {
   draft: 'draft',
+  pending_payment: 'pending_payment',
+  paid: 'paid',
   pending_review: 'pending_review',
+  pending_moderator_review: 'pending_moderator_review',
+  moderator_approved: 'moderator_approved',
+  moderator_rejected: 'moderator_rejected',
+  escalated_to_admin: 'escalated_to_admin',
+  pending_admin_final_review: 'pending_admin_final_review',
+  admin_approved: 'admin_approved',
   approved: 'approved',
   rejected: 'rejected',
   published: 'published',

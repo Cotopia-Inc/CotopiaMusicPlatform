@@ -78,9 +78,9 @@ router.post("/payments/capture", requireAuth, async (req: AuthRequest, res): Pro
     .set({ status: "completed" })
     .where(eq(paymentsTable.submissionId, submission.id));
 
-  // Move submission to pending_review with paid status
+  // Payment complete → enter the moderation queue
   const [updated] = await db.update(submissionsTable)
-    .set({ paymentStatus: "paid", status: "pending_review" })
+    .set({ paymentStatus: "paid", status: "pending_moderator_review" })
     .where(eq(submissionsTable.id, submission.id))
     .returning();
 

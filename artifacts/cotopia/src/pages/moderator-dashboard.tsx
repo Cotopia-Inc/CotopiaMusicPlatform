@@ -26,7 +26,7 @@ export default function ModeratorDashboard() {
     if (user && !MOD_ROLES.includes(user.role)) navigate("/");
   }, [user, navigate]);
 
-  const { data: pendingSubmissions } = useAdminListSubmissions({ status: "pending_review" });
+  const { data: pendingSubmissions } = useAdminListSubmissions({ status: "pending_moderator_review" });
   const pending = Array.isArray(pendingSubmissions) ? pendingSubmissions : [];
   const pendingCount = pending.length;
 

@@ -10,4 +10,5 @@ import type { SubmissionUpdateStatus } from './submissionUpdateStatus';
 export interface SubmissionUpdate {
   status?: SubmissionUpdateStatus;
   adminNotes?: string;
+  moderatorNotes?: string;
 }

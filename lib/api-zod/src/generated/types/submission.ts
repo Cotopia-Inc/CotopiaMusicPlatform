@@ -20,6 +20,8 @@ export interface Submission {
   status: SubmissionStatus;
   paymentStatus?: SubmissionPaymentStatus;
   /** @nullable */
+  moderatorNotes?: string | null;
+  /** @nullable */
   adminNotes?: string | null;
   /** @nullable */
   mediaUrl?: string | null;

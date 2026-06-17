@@ -8,9 +8,13 @@ export const submissionsTable = pgTable("submissions", {
   userId: integer("user_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
   type: text("type").notNull(), // song | video
   contentId: integer("content_id"),
-  status: text("status").notNull().default("pending_review"), // draft | pending_review | approved | rejected | published
+  // draft | pending_payment | paid | pending_moderator_review | moderator_approved
+  // | moderator_rejected | escalated_to_admin | pending_admin_final_review
+  // | admin_approved | rejected | published
+  status: text("status").notNull().default("pending_moderator_review"),
   paymentStatus: text("payment_status").notNull().default("unpaid"), // unpaid | paid | refunded
   submitterNotes: text("submitter_notes"),
+  moderatorNotes: text("moderator_notes"),
   adminNotes: text("admin_notes"),
   plan: text("plan").notNull().default("basic"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

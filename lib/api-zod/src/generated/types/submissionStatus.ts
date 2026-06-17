@@ -11,7 +11,15 @@ export type SubmissionStatus = typeof SubmissionStatus[keyof typeof SubmissionSt
 
 export const SubmissionStatus = {
   draft: 'draft',
+  pending_payment: 'pending_payment',
+  paid: 'paid',
   pending_review: 'pending_review',
+  pending_moderator_review: 'pending_moderator_review',
+  moderator_approved: 'moderator_approved',
+  moderator_rejected: 'moderator_rejected',
+  escalated_to_admin: 'escalated_to_admin',
+  pending_admin_final_review: 'pending_admin_final_review',
+  admin_approved: 'admin_approved',
   approved: 'approved',
   rejected: 'rejected',
   published: 'published',

@@ -1,0 +1,119 @@
+Update the submission approval workflow with role-based review stages.
+
+Goal:
+Moderators can review submissions, but admins/master admins must give final publishing approval.
+
+Submission statuses should be:
+
+* draft
+* pending_payment
+* paid
+* pending_moderator_review
+* moderator_approved
+* moderator_rejected
+* escalated_to_admin
+* pending_admin_final_review
+* admin_approved
+* rejected
+* published
+
+Role permissions:
+
+Master Admin:
+
+* Full access
+* Can approve, reject, publish, unpublish, override decisions
+* Can handle copyright/DMCA/legal decisions
+
+Admin:
+
+* Can make final approval
+* Can publish content
+* Can reject content
+* Can handle copyright/DMCA/legal decisions
+
+Moderator:
+
+* Can review submissions for:
+
+  * community guideline violations
+  * spam
+  * duplicate content
+  * explicit content labeling
+  * broken audio/video links
+  * missing artwork
+  * obvious prohibited content
+* Can mark submission as moderator_approved
+* Can mark submission as moderator_rejected for obvious spam or rule violations
+* Can escalate submission to admin
+* Cannot publish content live
+* Cannot make final copyright/DMCA decisions
+* Cannot issue final copyright strikes
+* Cannot suspend users permanently
+
+Editor:
+
+* Cannot approve or reject submissions
+* Can review published or pending content for editorial quality
+* Can recommend songs/videos for playlists
+* Can recommend featured placement
+* Can leave internal editorial notes
+
+Workflow:
+
+1. Artist/Label submits content
+2. Payment is completed or marked demo paid
+3. Submission becomes pending_moderator_review
+4. Moderator reviews
+5. Moderator can:
+
+   * approve for admin final review
+   * reject obvious spam/rule violation
+   * escalate to admin
+6. If moderator approves, status becomes pending_admin_final_review
+7. Admin/master admin performs final review
+8. Admin can:
+
+   * publish
+   * reject
+   * send back to moderator
+   * escalate legal/copyright concern
+9. Only admin/master_admin can set status to published
+
+UI updates:
+
+Moderator Dashboard:
+
+* Show Pending Moderator Review
+* Buttons:
+
+  * Approve for Admin Review
+  * Reject as Spam/Policy Violation
+  * Escalate to Admin
+  * Add Moderator Notes
+
+Admin Submissions Page:
+
+* Show Pending Final Review
+* Show Escalated Submissions
+* Show Moderator Notes
+* Buttons:
+
+  * Publish
+  * Reject
+  * Return to Moderator
+  * Flag Legal/Copyright Concern
+  * Add Admin Notes
+
+Audit logs:
+Create audit log entries for:
+
+* moderator approval
+* moderator rejection
+* escalation to admin
+* admin approval
+* admin rejection
+* publish action
+* return to moderator
+
+Do not remove existing submission/payment/upload functionality.

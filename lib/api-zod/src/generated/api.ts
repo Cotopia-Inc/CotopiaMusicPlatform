@@ -1307,8 +1307,9 @@ export const ListSubmissionsResponseItem = zod.object({
   "type": zod.enum(['song', 'video']),
   "title": zod.string(),
   "contentId": zod.number().nullish(),
-  "status": zod.enum(['draft', 'pending_review', 'approved', 'rejected', 'published']),
+  "status": zod.enum(['draft', 'pending_payment', 'paid', 'pending_review', 'pending_moderator_review', 'moderator_approved', 'moderator_rejected', 'escalated_to_admin', 'pending_admin_final_review', 'admin_approved', 'approved', 'rejected', 'published']),
   "paymentStatus": zod.enum(['unpaid', 'paid', 'refunded']).optional(),
+  "moderatorNotes": zod.string().nullish(),
   "adminNotes": zod.string().nullish(),
   "mediaUrl": zod.string().nullish(),
   "coverUrl": zod.string().nullish(),
@@ -1380,8 +1381,9 @@ export const GetSubmissionResponse = zod.object({
   "type": zod.enum(['song', 'video']),
   "title": zod.string(),
   "contentId": zod.number().nullish(),
-  "status": zod.enum(['draft', 'pending_review', 'approved', 'rejected', 'published']),
+  "status": zod.enum(['draft', 'pending_payment', 'paid', 'pending_review', 'pending_moderator_review', 'moderator_approved', 'moderator_rejected', 'escalated_to_admin', 'pending_admin_final_review', 'admin_approved', 'approved', 'rejected', 'published']),
   "paymentStatus": zod.enum(['unpaid', 'paid', 'refunded']).optional(),
+  "moderatorNotes": zod.string().nullish(),
   "adminNotes": zod.string().nullish(),
   "mediaUrl": zod.string().nullish(),
   "coverUrl": zod.string().nullish(),
@@ -1398,8 +1400,9 @@ export const UpdateSubmissionParams = zod.object({
 })
 
 export const UpdateSubmissionBody = zod.object({
-  "status": zod.enum(['draft', 'pending_review', 'approved', 'rejected', 'published']).optional(),
-  "adminNotes": zod.string().optional()
+  "status": zod.enum(['draft', 'pending_payment', 'paid', 'pending_review', 'pending_moderator_review', 'moderator_approved', 'moderator_rejected', 'escalated_to_admin', 'pending_admin_final_review', 'admin_approved', 'approved', 'rejected', 'published']).optional(),
+  "adminNotes": zod.string().optional(),
+  "moderatorNotes": zod.string().optional()
 })
 
 export const UpdateSubmissionResponse = zod.object({
@@ -1409,8 +1412,9 @@ export const UpdateSubmissionResponse = zod.object({
   "type": zod.enum(['song', 'video']),
   "title": zod.string(),
   "contentId": zod.number().nullish(),
-  "status": zod.enum(['draft', 'pending_review', 'approved', 'rejected', 'published']),
+  "status": zod.enum(['draft', 'pending_payment', 'paid', 'pending_review', 'pending_moderator_review', 'moderator_approved', 'moderator_rejected', 'escalated_to_admin', 'pending_admin_final_review', 'admin_approved', 'approved', 'rejected', 'published']),
   "paymentStatus": zod.enum(['unpaid', 'paid', 'refunded']).optional(),
+  "moderatorNotes": zod.string().nullish(),
   "adminNotes": zod.string().nullish(),
   "mediaUrl": zod.string().nullish(),
   "coverUrl": zod.string().nullish(),
@@ -1424,6 +1428,36 @@ export const UpdateSubmissionResponse = zod.object({
  */
 export const DeleteSubmissionParams = zod.object({
   "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary Perform a role-based review action on a submission
+ */
+export const ReviewSubmissionParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ReviewSubmissionBody = zod.object({
+  "action": zod.enum(['moderator_approve', 'moderator_reject', 'escalate', 'moderator_note', 'admin_publish', 'admin_reject', 'return_to_moderator', 'flag_legal', 'admin_note', 'editor_recommend', 'editor_note']),
+  "notes": zod.string().optional()
+})
+
+export const ReviewSubmissionResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "submitterName": zod.string().optional(),
+  "type": zod.enum(['song', 'video']),
+  "title": zod.string(),
+  "contentId": zod.number().nullish(),
+  "status": zod.enum(['draft', 'pending_payment', 'paid', 'pending_review', 'pending_moderator_review', 'moderator_approved', 'moderator_rejected', 'escalated_to_admin', 'pending_admin_final_review', 'admin_approved', 'approved', 'rejected', 'published']),
+  "paymentStatus": zod.enum(['unpaid', 'paid', 'refunded']).optional(),
+  "moderatorNotes": zod.string().nullish(),
+  "adminNotes": zod.string().nullish(),
+  "mediaUrl": zod.string().nullish(),
+  "coverUrl": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().optional()
 })
 
 
@@ -2222,7 +2256,7 @@ export const AdminUpdateUserResponse = zod.object({
  * @summary List all submissions for review (admin)
  */
 export const AdminListSubmissionsQueryParams = zod.object({
-  "status": zod.enum(['draft', 'pending_review', 'approved', 'rejected', 'published']).optional()
+  "status": zod.enum(['draft', 'pending_payment', 'paid', 'pending_review', 'pending_moderator_review', 'moderator_approved', 'moderator_rejected', 'escalated_to_admin', 'pending_admin_final_review', 'admin_approved', 'approved', 'rejected', 'published']).optional()
 })
 
 export const AdminListSubmissionsResponseItem = zod.object({
@@ -2232,8 +2266,9 @@ export const AdminListSubmissionsResponseItem = zod.object({
   "type": zod.enum(['song', 'video']),
   "title": zod.string(),
   "contentId": zod.number().nullish(),
-  "status": zod.enum(['draft', 'pending_review', 'approved', 'rejected', 'published']),
+  "status": zod.enum(['draft', 'pending_payment', 'paid', 'pending_review', 'pending_moderator_review', 'moderator_approved', 'moderator_rejected', 'escalated_to_admin', 'pending_admin_final_review', 'admin_approved', 'approved', 'rejected', 'published']),
   "paymentStatus": zod.enum(['unpaid', 'paid', 'refunded']).optional(),
+  "moderatorNotes": zod.string().nullish(),
   "adminNotes": zod.string().nullish(),
   "mediaUrl": zod.string().nullish(),
   "coverUrl": zod.string().nullish(),
@@ -2997,8 +3032,9 @@ export const CapturePaymentResponse = zod.object({
   "type": zod.enum(['song', 'video']),
   "title": zod.string(),
   "contentId": zod.number().nullish(),
-  "status": zod.enum(['draft', 'pending_review', 'approved', 'rejected', 'published']),
+  "status": zod.enum(['draft', 'pending_payment', 'paid', 'pending_review', 'pending_moderator_review', 'moderator_approved', 'moderator_rejected', 'escalated_to_admin', 'pending_admin_final_review', 'admin_approved', 'approved', 'rejected', 'published']),
   "paymentStatus": zod.enum(['unpaid', 'paid', 'refunded']).optional(),
+  "moderatorNotes": zod.string().nullish(),
   "adminNotes": zod.string().nullish(),
   "mediaUrl": zod.string().nullish(),
   "coverUrl": zod.string().nullish(),
