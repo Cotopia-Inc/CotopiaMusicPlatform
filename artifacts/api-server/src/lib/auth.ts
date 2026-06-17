@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import type { Request, Response, NextFunction } from "express";
-import { db, usersTable } from "@workspace/db";
+import { db, usersTable, appSettingsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 
 const JWT_SECRET = process.env.SESSION_SECRET ?? "cotopia-dev-secret-change-in-production";
@@ -81,6 +81,14 @@ export async function optionalAuth(req: AuthRequest, _res: Response, next: NextF
 export async function requireVerifiedEmail(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
   if (!req.user) {
     res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+  const [settings] = await db
+    .select({ requireEmailVerification: appSettingsTable.requireEmailVerification })
+    .from(appSettingsTable)
+    .limit(1);
+  if (settings?.requireEmailVerification === false) {
+    next();
     return;
   }
   const [user] = await db

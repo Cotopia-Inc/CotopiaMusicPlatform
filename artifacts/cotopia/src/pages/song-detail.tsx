@@ -10,6 +10,7 @@ import { Play, Pause, Heart, Star, Send, Radio, Users, MessageCircle, ArrowLeft,
 import { RoleTag } from "@/components/role-badges";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
+import { usePlatformConfig } from "@/lib/platform-config";
 import { usePlayer } from "@/lib/player";
 import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
@@ -37,6 +38,7 @@ export default function SongDetail() {
   const { id } = useParams();
   const songId = Number(id);
   const { user } = useAuth();
+  const config = usePlatformConfig();
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -507,7 +509,7 @@ export default function SongDetail() {
 
         {/* Input */}
         <div className="p-3 border-t border-border bg-card/80 flex-shrink-0">
-          {user && !(user as any).emailVerified && (
+          {user && config.requireEmailVerification && !(user as any).emailVerified && (
             <VerifyEmailBanner action="join the chat" className="mb-3" />
           )}
           {user ? (

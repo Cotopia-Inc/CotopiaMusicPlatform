@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/lib/auth";
+import { usePlatformConfig } from "@/lib/platform-config";
 import { useLocation } from "wouter";
 import {
   useListConversations,
@@ -39,6 +40,7 @@ function authHeaders() {
 
 export default function MessagesPage() {
   const { user } = useAuth();
+  const config = usePlatformConfig();
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const qc = useQueryClient();
@@ -605,7 +607,7 @@ export default function MessagesPage() {
                 <Shield className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                 <p className="text-xs text-muted-foreground">Messaging is disabled while this user is blocked.</p>
               </div>
-            ) : !(user as any)?.emailVerified ? (
+            ) : (config.requireEmailVerification && !(user as any)?.emailVerified) ? (
               <div className="p-4 border-t border-border flex-shrink-0">
                 <VerifyEmailBanner action="send messages" />
               </div>

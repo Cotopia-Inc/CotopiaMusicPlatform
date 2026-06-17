@@ -1,5 +1,6 @@
 import { useGetMe, getGetMeQueryKey, useUpdateMe, useChangePassword, useChangeUsername, useSendOtp, useVerifyOtp, useGetMySettings, getGetMySettingsQueryKey, useUpdateMySettings, type UserSettingsUpdate } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
+import { usePlatformConfig } from "@/lib/platform-config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,6 +19,7 @@ import { MessageSquare } from "lucide-react";
 
 export default function Profile() {
   const { user } = useAuth();
+  const config = usePlatformConfig();
   const { data: profile, isLoading } = useGetMe({
     query: { enabled: !!user, queryKey: getGetMeQueryKey() }
   });
@@ -306,7 +308,7 @@ export default function Profile() {
       </div>
 
       {/* Email verification banner */}
-      {!emailVerified && (
+      {config.requireEmailVerification && !emailVerified && (
         <div className="flex items-center justify-between gap-4 p-4 rounded-xl border border-amber-500/30 bg-amber-500/10">
           <div className="flex items-center gap-3">
             <MailCheck className="w-5 h-5 text-amber-400 flex-shrink-0" />

@@ -361,6 +361,15 @@ router.post("/auth/demographics", requireAuth, async (req: AuthRequest, res): Pr
   res.json(userOut);
 });
 
+// ── Public platform config ─────────────────────────────────────────────────
+router.get("/platform-config", async (_req, res): Promise<void> => {
+  const [settings] = await db
+    .select({ requireEmailVerification: appSettingsTable.requireEmailVerification })
+    .from(appSettingsTable)
+    .limit(1);
+  res.json({ requireEmailVerification: settings?.requireEmailVerification ?? true });
+});
+
 // ── User search ────────────────────────────────────────────────────────────
 router.get("/users/search", async (req, res): Promise<void> => {
   const q = String(req.query.q ?? "").trim();

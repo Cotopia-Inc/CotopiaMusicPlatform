@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { MailWarning } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import { usePlatformConfig } from "@/lib/platform-config";
 
 interface VerifyEmailBannerProps {
   /** Short description of the action that is gated, e.g. "join the chat". */
@@ -10,7 +11,8 @@ interface VerifyEmailBannerProps {
 
 export function VerifyEmailBanner({ action = "use this feature", className }: VerifyEmailBannerProps) {
   const { user } = useAuth();
-  if (!user || (user as any).emailVerified) return null;
+  const config = usePlatformConfig();
+  if (!user || !config.requireEmailVerification || (user as any).emailVerified) return null;
 
   return (
     <div className={`flex items-start gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 ${className ?? ""}`}>

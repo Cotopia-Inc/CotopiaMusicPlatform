@@ -12,6 +12,7 @@ import { ReportModal } from "@/components/report-modal";
 import { VerifyEmailBanner } from "@/components/verify-email-banner";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
+import { usePlatformConfig } from "@/lib/platform-config";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { useQueryClient } from "@tanstack/react-query";
@@ -36,6 +37,7 @@ export default function VideoDetail() {
   const { id } = useParams();
   const videoId = Number(id);
   const { user } = useAuth();
+  const config = usePlatformConfig();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { addToQueue } = usePlayer();
@@ -374,7 +376,7 @@ export default function VideoDetail() {
 
           {/* Input */}
           <div className="p-2 border-t border-white/10 flex-shrink-0 bg-black/30">
-            {user && !(user as any).emailVerified && (
+            {user && config.requireEmailVerification && !(user as any).emailVerified && (
               <VerifyEmailBanner action="join the chat" className="mb-2" />
             )}
             {user ? (
