@@ -9,8 +9,8 @@ This guide explains how to manually test the safety and beta-feedback features a
 | Email | Role | Use for |
 |---|---|---|
 | admin@cotopia.com | master_admin | Moderation queue, enforcement, verification, beta analytics, feedback dashboard |
-| mod@cotopia.com | moderator | Report review, enforcement (warnings/strikes/suspensions) |
-| editor@cotopia.com | editor | Admin-only actions (feedback dashboard, verification, lift enforcement) |
+| mod@cotopia.com | moderator | Report review, issuing warnings (strike/suspension/ban require admin+) |
+| editor@cotopia.com | editor | Negative test — no moderation/enforcement access (admin endpoints return 403) |
 | alex@example.com | listener | Reporting, blocking, feedback submission, PM settings |
 | nova@example.com | artist | Email-verification gates, verification badge target |
 | deepwave@example.com | label | Verification badge (label) target |
@@ -122,13 +122,15 @@ curl -s -X POST localhost:80/api/admin/verification \
 ## 5. Warning / enforcement system
 
 Tiered moderation: **warning → strike → suspension → ban**. Actions notify the target user and are
-gated by role (moderators can warn/strike/suspend; lifting requires admin).
+gated by role: **warning** requires moderator or above; **strike** and **suspension** require admin
+or above; **ban** requires master_admin only. Lifting an action requires admin or above.
 
-**Issue an action (moderator/admin):**
+**Issue an action (role-gated):**
 1. Log in as `mod@cotopia.com` and open **Moderation → Members** (`/admin/members`).
-2. Issue a warning, strike, suspension, or ban against a user with a reason.
-3. **Expected:** the action is recorded; the target receives a notification. A suspension sets
-   `suspendedUntil`; a ban sets `isBanned`.
+2. As a moderator you can issue a **warning**. Strikes/suspensions are rejected for moderators
+   (admin+ required), and bans are rejected for everyone except master_admin.
+3. **Expected:** the permitted action is recorded; the target receives a notification. A suspension sets
+   `suspendedUntil`; a ban sets `isBanned`. Disallowed actions return `403`.
 
 **Verify enforcement effect:**
 1. Log in as the suspended/banned user.
@@ -141,10 +143,11 @@ gated by role (moderators can warn/strike/suspend; lifting requires admin).
 
 **API check:**
 ```bash
-# Issue: { userId, type: "warning"|"strike"|"suspension"|"ban", reason, ... }
+# Issue: { userId, actionType: "warning"|"strike"|"suspension"|"ban", reason, durationDays?, reportId? }
+# A moderator token may only issue "warning"; strike/suspension need admin, ban needs master_admin.
 curl -s -X POST localhost:80/api/admin/enforcement \
   -H "Authorization: Bearer <MOD_TOKEN>" -H "Content-Type: application/json" \
-  -d '{"userId":5,"type":"warning","reason":"..."}'
+  -d '{"userId":5,"actionType":"warning","reason":"..."}'
 
 # List enforcement history
 curl -s localhost:80/api/admin/enforcement -H "Authorization: Bearer <MOD_TOKEN>"

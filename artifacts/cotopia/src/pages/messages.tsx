@@ -11,6 +11,7 @@ import {
   getGetUnreadMessageCountQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { VerifyEmailBanner } from "@/components/verify-email-banner";
 import { RoleBadges } from "@/components/role-badges";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -153,8 +154,17 @@ export default function MessagesPage() {
         qc.invalidateQueries({ queryKey: getGetConversationMessagesQueryKey(selectedConvId ?? 0) });
         qc.invalidateQueries({ queryKey: getListConversationsQueryKey() });
       }
-    } catch {
-      toast({ title: "Failed to send message", variant: "destructive" });
+    } catch (err) {
+      const e = err as { status?: number; data?: { code?: string } };
+      if (e?.status === 403 && e?.data?.code === "email_not_verified") {
+        toast({
+          title: "Verify your email to send messages",
+          description: "Check your inbox for a code, or resend it from your profile.",
+          variant: "destructive",
+        });
+      } else {
+        toast({ title: "Failed to send message", variant: "destructive" });
+      }
     }
   }
 
@@ -594,6 +604,10 @@ export default function MessagesPage() {
               <div className="flex items-center gap-2 p-4 border-t border-border flex-shrink-0 bg-muted/20">
                 <Shield className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                 <p className="text-xs text-muted-foreground">Messaging is disabled while this user is blocked.</p>
+              </div>
+            ) : !(user as any)?.emailVerified ? (
+              <div className="p-4 border-t border-border flex-shrink-0">
+                <VerifyEmailBanner action="send messages" />
               </div>
             ) : (
               <form onSubmit={handleSend} className="flex items-center gap-2 p-4 border-t border-border flex-shrink-0">

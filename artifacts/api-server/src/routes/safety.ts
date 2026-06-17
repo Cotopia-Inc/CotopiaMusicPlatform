@@ -103,6 +103,16 @@ router.patch("/admin/reports/:id", requireAuth, requireRole(...MOD_ROLES), async
 
   const [report] = await db.update(reportsTable).set(updateData).where(eq(reportsTable.id, id)).returning();
   if (!report) { res.status(404).json({ error: "Report not found" }); return; }
+
+  await db.insert(adminAuditLogsTable).values({
+    adminUserId: req.user!.userId,
+    action: "report_triage",
+    targetType: "report",
+    targetId: id,
+    description: `Report #${id} updated${status ? ` to ${status}` : ""}`,
+    metadata: { status: status ?? null, adminNotes: adminNotes ?? null } as unknown,
+  });
+
   res.json(report);
 });
 
@@ -193,6 +203,16 @@ router.patch("/admin/feedback/:id", requireAuth, requireRole(...ADMIN_ROLES), as
 
   const [feedback] = await db.update(feedbackTable).set(updateData).where(eq(feedbackTable.id, id)).returning();
   if (!feedback) { res.status(404).json({ error: "Feedback not found" }); return; }
+
+  await db.insert(adminAuditLogsTable).values({
+    adminUserId: req.user!.userId,
+    action: "feedback_triage",
+    targetType: "feedback",
+    targetId: id,
+    description: `Feedback #${id} updated${status ? ` to ${status}` : ""}`,
+    metadata: { status: status ?? null, adminNotes: adminNotes ?? null } as unknown,
+  });
+
   res.json(feedback);
 });
 
