@@ -1,0 +1,153 @@
+Platform Safety and Beta Feedback Update
+
+1. AGE REQUIREMENT
+
+Update Terms of Service and registration flow.
+
+Users must be:
+
+18 years old or the age of legal majority in their jurisdiction, whichever is greater.
+
+Add required registration checkbox:
+
+"I confirm I am at least 18 years old or the age of legal majority in my jurisdiction."
+
+Store acceptance record.
+
+2. USER BLOCKING
+
+Create block system.
+
+Users can:
+
+* Block user
+* Unblock user
+
+Blocked users cannot:
+
+* Send private messages
+* Follow each other
+* Interact through private messaging
+
+3. REPORT SYSTEM
+
+Add report buttons to:
+
+* Songs
+* Videos
+* Profiles
+* Comments
+* Chat messages
+* Private messages
+
+Report reasons:
+
+* Copyright
+* Harassment
+* Spam
+* Fake Profile
+* Illegal Content
+* Other
+
+Create reports table and moderation queue.
+
+4. EMAIL VERIFICATION
+
+Require verified email before:
+
+* Chat posting
+* Private messaging
+* Content submission
+
+5. PRIVATE MESSAGE SETTINGS
+
+Add user controls:
+
+* Everyone
+* Followers Only
+* Verified Users Only
+* Nobody
+
+Default:
+
+Followers Only
+
+6. VERIFICATION SYSTEM
+
+Add:
+
+* Verified Artist
+* Verified Label
+
+Admin controlled.
+
+7. COMMUNITY ENFORCEMENT
+
+Add user warning system.
+
+Levels:
+
+* Warning
+* Strike
+* Temporary Suspension
+* Permanent Ban
+
+Moderator:
+
+* Warning
+
+Admin:
+
+* Strike
+* Suspension
+
+Master Admin:
+
+* Permanent Ban
+
+8. FEEDBACK CENTER
+
+Create:
+
+/feedback
+
+Users can submit:
+
+* Bug Report
+* Feature Request
+* General Feedback
+
+Fields:
+
+* Type
+* Title
+* Description
+* Screenshot Upload
+* User Role
+
+Create admin feedback dashboard.
+
+9. BETA ANALYTICS
+
+Track:
+
+* Feedback submitted
+* Feature requests
+* Bug reports
+* User retention
+* Upload completion rate
+* Chat participation
+* Private message usage
+* Playlist creation
+* Playlist follows
+
+10. TESTING GUIDE
+
+Provide testing instructions for:
+
+* Email verification
+* Blocking users
+* Reporting content
+* Verification badges
+* Warning system
+* Feedback system
