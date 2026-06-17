@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { eq, desc, sql, ilike, and, count, avg } from "drizzle-orm";
+import { eq, desc, sql, ilike, and, count, avg, or, isNull, lte } from "drizzle-orm";
 import {
   db, videosTable, artistsTable, usersTable,
   commentsTable, ratingsTable, favoritesTable, historyTable,
@@ -79,7 +79,8 @@ router.get("/videos", optionalAuth, async (req: AuthRequest, res): Promise<void>
   }
   const { q, artistId, limit = 20, offset = 0 } = params.data;
 
-  const conditions = [eq(videosTable.status, "published")];
+  const releasedVideo = or(isNull(videosTable.releaseDate), lte(videosTable.releaseDate, sql`CURRENT_DATE`));
+  const conditions = [eq(videosTable.status, "published"), releasedVideo!];
   if (q) conditions.push(ilike(videosTable.title, `%${q}%`));
   if (artistId) conditions.push(eq(videosTable.artistId, artistId));
 
@@ -139,7 +140,7 @@ router.get("/videos/featured", async (_req, res): Promise<void> => {
     .from(videosTable)
     .leftJoin(artistsTable, eq(videosTable.artistId, artistsTable.id))
     .leftJoin(usersTable, eq(artistsTable.userId, usersTable.id))
-    .where(and(eq(videosTable.isFeatured, true), eq(videosTable.status, "published")))
+    .where(and(eq(videosTable.isFeatured, true), eq(videosTable.status, "published"), or(isNull(videosTable.releaseDate), lte(videosTable.releaseDate, sql`CURRENT_DATE`))))
     .orderBy(desc(videosTable.createdAt))
     .limit(FEATURED_POOL_SIZE);
 
@@ -176,7 +177,7 @@ router.get("/videos/trending", async (req, res): Promise<void> => {
     .from(videosTable)
     .leftJoin(artistsTable, eq(videosTable.artistId, artistsTable.id))
     .leftJoin(usersTable, eq(artistsTable.userId, usersTable.id))
-    .where(eq(videosTable.status, "published"))
+    .where(and(eq(videosTable.status, "published"), or(isNull(videosTable.releaseDate), lte(videosTable.releaseDate, sql`CURRENT_DATE`))))
     .orderBy(desc(videosTable.viewCount))
     .limit(limit);
 
@@ -221,7 +222,7 @@ router.patch("/videos/:id", requireAuth, async (req: AuthRequest, res): Promise<
     return;
   }
 
-  const isAdmin = req.user!.role === "admin" || req.user!.role === "master_admin";
+  const isAdmin = ["admin", "master_admin", "editor"].includes(req.user!.role);
   if (!isAdmin) {
     const [artist] = await db.select().from(artistsTable).where(eq(artistsTable.userId, req.user!.userId)).limit(1);
     if (!artist || existing.artistId !== artist.id) {

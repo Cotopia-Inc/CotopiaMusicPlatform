@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { eq, desc, sql, ilike, and, count, avg } from "drizzle-orm";
+import { eq, desc, sql, ilike, and, count, avg, or, isNull, lte } from "drizzle-orm";
 import {
   db, songsTable, artistsTable, albumsTable, usersTable,
   commentsTable, ratingsTable, favoritesTable, historyTable,
@@ -84,7 +84,8 @@ router.get("/songs", optionalAuth, async (req: AuthRequest, res): Promise<void> 
   }
   const { q, artistId, genre, limit = 20, offset = 0 } = params.data;
 
-  const conditions = [eq(songsTable.status, "published")];
+  const releasedSong = or(isNull(songsTable.releaseDate), lte(songsTable.releaseDate, sql`CURRENT_DATE`));
+  const conditions = [eq(songsTable.status, "published"), releasedSong!];
   if (q) conditions.push(ilike(songsTable.title, `%${q}%`));
   if (artistId) conditions.push(eq(songsTable.artistId, artistId));
   if (genre) conditions.push(eq(songsTable.genre, genre));
@@ -173,7 +174,7 @@ router.get("/songs/featured", async (_req, res): Promise<void> => {
     .leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id))
     .leftJoin(usersTable, eq(artistsTable.userId, usersTable.id))
     .leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id))
-    .where(and(eq(songsTable.isFeatured, true), eq(songsTable.status, "published")))
+    .where(and(eq(songsTable.isFeatured, true), eq(songsTable.status, "published"), or(isNull(songsTable.releaseDate), lte(songsTable.releaseDate, sql`CURRENT_DATE`))))
     .orderBy(desc(songsTable.createdAt))
     .limit(FEATURED_POOL_SIZE);
 
@@ -213,7 +214,7 @@ router.get("/songs/trending", async (req, res): Promise<void> => {
     .leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id))
     .leftJoin(usersTable, eq(artistsTable.userId, usersTable.id))
     .leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id))
-    .where(eq(songsTable.status, "published"))
+    .where(and(eq(songsTable.status, "published"), or(isNull(songsTable.releaseDate), lte(songsTable.releaseDate, sql`CURRENT_DATE`))))
     .orderBy(desc(songsTable.playCount))
     .limit(limit);
 
@@ -258,7 +259,7 @@ router.patch("/songs/:id", requireAuth, async (req: AuthRequest, res): Promise<v
     return;
   }
 
-  const isAdmin = req.user!.role === "admin" || req.user!.role === "master_admin";
+  const isAdmin = ["admin", "master_admin", "editor"].includes(req.user!.role);
   if (!isAdmin) {
     const [artist] = await db.select().from(artistsTable).where(eq(artistsTable.userId, req.user!.userId)).limit(1);
     if (!artist || existing.artistId !== artist.id) {

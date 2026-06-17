@@ -17,6 +17,8 @@ export interface DiscoverFeed {
   trendingVideos: Video[];
   topRatedSongs: Song[];
   mostDiscussed: Song[];
+  newSongs: Song[];
+  newVideos: Video[];
   newArtists: Artist[];
   newLabels: Label[];
 }
