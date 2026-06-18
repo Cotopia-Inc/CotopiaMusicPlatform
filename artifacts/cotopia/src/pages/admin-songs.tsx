@@ -25,8 +25,11 @@ export default function AdminSongs() {
 
   const updateSong = useUpdateSong();
 
-  const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey: getListSongsQueryKey({ q: search, limit: 100 }) });
+  const patchCache = (id: number, patch: Record<string, unknown>) =>
+    queryClient.setQueryData(
+      getListSongsQueryKey({ q: search, limit: 100 }),
+      (old: any) => old ? { ...old, items: old.items?.map((s: any) => s.id === id ? { ...s, ...patch } : s) } : old
+    );
 
   const handleToggleFeature = (id: number, currentFeatured: boolean | null | undefined) => {
     setPendingId(id);
@@ -35,7 +38,7 @@ export default function AdminSongs() {
       {
         onSuccess: () => {
           toast({ title: currentFeatured ? "Removed from featured" : "Song featured!" });
-          invalidate();
+          patchCache(id, { isFeatured: !currentFeatured });
         },
         onError: () => toast({ variant: "destructive", title: "Failed to update song" }),
         onSettled: () => setPendingId(null),
@@ -52,7 +55,7 @@ export default function AdminSongs() {
       {
         onSuccess: () => {
           toast({ title: isPublished ? "Song unpublished" : "Song published!" });
-          invalidate();
+          patchCache(id, { status: newStatus });
         },
         onError: () => toast({ variant: "destructive", title: "Failed to update song" }),
         onSettled: () => setPendingId(null),

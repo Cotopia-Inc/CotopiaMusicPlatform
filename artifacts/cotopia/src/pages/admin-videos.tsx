@@ -25,8 +25,11 @@ export default function AdminVideos() {
 
   const updateVideo = useUpdateVideo();
 
-  const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey: getListVideosQueryKey({ q: search, limit: 100 }) });
+  const patchCache = (id: number, patch: Record<string, unknown>) =>
+    queryClient.setQueryData(
+      getListVideosQueryKey({ q: search, limit: 100 }),
+      (old: any) => old ? { ...old, items: old.items?.map((v: any) => v.id === id ? { ...v, ...patch } : v) } : old
+    );
 
   const handleToggleFeature = (id: number, currentFeatured: boolean | null | undefined) => {
     setPendingId(id);
@@ -35,7 +38,7 @@ export default function AdminVideos() {
       {
         onSuccess: () => {
           toast({ title: currentFeatured ? "Removed from featured" : "Video featured!" });
-          invalidate();
+          patchCache(id, { isFeatured: !currentFeatured });
         },
         onError: () => toast({ variant: "destructive", title: "Failed to update video" }),
         onSettled: () => setPendingId(null),
@@ -52,7 +55,7 @@ export default function AdminVideos() {
       {
         onSuccess: () => {
           toast({ title: isPublished ? "Video unpublished" : "Video published!" });
-          invalidate();
+          patchCache(id, { status: newStatus });
         },
         onError: () => toast({ variant: "destructive", title: "Failed to update video" }),
         onSettled: () => setPendingId(null),
