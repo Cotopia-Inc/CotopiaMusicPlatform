@@ -25,7 +25,7 @@ async function sendOtpEmail(to: string, code: string, purpose: string): Promise<
   const label = purpose === "reset_password" ? "password reset" : "email verification";
   try {
     await resend.emails.send({
-      from: "Cotopia <onboarding@resend.dev>",
+      from: "Cotopia <noreply@cotopia.org>",
       to,
       subject,
       html: `
