@@ -257,11 +257,84 @@ export default function Discover() {
             ) : (
               <div className="col-span-full text-center py-12">
                 <Star className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
-                <p className="text-muted-foreground text-sm">No rated tracks yet.</p>
+                <p className="text-muted-foreground text-sm">No rated songs yet.</p>
                 <p className="text-muted-foreground/60 text-xs mt-1">Be the first to rate a song on its detail page!</p>
               </div>
             )}
           </div>
+
+          {/* ── Top Rated Videos ── */}
+          {((discover?.topRatedVideos?.length ?? 0) > 0 || isLoading) && (
+            <>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mt-8 mb-4 flex items-center gap-1.5">
+                <VideoIcon className="w-3.5 h-3.5" /> Top Rated Videos
+              </p>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {isLoading ? (
+                  Array(4).fill(0).map((_, i) => (
+                    <div key={i} className="space-y-3">
+                      <Skeleton className="aspect-video rounded-md" />
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-3 w-1/2" />
+                    </div>
+                  ))
+                ) : discover!.topRatedVideos!.map((video, idx) => {
+                  const vAny = video as any;
+                  return (
+                    <div key={video.id} className="group cursor-pointer space-y-3">
+                      <Link href={`/videos/${video.id}`}>
+                        <div className="aspect-video relative overflow-hidden rounded-md bg-secondary border border-yellow-500/20 ring-1 ring-yellow-500/10">
+                          {video.thumbnailUrl ? (
+                            <img src={video.thumbnailUrl} alt={video.title} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">No Thumbnail</div>
+                          )}
+                          <div className="absolute top-2 left-2">
+                            <span className="bg-yellow-500/90 text-black text-[9px] font-bold rounded px-1.5 py-0.5">#{idx + 1}</span>
+                          </div>
+                          {vAny.avgRating && (
+                            <div className="absolute bottom-2 right-2 flex items-center gap-0.5 bg-black/70 rounded px-1.5 py-0.5">
+                              <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                              <span className="text-white text-[10px] font-bold tabular-nums">{Number(vAny.avgRating).toFixed(1)}</span>
+                              {vAny.ratingCount > 0 && (
+                                <span className="text-white/60 text-[9px] tabular-nums ml-0.5">({vAny.ratingCount})</span>
+                              )}
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <button
+                              className="bg-primary text-primary-foreground rounded-full p-3 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300"
+                              title={`Play ${video.title}`}
+                              onClick={(e) => { e.preventDefault(); play({ id: video.id, title: video.title, artistName: video.artistName ?? "", artistId: video.artistId, artistUserRole: video.artistUserRole ?? null, artistIsVerified: video.artistIsVerified ?? false, coverUrl: video.thumbnailUrl, videoUrl: video.videoUrl, duration: video.duration }); }}
+                            >
+                              <Play className="w-6 h-6 fill-current ml-1" />
+                            </button>
+                          </div>
+                        </div>
+                      </Link>
+                      <div>
+                        <Link href={`/videos/${video.id}`}>
+                          <h4 className="font-semibold text-sm truncate hover:text-primary transition-colors">{video.title}</h4>
+                        </Link>
+                        <UserLink username={video.artistName} artistId={video.artistId} role={video.artistUserRole} isVerified={video.artistIsVerified ?? false} className="text-xs text-muted-foreground" />
+                        {vAny.avgRating && (
+                          <div className="flex items-center gap-0.5 mt-1">
+                            {[1,2,3,4,5].map(s => (
+                              <Star key={s} className={`w-3 h-3 ${Number(vAny.avgRating) >= s ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground/30'}`} />
+                            ))}
+                            <span className="text-[10px] text-muted-foreground ml-1">{Number(vAny.avgRating).toFixed(1)}</span>
+                            {vAny.ratingCount > 0 && (
+                              <span className="text-[10px] text-muted-foreground/50">· {vAny.ratingCount} {vAny.ratingCount === 1 ? 'rating' : 'ratings'}</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </section>
       )}
 

@@ -3638,7 +3638,7 @@ components:
     # ── Discover ──────────────────────────────────────────────────────────────
     DiscoverFeed:
       type: object
-      required: [trendingSongs, trendingVideos, topRatedSongs, mostDiscussed, newArtists, newLabels, featuredSongs, featuredVideos, newSongs, newVideos, showTopRated]
+      required: [trendingSongs, trendingVideos, topRatedSongs, topRatedVideos, mostDiscussed, newArtists, newLabels, featuredSongs, featuredVideos, newSongs, newVideos, showTopRated]
       properties:
         showTopRated:
           type: boolean
@@ -3664,6 +3664,10 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Song"
+        topRatedVideos:
+          type: array
+          items:
+            $ref: "#/components/schemas/Video"
         mostDiscussed:
           type: array
           items:

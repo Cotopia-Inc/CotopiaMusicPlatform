@@ -1789,6 +1789,25 @@ export const GetDiscoverResponse = zod.object({
   "credits": zod.string().nullish(),
   "createdAt": zod.string()
 })),
+  "topRatedVideos": zod.array(zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "artistId": zod.number(),
+  "artistUserId": zod.number().nullish(),
+  "artistName": zod.string(),
+  "artistUserRole": zod.string().nullish(),
+  "artistIsVerified": zod.boolean().optional(),
+  "genre": zod.string().nullish(),
+  "duration": zod.number(),
+  "thumbnailUrl": zod.string().nullish(),
+  "videoUrl": zod.string().nullish(),
+  "viewCount": zod.number().optional(),
+  "avgRating": zod.number().nullish(),
+  "status": zod.enum(['draft', 'pending_review', 'approved', 'rejected', 'published']),
+  "isFeatured": zod.boolean().optional(),
+  "credits": zod.string().nullish(),
+  "createdAt": zod.string()
+})),
   "mostDiscussed": zod.array(zod.object({
   "id": zod.number(),
   "title": zod.string(),

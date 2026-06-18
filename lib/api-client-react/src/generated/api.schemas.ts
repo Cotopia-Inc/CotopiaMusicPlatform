@@ -890,6 +890,7 @@ export interface DiscoverFeed {
   trendingSongs: Song[];
   trendingVideos: Video[];
   topRatedSongs: Song[];
+  topRatedVideos: Video[];
   mostDiscussed: Song[];
   newSongs: Song[];
   newVideos: Video[];

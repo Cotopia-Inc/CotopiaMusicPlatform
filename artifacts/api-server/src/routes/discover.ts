@@ -89,6 +89,35 @@ router.get("/discover", async (_req, res): Promise<void> => {
       .sort((a, b) => ((b.avgRating as number) ?? 0) - ((a.avgRating as number) ?? 0));
   }
 
+  // Top rated videos — same two-step pattern
+  const videoRatingAggRows = await db.select({
+    contentId: ratingsTable.contentId,
+    avgRating: avg(ratingsTable.rating),
+    ratingCount: count(),
+  }).from(ratingsTable)
+    .where(eq(ratingsTable.contentType, "video"))
+    .groupBy(ratingsTable.contentId)
+    .having(gt(count(), minRatings - 1))
+    .orderBy(desc(avg(ratingsTable.rating)), desc(count()))
+    .limit(8);
+
+  let topRatedVideos: Array<Record<string, unknown>> = [];
+  if (videoRatingAggRows.length > 0) {
+    const ratedVideoIds = videoRatingAggRows.map(r => r.contentId);
+    const videoRatingMap = new Map(videoRatingAggRows.map(r => [r.contentId, {
+      avgRating: r.avgRating ? parseFloat(r.avgRating) : null,
+      ratingCount: r.ratingCount,
+    }]));
+    const ratedVideoRows = await db.select(videoSelect).from(videosTable)
+      .leftJoin(artistsTable, eq(videosTable.artistId, artistsTable.id))
+      .leftJoin(usersTable, eq(artistsTable.userId, usersTable.id))
+      .where(and(eq(videosTable.status, "published"), inArray(videosTable.id, ratedVideoIds), releasedVideo!));
+    topRatedVideos = ratedVideoRows
+      .filter(v => videoRatingMap.has(v.id))
+      .map(v => ({ ...v, avgRating: videoRatingMap.get(v.id)!.avgRating, ratingCount: videoRatingMap.get(v.id)!.ratingCount }))
+      .sort((a, b) => ((b.avgRating as number) ?? 0) - ((a.avgRating as number) ?? 0));
+  }
+
   // Most discussed: songs sorted by actual comment count (not createdAt)
   const commentAggRows = await db.select({
     contentId: commentsTable.contentId,
@@ -142,6 +171,7 @@ router.get("/discover", async (_req, res): Promise<void> => {
     trendingSongs: await Promise.all(trendingSongs.map(addRating)),
     trendingVideos: await Promise.all(trendingVideos.map(addVideoRating)),
     topRatedSongs: showTopRated ? topRatedSongs : [],
+    topRatedVideos: showTopRated ? topRatedVideos : [],
     mostDiscussed,
     newSongs: await Promise.all(newSongsRaw.map(addRating)),
     newVideos: await Promise.all(newVideosRaw.map(addVideoRating)),
