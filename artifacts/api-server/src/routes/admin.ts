@@ -203,6 +203,7 @@ router.get("/admin/analytics", requireAuth, requireRole(...ADMIN_ROLES), async (
     [totalPlaysRow], [totalViewsRow], [totalCommentsRow], [pendingRow],
     [totalArtistsRow], [totalLabelsRow],
     [totalPageViewsRow], [totalUniqueVisitorsRow],
+    [songCompletionsRow], [videoCompletionsRow],
   ] = await Promise.all([
     db.select({ count: count() }).from(usersTable),
     db.select({ count: count() }).from(songsTable).where(eq(songsTable.status, "published")),
@@ -215,6 +216,8 @@ router.get("/admin/analytics", requireAuth, requireRole(...ADMIN_ROLES), async (
     db.select({ count: count() }).from(labelsTable),
     db.select({ count: count() }).from(analyticsEventsTable).where(eq(analyticsEventsTable.eventType, "page_view")),
     db.select({ count: sql<number>`count(distinct ${analyticsEventsTable.userId})` }).from(analyticsEventsTable).where(eq(analyticsEventsTable.eventType, "page_view")),
+    db.select({ count: count() }).from(analyticsEventsTable).where(and(eq(analyticsEventsTable.eventType, "content"), eq(analyticsEventsTable.eventName, "song_complete"))),
+    db.select({ count: count() }).from(analyticsEventsTable).where(and(eq(analyticsEventsTable.eventType, "content"), eq(analyticsEventsTable.eventName, "video_complete"))),
   ]);
 
   const usersByRole = await db.select({ role: usersTable.role, count: count() }).from(usersTable).groupBy(usersTable.role);
@@ -231,10 +234,39 @@ router.get("/admin/analytics", requireAuth, requireRole(...ADMIN_ROLES), async (
     .from(videosTable).leftJoin(artistsTable, eq(videosTable.artistId, artistsTable.id))
     .where(eq(videosTable.status, "published")).orderBy(desc(videosTable.viewCount)).limit(10);
 
+  // Per-song completion counts from analytics events
+  const songCompletionCounts = await db
+    .select({ contentId: analyticsEventsTable.contentId, count: count() })
+    .from(analyticsEventsTable)
+    .where(and(eq(analyticsEventsTable.eventType, "content"), eq(analyticsEventsTable.eventName, "song_complete")))
+    .groupBy(analyticsEventsTable.contentId);
+  const songCompletionMap = new Map(songCompletionCounts.map(r => [r.contentId, r.count]));
+
+  // Per-video completion counts from analytics events
+  const videoCompletionCounts = await db
+    .select({ contentId: analyticsEventsTable.contentId, count: count() })
+    .from(analyticsEventsTable)
+    .where(and(eq(analyticsEventsTable.eventType, "content"), eq(analyticsEventsTable.eventName, "video_complete")))
+    .groupBy(analyticsEventsTable.contentId);
+  const videoCompletionMap = new Map(videoCompletionCounts.map(r => [r.contentId, r.count]));
+
   const topSongsWithRatings = await Promise.all(topSongs.map(async (s) => {
     const [r] = await db.select({ avg: avg(ratingsTable.rating) }).from(ratingsTable).where(and(eq(ratingsTable.contentType, "song"), eq(ratingsTable.contentId, s.id)));
-    return { ...s, avgRating: r?.avg ? parseFloat(r.avg) : null };
+    const completions = songCompletionMap.get(s.id) ?? 0;
+    const completionRate = s.playCount > 0 ? Math.round((completions / s.playCount) * 100) : null;
+    return { ...s, avgRating: r?.avg ? parseFloat(r.avg) : null, completions, completionRate };
   }));
+
+  const topVideosWithCompletion = topVideos.map(v => {
+    const completions = videoCompletionMap.get(v.id) ?? 0;
+    const completionRate = v.viewCount > 0 ? Math.round((completions / v.viewCount) * 100) : null;
+    return { ...v, completions, completionRate };
+  });
+
+  const totalSongCompletions = Number(songCompletionsRow?.count ?? 0);
+  const totalVideoCompletions = Number(videoCompletionsRow?.count ?? 0);
+  const totalPlays = Number(totalPlaysRow?.total ?? 0);
+  const totalViews = Number(totalViewsRow?.total ?? 0);
 
   res.json({
     totalUsers: totalUsersRow?.count ?? 0,
@@ -242,15 +274,19 @@ router.get("/admin/analytics", requireAuth, requireRole(...ADMIN_ROLES), async (
     totalVideos: totalVideosRow?.count ?? 0,
     totalArtists: totalArtistsRow?.count ?? 0,
     totalLabels: totalLabelsRow?.count ?? 0,
-    totalPlays: Number(totalPlaysRow?.total ?? 0),
-    totalViews: Number(totalViewsRow?.total ?? 0),
+    totalPlays,
+    totalViews,
     totalComments: totalCommentsRow?.count ?? 0,
     pendingSubmissions: pendingRow?.count ?? 0,
     totalPageViews: Number(totalPageViewsRow?.count ?? 0),
     totalUniqueVisitors: Number(totalUniqueVisitorsRow?.count ?? 0),
     usersByRole: usersByRoleObj,
     topSongs: topSongsWithRatings,
-    topVideos,
+    topVideos: topVideosWithCompletion,
+    totalSongCompletions,
+    totalVideoCompletions,
+    songCompletionRate: totalPlays > 0 ? Math.round((totalSongCompletions / totalPlays) * 100) : null,
+    videoCompletionRate: totalViews > 0 ? Math.round((totalVideoCompletions / totalViews) * 100) : null,
   });
 });
 

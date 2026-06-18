@@ -71,6 +71,25 @@ export function Player() {
     }
   }, [track?.id]);
 
+  // Track natural song/video completion events
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const completed = (e as CustomEvent<{ track: typeof track }>).detail?.track;
+      if (!completed) return;
+      const eventName = completed.videoUrl ? "video_complete" : "song_complete";
+      trackEvent.mutate({
+        data: {
+          eventType: "content",
+          eventName,
+          contentType: completed.videoUrl ? "video" : "song",
+          contentId: completed.id,
+        },
+      });
+    };
+    window.addEventListener("cotopia:track_complete", handler);
+    return () => window.removeEventListener("cotopia:track_complete", handler);
+  }, []);
+
   // Global mouse events for drag + resize
   useEffect(() => {
     const onMove = (e: MouseEvent) => {

@@ -2,7 +2,7 @@ import { useGetAdminAnalytics } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
 import { useLocation } from "wouter";
 import { useEffect } from "react";
-import { BarChart3, Music, Video, Users, Play, Eye, MessageSquare, Clock, TrendingUp, Star, Globe, UserCheck } from "lucide-react";
+import { BarChart3, Music, Video, Users, Play, Eye, MessageSquare, Clock, TrendingUp, Star, Globe, UserCheck, CheckCircle2 } from "lucide-react";
 import { RoleTag } from "@/components/role-badges";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -86,6 +86,22 @@ export default function AdminAnalytics() {
         <StatCard label="Unique Visitors" value={(data as any)?.totalUniqueVisitors ?? 0} icon={UserCheck} sub="distinct logged-in visitors" />
       </div>
 
+      {/* Completion Rates */}
+      <div className="grid grid-cols-2 gap-4">
+        <StatCard
+          label="Song Completion Rate"
+          value={(data as any)?.songCompletionRate != null ? `${(data as any).songCompletionRate}%` : "—"}
+          icon={CheckCircle2}
+          sub={`${((data as any)?.totalSongCompletions ?? 0).toLocaleString()} completions of ${((data as any)?.totalPlays ?? 0).toLocaleString()} plays`}
+        />
+        <StatCard
+          label="Video Completion Rate"
+          value={(data as any)?.videoCompletionRate != null ? `${(data as any).videoCompletionRate}%` : "—"}
+          icon={CheckCircle2}
+          sub={`${((data as any)?.totalVideoCompletions ?? 0).toLocaleString()} completions of ${((data as any)?.totalViews ?? 0).toLocaleString()} views`}
+        />
+      </div>
+
       {/* Users by role */}
       {data?.usersByRole && (
         <Card>
@@ -129,6 +145,9 @@ export default function AdminAnalytics() {
                   <div className="text-right flex-shrink-0">
                     <p className="text-xs font-bold">{(song.playCount ?? 0).toLocaleString()}</p>
                     <p className="text-[10px] text-muted-foreground">plays</p>
+                    {(song as any).completionRate != null && (
+                      <p className="text-[10px] text-emerald-400 font-medium">{(song as any).completionRate}% done</p>
+                    )}
                   </div>
                 </div>
               ))}
@@ -162,6 +181,9 @@ export default function AdminAnalytics() {
                   <div className="text-right flex-shrink-0">
                     <p className="text-xs font-bold">{(video.viewCount ?? 0).toLocaleString()}</p>
                     <p className="text-[10px] text-muted-foreground">views</p>
+                    {(video as any).completionRate != null && (
+                      <p className="text-[10px] text-emerald-400 font-medium">{(video as any).completionRate}% done</p>
+                    )}
                   </div>
                 </div>
               ))}

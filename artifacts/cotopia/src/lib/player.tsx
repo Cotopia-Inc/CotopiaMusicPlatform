@@ -160,7 +160,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       }
     });
     audio.addEventListener("durationchange", () => setDuration(audio.duration || 0));
-    audio.addEventListener("ended", () => { setPlaying(false); autoAdvanceRef.current(); });
+    audio.addEventListener("ended", () => { setPlaying(false); if (trackRef.current) window.dispatchEvent(new CustomEvent("cotopia:track_complete", { detail: { track: trackRef.current } })); autoAdvanceRef.current(); });
     audio.addEventListener("play", () => setPlaying(true));
     audio.addEventListener("pause", () => setPlaying(false));
     audio.addEventListener("error", () => setPlaying(false));
@@ -227,7 +227,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     const handlers: Record<string, EventListener> = {
       timeupdate: () => setCurrentTime(el.currentTime),
       durationchange: () => setDuration(el.duration || 0),
-      ended: () => { setIsPlaying(false); autoAdvanceRef.current(); },
+      ended: () => { setIsPlaying(false); if (trackRef.current) window.dispatchEvent(new CustomEvent("cotopia:track_complete", { detail: { track: trackRef.current } })); autoAdvanceRef.current(); },
       play: () => setIsPlaying(true),
       pause: () => setIsPlaying(false),
       error: () => setIsPlaying(false),

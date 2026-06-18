@@ -67,6 +67,13 @@ export default function VideoDetail() {
     }
   }, [videoId]);
 
+  const handleVideoEnded = useCallback(() => {
+    setIsVideoPlaying(false);
+    if (videoId) {
+      trackEvent.mutate({ data: { eventType: "content", eventName: "video_complete", contentType: "video", contentId: videoId } });
+    }
+  }, [videoId]);
+
   const handleFullscreen = useCallback(() => {
     if (videoRef.current) {
       videoRef.current.requestFullscreen?.();
@@ -233,6 +240,7 @@ export default function VideoDetail() {
             className="absolute inset-0 w-full h-full object-contain"
             controls
             autoPlay
+            onEnded={handleVideoEnded}
             style={{ zIndex: 10 }}
           />
         ) : (

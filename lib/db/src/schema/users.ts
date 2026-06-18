@@ -18,7 +18,7 @@ export const usersTable = pgTable("users", {
   isSuspended: boolean("is_suspended").notNull().default(false),
   suspendedUntil: timestamp("suspended_until", { withTimezone: true }), // temporary suspension expiry; null = indefinite/none
   isBanned: boolean("is_banned").notNull().default(false), // permanent ban
-  messagePolicy: text("message_policy").notNull().default("followers_only"), // everyone | followers_only | verified_only | nobody
+  messagePolicy: text("message_policy").notNull().default("everyone"), // everyone | followers_only | verified_only | nobody
   isActive: boolean("is_active").notNull().default(true),
   emailVerified: boolean("email_verified").notNull().default(false),
   // Demographics (collected after signup)
