@@ -62,7 +62,10 @@ export default function AdminDiscover() {
     updateSong.mutate({ id, data: { isFeatured: !current } }, {
       onSuccess: () => {
         toast({ title: current ? "Removed from featured" : "Song featured on Home & Discover!" });
-        queryClient.invalidateQueries({ queryKey: getListSongsQueryKey({ limit: 200 }) });
+        queryClient.setQueryData(
+          getListSongsQueryKey({ limit: 200 }),
+          (old: any) => old ? { ...old, items: old.items?.map((s: any) => s.id === id ? { ...s, isFeatured: !current } : s) } : old
+        );
       },
       onError: () => toast({ variant: "destructive", title: "Failed to update" }),
       onSettled: () => setPendingId(null),
@@ -74,7 +77,10 @@ export default function AdminDiscover() {
     updateVideo.mutate({ id, data: { isFeatured: !current } }, {
       onSuccess: () => {
         toast({ title: current ? "Removed from featured" : "Video featured on Home & Discover!" });
-        queryClient.invalidateQueries({ queryKey: getListVideosQueryKey({ limit: 200 }) });
+        queryClient.setQueryData(
+          getListVideosQueryKey({ limit: 200 }),
+          (old: any) => old ? { ...old, items: old.items?.map((v: any) => v.id === id ? { ...v, isFeatured: !current } : v) } : old
+        );
       },
       onError: () => toast({ variant: "destructive", title: "Failed to update" }),
       onSettled: () => setPendingId(null),
