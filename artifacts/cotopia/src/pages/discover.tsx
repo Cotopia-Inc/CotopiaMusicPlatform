@@ -61,7 +61,7 @@ export default function Discover() {
                           <button
                             className="bg-primary text-primary-foreground rounded-full p-3 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300"
                             title={`Play ${song.title}`}
-                            onClick={(e) => { e.preventDefault(); play({ id: song.id, title: song.title, artistName: song.artistName ?? "", artistId: song.artistId, artistUserRole: song.artistUserRole ?? null, artistIsVerified: song.artistIsVerified ?? false, coverUrl: song.coverUrl, streamUrl: song.streamUrl, duration: song.duration }); }}
+                            onClick={(e) => { e.stopPropagation(); e.preventDefault(); play({ id: song.id, title: song.title, artistName: song.artistName ?? "", artistId: song.artistId, artistUserRole: song.artistUserRole ?? null, artistIsVerified: song.artistIsVerified ?? false, coverUrl: song.coverUrl, streamUrl: song.streamUrl, duration: song.duration }); }}
                           >
                             <Play className="w-6 h-6 fill-current ml-1" />
                           </button>
@@ -106,7 +106,7 @@ export default function Discover() {
                           <button
                             className="bg-primary text-primary-foreground rounded-full p-4 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300"
                             title={`Play ${video.title}`}
-                            onClick={(e) => { e.preventDefault(); play({ id: video.id, title: video.title, artistName: video.artistName ?? "", artistId: video.artistId, artistUserRole: video.artistUserRole ?? null, artistIsVerified: video.artistIsVerified ?? false, coverUrl: video.thumbnailUrl, videoUrl: video.videoUrl, duration: video.duration }); }}
+                            onClick={(e) => { e.stopPropagation(); e.preventDefault(); play({ id: video.id, title: video.title, artistName: video.artistName ?? "", artistId: video.artistId, artistUserRole: video.artistUserRole ?? null, artistIsVerified: video.artistIsVerified ?? false, coverUrl: video.thumbnailUrl, videoUrl: video.videoUrl, duration: video.duration }); }}
                           >
                             <Play className="w-6 h-6 fill-current ml-1" />
                           </button>
@@ -153,7 +153,7 @@ export default function Discover() {
                       <button
                         className="bg-primary text-primary-foreground rounded-full p-3 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300"
                         title={`Play ${song.title}`}
-                        onClick={(e) => { e.preventDefault(); play({ id: song.id, title: song.title, artistName: song.artistName ?? "", artistId: song.artistId, artistUserRole: song.artistUserRole ?? null, artistIsVerified: song.artistIsVerified ?? false, coverUrl: song.coverUrl, streamUrl: song.streamUrl, duration: song.duration }); }}
+                        onClick={(e) => { e.stopPropagation(); e.preventDefault(); play({ id: song.id, title: song.title, artistName: song.artistName ?? "", artistId: song.artistId, artistUserRole: song.artistUserRole ?? null, artistIsVerified: song.artistIsVerified ?? false, coverUrl: song.coverUrl, streamUrl: song.streamUrl, duration: song.duration }); }}
                       >
                         <Play className="w-6 h-6 fill-current ml-1" />
                       </button>
@@ -224,7 +224,7 @@ export default function Discover() {
                           <button
                             className="bg-primary text-primary-foreground rounded-full p-3 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300"
                             title={`Play ${song.title}`}
-                            onClick={(e) => { e.preventDefault(); play({ id: song.id, title: song.title, artistName: song.artistName ?? "", artistId: song.artistId, artistUserRole: song.artistUserRole ?? null, artistIsVerified: song.artistIsVerified ?? false, coverUrl: song.coverUrl, streamUrl: song.streamUrl, duration: song.duration }); }}
+                            onClick={(e) => { e.stopPropagation(); e.preventDefault(); play({ id: song.id, title: song.title, artistName: song.artistName ?? "", artistId: song.artistId, artistUserRole: song.artistUserRole ?? null, artistIsVerified: song.artistIsVerified ?? false, coverUrl: song.coverUrl, streamUrl: song.streamUrl, duration: song.duration }); }}
                           >
                             <Play className="w-6 h-6 fill-current ml-1" />
                           </button>
@@ -305,7 +305,7 @@ export default function Discover() {
                             <button
                               className="bg-primary text-primary-foreground rounded-full p-3 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300"
                               title={`Play ${video.title}`}
-                              onClick={(e) => { e.preventDefault(); play({ id: video.id, title: video.title, artistName: video.artistName ?? "", artistId: video.artistId, artistUserRole: video.artistUserRole ?? null, artistIsVerified: video.artistIsVerified ?? false, coverUrl: video.thumbnailUrl, videoUrl: video.videoUrl, duration: video.duration }); }}
+                              onClick={(e) => { e.stopPropagation(); e.preventDefault(); play({ id: video.id, title: video.title, artistName: video.artistName ?? "", artistId: video.artistId, artistUserRole: video.artistUserRole ?? null, artistIsVerified: video.artistIsVerified ?? false, coverUrl: video.thumbnailUrl, videoUrl: video.videoUrl, duration: video.duration }); }}
                             >
                               <Play className="w-6 h-6 fill-current ml-1" />
                             </button>
@@ -371,7 +371,7 @@ export default function Discover() {
                       <button
                         className="bg-primary text-primary-foreground rounded-full p-3 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300"
                         title={`Play ${song.title}`}
-                        onClick={(e) => { e.preventDefault(); play({ id: song.id, title: song.title, artistName: song.artistName ?? "", artistId: song.artistId, artistUserRole: song.artistUserRole ?? null, artistIsVerified: song.artistIsVerified ?? false, coverUrl: song.coverUrl, streamUrl: song.streamUrl, duration: song.duration }); }}
+                        onClick={(e) => { e.stopPropagation(); e.preventDefault(); play({ id: song.id, title: song.title, artistName: song.artistName ?? "", artistId: song.artistId, artistUserRole: song.artistUserRole ?? null, artistIsVerified: song.artistIsVerified ?? false, coverUrl: song.coverUrl, streamUrl: song.streamUrl, duration: song.duration }); }}
                       >
                         <Play className="w-6 h-6 fill-current ml-1" />
                       </button>
@@ -426,7 +426,7 @@ export default function Discover() {
                       <button
                         className="bg-primary text-primary-foreground rounded-full p-4 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300"
                         title={`Play ${video.title}`}
-                        onClick={(e) => { e.preventDefault(); play({ id: video.id, title: video.title, artistName: video.artistName ?? "", artistId: video.artistId, artistUserRole: video.artistUserRole ?? null, artistIsVerified: video.artistIsVerified ?? false, coverUrl: video.thumbnailUrl, videoUrl: video.videoUrl, duration: video.duration }); }}
+                        onClick={(e) => { e.stopPropagation(); e.preventDefault(); play({ id: video.id, title: video.title, artistName: video.artistName ?? "", artistId: video.artistId, artistUserRole: video.artistUserRole ?? null, artistIsVerified: video.artistIsVerified ?? false, coverUrl: video.thumbnailUrl, videoUrl: video.videoUrl, duration: video.duration }); }}
                       >
                         <Play className="w-6 h-6 fill-current ml-1" />
                       </button>
