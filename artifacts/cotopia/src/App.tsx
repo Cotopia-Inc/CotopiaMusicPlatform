@@ -62,6 +62,7 @@ import AdminCopyrightConcerns from "@/pages/admin-copyright-concerns";
 import AdminBroadcast from "@/pages/admin-broadcast";
 import ArtistAnalytics from "@/pages/artist-analytics";
 import LabelAnalytics from "@/pages/label-analytics";
+import LabelDashboard from "@/pages/label-dashboard";
 import Contact from "@/pages/contact";
 import AdminDiscover from "@/pages/admin-discover";
 
@@ -379,6 +380,9 @@ function Router() {
       {/* Artist + Label tools */}
       <Route path="/artist/analytics">
         <RoleRoute roles={ARTIST_ROLES}><ArtistAnalytics /></RoleRoute>
+      </Route>
+      <Route path="/label/dashboard">
+        <RoleRoute roles={LABEL_ROLES}><LabelDashboard /></RoleRoute>
       </Route>
       <Route path="/label/analytics">
         <RoleRoute roles={LABEL_ROLES}><LabelAnalytics /></RoleRoute>

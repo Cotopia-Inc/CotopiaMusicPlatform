@@ -7,6 +7,43 @@ import { requireAuth, type AuthRequest } from "../lib/auth";
 
 const router = Router();
 
+router.get("/label/me", requireAuth, async (req: AuthRequest, res): Promise<void> => {
+  if (req.user!.role !== "label") {
+    res.status(403).json({ error: "Forbidden: label role required" });
+    return;
+  }
+
+  const [label] = await db
+    .select({
+      id: labelsTable.id,
+      userId: labelsTable.userId,
+      name: labelsTable.name,
+      bio: labelsTable.bio,
+      logoUrl: labelsTable.logoUrl,
+      bannerUrl: labelsTable.bannerUrl,
+    })
+    .from(labelsTable)
+    .where(eq(labelsTable.userId, req.user!.userId))
+    .limit(1);
+
+  if (!label) {
+    res.status(404).json({ error: "Label profile not found" });
+    return;
+  }
+
+  const artists = await db
+    .select({
+      id: artistsTable.id,
+      stageName: artistsTable.stageName,
+      avatarUrl: artistsTable.avatarUrl,
+      genre: artistsTable.genre,
+    })
+    .from(artistsTable)
+    .where(eq(artistsTable.labelId, label.id));
+
+  res.json({ ...label, artists });
+});
+
 router.get("/label/analytics", requireAuth, async (req: AuthRequest, res): Promise<void> => {
   if (req.user!.role !== "label") {
     res.status(403).json({ error: "Forbidden: label role required" });

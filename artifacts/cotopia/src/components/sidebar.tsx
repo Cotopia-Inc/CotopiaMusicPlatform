@@ -362,12 +362,24 @@ export function Sidebar() {
               </>
             )}
 
-            {/* Label Analytics */}
+            {/* Label Tools */}
             {role === "label" && (
               <>
                 <div className="pt-4 pb-1">
                   <p className="px-3 text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Label Tools</p>
                 </div>
+                <Link href="/label/dashboard">
+                  <Button
+                    variant={isActive("/label/dashboard") ? "secondary" : "ghost"}
+                    className={cn(
+                      "w-full justify-start gap-3 text-sm h-9",
+                      isActive("/label/dashboard") ? "font-semibold text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <Settings className="w-4 h-4 flex-shrink-0" />
+                    Label Dashboard
+                  </Button>
+                </Link>
                 <Link href="/label/analytics">
                   <Button
                     variant={isActive("/label/analytics") ? "secondary" : "ghost"}
