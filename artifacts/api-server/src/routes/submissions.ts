@@ -49,11 +49,11 @@ router.post("/submissions", requireAuth, requireVerifiedEmail, async (req: AuthR
 
   const d = parsed.data;
 
-  // Find or create artist profile for this user
+  // Find or create artist profile for this user — always use their own account username
   let [artist] = await db.select().from(artistsTable).where(eq(artistsTable.userId, req.user!.userId)).limit(1);
   if (!artist) {
     const [user] = await db.select({ username: usersTable.username }).from(usersTable).where(eq(usersTable.id, req.user!.userId)).limit(1);
-    const stageName = d.artistName || user?.username || "Unknown Artist";
+    const stageName = user?.username || "Unknown Artist";
     [artist] = await db.insert(artistsTable).values({
       userId: req.user!.userId,
       stageName,
@@ -123,11 +123,11 @@ router.post("/submissions/bulk", requireAuth, requireVerifiedEmail, async (req: 
 
   const d = parsed.data;
 
-  // Find or create artist profile for this user
+  // Find or create artist profile for this user — always use their own account username
   let [artist] = await db.select().from(artistsTable).where(eq(artistsTable.userId, req.user!.userId)).limit(1);
   if (!artist) {
     const [user] = await db.select({ username: usersTable.username }).from(usersTable).where(eq(usersTable.id, req.user!.userId)).limit(1);
-    const stageName = d.artistName || user?.username || "Unknown Artist";
+    const stageName = user?.username || "Unknown Artist";
     [artist] = await db.insert(artistsTable).values({
       userId: req.user!.userId,
       stageName,

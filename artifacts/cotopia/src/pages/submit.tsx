@@ -112,7 +112,7 @@ function FileRow({
 
 // ── Shared metadata form ───────────────────────────────────────────────────────
 interface SharedMeta {
-  artistName: string;
+  artistName: string; // read-only display — populated from logged-in user, not editable
   labelName: string;
   genre: string;
   mood: string;
@@ -132,7 +132,10 @@ function MetadataSection({ meta, onChange, type }: { meta: SharedMeta; onChange:
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Artist / Stage Name</Label>
-          <Input placeholder="Your artist name" value={meta.artistName} onChange={e => set({ artistName: e.target.value })} className="bg-secondary/50 border-secondary" />
+          <div className="flex items-center gap-2 h-9 px-3 rounded-md border border-secondary bg-secondary/30 text-sm text-muted-foreground select-none">
+            {meta.artistName || "—"}
+          </div>
+          <p className="text-[11px] text-muted-foreground/60">Your registered artist name — set from your account</p>
         </div>
         <div className="space-y-2">
           <Label>Label Name <span className="text-muted-foreground text-xs">(optional)</span></Label>
@@ -316,7 +319,15 @@ const defaultMeta: SharedMeta = { artistName: "", labelName: "", genre: "", mood
 
 export default function Submit() {
   const { user } = useAuth();
+  const lockedArtistName = (user as any)?.displayName || user?.username || "";
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (lockedArtistName) {
+      setSongMeta(m => ({ ...m, artistName: lockedArtistName }));
+      setVideoMeta(m => ({ ...m, artistName: lockedArtistName }));
+    }
+  }, [lockedArtistName]);
   const [, setLocation] = useLocation();
 
   const [step, setStep] = useState(0);
@@ -440,10 +451,6 @@ export default function Submit() {
       toast({ title: "Upload files first", description: "All files must finish uploading before continuing.", variant: "destructive" });
       return;
     }
-    if (!meta.artistName.trim()) {
-      toast({ title: "Artist name required", description: "Fill in the Artist / Stage Name field.", variant: "destructive" });
-      return;
-    }
     if (!meta.genre) {
       toast({ title: "Genre required", description: "Select a genre for your release.", variant: "destructive" });
       return;
@@ -512,7 +519,7 @@ export default function Submit() {
         data: {
           type: tab,
           plan,
-          artistName: meta.artistName || undefined,
+          artistName: lockedArtistName || undefined,
           labelName: meta.labelName || undefined,
           genre: meta.genre || undefined,
           mood: meta.mood || undefined,
