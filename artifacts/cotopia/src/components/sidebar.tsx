@@ -186,6 +186,7 @@ export function Sidebar() {
     { href: "/admin/strikes", label: "Copyright Strikes", icon: ShieldOff },
     { href: "/admin/copyright-concerns", label: "Copyright Concerns", icon: Flag },
     { href: "/admin/reports", label: "Reports", icon: Flag },
+    { href: "/admin/enforcement", label: "Enforcement", icon: Shield },
     { href: "/admin/members", label: "Member Actions", icon: ShieldOff },
     { href: "/admin/feedback", label: "Beta Feedback", icon: MessageSquare },
     { href: "/admin/beta-analytics", label: "Beta Analytics", icon: BarChart3 },
@@ -205,6 +206,7 @@ export function Sidebar() {
     { href: "/moderator/messages", label: "DM Feed", icon: MessageCircle },
     { href: "/moderator/copyright-concerns", label: "Copyright Concerns", icon: Flag },
     { href: "/admin/reports", label: "Reports", icon: Flag },
+    { href: "/admin/enforcement", label: "Enforcement", icon: Shield },
     { href: "/admin/members", label: "Member Actions", icon: ShieldOff },
   ];
 

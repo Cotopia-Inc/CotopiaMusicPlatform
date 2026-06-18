@@ -6,7 +6,7 @@ import {
   useDeleteVideo, useUpdateVideo,
 } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Play, Heart, Star, Send, Radio, Users, MessageCircle, Maximize2, ArrowLeft, Trash2, Edit2, X, Save, Upload, ImageIcon, ListPlus } from "lucide-react";
+import { Play, Heart, Star, Send, Radio, Users, MessageCircle, Maximize2, ArrowLeft, Trash2, Edit2, X, Save, Upload, ImageIcon, ListPlus, Pencil, Shield, ShieldOff, Check } from "lucide-react";
 import { RoleTag } from "@/components/role-badges";
 import { ReportModal } from "@/components/report-modal";
 import { VerifyEmailBanner } from "@/components/verify-email-banner";
@@ -52,6 +52,11 @@ export default function VideoDetail() {
 
   const [chatInput, setChatInput] = useState("");
   const [deletingChatMsgId, setDeletingChatMsgId] = useState<number | null>(null);
+  const [editingChatMsgId, setEditingChatMsgId] = useState<number | null>(null);
+  const [editingChatBody, setEditingChatBody] = useState("");
+  const [savingChatEdit, setSavingChatEdit] = useState(false);
+  const [chatBlockedUserIds, setChatBlockedUserIds] = useState<Set<number>>(new Set());
+  const [chatBlockLoading, setChatBlockLoading] = useState<number | null>(null);
   const [localFavorited, setLocalFavorited] = useState<boolean | null>(null);
   const [localRating, setLocalRating] = useState<number | null>(null);
   const [hoveredRating, setHoveredRating] = useState<number | null>(null);
@@ -94,6 +99,46 @@ export default function VideoDetail() {
       setDeletingChatMsgId(null);
     }
   }
+
+  async function handleEditChatMsg(msgId: number) {
+    if (!editingChatBody.trim()) return;
+    setSavingChatEdit(true);
+    const token = localStorage.getItem("cotopia_token");
+    try {
+      await fetch(`/api/chat/msg/${msgId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ message: editingChatBody.trim() }),
+      });
+      queryClient.invalidateQueries({ queryKey: getGetChatMessagesQueryKey("video", videoId) });
+      setEditingChatMsgId(null);
+    } catch {
+      toast({ title: "Failed to edit message", variant: "destructive" });
+    } finally {
+      setSavingChatEdit(false);
+    }
+  }
+
+  async function handleChatBlockToggle(targetUserId: number) {
+    const isBlocked = chatBlockedUserIds.has(targetUserId);
+    setChatBlockLoading(targetUserId);
+    const token = localStorage.getItem("cotopia_token");
+    try {
+      if (isBlocked) {
+        await fetch(`/api/users/block/${targetUserId}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
+        setChatBlockedUserIds(prev => { const next = new Set(prev); next.delete(targetUserId); return next; });
+        toast({ title: "User unblocked" });
+      } else {
+        await fetch("/api/users/block", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ userId: targetUserId }) });
+        setChatBlockedUserIds(prev => new Set([...prev, targetUserId]));
+        toast({ title: "User blocked" });
+      }
+    } catch {
+      toast({ title: "Failed", variant: "destructive" });
+    } finally {
+      setChatBlockLoading(null);
+    }
+  }
   const rateMutation = useRateVideo();
   const favoriteMutation = useFavoriteVideo();
   const unfavoriteMutation = useUnfavoriteVideo();
@@ -104,6 +149,15 @@ export default function VideoDetail() {
       trackEvent.mutate({ data: { eventType: "page_view", eventName: "video_page", contentType: "video" as const, contentId: video.id } });
     }
   }, [video?.id]);
+
+  useEffect(() => {
+    if (!user) return;
+    const token = localStorage.getItem("cotopia_token");
+    fetch("/api/users/blocks", { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json())
+      .then((ids: number[]) => Array.isArray(ids) && setChatBlockedUserIds(new Set(ids)))
+      .catch(() => {});
+  }, [user]);
 
   const deleteVideoMutation = useDeleteVideo();
   const updateVideoMutation = useUpdateVideo();
@@ -333,41 +387,84 @@ export default function VideoDetail() {
                 {chatMessages.map((msg) => {
                   const isOwn = msg.userId === user?.id;
                   const isDeleting = deletingChatMsgId === msg.id;
+                  const isEditing = editingChatMsgId === msg.id;
+                  const isBlocked = chatBlockedUserIds.has(msg.userId);
                   return (
                     <div key={msg.id} className="flex gap-2 px-1 group">
-                      <div className="w-6 h-6 rounded-full bg-primary/30 overflow-hidden flex-shrink-0 text-[10px] flex items-center justify-center font-bold text-primary">
+                      <div className="w-6 h-6 rounded-full bg-primary/30 overflow-hidden flex-shrink-0 text-[10px] flex items-center justify-center font-bold text-primary mt-0.5">
                         {msg.avatarUrl
                           ? <img src={msg.avatarUrl} alt={msg.username} className="w-full h-full object-cover" />
                           : msg.username[0].toUpperCase()}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-baseline gap-1.5">
-                          <UserLink
-                            username={msg.username}
-                            userId={msg.userId}
-                            role={msg.role ?? undefined}
-                            isVerified={msg.isVerified}
-                            artistId={msg.artistId}
-                            className="text-[10px] font-semibold text-primary"
-                          />
-                          <span className={`text-[10px] break-words leading-relaxed ${isDeleting ? "opacity-40" : "text-white/80"}`}>
-                            {isDeleting ? "Deleting…" : msg.message}
-                          </span>
-                          {isOwn && !isDeleting && (
-                            <button
-                              onClick={() => handleDeleteChatMsg(msg.id)}
-                              className="opacity-0 group-hover:opacity-100 transition-opacity ml-auto flex-shrink-0 text-white/30 hover:text-red-400"
-                              title="Delete"
-                            >
-                              <Trash2 className="w-3 h-3" />
+                        {isEditing ? (
+                          <div className="flex gap-1 items-center">
+                            <input
+                              value={editingChatBody}
+                              onChange={e => setEditingChatBody(e.target.value)}
+                              onKeyDown={e => {
+                                if (e.key === "Enter") handleEditChatMsg(msg.id);
+                                if (e.key === "Escape") setEditingChatMsgId(null);
+                              }}
+                              className="flex-1 bg-white/20 text-white text-[10px] px-1.5 py-0.5 rounded border border-white/20 focus:outline-none min-w-0"
+                              autoFocus
+                              maxLength={500}
+                              disabled={savingChatEdit}
+                            />
+                            <button onClick={() => handleEditChatMsg(msg.id)} disabled={savingChatEdit} className="text-primary hover:text-primary/80 p-0.5 flex-shrink-0" title="Save">
+                              <Check className="w-3 h-3" />
                             </button>
-                          )}
-                          {!isOwn && user && (
-                            <div className="opacity-0 group-hover:opacity-100 transition-opacity ml-auto flex-shrink-0">
-                              <ReportModal targetType="chat_message" targetId={msg.id} />
-                            </div>
-                          )}
-                        </div>
+                            <button onClick={() => setEditingChatMsgId(null)} className="text-white/40 hover:text-white p-0.5 flex-shrink-0" title="Cancel">
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-baseline gap-1.5">
+                            <UserLink
+                              username={msg.username}
+                              userId={msg.userId}
+                              role={msg.role ?? undefined}
+                              isVerified={msg.isVerified}
+                              artistId={msg.artistId}
+                              className="text-[10px] font-semibold text-primary flex-shrink-0"
+                            />
+                            <span className={`text-[10px] break-words leading-relaxed flex-1 min-w-0 ${isDeleting ? "opacity-40" : "text-white/80"}`}>
+                              {isDeleting ? "Deleting…" : msg.message}
+                            </span>
+                            {isOwn && !isDeleting && (
+                              <span className="opacity-0 group-hover:opacity-100 transition-opacity ml-auto flex-shrink-0 flex gap-0.5">
+                                <button
+                                  onClick={() => { setEditingChatMsgId(msg.id); setEditingChatBody(msg.message); }}
+                                  className="text-white/30 hover:text-primary p-0.5 rounded"
+                                  title="Edit"
+                                >
+                                  <Pencil className="w-2.5 h-2.5" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteChatMsg(msg.id)}
+                                  className="text-white/30 hover:text-red-400 p-0.5 rounded"
+                                  title="Delete"
+                                >
+                                  <Trash2 className="w-2.5 h-2.5" />
+                                </button>
+                              </span>
+                            )}
+                            {!isOwn && user && !isDeleting && (
+                              <span className="opacity-0 group-hover:opacity-100 transition-opacity ml-auto flex-shrink-0 flex gap-0.5 items-center">
+                                <button
+                                  onClick={() => handleChatBlockToggle(msg.userId)}
+                                  disabled={chatBlockLoading === msg.userId}
+                                  className={`p-0.5 rounded ${isBlocked ? "text-green-400 hover:text-green-300" : "text-white/30 hover:text-amber-400"}`}
+                                  title={isBlocked ? "Unblock user" : "Block user"}
+                                >
+                                  {isBlocked ? <ShieldOff className="w-2.5 h-2.5" /> : <Shield className="w-2.5 h-2.5" />}
+                                </button>
+                                <ReportModal targetType="chat_message" targetId={msg.id} />
+                                <ReportModal targetType="profile" targetId={msg.userId} />
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                   );

@@ -49,6 +49,7 @@ import AdminAuditLogs from "@/pages/admin-audit-logs";
 import AdminLegal from "@/pages/admin-legal";
 import AdminStrikes from "@/pages/admin-strikes";
 import AdminReports from "@/pages/admin-reports";
+import AdminEnforcement from "@/pages/admin-enforcement";
 import Feedback from "@/pages/feedback";
 import AdminFeedback from "@/pages/admin-feedback";
 import AdminMembers from "@/pages/admin-members";
@@ -332,6 +333,9 @@ function Router() {
       </Route>
       <Route path="/admin/reports">
         <RoleRoute roles={MOD_ROLES}><AdminReports /></RoleRoute>
+      </Route>
+      <Route path="/admin/enforcement">
+        <RoleRoute roles={MOD_ROLES}><AdminEnforcement /></RoleRoute>
       </Route>
       <Route path="/admin/members">
         <RoleRoute roles={MOD_ROLES}><AdminMembers /></RoleRoute>

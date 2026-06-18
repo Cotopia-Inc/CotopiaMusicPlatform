@@ -6,12 +6,19 @@ import {
   getGetUnreadNotificationCountQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCheck, Bell, CheckCircle, XCircle, Megaphone } from "lucide-react";
+import { CheckCheck, Bell, CheckCircle, XCircle, Megaphone, Trash2 } from "lucide-react";
 import { Link } from "wouter";
 import { formatDistanceToNow } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
+
+function authHeaders() {
+  const token = localStorage.getItem("cotopia_token");
+  return { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
+}
 
 function typeIcon(type: string) {
   if (type === "submission_approved") return <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />;
@@ -22,12 +29,16 @@ function typeIcon(type: string) {
 
 export default function NotificationsPage() {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const { data: notifications, isLoading } = useListNotifications(
     {},
     { query: { queryKey: getListNotificationsQueryKey({}) } }
   );
   const markAll = useMarkAllNotificationsRead();
   const markOne = useMarkNotificationRead();
+
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [clearingAll, setClearingAll] = useState(false);
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: getListNotificationsQueryKey({}) });
@@ -42,7 +53,33 @@ export default function NotificationsPage() {
     markOne.mutate({ id }, { onSuccess: invalidate });
   };
 
+  const handleDeleteOne = async (id: number) => {
+    setDeletingId(id);
+    try {
+      await fetch(`/api/notifications/${id}`, { method: "DELETE", headers: authHeaders() });
+      invalidate();
+    } catch {
+      toast({ title: "Failed to delete notification", variant: "destructive" });
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const handleClearAll = async () => {
+    setClearingAll(true);
+    try {
+      await fetch("/api/notifications", { method: "DELETE", headers: authHeaders() });
+      invalidate();
+      toast({ title: "All notifications cleared" });
+    } catch {
+      toast({ title: "Failed to clear notifications", variant: "destructive" });
+    } finally {
+      setClearingAll(false);
+    }
+  };
+
   const unreadCount = notifications?.filter((n) => !n.isRead).length ?? 0;
+  const hasAny = (notifications?.length ?? 0) > 0;
 
   return (
     <div className="space-y-8 pb-24">
@@ -52,18 +89,32 @@ export default function NotificationsPage() {
           <h1 className="text-4xl font-extrabold tracking-tight mb-2">Notifications</h1>
           <p className="text-muted-foreground">Updates on your submissions and activity.</p>
         </div>
-        {unreadCount > 0 && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-2 mt-2 flex-shrink-0"
-            onClick={handleMarkAll}
-            disabled={markAll.isPending}
-          >
-            <CheckCheck className="w-3.5 h-3.5" />
-            Mark all read
-          </Button>
-        )}
+        <div className="flex items-center gap-2 mt-2 flex-shrink-0">
+          {unreadCount > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={handleMarkAll}
+              disabled={markAll.isPending}
+            >
+              <CheckCheck className="w-3.5 h-3.5" />
+              Mark all read
+            </Button>
+          )}
+          {hasAny && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 text-destructive hover:text-destructive border-destructive/30 hover:border-destructive/60 hover:bg-destructive/5"
+              onClick={handleClearAll}
+              disabled={clearingAll}
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              {clearingAll ? "Clearing…" : "Clear all"}
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="space-y-2">
@@ -81,7 +132,7 @@ export default function NotificationsPage() {
           notifications.map((n) => (
             <div
               key={n.id}
-              className={`bg-card border rounded-xl px-4 py-3.5 flex items-start gap-3 transition-colors ${
+              className={`bg-card border rounded-xl px-4 py-3.5 flex items-start gap-3 transition-colors group ${
                 !n.isRead ? "border-primary/30 bg-primary/5" : "border-border"
               }`}
             >
@@ -116,14 +167,27 @@ export default function NotificationsPage() {
                 )}
               </div>
 
-              {/* Mark read */}
-              {!n.isRead && (
+              {/* Actions */}
+              <div className="flex items-center gap-1.5 flex-shrink-0 mt-0.5">
+                {!n.isRead && (
+                  <button
+                    onClick={() => handleMarkOne(n.id)}
+                    className="w-5 h-5 rounded-full border border-primary/40 hover:bg-primary/20 transition-colors"
+                    title="Mark as read"
+                  />
+                )}
                 <button
-                  onClick={() => handleMarkOne(n.id)}
-                  className="w-5 h-5 rounded-full border border-primary/40 flex-shrink-0 mt-0.5 hover:bg-primary/20 transition-colors"
-                  title="Mark as read"
-                />
-              )}
+                  onClick={() => handleDeleteOne(n.id)}
+                  disabled={deletingId === n.id}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity w-6 h-6 rounded flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                  title="Delete notification"
+                >
+                  {deletingId === n.id
+                    ? <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />
+                    : <Trash2 className="w-3 h-3" />
+                  }
+                </button>
+              </div>
             </div>
           ))
         ) : (

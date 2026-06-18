@@ -53,4 +53,26 @@ router.patch("/notifications/:id/read", requireAuth, async (req: AuthRequest, re
   res.json(notif);
 });
 
+router.delete("/notifications/:id", requireAuth, async (req: AuthRequest, res): Promise<void> => {
+  const id = parseInt(req.params.id as string, 10);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+
+  const deleted = await db
+    .delete(notificationsTable)
+    .where(and(eq(notificationsTable.id, id), eq(notificationsTable.userId, req.user!.userId)))
+    .returning();
+
+  if (!deleted.length) { res.status(404).json({ error: "Not found" }); return; }
+  res.json({ success: true });
+});
+
+router.delete("/notifications", requireAuth, async (req: AuthRequest, res): Promise<void> => {
+  const deleted = await db
+    .delete(notificationsTable)
+    .where(eq(notificationsTable.userId, req.user!.userId))
+    .returning();
+
+  res.json({ deleted: deleted.length });
+});
+
 export default router;
