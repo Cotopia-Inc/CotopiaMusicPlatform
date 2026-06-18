@@ -65,6 +65,7 @@ async function getVideoWithArtist(id: number, userId?: number) {
   return {
     ...row,
     avgRating: r?.avg ? parseFloat(r.avg) : null,
+    ratingCount: r?.count ?? 0,
     commentCount: commentCount?.count ?? 0,
     userRating,
     isFavorited,

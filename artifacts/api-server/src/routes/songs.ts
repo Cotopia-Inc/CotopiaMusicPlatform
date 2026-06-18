@@ -70,6 +70,7 @@ async function getSongWithArtist(id: number, userId?: number) {
   return {
     ...row,
     avgRating: ratingRows[0]?.avg ? parseFloat(ratingRows[0].avg) : null,
+    ratingCount: ratingRows[0]?.count ?? 0,
     commentCount: commentCount?.count ?? 0,
     userRating,
     isFavorited,

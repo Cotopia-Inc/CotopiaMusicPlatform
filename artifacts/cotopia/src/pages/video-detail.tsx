@@ -599,6 +599,11 @@ export default function VideoDetail() {
             <span className="text-sm text-muted-foreground ml-1 tabular-nums">
               {video.avgRating ? video.avgRating.toFixed(1) : '—'}
             </span>
+            {(video as any).ratingCount > 0 && (
+              <span className="text-xs text-muted-foreground/60 tabular-nums">
+                ({(video as any).ratingCount} {(video as any).ratingCount === 1 ? 'rating' : 'ratings'})
+              </span>
+            )}
           </div>
         </div>
 

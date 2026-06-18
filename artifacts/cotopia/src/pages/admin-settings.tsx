@@ -45,6 +45,8 @@ export default function AdminSettings() {
     strikesUntilSuspension: 3,
     autoSuspensionDays: 7,
     suspensionsUntilBanReview: 3,
+    showTopRated: true,
+    topRatedMinRatings: 1,
   });
 
   useEffect(() => {
@@ -62,6 +64,8 @@ export default function AdminSettings() {
         strikesUntilSuspension: settings.strikesUntilSuspension ?? 3,
         autoSuspensionDays: settings.autoSuspensionDays ?? 7,
         suspensionsUntilBanReview: settings.suspensionsUntilBanReview ?? 3,
+        showTopRated: settings.showTopRated ?? true,
+        topRatedMinRatings: settings.topRatedMinRatings ?? 1,
       });
     }
   }, [settings]);
@@ -253,6 +257,29 @@ export default function AdminSettings() {
               checked={formData.featureRotation}
               onCheckedChange={(checked) => setFormData({...formData, featureRotation: checked})}
             />
+          </div>
+
+          <div className="flex items-center justify-between p-4 bg-secondary/30 rounded-lg border border-border">
+            <div className="space-y-1">
+              <Label className="font-bold text-base">Top Rated Board</Label>
+              <p className="text-sm text-muted-foreground">Show the Top Rated section on the Discover page, ranking songs by average listener rating. When off, the section is hidden from all users.</p>
+            </div>
+            <Switch
+              checked={formData.showTopRated}
+              onCheckedChange={(checked) => setFormData({...formData, showTopRated: checked})}
+            />
+          </div>
+
+          <div className={`space-y-2 ${formData.showTopRated ? "" : "opacity-50 pointer-events-none"}`}>
+            <Label>Minimum Ratings Required</Label>
+            <Input
+              type="number"
+              min={1}
+              value={formData.topRatedMinRatings}
+              onChange={(e) => setFormData({...formData, topRatedMinRatings: Math.max(1, Number(e.target.value))})}
+              className="bg-secondary/50 border-secondary max-w-[120px]"
+            />
+            <p className="text-xs text-muted-foreground">A song must have at least this many ratings to appear in the Top Rated board. Raise this to filter out songs with only one or two votes.</p>
           </div>
         </div>
 

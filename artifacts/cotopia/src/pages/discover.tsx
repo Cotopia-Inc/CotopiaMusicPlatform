@@ -178,54 +178,92 @@ export default function Discover() {
       </section>
 
       {/* ── Top Rated ── */}
-      <section>
-        <h3 className="text-2xl font-bold tracking-tight mb-6">Top Rated</h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-          {isLoading ? (
-            Array(6).fill(0).map((_, i) => (
-              <div key={i} className="space-y-3">
-                <Skeleton className="aspect-square rounded-md" />
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-3 w-1/2" />
-              </div>
-            ))
-          ) : discover?.topRatedSongs?.length ? (
-            discover.topRatedSongs.map((song) => (
-              <div key={song.id} className="group cursor-pointer space-y-3">
-                <Link href={`/songs/${song.id}`}>
-                  <div className="aspect-square relative overflow-hidden rounded-md bg-secondary border border-border">
-                    {song.coverUrl ? (
-                      <img src={song.coverUrl} alt={song.title} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">No Cover</div>
-                    )}
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <button
-                        className="bg-primary text-primary-foreground rounded-full p-3 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300"
-                        title={`Play ${song.title}`}
-                        onClick={(e) => { e.preventDefault(); play({ id: song.id, title: song.title, artistName: song.artistName ?? "", artistId: song.artistId, artistUserRole: song.artistUserRole ?? null, artistIsVerified: song.artistIsVerified ?? false, coverUrl: song.coverUrl, streamUrl: song.streamUrl, duration: song.duration }); }}
-                      >
-                        <Play className="w-6 h-6 fill-current ml-1" />
-                      </button>
+      {(isLoading || discover?.showTopRated !== false) && (
+        <section>
+          <div className="flex items-center gap-2 mb-6">
+            <Star className="w-5 h-5 text-yellow-400 fill-current" />
+            <h3 className="text-2xl font-bold tracking-tight">Top Rated</h3>
+            <span className="text-xs bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 rounded-full px-2 py-0.5 ml-1">By Rating</span>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            {isLoading ? (
+              Array(5).fill(0).map((_, i) => (
+                <div key={i} className="space-y-3">
+                  <Skeleton className="aspect-square rounded-md" />
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-3 w-1/2" />
+                </div>
+              ))
+            ) : (discover?.topRatedSongs?.length ?? 0) > 0 ? (
+              discover!.topRatedSongs!.map((song, idx) => {
+                const songAny = song as any;
+                return (
+                  <div key={song.id} className="group cursor-pointer space-y-3">
+                    <Link href={`/songs/${song.id}`}>
+                      <div className="aspect-square relative overflow-hidden rounded-md bg-secondary border border-yellow-500/20 ring-1 ring-yellow-500/10">
+                        {song.coverUrl ? (
+                          <img src={song.coverUrl} alt={song.title} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">No Cover</div>
+                        )}
+                        {/* Rank badge */}
+                        <div className="absolute top-2 left-2">
+                          <span className="bg-yellow-500/90 text-black text-[9px] font-bold rounded px-1.5 py-0.5">#{idx + 1}</span>
+                        </div>
+                        {/* Avg rating badge */}
+                        {songAny.avgRating && (
+                          <div className="absolute bottom-2 right-2 flex items-center gap-0.5 bg-black/70 rounded px-1.5 py-0.5">
+                            <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                            <span className="text-white text-[10px] font-bold tabular-nums">{Number(songAny.avgRating).toFixed(1)}</span>
+                            {songAny.ratingCount > 0 && (
+                              <span className="text-white/60 text-[9px] tabular-nums ml-0.5">({songAny.ratingCount})</span>
+                            )}
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <button
+                            className="bg-primary text-primary-foreground rounded-full p-3 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300"
+                            title={`Play ${song.title}`}
+                            onClick={(e) => { e.preventDefault(); play({ id: song.id, title: song.title, artistName: song.artistName ?? "", artistId: song.artistId, artistUserRole: song.artistUserRole ?? null, artistIsVerified: song.artistIsVerified ?? false, coverUrl: song.coverUrl, streamUrl: song.streamUrl, duration: song.duration }); }}
+                          >
+                            <Play className="w-6 h-6 fill-current ml-1" />
+                          </button>
+                        </div>
+                      </div>
+                    </Link>
+                    <div>
+                      <div className="flex items-start justify-between gap-1">
+                        <Link href={`/songs/${song.id}`}>
+                          <h4 className="font-semibold text-sm truncate hover:text-primary transition-colors">{song.title}</h4>
+                        </Link>
+                        <SongMenu song={song} className="flex-shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition-opacity" />
+                      </div>
+                      <UserLink username={song.artistName} artistId={song.artistId} role={song.artistUserRole} isVerified={song.artistIsVerified ?? false} className="text-xs text-muted-foreground" />
+                      {songAny.avgRating && (
+                        <div className="flex items-center gap-0.5 mt-1">
+                          {[1,2,3,4,5].map(s => (
+                            <Star key={s} className={`w-3 h-3 ${Number(songAny.avgRating) >= s ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground/30'}`} />
+                          ))}
+                          <span className="text-[10px] text-muted-foreground ml-1">{Number(songAny.avgRating).toFixed(1)}</span>
+                          {songAny.ratingCount > 0 && (
+                            <span className="text-[10px] text-muted-foreground/50">· {songAny.ratingCount} {songAny.ratingCount === 1 ? 'rating' : 'ratings'}</span>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
-                </Link>
-                <div>
-                  <div className="flex items-start justify-between gap-1">
-                    <Link href={`/songs/${song.id}`}>
-                      <h4 className="font-semibold text-sm truncate hover:text-primary transition-colors">{song.title}</h4>
-                    </Link>
-                    <SongMenu song={song} className="flex-shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition-opacity" />
-                  </div>
-                  <UserLink username={song.artistName} artistId={song.artistId} role={song.artistUserRole} isVerified={song.artistIsVerified ?? false} className="text-xs text-muted-foreground" />
-                </div>
+                );
+              })
+            ) : (
+              <div className="col-span-full text-center py-12">
+                <Star className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
+                <p className="text-muted-foreground text-sm">No rated tracks yet.</p>
+                <p className="text-muted-foreground/60 text-xs mt-1">Be the first to rate a song on its detail page!</p>
               </div>
-            ))
-          ) : (
-            <div className="col-span-full text-muted-foreground py-8">No top rated tracks found.</div>
-          )}
-        </div>
-      </section>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* ── New Songs ── */}
       {(isLoading || (discover?.newSongs?.length ?? 0) > 0) && (

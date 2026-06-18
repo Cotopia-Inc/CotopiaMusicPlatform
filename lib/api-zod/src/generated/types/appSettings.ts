@@ -28,4 +28,6 @@ export interface AppSettings {
   strikesUntilSuspension?: number;
   autoSuspensionDays?: number;
   suspensionsUntilBanReview?: number;
+  showTopRated?: boolean;
+  topRatedMinRatings?: number;
 }

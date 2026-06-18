@@ -27,6 +27,8 @@ export const appSettingsTable = pgTable("app_settings", {
   refundPolicyText: text("refund_policy_text"),
   aiPolicyText: text("ai_policy_text"),
   communityRulesText: text("community_rules_text"),
+  showTopRated: boolean("show_top_rated").notNull().default(true),
+  topRatedMinRatings: integer("top_rated_min_ratings").notNull().default(1),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
 

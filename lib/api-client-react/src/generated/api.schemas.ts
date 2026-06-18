@@ -323,6 +323,7 @@ export interface Song {
 
 export type SongDetail = Song & ({
   commentCount?: number;
+  ratingCount?: number;
   /** @nullable */
   userRating?: number | null;
   isFavorited?: boolean;
@@ -404,6 +405,7 @@ export interface Video {
 
 export type VideoDetail = Video & ({
   commentCount?: number;
+  ratingCount?: number;
   /** @nullable */
   userRating?: number | null;
   isFavorited?: boolean;
@@ -881,6 +883,8 @@ export interface HomeFeed {
 }
 
 export interface DiscoverFeed {
+  showTopRated: boolean;
+  topRatedMinRatings?: number;
   featuredSongs: Song[];
   featuredVideos: Video[];
   trendingSongs: Song[];
@@ -1018,6 +1022,8 @@ export interface AppSettings {
   strikesUntilSuspension?: number;
   autoSuspensionDays?: number;
   suspensionsUntilBanReview?: number;
+  showTopRated?: boolean;
+  topRatedMinRatings?: number;
 }
 
 export interface AppSettingsUpdate {
@@ -1039,6 +1045,9 @@ export interface AppSettingsUpdate {
   autoSuspensionDays?: number;
   /** @minimum 1 */
   suspensionsUntilBanReview?: number;
+  showTopRated?: boolean;
+  /** @minimum 1 */
+  topRatedMinRatings?: number;
 }
 
 export interface Broadcast {

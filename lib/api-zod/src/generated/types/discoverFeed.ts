@@ -11,6 +11,8 @@ import type { Song } from './song';
 import type { Video } from './video';
 
 export interface DiscoverFeed {
+  showTopRated: boolean;
+  topRatedMinRatings?: number;
   featuredSongs: Song[];
   featuredVideos: Video[];
   trendingSongs: Song[];

@@ -2970,6 +2970,8 @@ components:
           properties:
             commentCount:
               type: integer
+            ratingCount:
+              type: integer
             userRating:
               type: ["integer", "null"]
             isFavorited:
@@ -3075,6 +3077,8 @@ components:
         - type: object
           properties:
             commentCount:
+              type: integer
+            ratingCount:
               type: integer
             userRating:
               type: ["integer", "null"]
@@ -3634,8 +3638,12 @@ components:
     # ── Discover ──────────────────────────────────────────────────────────────
     DiscoverFeed:
       type: object
-      required: [trendingSongs, trendingVideos, topRatedSongs, mostDiscussed, newArtists, newLabels, featuredSongs, featuredVideos, newSongs, newVideos]
+      required: [trendingSongs, trendingVideos, topRatedSongs, mostDiscussed, newArtists, newLabels, featuredSongs, featuredVideos, newSongs, newVideos, showTopRated]
       properties:
+        showTopRated:
+          type: boolean
+        topRatedMinRatings:
+          type: integer
         featuredSongs:
           type: array
           items:
@@ -3861,6 +3869,10 @@ components:
           type: integer
         suspensionsUntilBanReview:
           type: integer
+        showTopRated:
+          type: boolean
+        topRatedMinRatings:
+          type: integer
 
     AppSettingsUpdate:
       type: object
@@ -3896,6 +3908,11 @@ components:
           type: integer
           minimum: 1
         suspensionsUntilBanReview:
+          type: integer
+          minimum: 1
+        showTopRated:
+          type: boolean
+        topRatedMinRatings:
           type: integer
           minimum: 1
 

@@ -382,6 +382,7 @@ export const GetSongResponse = zod.object({
   "createdAt": zod.string()
 }).and(zod.object({
   "commentCount": zod.number().optional(),
+  "ratingCount": zod.number().optional(),
   "userRating": zod.number().nullish(),
   "isFavorited": zod.boolean().optional()
 }))
@@ -634,6 +635,7 @@ export const GetVideoResponse = zod.object({
   "createdAt": zod.string()
 }).and(zod.object({
   "commentCount": zod.number().optional(),
+  "ratingCount": zod.number().optional(),
   "userRating": zod.number().nullish(),
   "isFavorited": zod.boolean().optional(),
   "description": zod.string().nullish()
@@ -1681,6 +1683,8 @@ export const GetHomeFeedResponse = zod.object({
  * @summary Get discovery page aggregated data
  */
 export const GetDiscoverResponse = zod.object({
+  "showTopRated": zod.boolean(),
+  "topRatedMinRatings": zod.number().optional(),
   "featuredSongs": zod.array(zod.object({
   "id": zod.number(),
   "title": zod.string(),
@@ -2356,13 +2360,16 @@ export const GetAppSettingsResponse = zod.object({
   "autoEscalationEnabled": zod.boolean().optional(),
   "strikesUntilSuspension": zod.number().optional(),
   "autoSuspensionDays": zod.number().optional(),
-  "suspensionsUntilBanReview": zod.number().optional()
+  "suspensionsUntilBanReview": zod.number().optional(),
+  "showTopRated": zod.boolean().optional(),
+  "topRatedMinRatings": zod.number().optional()
 })
 
 
 /**
  * @summary Update app settings (admin)
  */
+
 
 
 
@@ -2383,7 +2390,9 @@ export const UpdateAppSettingsBody = zod.object({
   "autoEscalationEnabled": zod.boolean().optional(),
   "strikesUntilSuspension": zod.number().min(1).optional(),
   "autoSuspensionDays": zod.number().min(1).optional(),
-  "suspensionsUntilBanReview": zod.number().min(1).optional()
+  "suspensionsUntilBanReview": zod.number().min(1).optional(),
+  "showTopRated": zod.boolean().optional(),
+  "topRatedMinRatings": zod.number().min(1).optional()
 })
 
 export const UpdateAppSettingsResponse = zod.object({
@@ -2402,7 +2411,9 @@ export const UpdateAppSettingsResponse = zod.object({
   "autoEscalationEnabled": zod.boolean().optional(),
   "strikesUntilSuspension": zod.number().optional(),
   "autoSuspensionDays": zod.number().optional(),
-  "suspensionsUntilBanReview": zod.number().optional()
+  "suspensionsUntilBanReview": zod.number().optional(),
+  "showTopRated": zod.boolean().optional(),
+  "topRatedMinRatings": zod.number().optional()
 })
 
 

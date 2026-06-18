@@ -9,6 +9,7 @@ import type { Video } from './video';
 
 export type VideoDetail = Video & ({
   commentCount?: number;
+  ratingCount?: number;
   /** @nullable */
   userRating?: number | null;
   isFavorited?: boolean;

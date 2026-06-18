@@ -25,4 +25,7 @@ export interface AppSettingsUpdate {
   autoSuspensionDays?: number;
   /** @minimum 1 */
   suspensionsUntilBanReview?: number;
+  showTopRated?: boolean;
+  /** @minimum 1 */
+  topRatedMinRatings?: number;
 }

@@ -308,6 +308,11 @@ export default function SongDetail() {
             <span className="text-sm text-muted-foreground ml-2 tabular-nums">
               {song.avgRating ? song.avgRating.toFixed(1) : '—'}
             </span>
+            {(song as any).ratingCount > 0 && (
+              <span className="text-xs text-muted-foreground/60 tabular-nums">
+                ({(song as any).ratingCount} {(song as any).ratingCount === 1 ? 'rating' : 'ratings'})
+              </span>
+            )}
           </div>
         </div>
 

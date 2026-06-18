@@ -9,6 +9,7 @@ import type { Song } from './song';
 
 export type SongDetail = Song & ({
   commentCount?: number;
+  ratingCount?: number;
   /** @nullable */
   userRating?: number | null;
   isFavorited?: boolean;

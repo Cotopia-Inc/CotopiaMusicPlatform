@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { eq, desc, and, avg, count, sql, or, isNull, lte } from "drizzle-orm";
-import { db, songsTable, videosTable, artistsTable, labelsTable, albumsTable, ratingsTable, commentsTable, followsTable, usersTable } from "@workspace/db";
+import { eq, desc, and, avg, count, sql, or, isNull, lte, inArray, gt } from "drizzle-orm";
+import { db, songsTable, videosTable, artistsTable, labelsTable, albumsTable, ratingsTable, commentsTable, followsTable, usersTable, appSettingsTable } from "@workspace/db";
 import { isFeatureRotationEnabled, rotateFeatured, FEATURED_POOL_SIZE } from "../lib/featured";
 
 const router = Router();
@@ -16,7 +16,7 @@ router.get("/discover", async (_req, res): Promise<void> => {
     coverUrl: songsTable.coverUrl, streamUrl: songsTable.streamUrl,
     playCount: songsTable.playCount, status: songsTable.status, createdAt: songsTable.createdAt,
     artistIsVerified: usersTable.isVerified,
-      artistUserRole: usersTable.role,
+    artistUserRole: usersTable.role,
   };
 
   const videoSelect = {
@@ -25,7 +25,7 @@ router.get("/discover", async (_req, res): Promise<void> => {
     thumbnailUrl: videosTable.thumbnailUrl, videoUrl: videosTable.videoUrl,
     viewCount: videosTable.viewCount, status: videosTable.status, createdAt: videosTable.createdAt,
     artistIsVerified: usersTable.isVerified,
-      artistUserRole: usersTable.role,
+    artistUserRole: usersTable.role,
   };
 
   const [trendingSongs, trendingVideos, featuredSongs, featuredVideos, newSongsRaw, newVideosRaw] = await Promise.all([
@@ -41,17 +41,6 @@ router.get("/discover", async (_req, res): Promise<void> => {
   const rotatedFeaturedSongs = rotateFeatured(featuredSongs, 10, rotation);
   const rotatedFeaturedVideos = rotateFeatured(featuredVideos, 6, rotation);
 
-  // Top rated: songs with avg rating desc
-  const topRatedSongs = await db.select(songSelect).from(songsTable).leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id)).leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id)).leftJoin(usersTable, eq(artistsTable.userId, usersTable.id)).where(and(eq(songsTable.status, "published"), releasedSong!)).orderBy(desc(songsTable.playCount)).limit(8);
-
-  // Most discussed: highest comment count
-  const mostDiscussed = await db.select(songSelect).from(songsTable).leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id)).leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id)).leftJoin(usersTable, eq(artistsTable.userId, usersTable.id)).where(and(eq(songsTable.status, "published"), releasedSong!)).orderBy(desc(songsTable.createdAt)).limit(8);
-
-  const [newArtistsRaw, newLabelsRaw] = await Promise.all([
-    db.select({ id: artistsTable.id, userId: artistsTable.userId, stageName: artistsTable.stageName, bio: artistsTable.bio, avatarUrl: sql<string | null>`COALESCE(${artistsTable.avatarUrl}, ${usersTable.avatarUrl})`, bannerUrl: artistsTable.bannerUrl, genre: artistsTable.genre, labelId: artistsTable.labelId, createdAt: artistsTable.createdAt, isVerified: usersTable.isVerified }).from(artistsTable).leftJoin(usersTable, eq(artistsTable.userId, usersTable.id)).orderBy(desc(artistsTable.createdAt)).limit(8),
-    db.select().from(labelsTable).orderBy(desc(labelsTable.createdAt)).limit(6),
-  ]);
-
   const addRating = async (s: typeof trendingSongs[0]) => {
     const [r] = await db.select({ avg: avg(ratingsTable.rating) }).from(ratingsTable).where(and(eq(ratingsTable.contentType, "song"), eq(ratingsTable.contentId, s.id)));
     return { ...s, avgRating: r?.avg ? parseFloat(r.avg) : null };
@@ -60,6 +49,80 @@ router.get("/discover", async (_req, res): Promise<void> => {
     const [r] = await db.select({ avg: avg(ratingsTable.rating) }).from(ratingsTable).where(and(eq(ratingsTable.contentType, "video"), eq(ratingsTable.contentId, v.id)));
     return { ...v, avgRating: r?.avg ? parseFloat(r.avg) : null };
   };
+
+  // App settings for top-rated control
+  const [appSettings] = await db.select({
+    showTopRated: appSettingsTable.showTopRated,
+    topRatedMinRatings: appSettingsTable.topRatedMinRatings,
+  }).from(appSettingsTable).limit(1);
+  const showTopRated = appSettings?.showTopRated ?? true;
+  const minRatings = appSettings?.topRatedMinRatings ?? 1;
+
+  // Top rated: aggregate avg from ratings table, then fetch song rows
+  // This correctly sorts by real avg rating (not playCount)
+  const ratingAggRows = await db.select({
+    contentId: ratingsTable.contentId,
+    avgRating: avg(ratingsTable.rating),
+    ratingCount: count(),
+  }).from(ratingsTable)
+    .where(eq(ratingsTable.contentType, "song"))
+    .groupBy(ratingsTable.contentId)
+    .having(gt(count(), minRatings - 1))
+    .orderBy(desc(avg(ratingsTable.rating)), desc(count()))
+    .limit(10);
+
+  let topRatedSongs: Array<Record<string, unknown>> = [];
+  if (ratingAggRows.length > 0) {
+    const ratedIds = ratingAggRows.map(r => r.contentId);
+    const ratingMap = new Map(ratingAggRows.map(r => [r.contentId, {
+      avgRating: r.avgRating ? parseFloat(r.avgRating) : null,
+      ratingCount: r.ratingCount,
+    }]));
+    const ratedSongRows = await db.select(songSelect).from(songsTable)
+      .leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id))
+      .leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id))
+      .leftJoin(usersTable, eq(artistsTable.userId, usersTable.id))
+      .where(and(eq(songsTable.status, "published"), inArray(songsTable.id, ratedIds), releasedSong!));
+    topRatedSongs = ratedSongRows
+      .filter(s => ratingMap.has(s.id))
+      .map(s => ({ ...s, avgRating: ratingMap.get(s.id)!.avgRating, ratingCount: ratingMap.get(s.id)!.ratingCount }))
+      .sort((a, b) => ((b.avgRating as number) ?? 0) - ((a.avgRating as number) ?? 0));
+  }
+
+  // Most discussed: songs sorted by actual comment count (not createdAt)
+  const commentAggRows = await db.select({
+    contentId: commentsTable.contentId,
+    commentCount: count(),
+  }).from(commentsTable)
+    .where(eq(commentsTable.contentType, "song"))
+    .groupBy(commentsTable.contentId)
+    .having(gt(count(), 0))
+    .orderBy(desc(count()))
+    .limit(8);
+
+  let mostDiscussed: Array<Record<string, unknown>> = [];
+  if (commentAggRows.length > 0) {
+    const commentIds = commentAggRows.map(r => r.contentId);
+    const commentMap = new Map(commentAggRows.map(r => [r.contentId, r.commentCount]));
+    const discussedRows = await db.select(songSelect).from(songsTable)
+      .leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id))
+      .leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id))
+      .leftJoin(usersTable, eq(artistsTable.userId, usersTable.id))
+      .where(and(eq(songsTable.status, "published"), inArray(songsTable.id, commentIds), releasedSong!));
+    const sorted = discussedRows
+      .filter(s => commentMap.has(s.id))
+      .sort((a, b) => (commentMap.get(b.id) ?? 0) - (commentMap.get(a.id) ?? 0));
+    mostDiscussed = await Promise.all(sorted.map(async (s) => {
+      const [r] = await db.select({ avg: avg(ratingsTable.rating) }).from(ratingsTable)
+        .where(and(eq(ratingsTable.contentType, "song"), eq(ratingsTable.contentId, s.id)));
+      return { ...s, avgRating: r?.avg ? parseFloat(r.avg) : null, commentCount: commentMap.get(s.id) ?? 0 };
+    }));
+  }
+
+  const [newArtistsRaw, newLabelsRaw] = await Promise.all([
+    db.select({ id: artistsTable.id, userId: artistsTable.userId, stageName: artistsTable.stageName, bio: artistsTable.bio, avatarUrl: sql<string | null>`COALESCE(${artistsTable.avatarUrl}, ${usersTable.avatarUrl})`, bannerUrl: artistsTable.bannerUrl, genre: artistsTable.genre, labelId: artistsTable.labelId, createdAt: artistsTable.createdAt, isVerified: usersTable.isVerified }).from(artistsTable).leftJoin(usersTable, eq(artistsTable.userId, usersTable.id)).orderBy(desc(artistsTable.createdAt)).limit(8),
+    db.select().from(labelsTable).orderBy(desc(labelsTable.createdAt)).limit(6),
+  ]);
 
   const newArtists = await Promise.all(newArtistsRaw.map(async (a) => {
     const [fc] = await db.select({ count: count() }).from(followsTable).where(and(eq(followsTable.targetType, "artist"), eq(followsTable.targetId, a.id)));
@@ -78,12 +141,14 @@ router.get("/discover", async (_req, res): Promise<void> => {
     featuredVideos: await Promise.all(rotatedFeaturedVideos.map(addVideoRating)),
     trendingSongs: await Promise.all(trendingSongs.map(addRating)),
     trendingVideos: await Promise.all(trendingVideos.map(addVideoRating)),
-    topRatedSongs: await Promise.all(topRatedSongs.map(addRating)),
-    mostDiscussed: await Promise.all(mostDiscussed.map(addRating)),
+    topRatedSongs: showTopRated ? topRatedSongs : [],
+    mostDiscussed,
     newSongs: await Promise.all(newSongsRaw.map(addRating)),
     newVideos: await Promise.all(newVideosRaw.map(addVideoRating)),
     newArtists,
     newLabels,
+    showTopRated,
+    topRatedMinRatings: minRatings,
   });
 });
 
