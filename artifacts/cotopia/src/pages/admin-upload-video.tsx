@@ -4,7 +4,7 @@ import { useUpload } from "@workspace/object-storage-web";
 import { useAuth } from "@/lib/auth";
 import { useLocation, Link } from "wouter";
 import { useEffect } from "react";
-import { Upload, Video, ArrowLeft, CheckCircle, ListVideo, X, Loader2, AlertCircle } from "lucide-react";
+import { Upload, Video, ArrowLeft, CheckCircle, ListVideo, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -109,8 +109,6 @@ export default function AdminUploadVideo() {
   const [bulkTitles, setBulkTitles] = useState<string[]>([]);
   const [bulkUrls, setBulkUrls] = useState<(string | null)[]>([]);
   const [bulkShared, setBulkShared] = useState({ userId: 0, genre: "", mood: "", isExplicit: false, description: "", thumbnailUrl: "", releaseDate: "", isFeatured: false });
-  const singleNoArtist = form.userId > 0 && !accounts.find(a => a.userId === form.userId)?.artistId;
-  const bulkNoArtist = bulkShared.userId > 0 && !accounts.find(a => a.userId === bulkShared.userId)?.artistId;
   const [bulkThumbDone, setBulkThumbDone] = useState(false);
   const [bulkDone, setBulkDone] = useState<{ id: number; title: string }[] | null>(null);
 
@@ -233,14 +231,8 @@ export default function AdminUploadVideo() {
               <Label>Account *</Label>
               <select className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.userId} onChange={e => setForm(f => ({ ...f, userId: parseInt(e.target.value) }))} required>
                 <option value={0}>Select account...</option>
-                {accounts.map((a) => <option key={a.userId} value={a.userId}>{a.artistStageName ?? a.displayName ?? a.username} ({a.role}){!a.artistId ? " — no artist profile" : ""}</option>)}
+                {accounts.map((a) => <option key={a.userId} value={a.userId}>{a.artistStageName ?? a.displayName ?? a.username} ({a.role})</option>)}
               </select>
-              {singleNoArtist && (
-                <div className="flex items-center gap-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300">
-                  <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
-                  This account has no artist profile. Content can only be uploaded for accounts with an artist profile.
-                </div>
-              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -334,7 +326,7 @@ export default function AdminUploadVideo() {
               <Switch checked={form.isExplicit} onCheckedChange={v => setForm(f => ({ ...f, isExplicit: v }))} />
             </div>
 
-            <Button type="submit" className="w-full gap-2" disabled={uploadVideo.isPending || videoUpload.isUploading || !!singleNoArtist}>
+            <Button type="submit" className="w-full gap-2" disabled={uploadVideo.isPending || videoUpload.isUploading}>
               {uploadVideo.isPending ? <><Loader2 className="w-4 h-4 animate-spin" />Publishing...</> : <><Upload className="w-4 h-4" />Publish Video</>}
             </Button>
           </form>
@@ -353,14 +345,8 @@ export default function AdminUploadVideo() {
                   <Label>Artist *</Label>
                   <select className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" value={bulkShared.userId} onChange={e => setBulkShared(f => ({ ...f, userId: parseInt(e.target.value) }))} required>
                     <option value={0}>Select account...</option>
-                    {accounts.map((a) => <option key={a.userId} value={a.userId}>{a.artistStageName ?? a.displayName ?? a.username} ({a.role}){!a.artistId ? " — no artist profile" : ""}</option>)}
+                    {accounts.map((a) => <option key={a.userId} value={a.userId}>{a.artistStageName ?? a.displayName ?? a.username} ({a.role})</option>)}
                   </select>
-                  {bulkNoArtist && (
-                    <div className="flex items-center gap-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300">
-                      <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
-                      This account has no artist profile. Content can only be uploaded for accounts with an artist profile.
-                    </div>
-                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -476,7 +462,7 @@ export default function AdminUploadVideo() {
               )}
             </div>
 
-            <Button type="submit" className="w-full gap-2" disabled={bulkUpload.isPending || bulkFiles.length === 0 || !allUploaded || !!bulkNoArtist}>
+            <Button type="submit" className="w-full gap-2" disabled={bulkUpload.isPending || bulkFiles.length === 0 || !allUploaded}>
               {bulkUpload.isPending
                 ? <><Loader2 className="w-4 h-4 animate-spin" />Publishing {bulkFiles.length} videos...</>
                 : <><Upload className="w-4 h-4" />Publish {bulkFiles.length > 0 ? `${bulkFiles.length} Video${bulkFiles.length !== 1 ? "s" : ""}` : "Videos"}</>}
