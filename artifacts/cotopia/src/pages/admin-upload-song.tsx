@@ -4,7 +4,7 @@ import { useUpload } from "@workspace/object-storage-web";
 import { useAuth } from "@/lib/auth";
 import { useLocation, Link } from "wouter";
 import { useEffect } from "react";
-import { Upload, Music, ArrowLeft, CheckCircle, Disc, Disc3, ListMusic, BadgeCheck, X, Loader2 } from "lucide-react";
+import { Upload, Music, ArrowLeft, CheckCircle, Disc, Disc3, ListMusic, BadgeCheck, X, Loader2, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -244,6 +244,8 @@ export default function AdminUploadSong() {
 
   const { data: accountsData } = useAdminGetUploadAccounts();
   const accounts = accountsData ?? [];
+  const singleNoArtist = form.userId > 0 && !accounts.find(a => a.userId === form.userId)?.artistId;
+  const bulkNoArtist = bulkShared.userId > 0 && !accounts.find(a => a.userId === bulkShared.userId)?.artistId;
 
   // ── Success screens ────────────────────────────────────────────
   if (singleDone) {
@@ -325,8 +327,14 @@ export default function AdminUploadSong() {
               <Label>Account *</Label>
               <select className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.userId} onChange={e => setForm(f => ({ ...f, userId: parseInt(e.target.value) }))} required>
                 <option value={0}>Select account...</option>
-                {accounts.map((a) => <option key={a.userId} value={a.userId}>{a.artistStageName ?? a.displayName ?? a.username} ({a.role})</option>)}
+                {accounts.map((a) => <option key={a.userId} value={a.userId}>{a.artistStageName ?? a.displayName ?? a.username} ({a.role}){!a.artistId ? " — no artist profile" : ""}</option>)}
               </select>
+              {singleNoArtist && (
+                <div className="flex items-center gap-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300">
+                  <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                  This account has no artist profile. Content can only be uploaded for accounts with an artist profile.
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -427,7 +435,7 @@ export default function AdminUploadSong() {
               />
             </div>
 
-            <Button type="submit" className="w-full gap-2" disabled={uploadSong.isPending || audioUpload.isUploading}>
+            <Button type="submit" className="w-full gap-2" disabled={uploadSong.isPending || audioUpload.isUploading || !!singleNoArtist}>
               {uploadSong.isPending ? <><Loader2 className="w-4 h-4 animate-spin" />Publishing...</> : <><Upload className="w-4 h-4" />Publish Single</>}
             </Button>
           </form>
@@ -447,8 +455,14 @@ export default function AdminUploadSong() {
                   <Label>Artist *</Label>
                   <select className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" value={bulkShared.userId} onChange={e => setBulkShared(f => ({ ...f, userId: parseInt(e.target.value) }))} required>
                     <option value={0}>Select account...</option>
-                    {accounts.map((a) => <option key={a.userId} value={a.userId}>{a.artistStageName ?? a.displayName ?? a.username} ({a.role})</option>)}
+                    {accounts.map((a) => <option key={a.userId} value={a.userId}>{a.artistStageName ?? a.displayName ?? a.username} ({a.role}){!a.artistId ? " — no artist profile" : ""}</option>)}
                   </select>
+                  {bulkNoArtist && (
+                    <div className="flex items-center gap-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300">
+                      <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                      This account has no artist profile. Content can only be uploaded for accounts with an artist profile.
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -600,7 +614,7 @@ export default function AdminUploadSong() {
             <Button
               type="submit"
               className="w-full gap-2"
-              disabled={bulkUpload.isPending || bulkFiles.length === 0 || !allUploaded}
+              disabled={bulkUpload.isPending || bulkFiles.length === 0 || !allUploaded || !!bulkNoArtist}
             >
               {bulkUpload.isPending ? (
                 <><Loader2 className="w-4 h-4 animate-spin" />Publishing {bulkFiles.length} songs...</>

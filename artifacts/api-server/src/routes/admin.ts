@@ -43,7 +43,7 @@ router.get("/admin/upload-accounts", requireAuth, requireRole(...ADMIN_ROLES, "e
       artistStageName: artistsTable.stageName,
     })
     .from(usersTable)
-    .innerJoin(artistsTable, eq(artistsTable.userId, usersTable.id))
+    .leftJoin(artistsTable, eq(artistsTable.userId, usersTable.id))
     .orderBy(usersTable.role, usersTable.username);
   res.json(rows);
 });
