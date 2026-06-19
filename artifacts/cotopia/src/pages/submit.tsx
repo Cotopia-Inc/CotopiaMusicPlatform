@@ -349,7 +349,7 @@ export default function Submit() {
   const [paymentInitiated, setPaymentInitiated] = useState(false);
   const [submissionIds, setSubmissionIds] = useState<number[]>([]);
   const [successTitles, setSuccessTitles] = useState<string[]>([]);
-  const LEGAL_TOTAL = 12;
+  const LEGAL_TOTAL = 6;
   const [legalChecks, setLegalChecks] = useState<boolean[]>(Array(LEGAL_TOTAL).fill(false));
   const allLegalChecked = legalChecks.every(Boolean);
 
@@ -471,17 +471,11 @@ export default function Submit() {
 
   // ── Payment flow ──────────────────────────────────────────────────────────
   const SUBMISSION_AGREEMENT_TYPES = [
-    "terms",
-    "privacy",
-    "community_guidelines",
-    "submission_agreement",
-    "refund_policy",
-    "ai_policy",
-    "dmca_copyright",
     "content_ownership",
-    "license_grant",
+    "content_license_grant",
+    "future_tech_use",
     "no_royalties",
-    "ai_rights",
+    "fees_non_refundable",
     "indemnification",
   ] as const;
 
@@ -913,25 +907,37 @@ export default function Submit() {
               </div>
             </div>
 
+            {/* Plain-language summary */}
+            <div className="rounded-lg border border-border bg-secondary/30 p-4 space-y-1.5">
+              <p className="text-xs font-semibold text-foreground">Before you submit — what you're agreeing to</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                You keep ownership of your content, but by submitting it you give Cotopia and Everyday Radio broad rights to host, stream, promote, display, analyze, create derivative works, and use the content with current and future technologies, including AI and machine learning. Cotopia does not currently pay royalties or revenue share unless a separate written agreement says otherwise.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                See the{" "}
+                <a href="/legal/content-license" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Content License and Rights Grant</a>
+                {" "}and{" "}
+                <a href="/legal/submission-agreement" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Submission Agreement</a>
+                {" "}for full details.
+              </p>
+            </div>
+
             {!allLegalChecked && (
               <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
                 <AlertCircle className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
-                <p className="text-xs text-amber-300">You must review and accept all {LEGAL_TOTAL} agreements before proceeding to payment.</p>
+                <p className="text-xs text-amber-300">You must accept all {LEGAL_TOTAL} declarations before proceeding to payment.</p>
               </div>
             )}
 
-            {/* Platform Policies */}
             <div className="space-y-2">
-              <p className="text-[10px] font-semibold text-muted-foreground/50 uppercase tracking-widest">Platform Policies</p>
               {([
-                { i: 0, label: <span>I have read and agree to the <a href="/legal/terms" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">Terms of Service</a></span> },
-                { i: 1, label: <span>I have read and agree to the <a href="/legal/privacy" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">Privacy Policy</a></span> },
-                { i: 2, label: <span>I have read and agree to the <a href="/legal/community-guidelines" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">Community Guidelines</a></span> },
-                { i: 3, label: <span>I have read and agree to the <a href="/legal/submission-agreement" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">Submission Agreement</a></span> },
-                { i: 4, label: <span>I have read and agree to the <a href="/legal/refund-policy" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">Refund Policy</a> — submission fees are non-refundable once review begins</span> },
-                { i: 5, label: <span>I have read and agree to the <a href="/legal/ai-policy" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">AI Content Policy</a></span> },
-                { i: 6, label: <span>I have read and understand the <a href="/legal/dmca" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">DMCA &amp; Copyright Policy</a></span> },
-              ] as { i: number; label: React.ReactNode }[]).map(({ i, label }) => (
+                { i: 0, text: "I own or control all rights necessary to upload this content." },
+                { i: 1, label: <span>I grant Cotopia and Everyday Radio the <a href="/legal/content-license" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">Content License and Rights Grant</a> described in the <a href="/legal/terms" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">Terms of Service</a> and <a href="/legal/submission-agreement" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">Submission Agreement</a>.</span> },
+                { i: 2, text: "I understand Cotopia may use submitted content for hosting, streaming, promotion, display, playlists, discovery, analytics, AI, machine learning, and future platform technologies." },
+                { i: 3, text: "I understand Everyday Radio by Cotopia does not currently pay streaming royalties, mechanical royalties, performance royalties, publishing royalties, or revenue sharing unless covered by a separate written agreement." },
+                { i: 4, text: "I understand submission and promotion fees are non-refundable once review begins." },
+                { i: 5, text: "I agree to defend, indemnify, and hold harmless Cotopia and its related entities if my upload causes legal claims." },
+              ] as { i: number; text?: string; label?: React.ReactNode }[]).map(({ i, text, label }) => (
                 <div key={i} className="flex items-start gap-3 py-1">
                   <Checkbox
                     id={`legal-${i}`}
@@ -939,29 +945,7 @@ export default function Submit() {
                     onCheckedChange={v => { const next = [...legalChecks]; next[i] = Boolean(v); setLegalChecks(next); }}
                     className="mt-0.5 flex-shrink-0"
                   />
-                  <label htmlFor={`legal-${i}`} className="text-xs text-muted-foreground leading-relaxed cursor-pointer">{label}</label>
-                </div>
-              ))}
-            </div>
-
-            {/* Content Rights */}
-            <div className="space-y-2 pt-3 border-t border-border">
-              <p className="text-[10px] font-semibold text-muted-foreground/50 uppercase tracking-widest">Content Rights &amp; Declarations</p>
-              {([
-                { i: 7,  text: "I own or control all necessary rights to upload this content, including master recording rights, composition rights, and any required licenses." },
-                { i: 8,  text: "I grant Cotopia a non-exclusive license to host, stream, display, promote, feature, recommend, and place this content in playlists on Everyday Radio." },
-                { i: 9,  text: "I understand Everyday Radio by Cotopia does not currently pay streaming royalties, mechanical royalties, performance royalties, or publishing royalties unless covered by a separate written agreement." },
-                { i: 10, text: "If AI was used in creating this content, I confirm I have the legal rights to upload and distribute it under applicable copyright law." },
-                { i: 11, text: "I agree to defend, indemnify, and hold harmless Cotopia and its related entities from any legal claims, damages, or costs arising from my uploaded content." },
-              ] as { i: number; text: string }[]).map(({ i, text }) => (
-                <div key={i} className="flex items-start gap-3 py-1">
-                  <Checkbox
-                    id={`legal-${i}`}
-                    checked={legalChecks[i]}
-                    onCheckedChange={v => { const next = [...legalChecks]; next[i] = Boolean(v); setLegalChecks(next); }}
-                    className="mt-0.5 flex-shrink-0"
-                  />
-                  <label htmlFor={`legal-${i}`} className="text-xs text-muted-foreground leading-relaxed cursor-pointer">{text}</label>
+                  <label htmlFor={`legal-${i}`} className="text-xs text-muted-foreground leading-relaxed cursor-pointer">{label ?? text}</label>
                 </div>
               ))}
             </div>

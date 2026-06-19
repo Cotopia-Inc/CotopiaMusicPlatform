@@ -75,6 +75,7 @@ import LegalCommunityGuidelines from "@/pages/legal/community-guidelines";
 import LegalAiPolicy from "@/pages/legal/ai-policy";
 import LegalRefundPolicy from "@/pages/legal/refund-policy";
 import LegalSubmissionAgreement from "@/pages/legal/submission-agreement";
+import LegalContentLicense from "@/pages/legal/content-license";
 import LegalCopyrightComplaint from "@/pages/legal/copyright-complaint";
 
 import NotificationsPage from "@/pages/notifications";
@@ -268,6 +269,7 @@ function Router() {
       <Route path="/legal/ai-policy" component={LegalAiPolicy} />
       <Route path="/legal/refund-policy" component={LegalRefundPolicy} />
       <Route path="/legal/submission-agreement" component={LegalSubmissionAgreement} />
+      <Route path="/legal/content-license" component={LegalContentLicense} />
       <Route path="/legal/copyright-complaint" component={LegalCopyrightComplaint} />
 
       {/* Admin routes — admin + master_admin only */}

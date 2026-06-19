@@ -99,7 +99,8 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     { userId: user.id, agreementType: "privacy", agreementVersion: "1.0", ipAddress, userAgent, metadata: { source: "registration" } },
     { userId: user.id, agreementType: "community_guidelines", agreementVersion: "1.0", ipAddress, userAgent, metadata: { source: "registration" } },
     { userId: user.id, agreementType: "ai_policy", agreementVersion: "1.0", ipAddress, userAgent, metadata: { source: "registration" } },
-    { userId: user.id, agreementType: "age_confirmation", agreementVersion: "1.0", ipAddress, userAgent, metadata: { source: "registration", statement: "Confirmed at least 18 years old or the age of legal majority in their jurisdiction." } },
+    { userId: user.id, agreementType: "content_license", agreementVersion: "1.0", ipAddress, userAgent, metadata: { source: "registration" } },
+    { userId: user.id, agreementType: "age_confirmation", agreementVersion: "1.0", ipAddress, userAgent, metadata: { source: "registration", statement: "Confirmed at least 18 years old or the age of legal majority in their jurisdiction, whichever is greater." } },
   ]);
 
   // Check if email verification is required by platform settings

@@ -154,12 +154,13 @@ export default function Register() {
                       />
                     </FormControl>
                     <FormLabel className="text-xs text-muted-foreground leading-relaxed cursor-pointer font-normal">
-                      I have read and agree to the{" "}
+                      I agree to the{" "}
                       <Link href="/legal/terms" className="text-primary hover:underline font-medium" onClick={e => e.stopPropagation()}>Terms of Service</Link>,{" "}
                       <Link href="/legal/privacy" className="text-primary hover:underline font-medium" onClick={e => e.stopPropagation()}>Privacy Policy</Link>,{" "}
-                      <Link href="/legal/community-guidelines" className="text-primary hover:underline font-medium" onClick={e => e.stopPropagation()}>Community Guidelines</Link>,{" "}
+                      <Link href="/legal/content-license" className="text-primary hover:underline font-medium" onClick={e => e.stopPropagation()}>Content License and Rights Grant</Link>,{" "}
+                      <Link href="/legal/ai-policy" className="text-primary hover:underline font-medium" onClick={e => e.stopPropagation()}>AI Policy</Link>,{" "}
                       and{" "}
-                      <Link href="/legal/ai-policy" className="text-primary hover:underline font-medium" onClick={e => e.stopPropagation()}>AI Content Policy</Link>.
+                      <Link href="/legal/community-guidelines" className="text-primary hover:underline font-medium" onClick={e => e.stopPropagation()}>Community Guidelines</Link>.
                     </FormLabel>
                   </div>
                   <FormMessage />

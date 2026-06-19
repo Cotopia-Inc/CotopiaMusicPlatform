@@ -12,6 +12,10 @@ interface LegalSettings {
   termsVersion: string;
   privacyVersion: string;
   submissionAgreementVersion: string;
+  contentLicenseVersion: string;
+  aiPolicyVersion: string;
+  communityGuidelinesVersion: string;
+  refundPolicyVersion: string;
   dmcaContactEmail: string;
   copyrightAgentInfo: string;
   refundPolicyText: string;
@@ -43,6 +47,10 @@ export default function AdminLegal() {
     termsVersion: "1.0",
     privacyVersion: "1.0",
     submissionAgreementVersion: "1.0",
+    contentLicenseVersion: "1.0",
+    aiPolicyVersion: "1.0",
+    communityGuidelinesVersion: "1.0",
+    refundPolicyVersion: "1.0",
     dmcaContactEmail: "legal@cotopia.org",
     copyrightAgentInfo: "Cotopia Legal Team, legal@cotopia.org",
     refundPolicyText: "",
@@ -107,19 +115,38 @@ export default function AdminLegal() {
       </div>
 
       <div className="bg-card rounded-xl border border-border p-6 space-y-5">
-        <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Policy Versions</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div>
+          <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Policy Versions</h2>
+          <p className="text-xs text-muted-foreground mt-1">Incrementing a version number will require users to re-accept that agreement before submitting, uploading, or messaging.</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <Label htmlFor="tv" className="text-xs text-muted-foreground">Terms Version</Label>
+            <Label htmlFor="tv" className="text-xs text-muted-foreground">Terms of Service Version</Label>
             <Input id="tv" value={form.termsVersion} onChange={e => update("termsVersion", e.target.value)} className="bg-secondary/50 border-secondary" placeholder="1.0" />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="pv" className="text-xs text-muted-foreground">Privacy Version</Label>
+            <Label htmlFor="pv" className="text-xs text-muted-foreground">Privacy Policy Version</Label>
             <Input id="pv" value={form.privacyVersion} onChange={e => update("privacyVersion", e.target.value)} className="bg-secondary/50 border-secondary" placeholder="1.0" />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="sav" className="text-xs text-muted-foreground">Submission Agreement Version</Label>
             <Input id="sav" value={form.submissionAgreementVersion} onChange={e => update("submissionAgreementVersion", e.target.value)} className="bg-secondary/50 border-secondary" placeholder="1.0" />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="clv" className="text-xs text-muted-foreground">Content License &amp; Rights Grant Version</Label>
+            <Input id="clv" value={form.contentLicenseVersion} onChange={e => update("contentLicenseVersion", e.target.value)} className="bg-secondary/50 border-secondary" placeholder="1.0" />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="apv" className="text-xs text-muted-foreground">AI Policy Version</Label>
+            <Input id="apv" value={form.aiPolicyVersion} onChange={e => update("aiPolicyVersion", e.target.value)} className="bg-secondary/50 border-secondary" placeholder="1.0" />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="cgv" className="text-xs text-muted-foreground">Community Guidelines Version</Label>
+            <Input id="cgv" value={form.communityGuidelinesVersion} onChange={e => update("communityGuidelinesVersion", e.target.value)} className="bg-secondary/50 border-secondary" placeholder="1.0" />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="rpv" className="text-xs text-muted-foreground">Refund Policy Version</Label>
+            <Input id="rpv" value={form.refundPolicyVersion} onChange={e => update("refundPolicyVersion", e.target.value)} className="bg-secondary/50 border-secondary" placeholder="1.0" />
           </div>
         </div>
       </div>

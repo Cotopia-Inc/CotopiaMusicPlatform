@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { Scale, Shield, Copyright, Users, Brain, RotateCcw, FileCheck, AlertTriangle, ChevronRight, Radio, Home } from "lucide-react";
+import { Scale, Shield, Copyright, Users, Brain, RotateCcw, FileCheck, AlertTriangle, ChevronRight, Radio, Home, ScrollText } from "lucide-react";
 
 const policies = [
   {
@@ -7,6 +7,12 @@ const policies = [
     title: "Terms of Service",
     description: "Rules governing your use of the Everyday Radio platform.",
     icon: Scale,
+  },
+  {
+    href: "/legal/content-license",
+    title: "Content License and Rights Grant",
+    description: "The worldwide license you grant Cotopia when you upload or submit any content.",
+    icon: ScrollText,
   },
   {
     href: "/legal/privacy",

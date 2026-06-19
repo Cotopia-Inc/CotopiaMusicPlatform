@@ -772,6 +772,10 @@ router.get("/admin/legal-settings", requireAuth, requireRole("master_admin"), as
     termsVersion: settings.termsVersion,
     privacyVersion: settings.privacyVersion,
     submissionAgreementVersion: settings.submissionAgreementVersion,
+    contentLicenseVersion: settings.contentLicenseVersion,
+    aiPolicyVersion: settings.aiPolicyVersion,
+    communityGuidelinesVersion: settings.communityGuidelinesVersion,
+    refundPolicyVersion: settings.refundPolicyVersion,
     dmcaContactEmail: settings.dmcaContactEmail,
     copyrightAgentInfo: settings.copyrightAgentInfo,
     refundPolicyText: settings.refundPolicyText,
@@ -781,7 +785,7 @@ router.get("/admin/legal-settings", requireAuth, requireRole("master_admin"), as
 });
 
 router.patch("/admin/legal-settings", requireAuth, requireRole("master_admin"), async (req: AuthRequest, res): Promise<void> => {
-  const allowed = ["termsVersion", "privacyVersion", "submissionAgreementVersion", "dmcaContactEmail", "copyrightAgentInfo", "refundPolicyText", "aiPolicyText", "communityRulesText"];
+  const allowed = ["termsVersion", "privacyVersion", "submissionAgreementVersion", "contentLicenseVersion", "aiPolicyVersion", "communityGuidelinesVersion", "refundPolicyVersion", "dmcaContactEmail", "copyrightAgentInfo", "refundPolicyText", "aiPolicyText", "communityRulesText"];
   const data: Record<string, unknown> = {};
   for (const key of allowed) {
     if (key in (req.body as Record<string, unknown>)) data[key] = (req.body as Record<string, unknown>)[key];
@@ -804,6 +808,10 @@ router.patch("/admin/legal-settings", requireAuth, requireRole("master_admin"), 
     termsVersion: updated.termsVersion,
     privacyVersion: updated.privacyVersion,
     submissionAgreementVersion: updated.submissionAgreementVersion,
+    contentLicenseVersion: updated.contentLicenseVersion,
+    aiPolicyVersion: updated.aiPolicyVersion,
+    communityGuidelinesVersion: updated.communityGuidelinesVersion,
+    refundPolicyVersion: updated.refundPolicyVersion,
     dmcaContactEmail: updated.dmcaContactEmail,
     copyrightAgentInfo: updated.copyrightAgentInfo,
     refundPolicyText: updated.refundPolicyText,

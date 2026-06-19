@@ -1,0 +1,174 @@
+Update Everyday Radio by Cotopia legal agreements and submission acceptance flow with a broad Content License and Rights Grant.
+
+Goal:
+Every user who uploads, submits, posts, chats, messages, comments, reports, rates, or provides any material to the platform must agree that Cotopia receives a broad license to use that content.
+
+Important:
+Users retain ownership of their content, but grant Cotopia, Everyday Radio, Cotopia Music & Marketing, affiliates, successors, assigns, service providers, contractors, licensees, and sublicensees a broad worldwide license.
+
+1. ADD LEGAL SECTION
+
+Add a new legal page:
+
+/legal/content-license
+
+Title:
+
+Content License and Rights Grant
+
+Add this page to the Legal Center.
+
+2. DEFINE CONTENT
+
+Define “Content” as anything uploaded, submitted, posted, transmitted, displayed, stored, shared, generated, or made available through the Service, including but not limited to:
+
+* Music
+* Songs
+* Audio recordings
+* Sound recordings
+* Beats
+* Instrumentals
+* Vocals
+* Albums
+* EPs
+* Playlists
+* Music videos
+* Video recordings
+* Livestreams
+* Interviews
+* Podcasts
+* Artwork
+* Cover art
+* Photographs
+* Images
+* Graphics
+* Logos
+* Text
+* Comments
+* Chat messages
+* Private messages
+* Reports
+* Reviews
+* Ratings
+* User profiles
+* Usernames
+* Display names
+* Biographies
+* Metadata
+* Tags
+* Descriptions
+* Promotional materials
+* Voice recordings
+* Name, image, likeness, persona, signature, trademarks, branding, and publicity rights
+* AI-generated content
+* AI-assisted content
+* Any other materials submitted to or made available through the Service
+
+3. ADD RIGHTS GRANT LANGUAGE
+
+Add this language to the Content License page, Terms of Service, and Submission Agreement:
+
+“By uploading, posting, submitting, transmitting, storing, sharing, displaying, or otherwise providing Content through the Service, you grant Everyday Radio, Cotopia, Cotopia Music & Marketing, their parents, subsidiaries, affiliates, successors, assigns, contractors, partners, licensees, sublicensees, service providers, and future affiliated entities a worldwide, perpetual, irrevocable, non-exclusive, royalty-free, fully-paid, transferable, sublicensable license to host, store, reproduce, copy, modify, adapt, translate, format, publish, display, perform, broadcast, stream, communicate to the public, distribute, promote, advertise, market, feature, recommend, curate, index, analyze, create excerpts, create previews, create thumbnails, create compilations, create playlists, create derivative works, develop new products and services, and train, develop, improve, test, evaluate, and operate artificial intelligence, machine learning, automation, recommendation, moderation, search, analytics, and related technologies using the Content in connection with the operation, promotion, development, improvement, expansion, and commercialization of the Service and any current or future business activities.”
+
+4. ADD FUTURE TECHNOLOGY LANGUAGE
+
+Add:
+
+“This license applies to all current and future media, formats, technologies, distribution channels, platforms, devices, and methods of exploitation whether now known or later developed.”
+
+5. ADD NO COMPENSATION LANGUAGE
+
+Add:
+
+“You acknowledge and agree that Cotopia is not obligated to compensate you for any use of Content unless a separate written agreement expressly provides otherwise.”
+
+6. ADD OWNERSHIP LANGUAGE
+
+Add:
+
+“You retain ownership of your Content, but grant Cotopia and its affiliates the rights described in this Agreement.”
+
+7. ADD SURVIVAL LANGUAGE
+
+Add:
+
+“This license survives account termination, content removal, business restructuring, merger, acquisition, sale, assignment, or transfer of the Service to the extent necessary to preserve existing rights and uses authorized under this Agreement.”
+
+8. ADD REQUIRED CHECKBOXES
+
+Update registration and submission flows with required checkboxes:
+
+Registration:
+
+* I am at least 18 years old or the age of legal majority in my jurisdiction, whichever is greater.
+* I agree to the Terms of Service, Privacy Policy, Content License and Rights Grant, AI Policy, and Community Guidelines.
+
+Submission:
+
+* I own or control all rights necessary to upload this content.
+* I grant Cotopia and Everyday Radio the Content License and Rights Grant described in the Terms of Service and Submission Agreement.
+* I understand Cotopia may use submitted Content for hosting, streaming, promotion, display, playlists, discovery, analytics, AI, machine learning, and future platform technologies.
+* I understand Everyday Radio by Cotopia does not currently pay streaming royalties, mechanical royalties, performance royalties, publishing royalties, or revenue sharing unless covered by a separate written agreement.
+* I understand submission and promotion fees are non-refundable once review begins.
+* I agree to defend, indemnify, and hold harmless Cotopia and its related entities if my upload causes legal claims.
+
+9. STORE ACCEPTANCE RECORDS
+
+Make sure all legal acceptances are stored in:
+
+agreement_acceptances
+
+Fields:
+
+* id
+* user_id
+* agreement_type
+* agreement_version
+* ip_address
+* user_agent
+* accepted_at
+* submission_id nullable
+* payment_id nullable
+* metadata JSON
+
+Track agreement acceptance for:
+
+* registration
+* login after legal update
+* submission
+* payment
+* content upload
+
+10. ADMIN LEGAL VERSION CONTROL
+
+Update /admin/legal so master_admin can manage:
+
+* Terms version
+* Privacy version
+* Submission Agreement version
+* Content License version
+* AI Policy version
+* Community Guidelines version
+* Refund Policy version
+
+If a version changes, require users to accept the updated agreements before submitting, chatting, messaging, or uploading again.
+
+11. IMPORTANT DISPLAY RULE
+
+Do not hide legal language only in small footer links.
+
+On submission, show a short plain-language summary above the checkboxes:
+
+“You keep ownership of your content, but by submitting it you give Cotopia and Everyday Radio broad rights to host, stream, promote, display, analyze, create derivative works, and use the content with current and future technologies, including AI and machine learning. Cotopia does not currently pay royalties or revenue share unless a separate written agreement says otherwise.”
+
+12. TESTING GUIDE
+
+After completion, provide a testing guide for:
+
+* Viewing /legal/content-license
+* Registering with age/legal checkboxes
+* Submitting content with required license checkboxes
+* Confirming submissions cannot proceed without checkboxes
+* Confirming agreement_acceptances records are created
+* Updating legal version as master_admin
+* Confirming user must reaccept changed agreements
