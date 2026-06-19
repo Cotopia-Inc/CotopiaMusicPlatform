@@ -22,15 +22,10 @@ const ADMIN_ROLES = ["admin", "master_admin"] as const;
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 
-/** Finds or auto-creates an artist profile for any user. Returns the artistId. */
-async function findOrCreateArtistProfile(userId: number): Promise<number | null> {
-  const [user] = await db.select({ id: usersTable.id, username: usersTable.username, displayName: usersTable.displayName })
-    .from(usersTable).where(eq(usersTable.id, userId)).limit(1);
-  if (!user) return null;
+/** Finds an existing artist profile for a user. Returns null if none exists — never auto-creates. */
+async function findArtistProfile(userId: number): Promise<number | null> {
   const [existing] = await db.select({ id: artistsTable.id }).from(artistsTable).where(eq(artistsTable.userId, userId)).limit(1);
-  if (existing) return existing.id;
-  const [created] = await db.insert(artistsTable).values({ userId, stageName: user.displayName ?? user.username }).returning({ id: artistsTable.id });
-  return created.id;
+  return existing?.id ?? null;
 }
 
 // ── Admin Upload Accounts ─────────────────────────────────────────────────
@@ -48,7 +43,7 @@ router.get("/admin/upload-accounts", requireAuth, requireRole(...ADMIN_ROLES, "e
       artistStageName: artistsTable.stageName,
     })
     .from(usersTable)
-    .leftJoin(artistsTable, eq(artistsTable.userId, usersTable.id))
+    .innerJoin(artistsTable, eq(artistsTable.userId, usersTable.id))
     .orderBy(usersTable.role, usersTable.username);
   res.json(rows);
 });
@@ -337,8 +332,8 @@ router.post("/admin/upload-song", requireAuth, requireRole(...ADMIN_ROLES, "edit
 
   const { title, artistId: rawArtistId, userId: rawUserId, albumId, genre, mood, isExplicit, duration, streamUrl, coverUrl, releaseDate, releaseType, isFeatured } = parsed.data;
 
-  const resolvedArtistId = rawArtistId ?? (rawUserId ? await findOrCreateArtistProfile(rawUserId) : null);
-  if (!resolvedArtistId) { res.status(400).json({ error: "Must provide artistId or a valid userId" }); return; }
+  const resolvedArtistId = rawArtistId ?? (rawUserId ? await findArtistProfile(rawUserId) : null);
+  if (!resolvedArtistId) { res.status(400).json({ error: "Selected account has no artist profile — only accounts with an existing artist profile can be used for uploads" }); return; }
 
   // Verify artist exists
   const [artist] = await db.select({ id: artistsTable.id, stageName: artistsTable.stageName })
@@ -377,8 +372,8 @@ router.post("/admin/bulk-upload-songs", requireAuth, requireRole(...ADMIN_ROLES,
 
   const { artistId: rawArtistId2, userId: rawUserId2, releaseName, releaseType: inputReleaseType, genre, mood: bulkMood, isExplicit: bulkIsExplicit, coverUrl, releaseDate, isFeatured, songs } = parsed.data;
 
-  const resolvedArtistId2 = rawArtistId2 ?? (rawUserId2 ? await findOrCreateArtistProfile(rawUserId2) : null);
-  if (!resolvedArtistId2) { res.status(400).json({ error: "Must provide artistId or a valid userId" }); return; }
+  const resolvedArtistId2 = rawArtistId2 ?? (rawUserId2 ? await findArtistProfile(rawUserId2) : null);
+  if (!resolvedArtistId2) { res.status(400).json({ error: "Selected account has no artist profile — only accounts with an existing artist profile can be used for uploads" }); return; }
 
   const artistId = resolvedArtistId2;
   const [artist] = await db.select({ id: artistsTable.id, stageName: artistsTable.stageName })
@@ -436,8 +431,8 @@ router.post("/admin/upload-video", requireAuth, requireRole(...ADMIN_ROLES, "edi
 
   const { title, artistId: rawArtistId3, userId: rawUserId3, genre: videoGenre, mood: videoMood, isExplicit: videoIsExplicit, description, duration, videoUrl, thumbnailUrl, releaseDate, isFeatured } = parsed.data;
 
-  const resolvedArtistId3 = rawArtistId3 ?? (rawUserId3 ? await findOrCreateArtistProfile(rawUserId3) : null);
-  if (!resolvedArtistId3) { res.status(400).json({ error: "Must provide artistId or a valid userId" }); return; }
+  const resolvedArtistId3 = rawArtistId3 ?? (rawUserId3 ? await findArtistProfile(rawUserId3) : null);
+  if (!resolvedArtistId3) { res.status(400).json({ error: "Selected account has no artist profile — only accounts with an existing artist profile can be used for uploads" }); return; }
 
   const artistId = resolvedArtistId3;
   const [artist] = await db.select({ id: artistsTable.id, stageName: artistsTable.stageName })
@@ -472,8 +467,8 @@ router.post("/admin/bulk-upload-videos", requireAuth, requireRole(...ADMIN_ROLES
 
   const { artistId: rawArtistId4, userId: rawUserId4, genre: bulkVideoGenre, mood: bulkVideoMood, isExplicit: bulkVideoIsExplicit, description, thumbnailUrl, releaseDate, isFeatured, videos } = parsed.data;
 
-  const resolvedArtistId4 = rawArtistId4 ?? (rawUserId4 ? await findOrCreateArtistProfile(rawUserId4) : null);
-  if (!resolvedArtistId4) { res.status(400).json({ error: "Must provide artistId or a valid userId" }); return; }
+  const resolvedArtistId4 = rawArtistId4 ?? (rawUserId4 ? await findArtistProfile(rawUserId4) : null);
+  if (!resolvedArtistId4) { res.status(400).json({ error: "Selected account has no artist profile — only accounts with an existing artist profile can be used for uploads" }); return; }
 
   const artistId = resolvedArtistId4;
   const [artist] = await db.select({ id: artistsTable.id, stageName: artistsTable.stageName })
