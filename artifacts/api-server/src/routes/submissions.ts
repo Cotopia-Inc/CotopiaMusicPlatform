@@ -110,16 +110,6 @@ router.post("/submissions", requireAuth, requireVerifiedEmail, async (req: AuthR
     submitterNotes,
   }).returning();
 
-  // Admin/master_admin bypass: publish immediately, skip payment + review queue
-  const isAdminSubmitter = req.user!.role === "admin" || req.user!.role === "master_admin";
-  if (isAdminSubmitter) {
-    await publishContent(d.type as "song" | "video", contentId, { submissionId: submission.id });
-    const [updated] = await db.select().from(submissionsTable).where(eq(submissionsTable.id, submission.id)).limit(1);
-    const enriched = await enrichSubmission(updated ?? submission);
-    res.status(201).json(enriched);
-    return;
-  }
-
   const enriched = await enrichSubmission(submission);
   res.status(201).json(enriched);
 });
@@ -196,15 +186,7 @@ router.post("/submissions/bulk", requireAuth, requireVerifiedEmail, async (req: 
       submitterNotes,
     }).returning();
 
-    // Admin/master_admin bypass: publish immediately
-    const isAdminBulk = req.user!.role === "admin" || req.user!.role === "master_admin";
-    if (isAdminBulk) {
-      await publishContent(d.type as "song" | "video", contentId, { submissionId: submission.id });
-      const [updated] = await db.select().from(submissionsTable).where(eq(submissionsTable.id, submission.id)).limit(1);
-      results.push(await enrichSubmission(updated ?? submission));
-    } else {
-      results.push(await enrichSubmission(submission));
-    }
+    results.push(await enrichSubmission(submission));
   }
 
   res.status(201).json(results);

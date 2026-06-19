@@ -356,12 +356,23 @@ router.post("/admin/upload-song", requireAuth, requireRole(...ADMIN_ROLES, "edit
     duration: duration ?? 0,
     streamUrl,
     coverUrl: coverUrl ?? null,
-    status: "published",
+    status: "approved",
     releaseType: releaseType ?? "single",
     isFeatured: isFeatured ?? false,
     releaseDate: releaseDate ?? null,
     playCount: 0,
   }).returning();
+
+  // Create submission in pending_admin_final_review — skips payment and moderator
+  await db.insert(submissionsTable).values({
+    userId: req.user!.userId,
+    type: "song",
+    contentId: song.id,
+    plan: "basic",
+    status: "pending_admin_final_review",
+    paymentStatus: "paid",
+    submitterNotes: JSON.stringify({ adminUpload: true }),
+  });
 
   res.status(201).json({
     ...song,
@@ -414,13 +425,28 @@ router.post("/admin/bulk-upload-songs", requireAuth, requireRole(...ADMIN_ROLES,
       duration: s.duration ?? 0,
       streamUrl: s.streamUrl,
       coverUrl: s.coverUrl ?? coverUrl ?? null,
-      status: "published" as const,
+      status: "approved" as const,
       releaseType,
       isFeatured: isFeatured ?? false,
       releaseDate: releaseDate ?? null,
       playCount: 0,
     }))
   ).returning();
+
+  // Create one submission per song in pending_admin_final_review — skip payment and moderator
+  if (inserted.length) {
+    await db.insert(submissionsTable).values(
+      inserted.map(s => ({
+        userId: req.user!.userId,
+        type: "song" as const,
+        contentId: s.id,
+        plan: "basic",
+        status: "pending_admin_final_review",
+        paymentStatus: "paid",
+        submitterNotes: JSON.stringify({ adminUpload: true }),
+      }))
+    );
+  }
 
   res.status(201).json(inserted.map(song => ({
     ...song,
@@ -454,11 +480,22 @@ router.post("/admin/upload-video", requireAuth, requireRole(...ADMIN_ROLES, "edi
     duration: duration ?? 0,
     videoUrl,
     thumbnailUrl: thumbnailUrl ?? null,
-    status: "published",
+    status: "approved",
     isFeatured: isFeatured ?? false,
     releaseDate: releaseDate ?? null,
     viewCount: 0,
   }).returning();
+
+  // Create submission in pending_admin_final_review — skip payment and moderator
+  await db.insert(submissionsTable).values({
+    userId: req.user!.userId,
+    type: "video",
+    contentId: video.id,
+    plan: "basic",
+    status: "pending_admin_final_review",
+    paymentStatus: "paid",
+    submitterNotes: JSON.stringify({ adminUpload: true }),
+  });
 
   res.status(201).json({
     ...video,
@@ -491,12 +528,27 @@ router.post("/admin/bulk-upload-videos", requireAuth, requireRole(...ADMIN_ROLES
       duration: v.duration ?? 0,
       videoUrl: v.videoUrl,
       thumbnailUrl: v.thumbnailUrl ?? thumbnailUrl ?? null,
-      status: "published" as const,
+      status: "approved" as const,
       isFeatured: isFeatured ?? false,
       releaseDate: releaseDate ?? null,
       viewCount: 0,
     }))
   ).returning();
+
+  // Create one submission per video in pending_admin_final_review — skip payment and moderator
+  if (inserted.length) {
+    await db.insert(submissionsTable).values(
+      inserted.map(v => ({
+        userId: req.user!.userId,
+        type: "video" as const,
+        contentId: v.id,
+        plan: "basic",
+        status: "pending_admin_final_review",
+        paymentStatus: "paid",
+        submitterNotes: JSON.stringify({ adminUpload: true }),
+      }))
+    );
+  }
 
   res.status(201).json(inserted.map(video => ({
     ...video,

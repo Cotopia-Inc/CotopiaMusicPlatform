@@ -150,7 +150,7 @@ export default function AdminUploadSong() {
         },
       });
       setSingleDone({ id: song.id, title: song.title });
-      toast({ title: "Song published!", description: `"${song.title}" is now live on Everyday Radio` });
+      toast({ title: "Song uploaded for review", description: `"${song.title}" is waiting in Admin › Submissions for your approval` });
     } catch (err: any) {
       toast({ title: "Upload failed", description: err.message ?? "Unknown error", variant: "destructive" });
     }
@@ -236,7 +236,7 @@ export default function AdminUploadSong() {
         },
       });
       setBulkDone(songs.map(s => ({ id: s.id, title: s.title })));
-      toast({ title: `${songs.length} songs published!`, description: `${getReleaseLabel(releaseType)} is now live on Everyday Radio` });
+      toast({ title: `${songs.length} songs uploaded for review`, description: `${getReleaseLabel(releaseType)} is waiting in Admin › Submissions for your approval` });
     } catch (err: any) {
       toast({ title: "Publish failed", description: err.message ?? "Unknown error", variant: "destructive" });
     }

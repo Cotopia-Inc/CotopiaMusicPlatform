@@ -98,7 +98,7 @@ export default function AdminUploadVideo() {
         data: { title: form.title, userId: form.userId, genre: form.genre || undefined, mood: form.mood || undefined, isExplicit: form.isExplicit, description: form.description || undefined, credits: form.credits || undefined, duration: form.duration || undefined, videoUrl: form.videoUrl, thumbnailUrl: form.thumbnailUrl || undefined, releaseDate: form.releaseDate || undefined, isFeatured: form.isFeatured },
       });
       setSingleDone({ id: video.id, title: video.title });
-      toast({ title: "Video published!", description: `"${video.title}" is now live on Everyday Radio` });
+      toast({ title: "Video uploaded for review", description: `"${video.title}" is waiting in Admin › Submissions for your approval` });
     } catch (err: any) {
       toast({ title: "Upload failed", description: err.message ?? "Unknown error", variant: "destructive" });
     }
@@ -158,7 +158,7 @@ export default function AdminUploadVideo() {
         },
       });
       setBulkDone(videos.map(v => ({ id: v.id, title: v.title })));
-      toast({ title: `${videos.length} videos published!`, description: "All videos are now live on Everyday Radio" });
+      toast({ title: `${videos.length} videos uploaded for review`, description: "All videos are waiting in Admin › Submissions for your approval" });
     } catch (err: any) {
       toast({ title: "Publish failed", description: err.message ?? "Unknown error", variant: "destructive" });
     }
