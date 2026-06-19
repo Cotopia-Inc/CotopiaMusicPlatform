@@ -178,7 +178,9 @@ export default function Register() {
             <Link href="/login" className="text-primary hover:underline font-semibold">Sign in</Link>
           </div>
 
-          <div className="text-center">
+          <div className="text-center flex items-center justify-center gap-4">
+            <Link href="/about" className="text-[11px] text-muted-foreground/60 hover:text-muted-foreground underline transition-colors">Our Promise</Link>
+            <span className="text-muted-foreground/30 text-[11px]">·</span>
             <Link href="/legal" className="text-[11px] text-muted-foreground/60 hover:text-muted-foreground underline transition-colors">Legal Center</Link>
           </div>
         </div>

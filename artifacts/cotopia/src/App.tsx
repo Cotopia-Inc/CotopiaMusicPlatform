@@ -65,6 +65,7 @@ import ArtistAnalytics from "@/pages/artist-analytics";
 import LabelAnalytics from "@/pages/label-analytics";
 import LabelDashboard from "@/pages/label-dashboard";
 import Contact from "@/pages/contact";
+import About from "@/pages/about";
 import AdminDiscover from "@/pages/admin-discover";
 
 import LegalCenter from "@/pages/legal/index";
@@ -259,6 +260,9 @@ function Router() {
       <Route path="/feedback">
         <ProtectedRoute><Layout><Feedback /></Layout></ProtectedRoute>
       </Route>
+
+      {/* About / Our Promise — public */}
+      <Route path="/about" component={About} />
 
       {/* Legal Center — public routes */}
       <Route path="/legal" component={LegalCenter} />

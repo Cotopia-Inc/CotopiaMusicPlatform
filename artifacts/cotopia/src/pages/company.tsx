@@ -239,6 +239,14 @@ export default function CompanyHub() {
           </div>
         )}
       </div>
+
+      {/* Our Promise link */}
+      <div className="mt-12 pt-8 border-t border-border/30 text-center space-y-2">
+        <p className="text-sm text-muted-foreground">Learn more about what drives us.</p>
+        <Link href="/about" className="inline-flex items-center gap-2 text-sm text-primary hover:underline font-medium">
+          Read Our Promise →
+        </Link>
+      </div>
     </div>
   );
 }

@@ -410,6 +410,7 @@ export default function Home() {
         </p>
         <div className="flex items-center justify-center gap-4 flex-wrap">
           {[
+            { href: "/about", label: "Our Promise" },
             { href: "/legal", label: "Legal Center" },
             { href: "/legal/terms", label: "Terms" },
             { href: "/legal/privacy", label: "Privacy" },
