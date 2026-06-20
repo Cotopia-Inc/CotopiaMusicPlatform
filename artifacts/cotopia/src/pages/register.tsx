@@ -5,7 +5,6 @@ import * as z from "zod";
 import { useRegister, RegisterInputRole } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
-import { usePlatformConfig } from "@/lib/platform-config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -26,7 +25,6 @@ export default function Register() {
   const [, setLocation] = useLocation();
   const { login } = useAuth();
   const { toast } = useToast();
-  const config = usePlatformConfig();
   const registerMutation = useRegister();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -38,7 +36,7 @@ export default function Register() {
     registerMutation.mutate({ data: { username: values.username, email: values.email, password: values.password, role: values.role, ageConfirmed: values.ageConfirmed } }, {
       onSuccess: (res) => {
         login(res.user, res.token);
-        if (config.requireEmailVerification) {
+        if (!(res.user as any).emailVerified) {
           toast({ title: "Almost there!", description: "Check your email to verify your address before listening." });
           setLocation("/verify-email");
         } else {
