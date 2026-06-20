@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { useSaveDemographics } from "@workspace/api-client-react";
+import { useSaveDemographics, getGetMeQueryKey } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,7 @@ export default function Onboarding() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const saveMutation = useSaveDemographics();
 
   const [form, setForm] = useState<Record<FormKey, string>>({
@@ -77,6 +79,10 @@ export default function Onboarding() {
     saveMutation.mutate({ data: form }, {
       onSuccess: () => {
         toast({ title: "Profile complete!", description: "Welcome to Everyday Radio." });
+        // Update the cached user so ProtectedRoute sees demographicsCompleted:true immediately
+        queryClient.setQueryData(getGetMeQueryKey(), (old: any) =>
+          old ? { ...old, demographicsCompleted: true } : old
+        );
         setLocation("/");
       },
       onError: () => toast({ variant: "destructive", title: "Could not save", description: "Please try again." }),
