@@ -5,6 +5,7 @@ import * as z from "zod";
 import { useRegister, RegisterInputRole } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
+import { usePlatformConfig } from "@/lib/platform-config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -25,6 +26,7 @@ export default function Register() {
   const [, setLocation] = useLocation();
   const { login } = useAuth();
   const { toast } = useToast();
+  const config = usePlatformConfig();
   const registerMutation = useRegister();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -36,8 +38,13 @@ export default function Register() {
     registerMutation.mutate({ data: { username: values.username, email: values.email, password: values.password, role: values.role, ageConfirmed: values.ageConfirmed } }, {
       onSuccess: (res) => {
         login(res.user, res.token);
-        toast({ title: "Welcome to Everyday Radio!", description: "Your account is ready. Check your email to verify your address." });
-        setLocation("/");
+        if (config.requireEmailVerification) {
+          toast({ title: "Almost there!", description: "Check your email to verify your address before listening." });
+          setLocation("/verify-email");
+        } else {
+          toast({ title: "Welcome to Everyday Radio!", description: "Your account is ready — start listening now." });
+          setLocation("/");
+        }
       },
       onError: (err: any) => {
         const msg = err?.response?.data?.error ?? "Please check your details and try again.";
