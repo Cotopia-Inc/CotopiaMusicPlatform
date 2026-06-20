@@ -108,17 +108,12 @@ router.post("/auth/register", async (req, res): Promise<void> => {
   const verificationRequired = platformSettings?.requireEmailVerification ?? true;
 
   let finalUser = user;
-  if (verificationRequired) {
-    // Issue and send email verification OTP
-    const code = generateOtp();
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 min
-    await db.insert(emailOtpsTable).values({ userId: user.id, email: user.email, code, purpose: "verify_email", expiresAt });
-    await sendOtpEmail(user.email, code, "verify_email");
-  } else {
+  if (!verificationRequired) {
     // Verification disabled — mark user as verified immediately
     const [updated] = await db.update(usersTable).set({ emailVerified: true }).where(eq(usersTable.id, user.id)).returning();
     finalUser = updated;
   }
+  // When verification is required, the verify-email page sends the OTP on mount — no dupe here.
 
   const token = signToken({ userId: finalUser.id, role: finalUser.role });
   const { passwordHash: _, ...userOut } = finalUser;
