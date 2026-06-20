@@ -36,8 +36,8 @@ export default function Register() {
     registerMutation.mutate({ data: { username: values.username, email: values.email, password: values.password, role: values.role, ageConfirmed: values.ageConfirmed } }, {
       onSuccess: (res) => {
         login(res.user, res.token);
-        toast({ title: "Account created!", description: "Check your email to verify your address." });
-        setLocation("/verify-email");
+        toast({ title: "Welcome to Everyday Radio!", description: "Your account is ready. Check your email to verify your address." });
+        setLocation("/");
       },
       onError: (err: any) => {
         const msg = err?.response?.data?.error ?? "Please check your details and try again.";
