@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: cotopia
+    runtime: node
+    plan: starter
+    buildCommand: >
+      npm install -g pnpm@10 &&
+      pnpm install --no-frozen-lockfile &&
+      PORT=3000 BASE_PATH=/ NODE_ENV=production pnpm --filter @workspace/cotopia run build &&
+      pnpm --filter @workspace/api-server run build
+    startCommand: node artifacts/api-server/dist/index.mjs
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: STATIC_DIR
+        value: artifacts/cotopia/dist/public
+      - key: DATABASE_URL
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: RESEND_API_KEY
+        sync: false
