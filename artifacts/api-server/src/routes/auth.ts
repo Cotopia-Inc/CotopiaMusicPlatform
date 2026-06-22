@@ -21,11 +21,17 @@ const OTP_SUBJECTS: Record<string, string> = {
 };
 
 async function sendOtpEmail(to: string, code: string, purpose: string): Promise<void> {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey || apiKey === "re_placeholder") {
+    logger.warn("[OTP EMAIL] RESEND_API_KEY not configured — skipping email send");
+    return;
+  }
   const subject = OTP_SUBJECTS[purpose] ?? "Your Cotopia code";
   const label = purpose === "reset_password" ? "password reset" : "email verification";
+  const fromAddress = process.env.FROM_EMAIL ?? "Cotopia <noreply@cotopia.org>";
   try {
     await resend.emails.send({
-      from: "Cotopia <noreply@cotopia.org>",
+      from: fromAddress,
       to,
       subject,
       html: `
@@ -44,7 +50,7 @@ async function sendOtpEmail(to: string, code: string, purpose: string): Promise<
       `,
     });
   } catch (err) {
-    console.error("[OTP EMAIL] Failed to send:", err);
+    logger.error({ err }, "[OTP EMAIL] Failed to send");
   }
 }
 
@@ -250,7 +256,8 @@ router.post("/auth/send-otp", requireAuth, async (req: AuthRequest, res): Promis
     expiresAt,
   });
 
-  await sendOtpEmail(targetEmail, code, purpose);
+  // Fire-and-forget — respond immediately, don't block on email delivery
+  sendOtpEmail(targetEmail, code, purpose).catch(() => {});
   res.json({ ok: true });
 });
 
