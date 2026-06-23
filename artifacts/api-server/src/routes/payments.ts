@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { eq } from "drizzle-orm";
+import { and, eq, gte, lte, inArray } from "drizzle-orm";
 import { db, submissionsTable, appSettingsTable, paymentsTable } from "@workspace/db";
 import { InitiatePaymentBody, CapturePaymentBody } from "@workspace/api-zod";
 import { requireAuth, type AuthRequest } from "../lib/auth";
@@ -78,14 +78,40 @@ router.post("/payments/capture", requireAuth, async (req: AuthRequest, res): Pro
     .set({ status: "completed" })
     .where(eq(paymentsTable.submissionId, submission.id));
 
-  // Payment complete → enter the moderation queue
-  const [updated] = await db.update(submissionsTable)
+  // Find all sibling submissions in this batch:
+  // same user + same content type + still unpaid + created within 10 minutes of the
+  // representative submission. All files in a bulk upload are created within seconds of
+  // each other, so a 10-minute window safely captures the whole batch without bleeding
+  // into unrelated future submissions.
+  const batchStart = new Date(new Date(submission.createdAt as string | Date).getTime() - 60_000);
+  const batchEnd   = new Date(new Date(submission.createdAt as string | Date).getTime() + 10 * 60_000);
+
+  const batchSiblings = await db
+    .select({ id: submissionsTable.id })
+    .from(submissionsTable)
+    .where(and(
+      eq(submissionsTable.userId, submission.userId),
+      eq(submissionsTable.type, submission.type),
+      eq(submissionsTable.paymentStatus, "unpaid"),
+      gte(submissionsTable.createdAt, batchStart),
+      lte(submissionsTable.createdAt, batchEnd),
+    ));
+
+  const allBatchIds = batchSiblings.map(s => s.id);
+  // Always include the representative submission even if it was somehow already marked
+  if (!allBatchIds.includes(submission.id)) allBatchIds.push(submission.id);
+
+  // Move the entire batch into the moderation queue in one update
+  await db.update(submissionsTable)
     .set({ paymentStatus: "paid", status: "pending_moderator_review" })
-    .where(eq(submissionsTable.id, submission.id))
-    .returning();
+    .where(inArray(submissionsTable.id, allBatchIds));
 
-  logger.info({ submissionId: submission.id, paypalOrderId: parsed.data.paypalOrderId }, "Payment captured");
+  logger.info(
+    { submissionId: submission.id, batchSize: allBatchIds.length, paypalOrderId: parsed.data.paypalOrderId },
+    "Payment captured — batch moved to moderator review",
+  );
 
+  const [updated] = await db.select().from(submissionsTable).where(eq(submissionsTable.id, submission.id)).limit(1);
   res.json(updated);
 });
 

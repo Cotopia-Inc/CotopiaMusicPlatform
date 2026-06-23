@@ -478,6 +478,17 @@ export default function Submit() {
       toast({ title: "Track title required", description: `Track ${emptyTitle + 1} is missing a title.`, variant: "destructive" });
       return;
     }
+    // Warn when the inactive tab also has files — those need a separate submission
+    const inactiveCount = tab === "song" ? videoFiles.length : songFiles.length;
+    const inactiveType  = tab === "song" ? "video" : "song";
+    if (inactiveCount > 0) {
+      toast({
+        title: `Only your ${tab}s will be submitted`,
+        description: `You also have ${inactiveCount} ${inactiveType}${inactiveCount !== 1 ? "s" : ""} loaded — those need a separate submission and payment after this one.`,
+        duration: 7000,
+      });
+    }
+
     // Lock plan to match file count
     setPlan(activeFiles.length === 1 ? "single" : "basic");
     setStep(1);
@@ -901,6 +912,21 @@ export default function Submit() {
                 <span className="font-bold">Total</span>
                 <span className="font-extrabold text-primary text-xl">${price.toFixed(2)}</span>
               </div>
+              {(() => {
+                const inactiveCount = tab === "song" ? videoFiles.length : songFiles.length;
+                const inactiveType  = tab === "song" ? "video" : "song";
+                if (inactiveCount === 0) return null;
+                return (
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 mt-1">
+                    <AlertCircle className="w-3.5 h-3.5 text-amber-400 flex-shrink-0 mt-0.5" />
+                    <p className="text-xs text-amber-300 leading-relaxed">
+                      <strong>Heads up:</strong> You have {inactiveCount} {inactiveType}{inactiveCount !== 1 ? "s" : ""} loaded on the other tab.
+                      This payment only covers your {tab}s above.
+                      Return after this submission to pay for and submit your {inactiveType}s separately.
+                    </p>
+                  </div>
+                );
+              })()}
             </div>
           </div>
 
@@ -1025,6 +1051,23 @@ export default function Submit() {
             <Radio className="w-4 h-4 text-primary" />
             <p className="text-sm font-medium">Status: <span className="text-primary">Pending Review</span></p>
           </div>
+          {(() => {
+            const inactiveCount = tab === "song" ? videoFiles.length : songFiles.length;
+            const inactiveType  = tab === "song" ? "video" : "song";
+            if (inactiveCount === 0) return null;
+            return (
+              <div className="flex items-start gap-3 p-4 rounded-lg bg-amber-500/10 border border-amber-500/20 text-left max-w-sm mx-auto">
+                <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold text-amber-300">You still have {inactiveType}s to submit</p>
+                  <p className="text-xs text-muted-foreground">
+                    {inactiveCount} {inactiveType}{inactiveCount !== 1 ? "s" : ""} from the other tab still need a separate submission and payment.
+                    Click <strong>Submit More</strong> below to start that flow.
+                  </p>
+                </div>
+              </div>
+            );
+          })()}
           <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
             <Button onClick={() => setLocation("/submissions")} className="gap-2">
               <FileText className="w-4 h-4" />View My Submissions
