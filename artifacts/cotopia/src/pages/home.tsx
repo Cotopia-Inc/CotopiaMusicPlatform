@@ -384,9 +384,9 @@ export default function Home() {
                       </div>
                     )}
                   </div>
-                  <div>
-                    <h4 className="font-semibold text-xs truncate flex items-center justify-center gap-0.5">
-                      {artist.stageName}
+                  <div className="min-w-0">
+                    <h4 className="font-semibold text-xs flex items-center justify-center gap-0.5 min-w-0">
+                      <span className="truncate min-w-0">{artist.stageName}</span>
                       <RoleBadges role="artist" isVerified={artist.isVerified} size="sm" />
                     </h4>
                   </div>
