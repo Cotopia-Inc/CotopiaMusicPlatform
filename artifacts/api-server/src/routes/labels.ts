@@ -146,6 +146,56 @@ router.patch("/labels/:id", requireAuth, async (req: AuthRequest, res): Promise<
   res.json(result);
 });
 
+router.post("/labels/:id/claim", requireAuth, async (req: AuthRequest, res): Promise<void> => {
+  const params = GetLabelParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const [label] = await db.select().from(labelsTable).where(eq(labelsTable.id, params.data.id)).limit(1);
+  if (!label) {
+    res.status(404).json({ error: "Label not found" });
+    return;
+  }
+
+  // Idempotent — already owned by the caller
+  if (label.userId === req.user!.userId) {
+    const result = await getLabelRow(label.id, req.user!.userId);
+    res.json(result);
+    return;
+  }
+
+  const [callerUser] = await db
+    .select({ username: usersTable.username })
+    .from(usersTable)
+    .where(eq(usersTable.id, req.user!.userId))
+    .limit(1);
+
+  if (!callerUser) {
+    res.status(404).json({ error: "User not found" });
+    return;
+  }
+
+  const nameMatches =
+    label.name.trim().toLowerCase() === callerUser.username.trim().toLowerCase();
+
+  if (!nameMatches) {
+    res.status(403).json({
+      error: "Label name does not match your username — claim denied.",
+    });
+    return;
+  }
+
+  await db
+    .update(labelsTable)
+    .set({ userId: req.user!.userId })
+    .where(eq(labelsTable.id, label.id));
+
+  const result = await getLabelRow(label.id, req.user!.userId);
+  res.json(result);
+});
+
 router.post("/labels/:id/artists", requireAuth, async (req: AuthRequest, res): Promise<void> => {
   const params = GetLabelParams.safeParse(req.params);
   if (!params.success) { res.status(400).json({ error: "Invalid label id" }); return; }
