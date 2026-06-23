@@ -1,10 +1,9 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useAdminUploadSong, useAdminBulkUploadSongs, useAdminGetUploadAccounts } from "@workspace/api-client-react";
 import { useUpload } from "@workspace/object-storage-web";
 import { useAuth } from "@/lib/auth";
 import { useLocation, Link } from "wouter";
-import { useEffect } from "react";
-import { Upload, Music, ArrowLeft, CheckCircle, Disc, Disc3, ListMusic, BadgeCheck, X, Loader2 } from "lucide-react";
+import { Upload, Music, ArrowLeft, CheckCircle, Disc, Disc3, ListMusic, BadgeCheck, X, Loader2, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,6 +48,7 @@ function SongUploadRow({
   onStreamUrlSet: (idx: number, url: string) => void;
 }) {
   const [done, setDone] = useState(false);
+  const didUpload = useRef(false);
   const upload = useUpload({
     onSuccess: (res) => {
       const url = `/api/storage${res.objectPath}`;
@@ -56,6 +56,14 @@ function SongUploadRow({
       onStreamUrlSet(index, url);
     },
   });
+
+  useEffect(() => {
+    if (!didUpload.current) {
+      didUpload.current = true;
+      upload.uploadFile(file);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border/50">
@@ -76,17 +84,12 @@ function SongUploadRow({
           </div>
           <span className="text-xs text-muted-foreground w-8 text-right">{upload.progress}%</span>
         </div>
-      ) : (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-7 text-xs flex-shrink-0"
-          onClick={() => upload.uploadFile(file)}
-        >
-          <Upload className="w-3 h-3 mr-1" />
-          Upload
+      ) : upload.error ? (
+        <Button type="button" variant="outline" size="sm" className="h-7 text-xs flex-shrink-0 text-destructive border-destructive/40" onClick={() => upload.uploadFile(file)}>
+          <AlertCircle className="w-3 h-3 mr-1" />Retry
         </Button>
+      ) : (
+        <Loader2 className="w-4 h-4 animate-spin text-muted-foreground flex-shrink-0" />
       )}
     </div>
   );

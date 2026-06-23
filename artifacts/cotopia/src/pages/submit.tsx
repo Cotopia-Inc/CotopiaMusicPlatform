@@ -75,9 +75,18 @@ function FileRow({
   onRemove: (i: number) => void;
 }) {
   const [done, setDone] = useState(false);
+  const didUpload = useRef(false);
   const upload = useUpload({
     onSuccess: (res) => { setDone(true); onUrlSet(index, `/api/storage${res.objectPath}`); },
   });
+
+  useEffect(() => {
+    if (!didUpload.current) {
+      didUpload.current = true;
+      upload.uploadFile(file);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/30 border border-border/50">
@@ -98,10 +107,12 @@ function FileRow({
           </div>
           <span className="text-xs text-muted-foreground w-8 text-right">{upload.progress}%</span>
         </div>
-      ) : (
-        <Button type="button" variant="outline" size="sm" className="h-7 text-xs flex-shrink-0" onClick={() => upload.uploadFile(file)}>
-          <Upload className="w-3 h-3 mr-1" />Upload
+      ) : upload.error ? (
+        <Button type="button" variant="outline" size="sm" className="h-7 text-xs flex-shrink-0 text-destructive border-destructive/40" onClick={() => upload.uploadFile(file)}>
+          <AlertCircle className="w-3 h-3 mr-1" />Retry
         </Button>
+      ) : (
+        <Loader2 className="w-4 h-4 animate-spin text-muted-foreground flex-shrink-0" />
       )}
       <button type="button" onClick={() => onRemove(index)} className="text-muted-foreground hover:text-destructive flex-shrink-0 transition-colors">
         <X className="w-4 h-4" />

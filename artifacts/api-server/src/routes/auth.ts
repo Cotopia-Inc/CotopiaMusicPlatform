@@ -4,6 +4,7 @@ import { eq, ilike, or, and, gt } from "drizzle-orm";
 import { db, usersTable, artistsTable, labelsTable, emailOtpsTable, agreementAcceptancesTable, appSettingsTable } from "@workspace/db";
 import { RegisterBody, LoginBody, UpdateMeBody, SendOtpBody, VerifyOtpBody, ChangePasswordBody, ChangeUsernameBody, SaveDemographicsBody } from "@workspace/api-zod";
 import { signToken, requireAuth, type AuthRequest } from "../lib/auth";
+import { logger } from "../lib/logger";
 import { Resend } from "resend";
 
 const router = Router();

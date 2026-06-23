@@ -288,6 +288,11 @@ export default function SongDetail() {
             />
           )}
 
+          {/* Report song */}
+          {user && song && (
+            <ReportModal targetType="song" targetId={song.id} />
+          )}
+
           {/* Star rating */}
           <div className="flex items-center gap-1" onMouseLeave={() => setHoveredRating(null)}>
             {[1, 2, 3, 4, 5].map((star) => {
