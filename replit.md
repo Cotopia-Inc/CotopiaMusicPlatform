@@ -72,6 +72,7 @@ _Populate as you build — explicit user instructions worth remembering across s
 
 ## Gotchas
 
+- **Production DB migrations**: when new columns are added to `lib/db/src/schema/`, run `pnpm --filter @workspace/db run push` against the production `DATABASE_URL` before deploying. Recent additions: `users.deletion_requested_at` (account deletion requests).
 - Always run `pnpm run typecheck:libs` after changing any `lib/*` package before checking artifact types.
 - After changing `lib/api-spec/openapi.yaml`, run `pnpm --filter @workspace/api-spec run codegen` to regenerate hooks and schemas.
 - `@types/bcryptjs` and `bcryptjs` are in the pnpm catalog — use `catalog:` when adding them.
