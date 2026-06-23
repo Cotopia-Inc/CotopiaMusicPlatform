@@ -1,11 +1,11 @@
 - [Cotopia array vs paginated endpoints](cotopia-endpoints.md) — artists/labels/company-posts/submissions return plain arrays, not {items,total}; only songs/videos/discover are paginated
 - [Cotopia catalog setup](cotopia-catalog.md) — bcryptjs and @types/bcryptjs in pnpm catalog; scripts needs @workspace/db workspace:* dependency
 - [Orval codegen type collision fix](orval-codegen-collision.md) — now automated via fix-zod-collisions.cjs in codegen script; add new names to the collisions array if needed
-- [Cotopia object storage setup](cotopia-object-storage.md) — server-proxy upload (POST /api/storage/uploads/upload); use local ../lib/useUpload NOT @workspace/object-storage-web (stale); serve via /api/storage + objectPath
-- [Cotopia upload CORS fix](cotopia-upload-cors.md) — never do browser→GCS direct PUT; use POST /api/storage/uploads/upload proxy (express.raw) so Node.js does the GCS PUT server-side
+- [Cotopia file storage](cotopia-file-storage.md) — uploads use local disk (localFileStorage.ts); POST /api/storage/uploads/upload; use ../lib/useUpload in frontend (NOT @workspace/object-storage-web); GCS/Replit sidecar removed
 - [Cotopia hook and schema quirks](cotopia-hook-quirks.md) — useUpload uses onSuccess (not onChange/onUpload); useListArtists returns Artist[] directly; conditional Orval hooks need queryKey in options; AnalyticsEventInputContentType only allows song/video/playlist/user; follows table uses targetType/targetId (not followeeType/followeeId)
 - [Cotopia RBAC role separation](cotopia-rbac-roles.md) — MOD_ROLES excludes editor; editor≠moderator by design; copyright concerns use escalation flow not direct strikes
 - [Cotopia role badges everywhere](cotopia-role-badges-everywhere.md) — global invariant: every rendered user name needs RoleBadges from a real backend role field; second user refs need aliased self-join; external free-text names stay unbadged
 - [Cotopia api-server has no HMR](cotopia-api-server-no-hmr.md) — api-server is a one-time esbuild bundle; new/changed routes 404 until you restart the API Server workflow (frontend Vite does hot-reload)
 - [Cotopia enforcement attribution](cotopia-enforcement-attribution.md) — automated actions use issuedByUserId=null + isAutomated=true; admin_audit_logs.adminUserId is NOT nullable so attribute system audit logs to the triggering admin
 - [Cotopia api-server test setup](cotopia-api-tests.md) — vitest+supertest suite hits real DB; needs NODE_ENV=production+LOG_LEVEL=silent or pino worker hangs; runs as `test` validation command
+- [Cotopia GitHub auto-push](cotopia-github-push.md) — post-commit hook at .git/hooks/post-commit auto-pushes to GitHub on every commit; Render auto-deploys from main branch; push uses +HEAD:main refspec (force, no --force flag)
