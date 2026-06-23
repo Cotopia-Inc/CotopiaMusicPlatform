@@ -212,6 +212,63 @@ router.patch("/artists/:id", requireAuth, async (req: AuthRequest, res): Promise
   res.json(result);
 });
 
+router.post("/artists/:id/claim", requireAuth, async (req: AuthRequest, res): Promise<void> => {
+  const params = GetArtistParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const [artist] = await db.select().from(artistsTable).where(eq(artistsTable.id, params.data.id)).limit(1);
+  if (!artist) {
+    res.status(404).json({ error: "Artist not found" });
+    return;
+  }
+
+  // Already owned by this user — idempotent success
+  if (artist.userId === req.user!.userId) {
+    const result = await getArtistRow(artist.id, req.user!.userId);
+    res.json(result);
+    return;
+  }
+
+  // Look up the caller's username to compare against the stage name
+  const [callerUser] = await db
+    .select({ username: usersTable.username })
+    .from(usersTable)
+    .where(eq(usersTable.id, req.user!.userId))
+    .limit(1);
+
+  if (!callerUser) {
+    res.status(404).json({ error: "User not found" });
+    return;
+  }
+
+  const nameMatches =
+    artist.stageName.trim().toLowerCase() === callerUser.username.trim().toLowerCase();
+
+  if (!nameMatches) {
+    res.status(403).json({
+      error: "Artist stage name does not match your username — claim denied.",
+    });
+    return;
+  }
+
+  // Reassign the artist profile to the caller
+  await db
+    .update(artistsTable)
+    .set({ userId: req.user!.userId })
+    .where(eq(artistsTable.id, artist.id));
+
+  req.log.info(
+    { artistId: artist.id, prevUserId: artist.userId, newUserId: req.user!.userId },
+    "Artist profile claimed by matching username",
+  );
+
+  const result = await getArtistRow(artist.id, req.user!.userId);
+  res.json(result);
+});
+
 router.post("/artists/:id/follow", requireAuth, async (req: AuthRequest, res): Promise<void> => {
   const params = FollowArtistParams.safeParse(req.params);
   if (!params.success) {

@@ -2,7 +2,7 @@ import { useParams, Link, useLocation } from "wouter";
 import { useEffect, useRef, useState } from "react";
 import { useGetArtist, getGetArtistQueryKey, useFollowArtist, useUnfollowArtist, useTrackAnalyticsEvent } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Play, Users, Music, MessageCircle, ArrowLeft, Volume2, VolumeX } from "lucide-react";
+import { Play, Users, Music, MessageCircle, ArrowLeft, Volume2, VolumeX, ShieldCheck, Loader2 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { RoleBadges } from "@/components/role-badges";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { usePlayer } from "@/lib/player";
 import { useQueryClient } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SongMenu } from "@/components/song-menu";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ArtistDetail() {
   const { id } = useParams();
@@ -29,6 +30,30 @@ export default function ArtistDetail() {
   const followMutation = useFollowArtist();
   const unfollowMutation = useUnfollowArtist();
   const trackEvent = useTrackAnalyticsEvent();
+  const { toast } = useToast();
+  const [isClaiming, setIsClaiming] = useState(false);
+
+  async function handleClaim() {
+    if (!user) return;
+    setIsClaiming(true);
+    try {
+      const token = localStorage.getItem("cotopia_token");
+      const res = await fetch(`${import.meta.env.BASE_URL}api/artists/${artistId}/claim`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error((body as any).error ?? "Claim failed");
+      }
+      toast({ title: "Artist profile claimed!", description: "This profile is now linked to your account." });
+      queryClient.invalidateQueries({ queryKey: getGetArtistQueryKey(artistId) });
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Could not claim profile", description: err.message });
+    } finally {
+      setIsClaiming(false);
+    }
+  }
 
   useEffect(() => {
     if (artist?.id) {
@@ -161,6 +186,21 @@ export default function ArtistDetail() {
               >
                 <MessageCircle className="w-4 h-4" />
                 Message
+              </Button>
+            )}
+            {user &&
+              user.id !== (artist as any).userId &&
+              (user as any).username?.trim().toLowerCase() === artist.stageName.trim().toLowerCase() && (
+              <Button
+                variant="outline"
+                size="lg"
+                className="rounded-full px-6 gap-2 border-amber-500/50 text-amber-400 hover:bg-amber-500/10 hover:text-amber-300"
+                onClick={handleClaim}
+                disabled={isClaiming}
+              >
+                {isClaiming
+                  ? <><Loader2 className="w-4 h-4 animate-spin" />Claiming…</>
+                  : <><ShieldCheck className="w-4 h-4" />Claim Artist Profile</>}
               </Button>
             )}
           </div>
