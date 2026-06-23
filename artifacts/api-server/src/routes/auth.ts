@@ -227,6 +227,18 @@ router.patch("/auth/me", requireAuth, async (req: AuthRequest, res): Promise<voi
   res.json(userOut);
 });
 
+// ── Request account deletion ────────────────────────────────────────────────
+router.post("/auth/me/deletion-request", requireAuth, async (req: AuthRequest, res): Promise<void> => {
+  await db.update(usersTable).set({ deletionRequestedAt: new Date() }).where(eq(usersTable.id, req.user!.userId));
+  res.json({ ok: true });
+});
+
+// ── Cancel account deletion request ─────────────────────────────────────────
+router.delete("/auth/me/deletion-request", requireAuth, async (req: AuthRequest, res): Promise<void> => {
+  await db.update(usersTable).set({ deletionRequestedAt: null }).where(eq(usersTable.id, req.user!.userId));
+  res.json({ ok: true });
+});
+
 // ── Send OTP ───────────────────────────────────────────────────────────────
 router.post("/auth/send-otp", requireAuth, async (req: AuthRequest, res): Promise<void> => {
   const parsed = SendOtpBody.safeParse(req.body);

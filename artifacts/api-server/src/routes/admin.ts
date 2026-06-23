@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { eq, desc, ilike, and, count, avg, sql, or, notInArray } from "drizzle-orm";
+import { eq, desc, ilike, and, count, avg, sql, or, notInArray, isNotNull } from "drizzle-orm";
 import {
   db, usersTable, submissionsTable, songsTable, videosTable, artistsTable,
   labelsTable, albumsTable, commentsTable, ratingsTable, analyticsEventsTable,
@@ -1086,6 +1086,45 @@ router.delete("/admin/users/:id", requireAuth, requireRole("master_admin"), asyn
 
   await db.delete(usersTable).where(eq(usersTable.id, id));
   res.status(204).end();
+});
+
+// ── GET /admin/deletion-requests ──────────────────────────────────────────
+router.get("/admin/deletion-requests", requireAuth, requireRole("master_admin"), async (_req: AuthRequest, res): Promise<void> => {
+  const requests = await db
+    .select({
+      id: usersTable.id,
+      username: usersTable.username,
+      email: usersTable.email,
+      role: usersTable.role,
+      deletionRequestedAt: usersTable.deletionRequestedAt,
+      createdAt: usersTable.createdAt,
+    })
+    .from(usersTable)
+    .where(isNotNull(usersTable.deletionRequestedAt))
+    .orderBy(usersTable.deletionRequestedAt);
+  res.json(requests);
+});
+
+// ── POST /admin/users/:id/deletion-request/approve ────────────────────────
+router.post("/admin/users/:id/deletion-request/approve", requireAuth, requireRole("master_admin"), async (req: AuthRequest, res): Promise<void> => {
+  const id = Number(req.params.id);
+  if (!id) { res.status(400).json({ error: "Invalid user id" }); return; }
+  if (id === req.user!.userId) { res.status(400).json({ error: "Cannot delete your own account" }); return; }
+
+  const [target] = await db.select({ role: usersTable.role }).from(usersTable).where(eq(usersTable.id, id));
+  if (!target) { res.status(404).json({ error: "User not found" }); return; }
+  if (target.role === "master_admin") { res.status(403).json({ error: "Cannot delete another master admin" }); return; }
+
+  await db.delete(usersTable).where(eq(usersTable.id, id));
+  res.status(204).end();
+});
+
+// ── POST /admin/users/:id/deletion-request/deny ───────────────────────────
+router.post("/admin/users/:id/deletion-request/deny", requireAuth, requireRole("master_admin"), async (req: AuthRequest, res): Promise<void> => {
+  const id = Number(req.params.id);
+  if (!id) { res.status(400).json({ error: "Invalid user id" }); return; }
+  await db.update(usersTable).set({ deletionRequestedAt: null }).where(eq(usersTable.id, id));
+  res.json({ ok: true });
 });
 
 // ── GET /admin/users/:id/agreements ────────────────────────────────────────

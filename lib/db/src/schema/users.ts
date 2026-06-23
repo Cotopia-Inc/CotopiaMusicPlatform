@@ -33,6 +33,7 @@ export const usersTable = pgTable("users", {
   dateOfBirth: text("date_of_birth"),
   phone: text("phone"),
   demographicsCompleted: boolean("demographics_completed").notNull().default(false),
+  deletionRequestedAt: timestamp("deletion_requested_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

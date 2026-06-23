@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { UserLink } from "@/components/user-link";
-import { AlertTriangle, ScrollText, Monitor, Globe, FileText, Users, Bot, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
+import { AlertTriangle, ScrollText, Monitor, Globe, FileText, Users, Bot, ChevronDown, ChevronUp, Trash2, Clock, UserX, CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { CopyrightStrikeModal, type StrikeTarget } from "@/components/copyright-strike-modal";
 import { useAuth } from "@/lib/auth";
@@ -128,6 +128,170 @@ function AgreementsDialog({ userId, username, open, onClose }: { userId: number;
   );
 }
 
+type DeletionRequest = {
+  id: number;
+  username: string;
+  email: string;
+  role: string;
+  deletionRequestedAt: string;
+  createdAt: string;
+};
+
+function DeletionRequestsPanel({ isMasterAdmin }: { isMasterAdmin: boolean }) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [processingId, setProcessingId] = useState<number | null>(null);
+  const [confirmApprove, setConfirmApprove] = useState<DeletionRequest | null>(null);
+
+  const { data: requests = [], isLoading } = useQuery<DeletionRequest[]>({
+    queryKey: ["admin-deletion-requests"],
+    queryFn: async () => {
+      const res = await fetch(`${import.meta.env.BASE_URL}api/admin/deletion-requests`, { headers: authHeaders() });
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: isMasterAdmin,
+    refetchInterval: 30000,
+  });
+
+  const handleDeny = async (req: DeletionRequest) => {
+    setProcessingId(req.id);
+    try {
+      const res = await fetch(`${import.meta.env.BASE_URL}api/admin/users/${req.id}/deletion-request/deny`, {
+        method: "POST", headers: authHeaders(),
+      });
+      if (!res.ok) throw new Error("Failed");
+      toast({ title: `Deletion request denied for @${req.username}` });
+      queryClient.invalidateQueries({ queryKey: ["admin-deletion-requests"] });
+    } catch {
+      toast({ variant: "destructive", title: "Failed to deny request" });
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleApprove = async () => {
+    if (!confirmApprove) return;
+    setProcessingId(confirmApprove.id);
+    try {
+      const res = await fetch(`${import.meta.env.BASE_URL}api/admin/users/${confirmApprove.id}/deletion-request/approve`, {
+        method: "POST", headers: authHeaders(),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error((err as any).error ?? "Failed");
+      }
+      toast({ title: `@${confirmApprove.username} has been permanently deleted` });
+      queryClient.invalidateQueries({ queryKey: ["admin-deletion-requests"] });
+      queryClient.invalidateQueries({ queryKey: getAdminListUsersQueryKey({ limit: 50 }) });
+      setConfirmApprove(null);
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Delete failed", description: e.message });
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  if (!isMasterAdmin) return null;
+
+  return (
+    <>
+    <div className="bg-card rounded-xl border border-red-500/20 overflow-hidden">
+      <div className="flex items-center gap-3 px-6 py-4 border-b border-red-500/10 bg-red-500/5">
+        <UserX className="w-5 h-5 text-red-400" />
+        <div className="flex-1">
+          <h2 className="font-semibold text-sm text-red-300">Pending Account Deletion Requests</h2>
+          <p className="text-xs text-muted-foreground">Users who have requested their accounts be permanently deleted. You have final approval.</p>
+        </div>
+        {requests.length > 0 && (
+          <span className="bg-red-500/20 text-red-400 border border-red-500/30 text-xs font-bold px-2 py-0.5 rounded-full">
+            {requests.length}
+          </span>
+        )}
+      </div>
+
+      {isLoading ? (
+        <div className="p-6 space-y-3">
+          {Array(2).fill(0).map((_, i) => <Skeleton key={i} className="h-14 w-full rounded-lg" />)}
+        </div>
+      ) : requests.length === 0 ? (
+        <div className="flex items-center gap-3 px-6 py-8 text-center justify-center">
+          <CheckCircle className="w-4 h-4 text-green-400/60" />
+          <p className="text-sm text-muted-foreground">No pending deletion requests.</p>
+        </div>
+      ) : (
+        <div className="divide-y divide-border">
+          {requests.map((r) => (
+            <div key={r.id} className="flex items-center gap-4 px-6 py-4">
+              <div className="w-8 h-8 rounded-full bg-red-500/15 flex items-center justify-center flex-shrink-0">
+                <UserX className="w-4 h-4 text-red-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-sm">
+                  <UserLink username={r.username} userId={r.id} role={r.role} isVerified={false} />
+                </p>
+                <p className="text-xs text-muted-foreground">{r.email}</p>
+                <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                  <Clock className="w-3 h-3" />
+                  Requested {format(new Date(r.deletionRequestedAt), "MMM d, yyyy 'at' HH:mm 'UTC'")}
+                </p>
+              </div>
+              <div className="flex gap-2 flex-shrink-0">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-xs gap-1 text-green-400 border-green-500/20 hover:bg-green-500/10"
+                  onClick={() => handleDeny(r)}
+                  disabled={processingId === r.id}
+                >
+                  <XCircle className="w-3.5 h-3.5" />Deny
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-xs gap-1 text-red-400 border-red-500/20 hover:bg-red-500/10"
+                  onClick={() => setConfirmApprove(r)}
+                  disabled={processingId === r.id}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />Approve & Delete
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+
+    <Dialog open={!!confirmApprove} onOpenChange={v => { if (!v) setConfirmApprove(null); }}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-red-400">
+            <Trash2 className="w-5 h-5" />Approve Account Deletion
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3 py-2">
+          <p className="text-sm text-muted-foreground">
+            You are permanently deleting{" "}
+            <span className="font-semibold text-foreground">@{confirmApprove?.username}</span> as requested by them.
+            All their songs, videos, playlists, and data will be erased. This cannot be undone.
+          </p>
+          <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+            <p className="text-xs text-red-400 font-medium">⚠ This permanently fulfils the user's deletion request.</p>
+          </div>
+        </div>
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={() => setConfirmApprove(null)} disabled={!!processingId}>Cancel</Button>
+          <Button variant="destructive" onClick={handleApprove} disabled={!!processingId} className="gap-2">
+            {processingId ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+            {processingId ? "Deleting…" : "Delete Permanently"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
+  );
+}
+
 export default function AdminUsers() {
   const { data, isLoading } = useAdminListUsers({ limit: 50 }, {
     query: { queryKey: getAdminListUsersQueryKey({ limit: 50 }) }
@@ -198,6 +362,8 @@ export default function AdminUsers() {
         <h1 className="text-4xl font-extrabold tracking-tight mb-2">User Management</h1>
         <p className="text-muted-foreground">Manage user accounts, roles, and access.</p>
       </div>
+
+      <DeletionRequestsPanel isMasterAdmin={isMasterAdmin} />
 
       <div className="bg-card rounded-xl border border-border overflow-hidden">
         <div className="overflow-x-auto">

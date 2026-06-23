@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Upload, X, Loader2, Lock, User, MailCheck, CheckCircle, Mail, RefreshCw, Film, Camera } from "lucide-react";
+import { Upload, X, Loader2, Lock, User, MailCheck, CheckCircle, Mail, RefreshCw, Film, Camera, Trash2, AlertTriangle } from "lucide-react";
 import { useUpload } from "@workspace/object-storage-web";
 import { RoleBadges, VerifiedBadge } from "@/components/role-badges";
 import { useQueryClient } from "@tanstack/react-query";
@@ -15,7 +15,158 @@ import { useLocation } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { ImageCropModal } from "@/components/image-crop-modal";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { MessageSquare } from "lucide-react";
+
+function DangerZone({ profile }: { profile: any }) {
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const [showDialog, setShowDialog] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
+  const [isRequesting, setIsRequesting] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+
+  const pending = !!(profile as any).deletionRequestedAt;
+
+  const handleRequest = async () => {
+    setIsRequesting(true);
+    try {
+      const token = localStorage.getItem("cotopia_token");
+      const res = await fetch(`${import.meta.env.BASE_URL}api/auth/me/deletion-request`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Request failed");
+      toast({ title: "Deletion request submitted", description: "A master admin will review your request and contact you." });
+      qc.invalidateQueries({ queryKey: getGetMeQueryKey() });
+      setShowDialog(false);
+      setConfirmed(false);
+    } catch {
+      toast({ variant: "destructive", title: "Could not submit deletion request" });
+    } finally {
+      setIsRequesting(false);
+    }
+  };
+
+  const handleCancel = async () => {
+    setIsCancelling(true);
+    try {
+      const token = localStorage.getItem("cotopia_token");
+      const res = await fetch(`${import.meta.env.BASE_URL}api/auth/me/deletion-request`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Cancel failed");
+      toast({ title: "Deletion request cancelled", description: "Your account will not be deleted." });
+      qc.invalidateQueries({ queryKey: getGetMeQueryKey() });
+    } catch {
+      toast({ variant: "destructive", title: "Could not cancel deletion request" });
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
+  return (
+    <>
+    <div className="bg-card p-6 rounded-xl border border-red-500/20 space-y-4">
+      <div className="flex items-center gap-3">
+        <div className="w-9 h-9 rounded-lg bg-red-500/10 flex items-center justify-center">
+          <Trash2 className="w-4 h-4 text-red-400" />
+        </div>
+        <div>
+          <p className="font-semibold text-sm text-red-300">Delete Account</p>
+          <p className="text-xs text-muted-foreground">Permanently remove your account and all associated data.</p>
+        </div>
+      </div>
+
+      {pending ? (
+        <div className="space-y-3">
+          <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+            <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+            <div className="text-xs text-amber-300 space-y-1">
+              <p className="font-semibold">Deletion request pending review</p>
+              <p className="text-amber-300/80">Your request is awaiting approval from a master admin. You can cancel it any time before they act on it.</p>
+              {(profile as any).deletionRequestedAt && (
+                <p className="text-amber-300/60">Submitted: {new Date((profile as any).deletionRequestedAt).toLocaleString()}</p>
+              )}
+            </div>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleCancel}
+            disabled={isCancelling}
+            className="gap-2 border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
+          >
+            {isCancelling ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <X className="w-3.5 h-3.5" />}
+            {isCancelling ? "Cancelling…" : "Cancel Deletion Request"}
+          </Button>
+        </div>
+      ) : (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setShowDialog(true)}
+          className="gap-2 border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+          Request Account Deletion
+        </Button>
+      )}
+    </div>
+
+    <Dialog open={showDialog} onOpenChange={v => { if (!v) { setShowDialog(false); setConfirmed(false); } }}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-red-400">
+            <Trash2 className="w-5 h-5" />
+            Request Account Deletion
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-2">
+          <p className="text-sm text-muted-foreground">
+            This will submit a deletion request to the master admin. Once approved, your account, content, playlists, and all associated data will be <span className="text-foreground font-semibold">permanently erased</span> and cannot be recovered.
+          </p>
+          <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 space-y-1">
+            <p className="text-xs text-red-400 font-semibold">What gets deleted:</p>
+            <ul className="text-xs text-red-400/80 list-disc list-inside space-y-0.5">
+              <li>Your profile and all account data</li>
+              <li>All uploaded songs, videos, and albums</li>
+              <li>Your playlists, favorites, and play history</li>
+              <li>All messages and comments</li>
+            </ul>
+          </div>
+          <label className="flex items-start gap-3 cursor-pointer group">
+            <input
+              type="checkbox"
+              checked={confirmed}
+              onChange={e => setConfirmed(e.target.checked)}
+              className="mt-0.5 accent-red-500 w-4 h-4 flex-shrink-0"
+            />
+            <span className="text-xs text-muted-foreground group-hover:text-foreground transition-colors">
+              I understand this is permanent and irreversible. I want to request deletion of my account.
+            </span>
+          </label>
+        </div>
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={() => { setShowDialog(false); setConfirmed(false); }} disabled={isRequesting}>
+            Cancel
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={handleRequest}
+            disabled={!confirmed || isRequesting}
+            className="gap-2"
+          >
+            {isRequesting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+            {isRequesting ? "Submitting…" : "Submit Deletion Request"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
+  );
+}
 
 export default function Profile() {
   const { user } = useAuth();
@@ -664,6 +815,9 @@ export default function Profile() {
           </div>
         )}
       </div>
+
+      {/* Danger Zone — Account Deletion */}
+      <DangerZone profile={profile} />
 
       {cropModal && (
         <ImageCropModal
