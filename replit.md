@@ -56,7 +56,7 @@ A full-stack music and video streaming platform with role-based access, content 
 
 | Email | Role |
 |---|---|
-| admin@cotopia.com | master_admin |
+| admin@cotopia.org | master_admin |
 | editor@cotopia.com | editor |
 | mod@cotopia.com | moderator |
 | alex@example.com | listener |
