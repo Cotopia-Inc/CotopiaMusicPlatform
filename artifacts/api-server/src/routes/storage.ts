@@ -1,4 +1,4 @@
-import { Router, type IRouter, type Request, type Response } from "express";
+import express, { Router, type IRouter, type Request, type Response } from "express";
 import { Readable } from "stream";
 import {
   RequestUploadUrlBody,
@@ -42,6 +42,64 @@ router.post("/storage/uploads/request-url", async (req: Request, res: Response) 
     res.status(500).json({ error: "Failed to generate upload URL" });
   }
 });
+
+/**
+ * POST /storage/uploads/upload
+ *
+ * Server-side proxy upload: the browser POSTs the file here as raw binary,
+ * the server obtains a GCS signed URL internally and PUTs the bytes there.
+ * This avoids cross-origin (CORS) issues that block direct browser→GCS PUTs.
+ *
+ * Headers:
+ *   Content-Type   — file MIME type
+ *   X-File-Name    — URL-encoded original filename
+ */
+router.post(
+  "/storage/uploads/upload",
+  express.raw({ type: "*/*", limit: "200mb" }),
+  async (req: Request, res: Response) => {
+    const rawName = req.headers["x-file-name"];
+    const name = rawName
+      ? decodeURIComponent(Array.isArray(rawName) ? rawName[0] : rawName)
+      : "upload";
+    const contentType =
+      (Array.isArray(req.headers["content-type"])
+        ? req.headers["content-type"][0]
+        : req.headers["content-type"]) ?? "application/octet-stream";
+    const body = req.body as Buffer;
+
+    if (!Buffer.isBuffer(body) || body.length === 0) {
+      res.status(400).json({ error: "No file data provided" });
+      return;
+    }
+
+    try {
+      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+      const objectPath = objectStorageService.normalizeObjectEntityPath(uploadURL);
+
+      const gcsRes = await fetch(uploadURL, {
+        method: "PUT",
+        headers: { "Content-Type": contentType },
+        body: body,
+      });
+
+      if (!gcsRes.ok) {
+        req.log.error({ status: gcsRes.status }, "GCS upload failed");
+        res.status(502).json({ error: "Storage upload failed" });
+        return;
+      }
+
+      res.json({
+        uploadURL,
+        objectPath,
+        metadata: { name, size: body.length, contentType },
+      });
+    } catch (error) {
+      req.log.error({ err: error }, "Error uploading file to storage");
+      res.status(500).json({ error: "Failed to upload file" });
+    }
+  }
+);
 
 /**
  * GET /storage/public-objects/*
