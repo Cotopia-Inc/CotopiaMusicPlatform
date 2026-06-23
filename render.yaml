@@ -9,11 +9,17 @@ services:
       PORT=3000 BASE_PATH=/ NODE_ENV=production pnpm --filter @workspace/cotopia run build &&
       pnpm --filter @workspace/api-server run build
     startCommand: node artifacts/api-server/dist/index.mjs
+    disk:
+      name: cotopia-uploads
+      mountPath: /var/data/uploads
+      sizeGB: 10
     envVars:
       - key: NODE_ENV
         value: production
       - key: STATIC_DIR
         value: artifacts/cotopia/dist/public
+      - key: STORAGE_DIR
+        value: /var/data/uploads
       - key: DATABASE_URL
         sync: false
       - key: SESSION_SECRET
