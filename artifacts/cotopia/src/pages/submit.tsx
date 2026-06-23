@@ -1055,16 +1055,42 @@ export default function Submit() {
             const inactiveCount = tab === "song" ? videoFiles.length : songFiles.length;
             const inactiveType  = tab === "song" ? "video" : "song";
             if (inactiveCount === 0) return null;
+            const isSongActive = tab === "song";
             return (
-              <div className="flex items-start gap-3 p-4 rounded-lg bg-amber-500/10 border border-amber-500/20 text-left max-w-sm mx-auto">
-                <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
-                <div className="space-y-1">
-                  <p className="text-sm font-semibold text-amber-300">You still have {inactiveType}s to submit</p>
-                  <p className="text-xs text-muted-foreground">
-                    {inactiveCount} {inactiveType}{inactiveCount !== 1 ? "s" : ""} from the other tab still need a separate submission and payment.
-                    Click <strong>Submit More</strong> below to start that flow.
-                  </p>
+              <div className="flex flex-col gap-3 p-4 rounded-lg bg-amber-500/10 border border-amber-500/20 text-left max-w-sm mx-auto">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+                  <div className="space-y-0.5">
+                    <p className="text-sm font-semibold text-amber-300">You still have {inactiveType}s to submit</p>
+                    <p className="text-xs text-muted-foreground">
+                      {inactiveCount} {inactiveType}{inactiveCount !== 1 ? "s" : ""} from the other tab need a separate submission and payment.
+                    </p>
+                  </div>
                 </div>
+                <Button
+                  size="sm"
+                  className="w-full gap-2"
+                  onClick={() => {
+                    // Switch to the inactive tab, clear the just-submitted type's state,
+                    // keep the other tab's files so the user continues from where they left off
+                    setTab(inactiveType as "song" | "video");
+                    setStep(0);
+                    setPaypalOrderId(null);
+                    setPaymentInitiated(false);
+                    setSubmissionIds([]);
+                    setSuccessTitles([]);
+                    if (isSongActive) {
+                      setSongFiles([]); setSongTitles([]); setSongUrls([]); setSongMeta({ ...defaultMeta });
+                      setSongReleaseType(""); setSongReleaseName("");
+                    } else {
+                      setVideoFiles([]); setVideoTitles([]); setVideoUrls([]); setVideoMeta({ ...defaultMeta });
+                      setVideoReleaseType(""); setVideoReleaseName("");
+                    }
+                  }}
+                >
+                  {inactiveType === "video" ? <Film className="w-3.5 h-3.5" /> : <Music className="w-3.5 h-3.5" />}
+                  Submit my {inactiveType}s now
+                </Button>
               </div>
             );
           })()}
