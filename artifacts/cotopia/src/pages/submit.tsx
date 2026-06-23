@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useCreateBulkSubmission, useInitiatePayment, useCapturePayment } from "@workspace/api-client-react";
-import { useUpload } from "@workspace/object-storage-web";
+import { useUpload } from "../lib/useUpload";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

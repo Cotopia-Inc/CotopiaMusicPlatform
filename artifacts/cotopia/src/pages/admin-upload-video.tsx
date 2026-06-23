@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useAdminUploadVideo, useAdminBulkUploadVideos, useAdminGetUploadAccounts } from "@workspace/api-client-react";
-import { useUpload } from "@workspace/object-storage-web";
+import { useUpload } from "../lib/useUpload";
 import { useAuth } from "@/lib/auth";
 import { useLocation, Link } from "wouter";
 import { Upload, Video, ArrowLeft, CheckCircle, ListVideo, X, Loader2, AlertCircle } from "lucide-react";

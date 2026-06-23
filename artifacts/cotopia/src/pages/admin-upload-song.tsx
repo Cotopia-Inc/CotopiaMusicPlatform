@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useAdminUploadSong, useAdminBulkUploadSongs, useAdminGetUploadAccounts } from "@workspace/api-client-react";
-import { useUpload } from "@workspace/object-storage-web";
+import { useUpload } from "../lib/useUpload";
 import { useAuth } from "@/lib/auth";
 import { useLocation, Link } from "wouter";
 import { Upload, Music, ArrowLeft, CheckCircle, Disc, Disc3, ListMusic, BadgeCheck, X, Loader2, AlertCircle } from "lucide-react";
