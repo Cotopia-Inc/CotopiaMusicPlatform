@@ -4,13 +4,22 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   MessageSquare, Bug, Lightbulb, MessageCircle, Users, Upload,
-  Send, ListMusic,
+  Send, ListMusic, Music2,
 } from "lucide-react";
 
 const authHeaders = () => ({
   Authorization: `Bearer ${localStorage.getItem("cotopia_token")}`,
   "Content-Type": "application/json",
 });
+
+interface SongCompletionRate {
+  songId: number;
+  title: string;
+  artistName: string;
+  plays: number;
+  completions: number;
+  rate: number;
+}
 
 interface BetaAnalytics {
   feedbackTotal: number;
@@ -23,6 +32,7 @@ interface BetaAnalytics {
   privateMessages: { total: number; senders: number };
   playlistsCreated: number;
   playlistFollows: number;
+  songCompletionRates: SongCompletionRate[];
 }
 
 function fmt(n: number | undefined) {
@@ -31,6 +41,20 @@ function fmt(n: number | undefined) {
 
 function pct(rate: number | undefined) {
   return Math.round(((rate ?? 0) * (rate && rate <= 1 ? 100 : 1)));
+}
+
+function rateColor(rate: number) {
+  if (rate >= 75) return "text-emerald-400";
+  if (rate >= 50) return "text-yellow-400";
+  if (rate >= 25) return "text-orange-400";
+  return "text-red-400";
+}
+
+function rateBarColor(rate: number) {
+  if (rate >= 75) return "bg-emerald-500";
+  if (rate >= 50) return "bg-yellow-500";
+  if (rate >= 25) return "bg-orange-500";
+  return "bg-red-500";
 }
 
 export default function AdminBetaAnalytics() {
@@ -172,6 +196,79 @@ export default function AdminBetaAnalytics() {
           </Card>
         </div>
       )}
+
+      {/* Per-song completion rates */}
+      <div>
+        <div className="flex items-center gap-2 mb-4">
+          <Music2 className="w-5 h-5 text-primary" />
+          <h2 className="text-xl font-bold tracking-tight">Song Completion Rates</h2>
+          <span className="text-xs text-muted-foreground ml-1">ranked by completion %</span>
+        </div>
+
+        {isLoading ? (
+          <div className="space-y-2">
+            {Array(8).fill(0).map((_, i) => <Skeleton key={i} className="h-14 w-full rounded-xl" />)}
+          </div>
+        ) : !data?.songCompletionRates?.length ? (
+          <Card>
+            <CardContent className="py-12 text-center text-muted-foreground text-sm">
+              No play data yet — completion rates will appear once listeners start playing songs.
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <div className="divide-y divide-border">
+              {/* Header */}
+              <div className="grid grid-cols-[2fr_1fr_1fr_1fr_2fr] gap-4 px-5 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                <span>Song</span>
+                <span className="text-right">Plays</span>
+                <span className="text-right">Completions</span>
+                <span className="text-right">Rate</span>
+                <span className="pl-2">Progress</span>
+              </div>
+
+              {data.songCompletionRates.map((song, i) => (
+                <div
+                  key={song.songId}
+                  className="grid grid-cols-[2fr_1fr_1fr_1fr_2fr] gap-4 items-center px-5 py-3 hover:bg-secondary/30 transition-colors"
+                >
+                  {/* Song + artist */}
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground/50 tabular-nums w-5 shrink-0">{i + 1}</span>
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm truncate">{song.title}</p>
+                        <p className="text-xs text-muted-foreground truncate">{song.artistName}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Plays */}
+                  <p className="text-sm tabular-nums text-right text-muted-foreground">{fmt(song.plays)}</p>
+
+                  {/* Completions */}
+                  <p className="text-sm tabular-nums text-right text-muted-foreground">{fmt(song.completions)}</p>
+
+                  {/* Rate */}
+                  <p className={`text-sm tabular-nums font-bold text-right ${rateColor(song.rate)}`}>
+                    {song.rate}%
+                  </p>
+
+                  {/* Progress bar */}
+                  <div className="pl-2">
+                    <div className="h-2 w-full rounded-full bg-secondary overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all ${rateBarColor(song.rate)}`}
+                        style={{ width: `${song.rate}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
+      </div>
     </div>
   );
 }

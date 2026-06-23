@@ -3,6 +3,7 @@ import { eq, and, desc, count, sql, inArray } from "drizzle-orm";
 import {
   db, reportsTable, feedbackTable, enforcementActionsTable, appSettingsTable,
   usersTable, notificationsTable, adminAuditLogsTable, analyticsEventsTable,
+  songsTable, artistsTable,
 } from "@workspace/db";
 import { requireAuth, requireRole, type AuthRequest } from "../lib/auth";
 
@@ -603,12 +604,12 @@ router.get("/admin/beta-analytics", requireAuth, requireRole(...ADMIN_ROLES), as
     chatMessages, chatParticipants,
     pmTotal, pmSenders,
     playlistsCreated, playlistFollows,
+    songCompletionRows,
   ] = await Promise.all([
     db.select({ c: count() }).from(feedbackTable).then(r => r[0]?.c ?? 0),
     db.select({ c: count() }).from(feedbackTable).where(eq(feedbackTable.type, "bug")).then(r => r[0]?.c ?? 0),
     db.select({ c: count() }).from(feedbackTable).where(eq(feedbackTable.type, "feature")).then(r => r[0]?.c ?? 0),
     db.select({ c: count() }).from(usersTable).then(r => r[0]?.c ?? 0),
-    // retained = users who have at least one analytics event dated after their account creation day
     db.execute(sql`SELECT COUNT(DISTINCT u.id) AS c FROM users u JOIN analytics_events a ON a.user_id = u.id WHERE a.created_at > u.created_at + interval '1 day'`).then((r) => Number((r.rows?.[0] as { c?: number | string } | undefined)?.c ?? 0)),
     db.execute(sql`SELECT COUNT(*) AS c FROM submissions`).then((r) => Number((r.rows?.[0] as { c?: number | string } | undefined)?.c ?? 0)),
     db.execute(sql`SELECT COUNT(*) AS c FROM submissions WHERE status IN ('approved','published')`).then((r) => Number((r.rows?.[0] as { c?: number | string } | undefined)?.c ?? 0)),
@@ -618,7 +619,36 @@ router.get("/admin/beta-analytics", requireAuth, requireRole(...ADMIN_ROLES), as
     db.execute(sql`SELECT COUNT(DISTINCT sender_id) AS c FROM direct_messages`).then((r) => Number((r.rows?.[0] as { c?: number | string } | undefined)?.c ?? 0)),
     db.execute(sql`SELECT COUNT(*) AS c FROM playlists`).then((r) => Number((r.rows?.[0] as { c?: number | string } | undefined)?.c ?? 0)),
     db.select({ c: count() }).from(analyticsEventsTable).where(eq(analyticsEventsTable.eventName, "playlist_followed")).then(r => r[0]?.c ?? 0),
+    db.execute(sql`
+      SELECT
+        s.id        AS song_id,
+        s.title     AS title,
+        ar.stage_name AS artist_name,
+        COUNT(CASE WHEN ae.event_name = 'song_play'     THEN 1 END)::int AS plays,
+        COUNT(CASE WHEN ae.event_name = 'song_complete' THEN 1 END)::int AS completions
+      FROM songs s
+      JOIN artists ar ON ar.id = s.artist_id
+      JOIN analytics_events ae
+        ON ae.content_id = s.id AND ae.content_type = 'song'
+           AND ae.event_name IN ('song_play', 'song_complete')
+      GROUP BY s.id, s.title, ar.stage_name
+      HAVING COUNT(CASE WHEN ae.event_name = 'song_play' THEN 1 END) > 0
+      ORDER BY
+        (COUNT(CASE WHEN ae.event_name = 'song_complete' THEN 1 END)::float
+          / COUNT(CASE WHEN ae.event_name = 'song_play' THEN 1 END)::float) DESC,
+        plays DESC
+      LIMIT 100
+    `).then(r => r.rows as Array<{ song_id: number; title: string; artist_name: string; plays: number; completions: number }>),
   ]);
+
+  const songCompletionRates = songCompletionRows.map(row => ({
+    songId: row.song_id,
+    title: row.title,
+    artistName: row.artist_name,
+    plays: Number(row.plays),
+    completions: Number(row.completions),
+    rate: Math.round((Number(row.completions) / Number(row.plays)) * 100),
+  }));
 
   res.json({
     feedbackTotal,
@@ -639,6 +669,7 @@ router.get("/admin/beta-analytics", requireAuth, requireRole(...ADMIN_ROLES), as
     privateMessages: { total: pmTotal, senders: pmSenders },
     playlistsCreated,
     playlistFollows,
+    songCompletionRates,
   });
 });
 
