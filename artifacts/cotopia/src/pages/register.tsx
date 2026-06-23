@@ -45,7 +45,7 @@ export default function Register() {
         }
       },
       onError: (err: any) => {
-        const msg = err?.response?.data?.error ?? "Please check your details and try again.";
+        const msg = err?.data?.error ?? "Please check your details and try again.";
         toast({ variant: "destructive", title: "Registration failed", description: msg });
       }
     });

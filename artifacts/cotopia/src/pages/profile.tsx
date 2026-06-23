@@ -350,7 +350,7 @@ export default function Profile() {
         setCurrentPassword(""); setNewPassword(""); setConfirmPassword("");
         setShowPasswordForm(false);
       },
-      onError: (err: any) => toast({ variant: "destructive", title: err?.response?.data?.error ?? "Incorrect current password" }),
+      onError: (err: any) => toast({ variant: "destructive", title: err?.data?.error ?? "Incorrect current password" }),
     });
   };
 
@@ -362,7 +362,7 @@ export default function Profile() {
         toast({ title: "Username updated" });
         setShowUsernameForm(false);
       },
-      onError: (err: any) => toast({ variant: "destructive", title: err?.response?.data?.error ?? "Username already taken" }),
+      onError: (err: any) => toast({ variant: "destructive", title: err?.data?.error ?? "Username already taken" }),
     });
   };
 
@@ -391,7 +391,7 @@ export default function Profile() {
         startEmailCountdown();
         toast({ title: "Code sent", description: `A 6-digit code was sent to ${newEmail.trim()}.` });
       },
-      onError: (err: any) => toast({ variant: "destructive", title: err?.response?.data?.error ?? "Could not send code" }),
+      onError: (err: any) => toast({ variant: "destructive", title: err?.data?.error ?? "Could not send code" }),
     });
   };
 
@@ -406,7 +406,7 @@ export default function Profile() {
         setNewEmail("");
         setEmailCode("");
       },
-      onError: (err: any) => toast({ variant: "destructive", title: err?.response?.data?.error ?? "Incorrect or expired code" }),
+      onError: (err: any) => toast({ variant: "destructive", title: err?.data?.error ?? "Incorrect or expired code" }),
     });
   };
 
