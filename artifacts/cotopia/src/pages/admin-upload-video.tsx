@@ -23,12 +23,14 @@ function VideoUploadRow({
   index,
   onTitleChange,
   onVideoUrlSet,
+  onRemove,
 }: {
   file: File;
   title: string;
   index: number;
   onTitleChange: (idx: number, t: string) => void;
   onVideoUrlSet: (idx: number, url: string) => void;
+  onRemove: (idx: number) => void;
 }) {
   const [done, setDone] = useState(false);
   const didUpload = useRef(false);
@@ -76,6 +78,14 @@ function VideoUploadRow({
       ) : (
         <Loader2 className="w-4 h-4 animate-spin text-muted-foreground flex-shrink-0" />
       )}
+      <button
+        type="button"
+        onClick={() => onRemove(index)}
+        className="text-muted-foreground hover:text-destructive flex-shrink-0 transition-colors ml-1"
+        title="Remove file"
+      >
+        <X className="w-4 h-4" />
+      </button>
     </div>
   );
 }
@@ -144,6 +154,12 @@ export default function AdminUploadVideo() {
 
   const handleVideoUrlSet = useCallback((idx: number, url: string) => {
     setBulkUrls(prev => prev.map((u, i) => i === idx ? url : u));
+  }, []);
+
+  const handleRemoveBulkFile = useCallback((idx: number) => {
+    setBulkFiles(prev => prev.filter((_, i) => i !== idx));
+    setBulkTitles(prev => prev.filter((_, i) => i !== idx));
+    setBulkUrls(prev => prev.filter((_, i) => i !== idx));
   }, []);
 
   async function handleBulkSubmit(e: React.FormEvent) {
@@ -457,6 +473,7 @@ export default function AdminUploadVideo() {
                         index={i}
                         onTitleChange={handleTitleChange}
                         onVideoUrlSet={handleVideoUrlSet}
+                        onRemove={handleRemoveBulkFile}
                       />
                     ))}
                   </div>

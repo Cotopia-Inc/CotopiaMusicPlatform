@@ -40,12 +40,14 @@ function SongUploadRow({
   index,
   onTitleChange,
   onStreamUrlSet,
+  onRemove,
 }: {
   file: File;
   title: string;
   index: number;
   onTitleChange: (idx: number, title: string) => void;
   onStreamUrlSet: (idx: number, url: string) => void;
+  onRemove: (idx: number) => void;
 }) {
   const [done, setDone] = useState(false);
   const didUpload = useRef(false);
@@ -94,6 +96,14 @@ function SongUploadRow({
       ) : (
         <Loader2 className="w-4 h-4 animate-spin text-muted-foreground flex-shrink-0" />
       )}
+      <button
+        type="button"
+        onClick={() => onRemove(index)}
+        className="text-muted-foreground hover:text-destructive flex-shrink-0 transition-colors ml-1"
+        title="Remove file"
+      >
+        <X className="w-4 h-4" />
+      </button>
     </div>
   );
 }
@@ -205,6 +215,12 @@ export default function AdminUploadSong() {
 
   const handleStreamUrlSet = useCallback((idx: number, url: string) => {
     setBulkUrls(prev => prev.map((u, i) => i === idx ? url : u));
+  }, []);
+
+  const handleRemoveBulkFile = useCallback((idx: number) => {
+    setBulkFiles(prev => prev.filter((_, i) => i !== idx));
+    setBulkTitles(prev => prev.filter((_, i) => i !== idx));
+    setBulkUrls(prev => prev.filter((_, i) => i !== idx));
   }, []);
 
   const allUploaded = bulkUrls.length > 0 && bulkUrls.every(u => u !== null);
@@ -573,6 +589,7 @@ export default function AdminUploadSong() {
                         index={i}
                         onTitleChange={handleTitleChange}
                         onStreamUrlSet={handleStreamUrlSet}
+                        onRemove={handleRemoveBulkFile}
                       />
                     ))}
                   </div>

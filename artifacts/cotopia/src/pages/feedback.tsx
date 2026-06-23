@@ -12,7 +12,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Bug, Lightbulb, MessageSquare, Send, Loader2, Sparkles, Inbox, ImagePlus, X } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { useUpload } from "@workspace/object-storage-web";
+import { useUpload } from "../lib/useUpload";
 
 const TYPE_META: Record<string, { label: string; icon: React.ElementType; className: string }> = {
   bug: { label: "Bug Report", icon: Bug, className: "bg-red-500/15 text-red-400 border-red-500/30" },
