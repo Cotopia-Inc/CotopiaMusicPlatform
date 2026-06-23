@@ -85,9 +85,12 @@ function SongUploadRow({
           <span className="text-xs text-muted-foreground w-8 text-right">{upload.progress}%</span>
         </div>
       ) : upload.error ? (
-        <Button type="button" variant="outline" size="sm" className="h-7 text-xs flex-shrink-0 text-destructive border-destructive/40" onClick={() => upload.uploadFile(file)}>
-          <AlertCircle className="w-3 h-3 mr-1" />Retry
-        </Button>
+        <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
+          <Button type="button" variant="outline" size="sm" className="h-7 text-xs text-destructive border-destructive/40" onClick={() => upload.uploadFile(file)}>
+            <AlertCircle className="w-3 h-3 mr-1" />Retry
+          </Button>
+          <span className="text-[10px] text-destructive max-w-[150px] truncate" title={upload.error.message}>{upload.error.message}</span>
+        </div>
       ) : (
         <Loader2 className="w-4 h-4 animate-spin text-muted-foreground flex-shrink-0" />
       )}

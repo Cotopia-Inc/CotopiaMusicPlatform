@@ -12,12 +12,15 @@ interface UseUploadOptions {
 }
 
 /**
- * Two-step upload:
- *   1. POST /api/storage/uploads/request-url → get a GCS presigned URL (tiny JSON, no size limit)
- *   2. XHR PUT directly to GCS using that URL (bypasses Replit proxy entirely)
+ * Single-step server-proxy upload:
+ *   POST /api/storage/uploads/upload with the raw file bytes.
+ *   The server receives the stream, pushes it to GCS, and returns objectPath.
  *
- * The GCS bucket is configured with Access-Control-Allow-Origin: * so direct
- * browser→GCS PUTs work without CORS errors.
+ * This avoids direct browser→GCS PUT (which has cross-origin issues in some
+ * browser environments) and gives accurate upload progress via XHR.
+ *
+ * The Express route uses express.raw({ limit: "200mb" }) so files up to 200 MB
+ * are supported. The Replit reverse proxy passes large bodies through fine.
  */
 export function useUpload(options: UseUploadOptions = {}) {
   const [isUploading, setIsUploading] = useState(false);
@@ -32,51 +35,42 @@ export function useUpload(options: UseUploadOptions = {}) {
     setProgress(0);
 
     try {
-      // Step 1: request a presigned GCS URL from our server (JSON only, no file bytes)
-      const urlResp = await fetch("/api/storage/uploads/request-url", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: file.name,
-          size: file.size,
-          contentType: file.type || "application/octet-stream",
-        }),
-      });
-      if (!urlResp.ok) {
-        const body = await urlResp.json().catch(() => ({})) as { error?: string };
-        throw new Error(body.error ?? `Failed to get upload URL (${urlResp.status})`);
-      }
-      const { uploadURL, objectPath, metadata } = await urlResp.json() as UploadResponse;
-      setProgress(5);
-
-      // Step 2: PUT the file bytes directly to GCS (no Replit proxy involved)
-      // GCS bucket CORS is configured with Allow-Origin: * so this works from any origin.
-      await new Promise<void>((resolve, reject) => {
+      const result = await new Promise<UploadResponse>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
-        xhr.open("PUT", uploadURL);
+        xhr.open("POST", "/api/storage/uploads/upload");
         xhr.setRequestHeader("Content-Type", file.type || "application/octet-stream");
+        xhr.setRequestHeader("X-File-Name", encodeURIComponent(file.name));
 
         xhr.upload.onprogress = (e) => {
           if (e.lengthComputable) {
-            setProgress(5 + Math.round((e.loaded / e.total) * 92));
+            setProgress(Math.min(95, Math.round((e.loaded / e.total) * 95)));
           }
         };
 
         xhr.onload = () => {
           if (xhr.status >= 200 && xhr.status < 300) {
-            resolve();
+            try {
+              resolve(JSON.parse(xhr.responseText) as UploadResponse);
+            } catch {
+              reject(new Error("Invalid server response"));
+            }
           } else {
-            reject(new Error(`GCS upload failed (${xhr.status})`));
+            let msg = `Upload failed (${xhr.status})`;
+            try {
+              const body = JSON.parse(xhr.responseText) as { error?: string };
+              if (body.error) msg = body.error;
+            } catch { /* ignore */ }
+            reject(new Error(msg));
           }
         };
-        xhr.onerror = () => reject(new Error("Network error during upload"));
+
+        xhr.onerror = () => reject(new Error("Network error — check your connection and try again"));
         xhr.onabort = () => reject(new Error("Upload cancelled"));
 
         xhr.send(file);
       });
 
       setProgress(100);
-      const result: UploadResponse = { uploadURL, objectPath, metadata };
       optionsRef.current.onSuccess?.(result);
       return result;
     } catch (err) {
