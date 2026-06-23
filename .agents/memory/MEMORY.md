@@ -9,3 +9,4 @@
 - [Cotopia enforcement attribution](cotopia-enforcement-attribution.md) — automated actions use issuedByUserId=null + isAutomated=true; admin_audit_logs.adminUserId is NOT nullable so attribute system audit logs to the triggering admin
 - [Cotopia api-server test setup](cotopia-api-tests.md) — vitest+supertest suite hits real DB; needs NODE_ENV=production+LOG_LEVEL=silent or pino worker hangs; runs as `test` validation command
 - [Cotopia GitHub auto-push](cotopia-github-push.md) — post-commit hook at .git/hooks/post-commit auto-pushes to GitHub on every commit; Render auto-deploys from main branch; push uses +HEAD:main refspec (force, no --force flag)
+- [Cotopia ApiError shape](cotopia-api-error.md) — customFetch throws ApiError; error body is at err.data (not err.response.data); use err?.data?.error for server error strings in onError handlers
