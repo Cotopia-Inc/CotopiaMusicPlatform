@@ -10,8 +10,9 @@ import { useAuth } from "@/lib/auth";
 import { UserLink } from "@/components/user-link";
 import { RoleBadges } from "@/components/role-badges";
 import {
-  useFavoriteSong, useUnfavoriteSong, getGetSongQueryKey, useTrackAnalyticsEvent,
-  useRecordSongPlay, useRecordVideoView,
+  useFavoriteSong, useUnfavoriteSong, getGetSongQueryKey,
+  useFavoriteVideo, useUnfavoriteVideo, getGetVideoQueryKey,
+  useTrackAnalyticsEvent, useRecordSongPlay, useRecordVideoView,
 } from "@workspace/api-client-react";
 import { AddToPlaylist } from "@/components/add-to-playlist";
 import { useQueryClient } from "@tanstack/react-query";
@@ -29,7 +30,7 @@ export function Player() {
     track, isPlaying, currentTime, duration, volume,
     trackFavorited, nowPlayingOpen, isVideoTrack,
     queue, queueIndex, shuffle, repeat,
-    setTrackFavorited, togglePlay, seek, stop, skipNext, skipPrev,
+    setTrackFavorited, updateQueueTrackFavorited, togglePlay, seek, stop, skipNext, skipPrev,
     toggleShuffle, cycleRepeat, playAt, addToQueue, removeFromQueue,
     setVolume, setNowPlayingOpen, registerVideoElement, requestPiP,
   } = usePlayer();
@@ -47,8 +48,10 @@ export function Player() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const favoriteMutation = useFavoriteSong();
-  const unfavoriteMutation = useUnfavoriteSong();
+  const favoriteSongMutation = useFavoriteSong();
+  const unfavoriteSongMutation = useUnfavoriteSong();
+  const favoriteVideoMutation = useFavoriteVideo();
+  const unfavoriteVideoMutation = useUnfavoriteVideo();
   const trackEvent = useTrackAnalyticsEvent();
   const recordSongPlay = useRecordSongPlay();
   const recordVideoView = useRecordVideoView();
@@ -157,20 +160,46 @@ export function Player() {
       return;
     }
     const next = !trackFavorited;
+    const trackId = track.id;
     setTrackFavorited(next);
-    if (next) {
-      favoriteMutation.mutate({ id: track.id }, {
-        onError: () => { setTrackFavorited(!next); toast({ variant: "destructive", title: "Failed to favorite" }); },
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getGetSongQueryKey(track.id) });
-          trackEvent.mutate({ data: { eventType: "engagement", eventName: "favorite_added", contentType: "song", contentId: track.id } });
-        },
-      });
+    if (isVideoTrack) {
+      if (next) {
+        favoriteVideoMutation.mutate({ id: trackId }, {
+          onError: () => { setTrackFavorited(!next); toast({ variant: "destructive", title: "Failed to favorite" }); },
+          onSuccess: () => {
+            updateQueueTrackFavorited(trackId, true);
+            queryClient.invalidateQueries({ queryKey: getGetVideoQueryKey(trackId) });
+            trackEvent.mutate({ data: { eventType: "engagement", eventName: "favorite_added", contentType: "video", contentId: trackId } });
+          },
+        });
+      } else {
+        unfavoriteVideoMutation.mutate({ id: trackId }, {
+          onError: () => { setTrackFavorited(!next); toast({ variant: "destructive", title: "Failed to unfavorite" }); },
+          onSuccess: () => {
+            updateQueueTrackFavorited(trackId, false);
+            queryClient.invalidateQueries({ queryKey: getGetVideoQueryKey(trackId) });
+          },
+        });
+      }
     } else {
-      unfavoriteMutation.mutate({ id: track.id }, {
-        onError: () => { setTrackFavorited(!next); toast({ variant: "destructive", title: "Failed to unfavorite" }); },
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetSongQueryKey(track.id) }),
-      });
+      if (next) {
+        favoriteSongMutation.mutate({ id: trackId }, {
+          onError: () => { setTrackFavorited(!next); toast({ variant: "destructive", title: "Failed to favorite" }); },
+          onSuccess: () => {
+            updateQueueTrackFavorited(trackId, true);
+            queryClient.invalidateQueries({ queryKey: getGetSongQueryKey(trackId) });
+            trackEvent.mutate({ data: { eventType: "engagement", eventName: "favorite_added", contentType: "song", contentId: trackId } });
+          },
+        });
+      } else {
+        unfavoriteSongMutation.mutate({ id: trackId }, {
+          onError: () => { setTrackFavorited(!next); toast({ variant: "destructive", title: "Failed to unfavorite" }); },
+          onSuccess: () => {
+            updateQueueTrackFavorited(trackId, false);
+            queryClient.invalidateQueries({ queryKey: getGetSongQueryKey(trackId) });
+          },
+        });
+      }
     }
   };
 

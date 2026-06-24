@@ -42,6 +42,7 @@ interface PlayerContextValue {
   removeFromQueue: (index: number) => void;
   setVolume: (v: number) => void;
   setTrackFavorited: (v: boolean) => void;
+  updateQueueTrackFavorited: (trackId: number, favorited: boolean) => void;
   setNowPlayingOpen: (v: boolean) => void;
   registerVideoElement: (el: HTMLVideoElement | null) => void;
   requestPiP: () => Promise<void>;
@@ -345,6 +346,18 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const updateQueueTrackFavorited = useCallback((trackId: number, favorited: boolean) => {
+    // Update the queue array so switching back to this track shows the correct heart state
+    const updated = queueRef.current.map(t =>
+      t.id === trackId ? { ...t, isFavorited: favorited } : t
+    );
+    setQueue(updated);
+    // Also patch the live trackRef so nothing reads stale data mid-session
+    if (trackRef.current?.id === trackId) {
+      trackRef.current = { ...trackRef.current, isFavorited: favorited };
+    }
+  }, []);
+
   const requestPiP = useCallback(async () => {
     if (!videoElRef.current || !document.pictureInPictureEnabled) return;
     try {
@@ -361,7 +374,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       queue, queueIndex, shuffle, repeat,
       play, playAt, togglePlay, seek, stop, skipNext, skipPrev,
       toggleShuffle, cycleRepeat, addToQueue, removeFromQueue,
-      setVolume, setTrackFavorited, setNowPlayingOpen,
+      setVolume, setTrackFavorited, updateQueueTrackFavorited, setNowPlayingOpen,
       registerVideoElement, requestPiP, audioRef,
     }}>
       {children}
