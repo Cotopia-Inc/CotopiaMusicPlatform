@@ -100,7 +100,7 @@ export default function AdminMembers() {
   const { user } = useAuth();
   const { toast } = useToast();
   const qc = useQueryClient();
-  const isAdmin = (user as any)?.role === "master_admin";
+  const isAdmin = ["admin", "master_admin"].includes((user as any)?.role ?? "");
 
   const { data: directory = [] } = useQuery<DirectoryUser[]>({
     queryKey: ["admin-user-directory"],

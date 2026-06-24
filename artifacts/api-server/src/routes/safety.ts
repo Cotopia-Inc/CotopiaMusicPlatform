@@ -527,7 +527,7 @@ router.patch("/admin/enforcement/:id/lift", requireAuth, requireRole(...ADMIN_RO
 
 // ── Verification (artist/label) ────────────────────────────────────────────
 
-router.post("/admin/verification", requireAuth, requireRole("master_admin"), async (req: AuthRequest, res): Promise<void> => {
+router.post("/admin/verification", requireAuth, requireRole(...ADMIN_ROLES), async (req: AuthRequest, res): Promise<void> => {
   const { userId, verified, verificationType } = req.body as {
     userId?: number; verified?: boolean; verificationType?: string | null;
   };
