@@ -21,6 +21,7 @@ import {
   ArrowUpCircle, CornerUpLeft, Scale, StickyNote, Star, Send, Trash2,
 } from "lucide-react";
 import { CopyrightStrikeModal, type StrikeTarget } from "@/components/copyright-strike-modal";
+import { RoleTag } from "@/components/role-badges";
 
 type Mode = "moderator" | "admin" | "editor";
 
@@ -103,6 +104,7 @@ interface Sub {
   type: string;
   title: string;
   submitterName?: string;
+  submitterRole?: string;
   userId: number;
   status: string;
   paymentStatus?: string;
@@ -211,6 +213,9 @@ function SubmissionCard({
           </div>
           <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
             <span>{sub.submitterName || `User ${sub.userId}`}</span>
+            {sub.submitterRole && (
+              <RoleTag role={sub.submitterRole as any} size="sm" />
+            )}
             <span>·</span>
             <span>{format(new Date(sub.createdAt), 'MMM d, yyyy')}</span>
             <span>·</span>

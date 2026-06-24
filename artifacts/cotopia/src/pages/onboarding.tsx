@@ -85,7 +85,7 @@ export default function Onboarding() {
           old ? { ...old, demographicsCompleted: true } : old
         );
         setDone(true);
-        setLocation("/");
+        setTimeout(() => setLocation("/"), 1500);
       },
       onError: () => toast({ variant: "destructive", title: "Could not save", description: "Please try again." }),
     });

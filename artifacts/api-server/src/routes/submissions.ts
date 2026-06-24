@@ -13,7 +13,7 @@ import { publishContent } from "../lib/publisher";
 const router = Router();
 
 async function enrichSubmission(s: typeof submissionsTable.$inferSelect) {
-  const [user] = await db.select({ username: usersTable.username }).from(usersTable).where(eq(usersTable.id, s.userId)).limit(1);
+  const [user] = await db.select({ username: usersTable.username, role: usersTable.role }).from(usersTable).where(eq(usersTable.id, s.userId)).limit(1);
   let title = "";
   let mediaUrl: string | null = null;
   let coverUrl: string | null = null;
@@ -30,7 +30,7 @@ async function enrichSubmission(s: typeof submissionsTable.$inferSelect) {
       coverUrl = video?.thumbnailUrl ?? null;
     }
   }
-  return { ...s, submitterName: user?.username ?? "", title, mediaUrl, coverUrl };
+  return { ...s, submitterName: user?.username ?? "", submitterRole: user?.role ?? "", title, mediaUrl, coverUrl };
 }
 
 router.get("/submissions", requireAuth, async (req: AuthRequest, res): Promise<void> => {
