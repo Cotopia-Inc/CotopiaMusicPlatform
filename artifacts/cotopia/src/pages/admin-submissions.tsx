@@ -44,63 +44,13 @@ function statusBadge(status: string) {
   return <Badge variant="outline" className={`text-[10px] uppercase tracking-widest border ${s.className}`}>{s.label}</Badge>;
 }
 
-function AudioPreview({ url, coverUrl, title }: { url: string; coverUrl?: string | null; title: string }) {
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const [playing, setPlaying] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [mediaError, setMediaError] = useState(false);
-
-  const toggle = () => {
-    const el = audioRef.current;
-    if (!el || mediaError) return;
-    if (playing) { el.pause(); setPlaying(false); }
-    else { el.play().catch(() => setMediaError(true)); }
-  };
-
-  if (mediaError) {
-    return (
-      <div className="flex items-center gap-3 bg-secondary/40 rounded-xl p-3 mt-3">
-        <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-secondary flex items-center justify-center">
-          <Music className="w-5 h-5 text-muted-foreground/50" />
-        </div>
-        <p className="text-xs text-muted-foreground italic">Audio file unavailable — resubmit to generate a new playable file.</p>
-      </div>
-    );
-  }
-
+function AudioProgressBar({ progress, mediaError }: { progress: number; mediaError: boolean }) {
+  if (mediaError) return (
+    <p className="text-xs text-muted-foreground italic">Audio unavailable — resubmit to generate a new playable file.</p>
+  );
   return (
-    <div className="flex items-center gap-3 bg-secondary/40 rounded-xl p-3 mt-3">
-      <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-secondary">
-        {coverUrl
-          ? <img src={coverUrl} alt={title} className="w-full h-full object-cover" />
-          : <div className="w-full h-full flex items-center justify-center"><Music className="w-5 h-5 text-muted-foreground/50" /></div>}
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium truncate mb-1.5">{title}</p>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={toggle}
-            className="w-7 h-7 rounded-full bg-primary flex items-center justify-center flex-shrink-0 hover:bg-primary/90 transition-colors"
-          >
-            {playing
-              ? <Pause className="w-3 h-3 text-primary-foreground fill-current" />
-              : <Play className="w-3 h-3 text-primary-foreground fill-current ml-0.5" />}
-          </button>
-          <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
-            <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${progress}%` }} />
-          </div>
-        </div>
-      </div>
-      <audio
-        ref={audioRef}
-        src={url}
-        onTimeUpdate={(e) => {
-          const el = e.currentTarget;
-          if (el.duration) setProgress((el.currentTime / el.duration) * 100);
-        }}
-        onEnded={() => { setPlaying(false); setProgress(0); }}
-        onError={() => { setMediaError(true); setPlaying(false); }}
-      />
+    <div className="w-full h-1.5 bg-secondary rounded-full overflow-hidden">
+      <div className="h-full bg-primary rounded-full transition-all duration-100" style={{ width: `${progress}%` }} />
     </div>
   );
 }
@@ -184,6 +134,22 @@ function SubmissionCard({
   const [strikeTarget, setStrikeTarget] = useState<StrikeTarget | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
+  // Audio state — lifted to card level so play button works without expanding
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [playing, setPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [mediaError, setMediaError] = useState(false);
+
+  const isSong = sub.type === "song" && !!sub.mediaUrl;
+
+  const togglePlay = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const el = audioRef.current;
+    if (!el || mediaError) return;
+    if (playing) { el.pause(); setPlaying(false); }
+    else { el.play().catch(() => { setMediaError(true); setPlaying(false); }); setPlaying(true); }
+  };
+
   const isModeratorQueue = sub.status === "pending_moderator_review";
   const isTerminal = TERMINAL.includes(sub.status);
   const isRejected = sub.status === "rejected" || sub.status === "moderator_rejected";
@@ -196,14 +162,44 @@ function SubmissionCard({
 
   return (
     <div className="bg-card border border-border rounded-2xl overflow-hidden transition-all">
+      {/* Hidden audio element — always mounted when song has media */}
+      {isSong && (
+        <audio
+          ref={audioRef}
+          src={sub.mediaUrl!}
+          onTimeUpdate={(e) => {
+            const el = e.currentTarget;
+            if (el.duration) setProgress((el.currentTime / el.duration) * 100);
+          }}
+          onPlay={() => setPlaying(true)}
+          onPause={() => setPlaying(false)}
+          onEnded={() => { setPlaying(false); setProgress(0); }}
+          onError={() => { setMediaError(true); setPlaying(false); }}
+        />
+      )}
+
       {/* Header row */}
       <div className="flex items-center gap-4 px-5 py-4">
-        <div className="w-11 h-11 rounded-lg overflow-hidden flex-shrink-0 bg-secondary">
-          {sub.coverUrl
-            ? <img src={sub.coverUrl} alt={sub.title} className="w-full h-full object-cover" />
-            : sub.type === "song"
-              ? <div className="w-full h-full flex items-center justify-center"><Music className="w-4 h-4 text-muted-foreground/50" /></div>
-              : <div className="w-full h-full flex items-center justify-center"><Video className="w-4 h-4 text-muted-foreground/50" /></div>}
+        {/* Cover + inline play button for songs */}
+        <div className="relative flex-shrink-0">
+          <div className="w-11 h-11 rounded-lg overflow-hidden bg-secondary">
+            {sub.coverUrl
+              ? <img src={sub.coverUrl} alt={sub.title} className="w-full h-full object-cover" />
+              : sub.type === "song"
+                ? <div className="w-full h-full flex items-center justify-center"><Music className="w-4 h-4 text-muted-foreground/50" /></div>
+                : <div className="w-full h-full flex items-center justify-center"><Video className="w-4 h-4 text-muted-foreground/50" /></div>}
+          </div>
+          {isSong && !mediaError && (
+            <button
+              onClick={togglePlay}
+              className="absolute inset-0 rounded-lg flex items-center justify-center bg-black/50 opacity-0 hover:opacity-100 transition-opacity"
+              title={playing ? "Pause" : "Play"}
+            >
+              {playing
+                ? <Pause className="w-4 h-4 text-white fill-current" />
+                : <Play className="w-4 h-4 text-white fill-current ml-0.5" />}
+            </button>
+          )}
         </div>
 
         <div className="flex-1 min-w-0">
@@ -220,6 +216,12 @@ function SubmissionCard({
             <span>·</span>
             {statusBadge(sub.status)}
           </div>
+          {/* Inline progress bar — visible while playing */}
+          {isSong && playing && !mediaError && (
+            <div className="mt-1.5 w-full h-1 bg-secondary rounded-full overflow-hidden">
+              <div className="h-full bg-primary rounded-full transition-all duration-100" style={{ width: `${progress}%` }} />
+            </div>
+          )}
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
@@ -270,8 +272,22 @@ function SubmissionCard({
       {/* Expandable preview + notes + actions */}
       {expanded && (
         <div className="px-5 pb-5 border-t border-border/40 pt-4 space-y-4">
-          {sub.mediaUrl && sub.type === "song" && (
-            <AudioPreview url={sub.mediaUrl} coverUrl={sub.coverUrl} title={sub.title} />
+          {isSong && (
+            <div className="flex items-center gap-3 bg-secondary/40 rounded-xl p-3">
+              <button
+                onClick={togglePlay}
+                disabled={mediaError}
+                className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0 hover:bg-primary/90 transition-colors disabled:opacity-40"
+              >
+                {playing
+                  ? <Pause className="w-3.5 h-3.5 text-primary-foreground fill-current" />
+                  : <Play className="w-3.5 h-3.5 text-primary-foreground fill-current ml-0.5" />}
+              </button>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium truncate mb-1.5">{sub.title}</p>
+                <AudioProgressBar progress={progress} mediaError={mediaError} />
+              </div>
+            </div>
           )}
           {sub.mediaUrl && sub.type === "video" && (
             <VideoPreview url={sub.mediaUrl} coverUrl={sub.coverUrl} title={sub.title} />
