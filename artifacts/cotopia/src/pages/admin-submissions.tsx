@@ -47,13 +47,25 @@ function AudioPreview({ url, coverUrl, title }: { url: string; coverUrl?: string
   const audioRef = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [mediaError, setMediaError] = useState(false);
 
   const toggle = () => {
     const el = audioRef.current;
-    if (!el) return;
+    if (!el || mediaError) return;
     if (playing) { el.pause(); setPlaying(false); }
-    else { el.play(); setPlaying(true); }
+    else { el.play().catch(() => setMediaError(true)); }
   };
+
+  if (mediaError) {
+    return (
+      <div className="flex items-center gap-3 bg-secondary/40 rounded-xl p-3 mt-3">
+        <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-secondary flex items-center justify-center">
+          <Music className="w-5 h-5 text-muted-foreground/50" />
+        </div>
+        <p className="text-xs text-muted-foreground italic">Audio file unavailable — resubmit to generate a new playable file.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center gap-3 bg-secondary/40 rounded-xl p-3 mt-3">
@@ -86,6 +98,7 @@ function AudioPreview({ url, coverUrl, title }: { url: string; coverUrl?: string
           if (el.duration) setProgress((el.currentTime / el.duration) * 100);
         }}
         onEnded={() => { setPlaying(false); setProgress(0); }}
+        onError={() => { setMediaError(true); setPlaying(false); }}
       />
     </div>
   );
@@ -93,6 +106,18 @@ function AudioPreview({ url, coverUrl, title }: { url: string; coverUrl?: string
 
 function VideoPreview({ url, coverUrl, title }: { url: string; coverUrl?: string | null; title: string }) {
   const [revealed, setRevealed] = useState(false);
+  const [mediaError, setMediaError] = useState(false);
+
+  if (mediaError) {
+    return (
+      <div className="mt-3 flex items-center gap-3 bg-secondary/40 rounded-xl p-3">
+        <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
+          <Video className="w-4 h-4 text-muted-foreground/50" />
+        </div>
+        <p className="text-xs text-muted-foreground italic">Video file unavailable — resubmit to generate a new playable file.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="mt-3">
@@ -114,7 +139,8 @@ function VideoPreview({ url, coverUrl, title }: { url: string; coverUrl?: string
         </button>
       ) : (
         <div className="rounded-xl overflow-hidden bg-black aspect-video">
-          <video src={url} controls autoPlay className="w-full h-full" />
+          <video src={url} controls autoPlay className="w-full h-full"
+            onError={() => setMediaError(true)} />
         </div>
       )}
     </div>
