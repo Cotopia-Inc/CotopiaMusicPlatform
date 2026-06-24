@@ -196,6 +196,7 @@ export function Sidebar() {
   const editorLinks = [
     { href: "/editor", label: "Editor Dashboard", icon: BookOpen },
     { href: "/editor/playlists", label: "Editorial Playlists", icon: ListMusic },
+    { href: "/admin/submissions", label: "Review Submissions", icon: FileText },
     { href: "/admin/discover", label: "Discover Curation", icon: Sparkles },
   ];
 

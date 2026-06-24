@@ -405,9 +405,9 @@ router.get("/users/search", async (req, res): Promise<void> => {
 });
 
 // ── Get public user ────────────────────────────────────────────────────────
-router.get("/users/:id", async (req, res): Promise<void> => {
+router.get("/users/:id", async (req, res, next): Promise<void> => {
   const id = Number(req.params.id);
-  if (!id) { res.status(400).json({ error: "Invalid id" }); return; }
+  if (isNaN(id) || id <= 0) { next(); return; }  // non-numeric — let other routers handle
 
   const [row] = await db
     .select({
