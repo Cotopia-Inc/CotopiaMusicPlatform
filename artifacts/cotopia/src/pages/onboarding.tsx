@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Radio, UserCheck, ChevronRight } from "lucide-react";
+import { Radio, UserCheck, ChevronRight, Home } from "lucide-react";
 
 const US_STATES = ["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY","DC"];
 const RACE_OPTIONS = ["American Indian or Alaska Native","Asian","Black or African American","Hispanic or Latino","Middle Eastern or North African","Native Hawaiian or Other Pacific Islander","White","Two or More Races","Prefer not to say","Other"];
@@ -51,6 +51,7 @@ export default function Onboarding() {
 
   const [errors, setErrors] = useState<Partial<Record<FormKey, string>>>({});
   const [submitted, setSubmitted] = useState(false);
+  const [done, setDone] = useState(false);
 
   const set = (k: FormKey, v: string) => {
     setForm(prev => ({ ...prev, [k]: v }));
@@ -83,6 +84,7 @@ export default function Onboarding() {
         queryClient.setQueryData(getGetMeQueryKey(), (old: any) =>
           old ? { ...old, demographicsCompleted: true } : old
         );
+        setDone(true);
         setLocation("/");
       },
       onError: () => toast({ variant: "destructive", title: "Could not save", description: "Please try again." }),
@@ -204,6 +206,16 @@ export default function Onboarding() {
 
         <Button onClick={handleSubmit} className="w-full gap-2 h-11 font-semibold" disabled={saveMutation.isPending}>
           {saveMutation.isPending ? "Saving…" : <><span>Save & Continue</span><ChevronRight className="w-4 h-4" /></>}
+        </Button>
+
+        <Button
+          variant="outline"
+          className="w-full gap-2 h-11 font-semibold"
+          disabled={!done}
+          onClick={() => setLocation("/")}
+        >
+          <Home className="w-4 h-4" />
+          {done ? "Go to Home" : "Complete the form to continue"}
         </Button>
       </div>
     </div>
