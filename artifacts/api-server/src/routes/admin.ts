@@ -1192,11 +1192,37 @@ router.post("/admin/broadcast", requireAuth, requireRole(...ADMIN_ROLES), async 
 // Lightweight user directory for populating the copyright-concern "User Name" picker.
 // Moderators need this to escalate concerns, so it is intentionally broader than the
 // admin-only GET /admin/users (which exposes more sensitive fields).
-router.get("/admin/user-directory", requireAuth, requireRole(...ADMIN_ROLES, "moderator"), async (_req: AuthRequest, res): Promise<void> => {
-  const rows = await db
-    .select({ id: usersTable.id, username: usersTable.username, role: usersTable.role })
+router.get("/admin/user-directory", requireAuth, requireRole(...ADMIN_ROLES, "moderator"), async (req: AuthRequest, res): Promise<void> => {
+  const search = req.query.search ? String(req.query.search).trim() : "";
+  const limit = req.query.limit ? Math.min(Number(req.query.limit), 50) : undefined;
+
+  let query = db
+    .select({
+      id: usersTable.id,
+      username: usersTable.username,
+      displayName: usersTable.displayName,
+      role: usersTable.role,
+      isVerified: usersTable.isVerified,
+      verificationType: usersTable.verificationType,
+      isSuspended: usersTable.isSuspended,
+      isBanned: usersTable.isBanned,
+    })
     .from(usersTable)
-    .orderBy(usersTable.username);
+    .$dynamic();
+
+  if (search) {
+    query = query.where(
+      or(
+        ilike(usersTable.username, `%${search}%`),
+        ilike(usersTable.displayName, `%${search}%`),
+      )
+    );
+  }
+
+  query = query.orderBy(usersTable.username);
+  if (limit) query = query.limit(limit);
+
+  const rows = await query;
   res.json(rows);
 });
 

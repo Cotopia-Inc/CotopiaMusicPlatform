@@ -113,10 +113,10 @@ export default function AdminEnforcement() {
     if (!q.trim()) { setSearchResults([]); return; }
     setSearching(true);
     try {
-      const res = await fetch(`${import.meta.env.BASE_URL}api/admin/users?search=${encodeURIComponent(q)}&limit=8`, { headers: authHeaders() });
+      const res = await fetch(`${import.meta.env.BASE_URL}api/admin/user-directory?search=${encodeURIComponent(q)}&limit=8`, { headers: authHeaders() });
       if (!res.ok) throw new Error();
       const data = await res.json();
-      setSearchResults(data.items ?? data ?? []);
+      setSearchResults(Array.isArray(data) ? data : []);
     } catch {
       setSearchResults([]);
     } finally {

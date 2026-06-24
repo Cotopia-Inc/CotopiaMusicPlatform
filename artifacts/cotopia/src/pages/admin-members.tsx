@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -96,8 +97,10 @@ function UserPicker({
 }
 
 export default function AdminMembers() {
+  const { user } = useAuth();
   const { toast } = useToast();
   const qc = useQueryClient();
+  const isAdmin = ["admin", "master_admin"].includes((user as any)?.role ?? "");
 
   const { data: directory = [] } = useQuery<DirectoryUser[]>({
     queryKey: ["admin-user-directory"],
@@ -286,54 +289,56 @@ export default function AdminMembers() {
           </CardContent>
         </Card>
 
-        {/* Verification */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <BadgeCheck className="w-4 h-4 text-primary" /> Verification
-            </CardTitle>
-            <CardDescription className="text-xs">
-              Grant or revoke verified status for artists and labels.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-xs text-muted-foreground">User <span className="text-red-400">*</span></label>
-              <UserPicker users={directory} value={verifyUserId} onChange={setVerifyUserId} />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs text-muted-foreground">Verification Type</label>
-              <Select value={verificationType} onValueChange={v => setVerificationType(v as VerificationType)}>
-                <SelectTrigger className="bg-secondary/50 border-secondary text-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="artist">Artist</SelectItem>
-                  <SelectItem value="label">Label</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                className="flex-1 gap-1.5"
-                disabled={verifyUserId === null || verifyMutation.isPending}
-                onClick={() => verifyMutation.mutate(true)}
-              >
-                {verifyMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <BadgeCheck className="w-4 h-4" />}
-                Grant Verification
-              </Button>
-              <Button
-                variant="outline"
-                className="flex-1 gap-1.5"
-                disabled={verifyUserId === null || verifyMutation.isPending}
-                onClick={() => verifyMutation.mutate(false)}
-              >
-                <ShieldOff className="w-4 h-4" />
-                Revoke
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Verification — admin/master_admin only */}
+        {isAdmin && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <BadgeCheck className="w-4 h-4 text-primary" /> Verification
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Grant or revoke verified status for artists and labels.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs text-muted-foreground">User <span className="text-red-400">*</span></label>
+                <UserPicker users={directory} value={verifyUserId} onChange={setVerifyUserId} />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs text-muted-foreground">Verification Type</label>
+                <Select value={verificationType} onValueChange={v => setVerificationType(v as VerificationType)}>
+                  <SelectTrigger className="bg-secondary/50 border-secondary text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="artist">Artist</SelectItem>
+                    <SelectItem value="label">Label</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  className="flex-1 gap-1.5"
+                  disabled={verifyUserId === null || verifyMutation.isPending}
+                  onClick={() => verifyMutation.mutate(true)}
+                >
+                  {verifyMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <BadgeCheck className="w-4 h-4" />}
+                  Grant Verification
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-1 gap-1.5"
+                  disabled={verifyUserId === null || verifyMutation.isPending}
+                  onClick={() => verifyMutation.mutate(false)}
+                >
+                  <ShieldOff className="w-4 h-4" />
+                  Revoke
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Enforcement history */}
