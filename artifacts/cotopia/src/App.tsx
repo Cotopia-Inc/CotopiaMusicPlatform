@@ -299,7 +299,7 @@ function Router() {
         <RoleRoute roles={ADMIN_ROLES}><AdminUploadVideo /></RoleRoute>
       </Route>
       <Route path="/admin/submissions">
-        <RoleRoute roles={[...ADMIN_ROLES, "editor"]}><AdminSubmissions /></RoleRoute>
+        <RoleRoute roles={ADMIN_ROLES}><AdminSubmissions /></RoleRoute>
       </Route>
       <Route path="/admin/songs">
         <RoleRoute roles={ADMIN_ROLES}><AdminSongs /></RoleRoute>
