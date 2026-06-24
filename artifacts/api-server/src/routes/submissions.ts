@@ -15,16 +15,22 @@ const router = Router();
 async function enrichSubmission(s: typeof submissionsTable.$inferSelect) {
   const [user] = await db.select({ username: usersTable.username }).from(usersTable).where(eq(usersTable.id, s.userId)).limit(1);
   let title = "";
+  let mediaUrl: string | null = null;
+  let coverUrl: string | null = null;
   if (s.contentId) {
     if (s.type === "song") {
-      const [song] = await db.select({ title: songsTable.title }).from(songsTable).where(eq(songsTable.id, s.contentId)).limit(1);
+      const [song] = await db.select({ title: songsTable.title, streamUrl: songsTable.streamUrl, coverUrl: songsTable.coverUrl }).from(songsTable).where(eq(songsTable.id, s.contentId)).limit(1);
       title = song?.title ?? "";
+      mediaUrl = song?.streamUrl ?? null;
+      coverUrl = song?.coverUrl ?? null;
     } else {
-      const [video] = await db.select({ title: videosTable.title }).from(videosTable).where(eq(videosTable.id, s.contentId)).limit(1);
+      const [video] = await db.select({ title: videosTable.title, videoUrl: videosTable.videoUrl, thumbnailUrl: videosTable.thumbnailUrl }).from(videosTable).where(eq(videosTable.id, s.contentId)).limit(1);
       title = video?.title ?? "";
+      mediaUrl = video?.videoUrl ?? null;
+      coverUrl = video?.thumbnailUrl ?? null;
     }
   }
-  return { ...s, submitterName: user?.username ?? "", title };
+  return { ...s, submitterName: user?.username ?? "", title, mediaUrl, coverUrl };
 }
 
 router.get("/submissions", requireAuth, async (req: AuthRequest, res): Promise<void> => {
@@ -228,6 +234,15 @@ router.patch("/submissions/:id", requireAuth, async (req: AuthRequest, res): Pro
     return;
   }
 
+  const [existingBeforeUpdate] = await db.select().from(submissionsTable).where(eq(submissionsTable.id, params.data.id)).limit(1);
+
+  // Payment guard: admins cannot approve or publish an unpaid submission.
+  const isApprovalAction = parsed.data.status === "approved" || parsed.data.status === "published";
+  if (isApprovalAction && existingBeforeUpdate.paymentStatus !== "paid") {
+    res.status(403).json({ error: "This submission has not been paid for and cannot be approved or published." });
+    return;
+  }
+
   const [submission] = await db.update(submissionsTable)
     .set({ ...parsed.data })
     .where(eq(submissionsTable.id, params.data.id))
@@ -362,6 +377,15 @@ router.post("/submissions/:id/review", requireAuth, async (req: AuthRequest, res
   const TERMINAL = ["published", "rejected", "moderator_rejected"];
   const MOD_STATE_CHANGING = ["moderator_approve", "moderator_reject", "escalate"];
   const ADMIN_STATE_CHANGING = ["admin_publish", "admin_reject", "return_to_moderator"];
+
+  // Payment guard: no state-changing review action is allowed on an unpaid submission.
+  // This closes the loophole where an admin could publish a draft that never went through payment.
+  const ALL_STATE_CHANGING = [...MOD_STATE_CHANGING, ...ADMIN_STATE_CHANGING];
+  if (ALL_STATE_CHANGING.includes(action) && submission.paymentStatus !== "paid") {
+    res.status(403).json({ error: "This submission has not been paid for and cannot enter the review workflow." });
+    return;
+  }
+
   if (MOD_STATE_CHANGING.includes(action) && submission.status !== "pending_moderator_review") {
     res.status(409).json({ error: "This submission is no longer awaiting moderator review." });
     return;
