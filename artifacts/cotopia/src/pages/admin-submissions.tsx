@@ -2,6 +2,7 @@ import {
   useAdminListSubmissions,
   getAdminListSubmissionsQueryKey,
   useReviewSubmission,
+  useDeleteSubmission,
   type SubmissionReviewInputAction,
   type AdminListSubmissionsStatus,
 } from "@workspace/api-client-react";
@@ -17,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import {
   Play, Pause, ChevronDown, ChevronUp, Music, Video,
   CheckCircle, XCircle, Clock, AlertCircle, AlertTriangle,
-  ArrowUpCircle, CornerUpLeft, Scale, StickyNote, Star, Send,
+  ArrowUpCircle, CornerUpLeft, Scale, StickyNote, Star, Send, Trash2,
 } from "lucide-react";
 import { CopyrightStrikeModal, type StrikeTarget } from "@/components/copyright-strike-modal";
 
@@ -169,19 +170,23 @@ function SubmissionCard({
   sub,
   mode,
   onAction,
+  onDelete,
   isPending,
 }: {
   sub: Sub;
   mode: Mode;
   onAction: (id: number, action: SubmissionReviewInputAction, notes: string) => void;
+  onDelete: (id: number) => void;
   isPending: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [notes, setNotes] = useState("");
   const [strikeTarget, setStrikeTarget] = useState<StrikeTarget | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const isModeratorQueue = sub.status === "pending_moderator_review";
   const isTerminal = TERMINAL.includes(sub.status);
+  const isRejected = sub.status === "rejected" || sub.status === "moderator_rejected";
   const showModeratorActions = mode === "moderator" && isModeratorQueue;
   const showAdminActions = mode === "admin" && !isTerminal;
   const showEditorActions = mode === "editor";
@@ -217,14 +222,49 @@ function SubmissionCard({
           </div>
         </div>
 
-        <Button
-          variant="outline"
-          size="sm"
-          className="gap-1.5 text-xs border-border/60 hover:bg-secondary"
-          onClick={() => setExpanded(!expanded)}
-        >
-          {expanded ? <><ChevronUp className="w-3 h-3" /> Hide</> : <><ChevronDown className="w-3 h-3" /> Details</>}
-        </Button>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {isRejected && (
+            confirmDelete ? (
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11px] text-red-400">Delete?</span>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="h-7 px-2 text-xs"
+                  onClick={() => onDelete(sub.id)}
+                >
+                  Yes
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 px-2 text-xs border-border/60"
+                  onClick={() => setConfirmDelete(false)}
+                >
+                  No
+                </Button>
+              </div>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 w-7 p-0 text-muted-foreground hover:text-red-400 hover:bg-red-500/10"
+                onClick={() => setConfirmDelete(true)}
+                title="Delete submission"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </Button>
+            )
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 text-xs border-border/60 hover:bg-secondary"
+            onClick={() => setExpanded(!expanded)}
+          >
+            {expanded ? <><ChevronUp className="w-3 h-3" /> Hide</> : <><ChevronDown className="w-3 h-3" /> Details</>}
+          </Button>
+        </div>
       </div>
 
       {/* Expandable preview + notes + actions */}
@@ -399,8 +439,12 @@ export default function AdminSubmissions() {
   );
 
   const reviewMutation = useReviewSubmission();
+  const deleteMutation = useDeleteSubmission();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
+
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["adminListSubmissions"] });
 
   const handleAction = (id: number, action: SubmissionReviewInputAction, notes: string) => {
     reviewMutation.mutate(
@@ -408,7 +452,7 @@ export default function AdminSubmissions() {
       {
         onSuccess: () => {
           toast({ title: ACTION_TOAST[action] });
-          queryClient.invalidateQueries({ queryKey: ["adminListSubmissions"] });
+          invalidate();
         },
         onError: (err: unknown) => {
           const msg = err instanceof Error ? err.message : "Action failed";
@@ -417,6 +461,43 @@ export default function AdminSubmissions() {
       }
     );
   };
+
+  const handleDelete = (id: number) => {
+    deleteMutation.mutate(
+      { id },
+      {
+        onSuccess: () => {
+          toast({ title: "Submission deleted" });
+          invalidate();
+        },
+        onError: () => {
+          toast({ title: "Delete failed", variant: "destructive" });
+        },
+      }
+    );
+  };
+
+  const handleDeleteAll = async () => {
+    if (!data?.length) return;
+    const ids = data.map((s) => s.id);
+    let failed = 0;
+    for (const id of ids) {
+      try {
+        await deleteMutation.mutateAsync({ id });
+      } catch {
+        failed++;
+      }
+    }
+    invalidate();
+    setConfirmDeleteAll(false);
+    if (failed === 0) {
+      toast({ title: `Deleted ${ids.length} submission${ids.length !== 1 ? "s" : ""}` });
+    } else {
+      toast({ title: `Deleted ${ids.length - failed} of ${ids.length}`, description: `${failed} failed`, variant: "destructive" });
+    }
+  };
+
+  const isRejectedTab = statusFilter === "rejected" || statusFilter === "moderator_rejected";
 
   const heading = mode === "moderator"
     ? { tag: "Moderator", title: "Review Submissions", desc: "Approve for admin review, reject spam, or escalate. Moderators cannot publish content." }
@@ -433,11 +514,11 @@ export default function AdminSubmissions() {
       </div>
 
       {/* Status tabs */}
-      <div className="flex gap-2 flex-wrap">
+      <div className="flex items-center gap-2 flex-wrap">
         {tabs.map(({ value, label, icon: Icon }) => (
           <button
             key={value}
-            onClick={() => setStatusFilter(value)}
+            onClick={() => { setStatusFilter(value); setConfirmDeleteAll(false); }}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
               statusFilter === value
                 ? "bg-primary text-primary-foreground"
@@ -452,6 +533,46 @@ export default function AdminSubmissions() {
           <span className="flex items-center px-3 py-2 text-xs text-muted-foreground">
             {data.length} result{data.length !== 1 ? "s" : ""}
           </span>
+        )}
+
+        {/* Delete all — only shown on rejected tabs with results */}
+        {isRejectedTab && data && data.length > 0 && (
+          <div className="ml-auto flex items-center gap-2">
+            {confirmDeleteAll ? (
+              <>
+                <span className="text-xs text-red-400">Delete all {data.length}?</span>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="gap-1.5 text-xs"
+                  onClick={handleDeleteAll}
+                  disabled={deleteMutation.isPending}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  {deleteMutation.isPending ? "Deleting…" : "Yes, delete all"}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs border-border/60"
+                  onClick={() => setConfirmDeleteAll(false)}
+                  disabled={deleteMutation.isPending}
+                >
+                  Cancel
+                </Button>
+              </>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-xs text-red-400 border-red-500/30 hover:bg-red-500/10"
+                onClick={() => setConfirmDeleteAll(true)}
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Delete All
+              </Button>
+            )}
+          </div>
         )}
       </div>
 
@@ -477,6 +598,7 @@ export default function AdminSubmissions() {
               sub={sub as Sub}
               mode={mode}
               onAction={handleAction}
+              onDelete={handleDelete}
               isPending={reviewMutation.isPending}
             />
           ))
