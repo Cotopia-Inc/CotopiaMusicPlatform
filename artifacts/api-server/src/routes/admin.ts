@@ -1364,12 +1364,18 @@ router.post("/admin/artists/:id/assign", requireAuth, requireRole(...ADMIN_ROLES
   const prevUserId = artist.userId;
   await db.update(artistsTable).set({ userId }).where(eq(artistsTable.id, artistId));
 
+  // Upgrade role to artist only if the target is a plain listener —
+  // never downgrade staff or existing business roles.
+  if (targetUser.role === "listener") {
+    await db.update(usersTable).set({ role: "artist" }).where(eq(usersTable.id, userId));
+  }
+
   req.log.info(
-    { artistId, prevUserId, newUserId: userId, assignedBy: req.user!.userId },
+    { artistId, prevUserId, newUserId: userId, assignedBy: req.user!.userId, roleUpgraded: targetUser.role === "listener" },
     "Admin manually assigned artist profile to user",
   );
 
-  res.json({ success: true, artistId, assignedTo: { id: targetUser.id, username: targetUser.username } });
+  res.json({ success: true, artistId, assignedTo: { id: targetUser.id, username: targetUser.username, roleUpgraded: targetUser.role === "listener" } });
 });
 
 // ── Broadcasts ───────────────────────────────────────────────────────────────

@@ -232,9 +232,9 @@ router.post("/artists/:id/claim", requireAuth, async (req: AuthRequest, res): Pr
     return;
   }
 
-  // Look up the caller's username to compare against the stage name
+  // Look up the caller's username and role to compare against the stage name
   const [callerUser] = await db
-    .select({ username: usersTable.username })
+    .select({ username: usersTable.username, role: usersTable.role })
     .from(usersTable)
     .where(eq(usersTable.id, req.user!.userId))
     .limit(1);
@@ -260,8 +260,22 @@ router.post("/artists/:id/claim", requireAuth, async (req: AuthRequest, res): Pr
     .set({ userId: req.user!.userId })
     .where(eq(artistsTable.id, artist.id));
 
+  // Upgrade role to artist only if the user is currently a plain listener —
+  // never downgrade staff or existing business roles.
+  if (callerUser.role === "listener") {
+    await db
+      .update(usersTable)
+      .set({ role: "artist" })
+      .where(eq(usersTable.id, req.user!.userId));
+  }
+
   req.log.info(
-    { artistId: artist.id, prevUserId: artist.userId, newUserId: req.user!.userId },
+    {
+      artistId: artist.id,
+      prevUserId: artist.userId,
+      newUserId: req.user!.userId,
+      roleUpgraded: callerUser.role === "listener",
+    },
     "Artist profile claimed by matching username",
   );
 
