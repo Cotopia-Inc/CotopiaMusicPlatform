@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { eq, desc, and, avg, sql } from "drizzle-orm";
+import { eq, desc, and, avg, sql, isNotNull } from "drizzle-orm";
 import { db, songsTable, videosTable, artistsTable, labelsTable, albumsTable, companyPostsTable, followsTable, ratingsTable, editorPicksTable, usersTable } from "@workspace/db";
 import { count } from "drizzle-orm";
 import { isFeatureRotationEnabled, rotateFeatured, FEATURED_POOL_SIZE } from "../lib/featured";
@@ -27,21 +27,23 @@ router.get("/home", async (_req, res): Promise<void> => {
   };
 
   const [featuredSongs, featuredVideos, trendingSongs, newReleases] = await Promise.all([
-    db.select(songSelect).from(songsTable).leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id)).leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id)).leftJoin(usersTable, eq(artistsTable.userId, usersTable.id)).where(and(eq(songsTable.isFeatured, true), eq(songsTable.status, "published"))).orderBy(desc(songsTable.createdAt)).limit(FEATURED_POOL_SIZE),
-    db.select(videoSelect).from(videosTable).leftJoin(artistsTable, eq(videosTable.artistId, artistsTable.id)).leftJoin(usersTable, eq(artistsTable.userId, usersTable.id)).where(and(eq(videosTable.isFeatured, true), eq(videosTable.status, "published"))).orderBy(desc(videosTable.createdAt)).limit(FEATURED_POOL_SIZE),
-    db.select(songSelect).from(songsTable).leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id)).leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id)).leftJoin(usersTable, eq(artistsTable.userId, usersTable.id)).where(eq(songsTable.status, "published")).orderBy(desc(songsTable.playCount)).limit(10),
-    db.select(songSelect).from(songsTable).leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id)).leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id)).leftJoin(usersTable, eq(artistsTable.userId, usersTable.id)).where(eq(songsTable.status, "published")).orderBy(desc(songsTable.createdAt)).limit(8),
+    db.select(songSelect).from(songsTable).leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id)).leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id)).leftJoin(usersTable, eq(artistsTable.userId, usersTable.id)).where(and(eq(songsTable.isFeatured, true), eq(songsTable.status, "published"), isNotNull(songsTable.coverUrl))).orderBy(desc(songsTable.createdAt)).limit(FEATURED_POOL_SIZE),
+    db.select(videoSelect).from(videosTable).leftJoin(artistsTable, eq(videosTable.artistId, artistsTable.id)).leftJoin(usersTable, eq(artistsTable.userId, usersTable.id)).where(and(eq(videosTable.isFeatured, true), eq(videosTable.status, "published"), isNotNull(videosTable.thumbnailUrl))).orderBy(desc(videosTable.createdAt)).limit(FEATURED_POOL_SIZE),
+    db.select(songSelect).from(songsTable).leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id)).leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id)).leftJoin(usersTable, eq(artistsTable.userId, usersTable.id)).where(and(eq(songsTable.status, "published"), isNotNull(songsTable.coverUrl))).orderBy(desc(songsTable.playCount)).limit(10),
+    db.select(songSelect).from(songsTable).leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id)).leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id)).leftJoin(usersTable, eq(artistsTable.userId, usersTable.id)).where(and(eq(songsTable.status, "published"), isNotNull(songsTable.coverUrl))).orderBy(desc(songsTable.createdAt)).limit(8),
   ]);
 
   const rotation = await isFeatureRotationEnabled();
   const rotatedFeaturedSongs = rotateFeatured(featuredSongs, 6, rotation);
   const rotatedFeaturedVideos = rotateFeatured(featuredVideos, 4, rotation);
 
-  const [rawArtists, rawLabels, announcements] = await Promise.all([
-    db.select({ id: artistsTable.id, userId: artistsTable.userId, stageName: artistsTable.stageName, bio: artistsTable.bio, avatarUrl: sql<string | null>`COALESCE(${artistsTable.avatarUrl}, ${usersTable.avatarUrl})`, bannerUrl: artistsTable.bannerUrl, genre: artistsTable.genre, labelId: artistsTable.labelId, createdAt: artistsTable.createdAt, isVerified: usersTable.isVerified }).from(artistsTable).leftJoin(usersTable, eq(artistsTable.userId, usersTable.id)).orderBy(desc(artistsTable.createdAt)).limit(6),
-    db.select().from(labelsTable).orderBy(desc(labelsTable.createdAt)).limit(4),
+  const [rawArtistsAll, rawLabelsAll, announcements] = await Promise.all([
+    db.select({ id: artistsTable.id, userId: artistsTable.userId, stageName: artistsTable.stageName, bio: artistsTable.bio, avatarUrl: sql<string | null>`COALESCE(${artistsTable.avatarUrl}, ${usersTable.avatarUrl})`, bannerUrl: artistsTable.bannerUrl, genre: artistsTable.genre, labelId: artistsTable.labelId, createdAt: artistsTable.createdAt, isVerified: usersTable.isVerified }).from(artistsTable).leftJoin(usersTable, eq(artistsTable.userId, usersTable.id)).orderBy(desc(artistsTable.createdAt)).limit(20),
+    db.select().from(labelsTable).orderBy(desc(labelsTable.createdAt)).limit(20),
     db.select().from(companyPostsTable).orderBy(desc(companyPostsTable.isPinned), desc(companyPostsTable.createdAt)).limit(3),
   ]);
+  const rawArtists = rawArtistsAll.filter(a => a.avatarUrl).slice(0, 6);
+  const rawLabels = rawLabelsAll.filter(l => l.logoUrl).slice(0, 4);
 
   const addRatingToSong = async (s: typeof featuredSongs[0]) => {
     const [r] = await db.select({ avg: avg(ratingsTable.rating) }).from(ratingsTable).where(and(eq(ratingsTable.contentType, "song"), eq(ratingsTable.contentId, s.id)));
@@ -97,7 +99,7 @@ router.get("/home", async (_req, res): Promise<void> => {
         .leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id))
         .leftJoin(usersTable, eq(artistsTable.userId, usersTable.id))
         .where(and(eq(songsTable.id, p.contentId), eq(songsTable.status, "published"))).limit(1);
-      song = rows[0] ?? null;
+      song = (rows[0] && rows[0].coverUrl) ? rows[0] : null;
     } else if (p.contentType === "video") {
       const rows = await db.select({
         id: videosTable.id, title: videosTable.title, artistId: videosTable.artistId,
@@ -111,7 +113,7 @@ router.get("/home", async (_req, res): Promise<void> => {
         .leftJoin(artistsTable, eq(videosTable.artistId, artistsTable.id))
         .leftJoin(usersTable, eq(artistsTable.userId, usersTable.id))
         .where(and(eq(videosTable.id, p.contentId), eq(videosTable.status, "published"))).limit(1);
-      video = rows[0] ?? null;
+      video = (rows[0] && rows[0].thumbnailUrl) ? rows[0] : null;
     } else if (p.contentType === "artist") {
       const rows = await db.select({
         id: artistsTable.id, userId: artistsTable.userId, stageName: artistsTable.stageName,
@@ -121,7 +123,8 @@ router.get("/home", async (_req, res): Promise<void> => {
       }).from(artistsTable)
         .leftJoin(usersTable, eq(artistsTable.userId, usersTable.id))
         .where(eq(artistsTable.id, p.contentId)).limit(1);
-      artist = rows[0] ?? null;
+      const a = rows[0] ?? null;
+      artist = (a && a.avatarUrl) ? a : null;
     }
     return { ...p, song, video, artist };
   }));
