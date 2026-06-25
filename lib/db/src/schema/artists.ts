@@ -5,7 +5,7 @@ import { usersTable } from "./users";
 
 export const artistsTable = pgTable("artists", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
+  userId: integer("user_id").references(() => usersTable.id, { onDelete: "cascade" }),
   stageName: text("stage_name").notNull(),
   bio: text("bio"),
   avatarUrl: text("avatar_url"),

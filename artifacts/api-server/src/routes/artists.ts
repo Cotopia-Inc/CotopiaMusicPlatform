@@ -94,7 +94,7 @@ router.get("/artists", optionalAuth, async (req: AuthRequest, res): Promise<void
 
   // Deduplicate — guard against any stale duplicate artist records per user
   const seen = new Set<number>();
-  const unique = artists.filter(a => { if (seen.has(a.userId)) return false; seen.add(a.userId); return true; });
+  const unique = artists.filter(a => { if (!a.userId) return true; if (seen.has(a.userId)) return false; seen.add(a.userId); return true; });
 
   const withCounts = await Promise.all(unique.map(async (a) => {
     const [fc] = await db.select({ count: count() }).from(followsTable)

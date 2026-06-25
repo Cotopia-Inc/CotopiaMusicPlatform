@@ -950,13 +950,13 @@ router.post("/admin/strikes", requireAuth, requireRole(...ADMIN_ROLES), async (r
       const [song] = await db.select({ artistId: songsTable.artistId }).from(songsTable).where(eq(songsTable.id, Number(contentId))).limit(1);
       if (song) {
         const [artist] = await db.select({ userId: artistsTable.userId }).from(artistsTable).where(eq(artistsTable.id, song.artistId)).limit(1);
-        if (artist) resolvedUserId = artist.userId;
+        if (artist?.userId) resolvedUserId = artist.userId;
       }
     } else if (contentType === "video") {
       const [video] = await db.select({ artistId: videosTable.artistId }).from(videosTable).where(eq(videosTable.id, Number(contentId))).limit(1);
       if (video) {
         const [artist] = await db.select({ userId: artistsTable.userId }).from(artistsTable).where(eq(artistsTable.id, video.artistId)).limit(1);
-        if (artist) resolvedUserId = artist.userId;
+        if (artist?.userId) resolvedUserId = artist.userId;
       }
     }
   }
@@ -1381,6 +1381,30 @@ router.post("/admin/artists/:id/assign", requireAuth, requireRole(...ADMIN_ROLES
   );
 
   res.json({ success: true, artistId, assignedTo: { id: targetUser.id, username: targetUser.username, roleUpgraded: targetUser.role === "listener" } });
+});
+
+router.delete("/admin/artists/:id/assign", requireAuth, requireRole(...ADMIN_ROLES), async (req: AuthRequest, res): Promise<void> => {
+  const artistId = Number(req.params.id);
+  if (isNaN(artistId)) {
+    res.status(400).json({ error: "Invalid artist id" });
+    return;
+  }
+
+  const [artist] = await db.select().from(artistsTable).where(eq(artistsTable.id, artistId)).limit(1);
+  if (!artist) {
+    res.status(404).json({ error: "Artist not found" });
+    return;
+  }
+
+  const prevUserId = artist.userId;
+  await db.update(artistsTable).set({ userId: null }).where(eq(artistsTable.id, artistId));
+
+  req.log.info(
+    { artistId, prevUserId, unlinkedBy: req.user!.userId },
+    "Admin unlinked artist profile from user",
+  );
+
+  res.json({ success: true, artistId, prevUserId });
 });
 
 // ── Broadcasts ───────────────────────────────────────────────────────────────

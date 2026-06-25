@@ -2,7 +2,7 @@ import { useParams, Link, useLocation } from "wouter";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useGetArtist, getGetArtistQueryKey, useFollowArtist, useUnfollowArtist, useTrackAnalyticsEvent } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Play, Users, Music, MessageCircle, ArrowLeft, Volume2, VolumeX, ShieldCheck, Loader2, UserCog, Search } from "lucide-react";
+import { Play, Users, Music, MessageCircle, ArrowLeft, Volume2, VolumeX, ShieldCheck, Loader2, UserCog, UserMinus, Search } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { RoleBadges } from "@/components/role-badges";
 import { Button } from "@/components/ui/button";
@@ -47,6 +47,7 @@ export default function ArtistDetail() {
   const [assignSelected, setAssignSelected] = useState<{ id: number; username: string } | null>(null);
   const [assignLoading, setAssignLoading] = useState(false);
   const [assignSearching, setAssignSearching] = useState(false);
+  const [unlinkLoading, setUnlinkLoading] = useState(false);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isAdmin = ADMIN_ROLES.includes((user as any)?.role ?? "");
 
@@ -90,6 +91,27 @@ export default function ArtistDetail() {
       toast({ variant: "destructive", title: "Could not assign", description: err.message });
     } finally {
       setAssignLoading(false);
+    }
+  }
+
+  async function handleUnlink() {
+    if (!window.confirm(`Unlink this artist profile from its current user? The profile will become unclaimed and can be reassigned later.`)) return;
+    setUnlinkLoading(true);
+    try {
+      const res = await fetch(`${import.meta.env.BASE_URL}api/admin/artists/${artistId}/assign`, {
+        method: "DELETE",
+        headers: getAuthHeader(),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error((body as any).error ?? "Unlink failed");
+      }
+      toast({ title: "Artist profile unlinked", description: "The profile is no longer associated with any user account." });
+      queryClient.invalidateQueries({ queryKey: getGetArtistQueryKey(artistId) });
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Could not unlink", description: err.message });
+    } finally {
+      setUnlinkLoading(false);
     }
   }
 
@@ -272,6 +294,19 @@ export default function ArtistDetail() {
               >
                 <UserCog className="w-4 h-4" />
                 Assign to User
+              </Button>
+            )}
+            {isAdmin && (artist as any).userId && (
+              <Button
+                variant="outline"
+                size="lg"
+                className="rounded-full px-6 gap-2 border-red-500/50 text-red-400 hover:bg-red-500/10 hover:text-red-300"
+                onClick={handleUnlink}
+                disabled={unlinkLoading}
+              >
+                {unlinkLoading
+                  ? <><Loader2 className="w-4 h-4 animate-spin" />Unlinking…</>
+                  : <><UserMinus className="w-4 h-4" />Unlink Profile</>}
               </Button>
             )}
           </div>
