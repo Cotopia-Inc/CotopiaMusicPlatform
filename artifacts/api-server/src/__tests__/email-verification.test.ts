@@ -95,7 +95,8 @@ describe("email verification gate", () => {
   });
 
   it("allows a verified user past the gate (submission succeeds)", async () => {
-    const u = await verified();
+    const u = await createUser({ emailVerified: true, role: "artist" });
+    created.push(u.id);
     const res = await api()
       .post("/api/submissions")
       .set("Authorization", bearer(u.token))
