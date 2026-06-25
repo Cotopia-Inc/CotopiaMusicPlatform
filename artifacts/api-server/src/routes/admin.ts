@@ -22,13 +22,18 @@ const ADMIN_ROLES = ["admin", "master_admin"] as const;
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 
-/** Finds or creates an artist profile for a user. Never changes the user's role. */
+/**
+ * Finds an artist profile for a user.
+ * Auto-creates one only for artist/label roles — never for staff or plain listeners.
+ */
 async function findOrCreateArtistProfile(userId: number): Promise<number | null> {
-  const [user] = await db.select({ id: usersTable.id, username: usersTable.username, displayName: usersTable.displayName })
+  const [user] = await db.select({ id: usersTable.id, username: usersTable.username, displayName: usersTable.displayName, role: usersTable.role })
     .from(usersTable).where(eq(usersTable.id, userId)).limit(1);
   if (!user) return null;
   const [existing] = await db.select({ id: artistsTable.id }).from(artistsTable).where(eq(artistsTable.userId, userId)).limit(1);
   if (existing) return existing.id;
+  // Only auto-create for artist/label role users — staff and listeners must use the artist assign flow.
+  if (user.role !== "artist" && user.role !== "label") return null;
   const [created] = await db.insert(artistsTable).values({ userId, stageName: user.displayName ?? user.username }).returning({ id: artistsTable.id });
   return created.id;
 }

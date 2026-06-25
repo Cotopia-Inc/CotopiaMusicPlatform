@@ -66,14 +66,11 @@ router.get("/artists", optionalAuth, async (req: AuthRequest, res): Promise<void
   }
   const { q, limit = 20, offset = 0 } = params.data;
 
-  // Admin/editor upload forms need ALL artist profiles (including admin-owned ones).
-  // Public listing only shows profiles tied to actual artist-role accounts.
-  const isAdminOrEditor = req.user && ["admin", "master_admin", "editor"].includes(req.user.role);
-  const roleCondition = isAdminOrEditor ? undefined : eq(usersTable.role, "artist");
-
-  const baseConditions = [];
-  if (roleCondition) baseConditions.push(roleCondition);
-  if (q) baseConditions.push(ilike(artistsTable.stageName, `%${q}%`));
+  // Always restrict to genuine artist/label accounts — admin upload forms use /admin/upload-accounts.
+  const baseConditions: ReturnType<typeof eq>[] = [
+    or(eq(usersTable.role, "artist"), eq(usersTable.role, "label")) as ReturnType<typeof eq>,
+  ];
+  if (q) baseConditions.push(ilike(artistsTable.stageName, `%${q}%`) as ReturnType<typeof eq>);
 
   const artists = await db
     .select({
@@ -121,6 +118,7 @@ router.get("/artists/new", async (_req, res): Promise<void> => {
     .select({ id: artistsTable.id, userId: artistsTable.userId, stageName: artistsTable.stageName, bio: artistsTable.bio, avatarUrl: sql<string | null>`COALESCE(${artistsTable.avatarUrl}, ${usersTable.avatarUrl})`, bannerUrl: artistsTable.bannerUrl, genre: artistsTable.genre, labelId: artistsTable.labelId, createdAt: artistsTable.createdAt, isVerified: usersTable.isVerified, userRole: usersTable.role })
     .from(artistsTable)
     .innerJoin(usersTable, eq(artistsTable.userId, usersTable.id))
+    .where(or(eq(usersTable.role, "artist"), eq(usersTable.role, "label")))
     .orderBy(desc(artistsTable.createdAt))
     .limit(8);
 
@@ -138,6 +136,7 @@ router.get("/artists/featured", async (_req, res): Promise<void> => {
     .select({ id: artistsTable.id, userId: artistsTable.userId, stageName: artistsTable.stageName, bio: artistsTable.bio, avatarUrl: sql<string | null>`COALESCE(${artistsTable.avatarUrl}, ${usersTable.avatarUrl})`, bannerUrl: artistsTable.bannerUrl, genre: artistsTable.genre, labelId: artistsTable.labelId, createdAt: artistsTable.createdAt, isVerified: usersTable.isVerified, userRole: usersTable.role })
     .from(artistsTable)
     .innerJoin(usersTable, eq(artistsTable.userId, usersTable.id))
+    .where(or(eq(usersTable.role, "artist"), eq(usersTable.role, "label")))
     .orderBy(desc(artistsTable.createdAt))
     .limit(6);
 
