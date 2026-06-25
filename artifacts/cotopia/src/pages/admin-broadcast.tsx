@@ -80,7 +80,7 @@ export default function AdminBroadcastPage() {
     <div className="space-y-8 pb-24">
       <div>
         <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Admin</p>
-        <h1 className="text-4xl font-extrabold tracking-tight mb-2 flex items-center gap-3">
+        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-2 flex items-center gap-3">
           <Megaphone className="w-8 h-8 text-amber-400" />
           Broadcast
         </h1>

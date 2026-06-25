@@ -475,7 +475,7 @@ export default function Profile() {
       )}
 
       {/* Profile Settings */}
-      <div className="space-y-6 bg-card p-8 rounded-xl border border-border">
+      <div className="space-y-6 bg-card p-4 md:p-8 rounded-xl border border-border">
         <h2 className="text-xl font-bold">Profile Settings</h2>
 
         <div className="space-y-2">

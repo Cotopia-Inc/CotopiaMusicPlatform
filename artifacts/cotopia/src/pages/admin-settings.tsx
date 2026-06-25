@@ -90,11 +90,11 @@ export default function AdminSettings() {
   return (
     <div className="space-y-8 pb-24 max-w-3xl mx-auto">
       <div>
-        <h1 className="text-4xl font-extrabold tracking-tight mb-2">Platform Settings</h1>
+        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-2">Platform Settings</h1>
         <p className="text-muted-foreground">Configure global application settings and parameters.</p>
       </div>
 
-      <div className="bg-card p-8 rounded-xl border border-border shadow-lg space-y-8">
+      <div className="bg-card p-4 md:p-8 rounded-xl border border-border shadow-lg space-y-8">
         <div className="space-y-4">
           <h3 className="text-lg font-bold border-b border-border pb-2">Branding</h3>
           

@@ -50,7 +50,7 @@ export default function Contact() {
           <Radio className="w-5 h-5" />
           <span className="text-xs font-bold tracking-widest uppercase">Everyday Radio</span>
         </div>
-        <h1 className="text-4xl font-extrabold tracking-tight">Contact Us</h1>
+        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">Contact Us</h1>
         <p className="text-muted-foreground">Get in touch with the Cotopia team — we're here to help.</p>
       </div>
 

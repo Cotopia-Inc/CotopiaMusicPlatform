@@ -74,7 +74,7 @@ export default function AdminBetaAnalytics() {
     <div className="space-y-8 pb-24">
       <div>
         <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Admin</p>
-        <h1 className="text-4xl font-extrabold tracking-tight mb-2">Beta Analytics</h1>
+        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-2">Beta Analytics</h1>
         <p className="text-muted-foreground">
           Engagement, retention, and feedback metrics from the Cotopia beta program.
         </p>

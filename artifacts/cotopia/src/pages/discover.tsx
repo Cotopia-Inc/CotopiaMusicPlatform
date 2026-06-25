@@ -17,8 +17,8 @@ export default function Discover() {
   return (
     <div className="space-y-12 pb-24">
       <div>
-        <h1 className="text-4xl font-extrabold tracking-tight mb-2">Discover</h1>
-        <p className="text-muted-foreground text-lg">Find your next favorite sound on Everyday Radio.</p>
+        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-2">Discover</h1>
+        <p className="text-muted-foreground text-base md:text-lg">Find your next favorite sound on Everyday Radio.</p>
       </div>
 
       {/* ── Featured (admin-curated) ── */}

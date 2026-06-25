@@ -220,7 +220,7 @@ export function Player() {
       <div
           ref={overlayRef}
           style={{ ...overlayStyle, display: nowPlayingOpen ? undefined : "none" }}
-          className="bg-card/98 backdrop-blur-xl border border-border/70 rounded-2xl shadow-2xl overflow-hidden select-none"
+          className="hidden md:block bg-card/98 backdrop-blur-xl border border-border/70 rounded-2xl shadow-2xl overflow-hidden select-none"
         >
           {/* Drag handle / branded header */}
           <div
@@ -445,10 +445,10 @@ export function Player() {
         </div>
 
       {/* ── Player Bar ─────────────────────────────────────────────────────────── */}
-      <div className="h-20 bg-card/95 backdrop-blur border-t border-border/50 w-full flex items-center justify-between px-4 z-50 flex-shrink-0 gap-2">
+      <div className="h-16 md:h-20 bg-card/95 backdrop-blur border-t border-border/50 w-full flex items-center justify-between px-3 md:px-4 z-50 flex-shrink-0 gap-2">
 
         {/* Left: track info */}
-        <div className="flex items-center gap-3 w-[30%] min-w-0">
+        <div className="flex items-center gap-2 md:gap-3 flex-1 md:w-[30%] md:flex-none min-w-0">
           <button
             className="relative group w-12 h-12 rounded-md bg-secondary border border-border/50 flex-shrink-0 overflow-hidden shadow-md transition-all cursor-pointer"
             onClick={() => track && setNowPlayingOpen(!nowPlayingOpen)}
@@ -502,7 +502,7 @@ export function Player() {
           </div>
           <Button
             variant="ghost" size="icon"
-            className={`flex-shrink-0 w-8 h-8 transition-all ${
+            className={`hidden md:inline-flex flex-shrink-0 w-8 h-8 transition-all ${
               track
                 ? trackFavorited
                   ? "text-red-500 hover:text-red-400 scale-110"
@@ -516,12 +516,28 @@ export function Player() {
             <Heart className={`w-4 h-4 transition-all ${trackFavorited ? "fill-current" : ""}`} />
           </Button>
           {track && !isVideoTrack && (
-            <AddToPlaylist songId={track.id} className="w-8 h-8 text-muted-foreground hover:text-foreground" />
+            <AddToPlaylist songId={track.id} className="hidden md:flex w-8 h-8 text-muted-foreground hover:text-foreground" />
           )}
         </div>
 
-        {/* Centre: controls + progress */}
-        <div className="flex flex-col items-center gap-1.5 flex-1 max-w-lg">
+        {/* Mobile-only controls */}
+        <div className="flex md:hidden items-center gap-1 flex-shrink-0">
+          <Button variant="ghost" size="icon" className="w-8 h-8 text-muted-foreground disabled:opacity-30"
+            onClick={skipPrev} disabled={!track} title="Previous">
+            <SkipBack className="w-4 h-4 fill-current" />
+          </Button>
+          <Button size="icon" onClick={togglePlay} disabled={!track}
+            className="w-9 h-9 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 shadow-md shadow-primary/25">
+            {isPlaying ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 ml-0.5 fill-current" />}
+          </Button>
+          <Button variant="ghost" size="icon" className="w-8 h-8 text-muted-foreground disabled:opacity-30"
+            onClick={skipNext} disabled={!track || !hasNext} title="Next">
+            <SkipForward className="w-4 h-4 fill-current" />
+          </Button>
+        </div>
+
+        {/* Centre: controls + progress (desktop only) */}
+        <div className="hidden md:flex flex-col items-center gap-1.5 flex-1 max-w-lg">
           <div className="flex items-center gap-1">
             <Button
               variant="ghost" size="icon"
@@ -599,8 +615,8 @@ export function Player() {
           </div>
         </div>
 
-        {/* Right: queue + volume */}
-        <div className="flex items-center justify-end gap-2 w-[30%]">
+        {/* Right: queue + volume (desktop only) */}
+        <div className="hidden md:flex items-center justify-end gap-2 w-[30%]">
           <button
             onClick={() => setQueueOpen(v => !v)}
             disabled={!track}
@@ -634,7 +650,7 @@ export function Player() {
 
       {/* ── Queue Panel ─────────────────────────────────────────────────────────── */}
       {queueOpen && (
-        <div className="fixed bottom-20 right-4 z-30 w-80 flex flex-col" style={{ maxHeight: "calc(100vh - 7rem)" }}>
+        <div className="fixed bottom-16 md:bottom-20 right-4 z-30 w-80 max-w-[calc(100vw-2rem)] flex flex-col" style={{ maxHeight: "calc(100vh - 7rem)" }}>
           <div className="bg-card border border-border/60 rounded-2xl shadow-2xl flex flex-col min-h-0">
             <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-border/40 flex-shrink-0">
               <div className="flex items-center gap-2">

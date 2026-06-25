@@ -40,7 +40,7 @@ export default function AdminDashboard() {
       <div className="flex items-start justify-between">
         <div>
           <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Everyday Radio</p>
-          <h1 className="text-4xl font-extrabold tracking-tight">Admin Dashboard</h1>
+          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">Admin Dashboard</h1>
           <p className="text-muted-foreground mt-1">Platform overview and management — Powered by Cotopia</p>
         </div>
         <div className="flex items-center gap-2 bg-green-500/10 border border-green-500/20 px-3 py-2 rounded-lg">

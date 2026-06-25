@@ -43,7 +43,7 @@ export default function Submissions() {
   return (
     <div className="space-y-8 pb-24 max-w-6xl mx-auto">
       <div className="space-y-2">
-        <h1 className="text-4xl font-extrabold tracking-tight">My Submissions</h1>
+        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">My Submissions</h1>
         <p className="text-muted-foreground">Track the status of your submitted content.</p>
       </div>
 

@@ -280,7 +280,7 @@ export default function MessagesPage() {
   const showThread = !!selectedConvId || !!newConvUser;
 
   return (
-    <div className="h-[calc(100vh-64px)] flex overflow-hidden">
+    <div className="h-[calc(100vh-120px)] md:h-[calc(100vh-80px)] flex overflow-hidden">
 
       {/* ── Delete Confirmation Modal ─────────────────────────────────── */}
       {deleteConfirmId && (

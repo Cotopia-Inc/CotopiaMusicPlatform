@@ -89,7 +89,7 @@ export default function PlaylistDetail() {
 
       {/* Header */}
       <div className="flex flex-col md:flex-row gap-8 items-end">
-        <div className="w-64 h-64 rounded-md shadow-2xl overflow-hidden bg-secondary border border-border flex-shrink-0 flex items-center justify-center">
+        <div className="w-44 h-44 md:w-64 md:h-64 rounded-md shadow-2xl overflow-hidden bg-secondary border border-border flex-shrink-0 flex items-center justify-center">
           {playlist.coverUrl ? (
             <img src={playlist.coverUrl} alt={playlist.name} className="w-full h-full object-cover" />
           ) : (
@@ -98,7 +98,7 @@ export default function PlaylistDetail() {
         </div>
         <div className="flex-1 space-y-4">
           <p className="text-xs uppercase tracking-widest font-semibold text-primary">Playlist</p>
-          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter">{playlist.name}</h1>
+          <h1 className="text-3xl md:text-5xl md:text-7xl font-extrabold tracking-tighter">{playlist.name}</h1>
           <p className="text-muted-foreground text-sm">{playlist.description}</p>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span className="font-semibold text-foreground">Created by User {playlist.userId}</span>

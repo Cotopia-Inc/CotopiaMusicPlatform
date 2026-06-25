@@ -68,7 +68,7 @@ export default function Library() {
   return (
     <div className="space-y-8 pb-24">
       <div className="flex items-center justify-between">
-        <h1 className="text-4xl font-extrabold tracking-tight">Your Library</h1>
+        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">Your Library</h1>
         <Button className="gap-2" onClick={() => setShowNewPlaylist(true)}>
           <Plus className="w-4 h-4" /> New Playlist
         </Button>

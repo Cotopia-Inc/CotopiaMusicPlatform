@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Home, Compass, Music, Video, Users, Mic2, Library, Building2,
   LayoutDashboard, LogIn, LogOut, Settings, Send, Radio, Bell,
@@ -127,9 +127,22 @@ function UserSearch() {
 const ADMIN_ROLES = ["admin", "master_admin"];
 const STAFF_ROLES = ["admin", "master_admin", "moderator", "editor"];
 
-export function Sidebar() {
+interface SidebarProps {
+  onMobileClose?: () => void;
+}
+
+export function Sidebar({ onMobileClose }: SidebarProps = {}) {
   const [location, navigate] = useLocation();
   const { user, logout } = useAuth();
+
+  // Auto-close on navigation (mobile drawer)
+  const prevLocation = useRef(location);
+  useEffect(() => {
+    if (prevLocation.current !== location && onMobileClose) {
+      onMobileClose();
+    }
+    prevLocation.current = location;
+  }, [location, onMobileClose]);
 
   const { data: unreadData } = useGetUnreadNotificationCount({
     query: {

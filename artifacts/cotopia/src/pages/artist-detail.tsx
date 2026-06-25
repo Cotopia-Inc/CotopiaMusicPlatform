@@ -193,28 +193,28 @@ export default function ArtistDetail() {
       </div>
 
       {/* Header Info */}
-      <div className="flex flex-col md:flex-row gap-8 px-8 -mt-24 relative z-10">
-        <div className="relative w-48 h-48 flex-shrink-0">
+      <div className="flex flex-col md:flex-row gap-6 md:gap-8 px-4 md:px-8 -mt-16 md:-mt-24 relative z-10">
+        <div className="relative w-32 h-32 md:w-48 md:h-48 flex-shrink-0">
           <div className="w-full h-full rounded-full overflow-hidden bg-card border-4 border-background shadow-2xl">
             {artist.avatarUrl ? (
               <img src={artist.avatarUrl} alt={artist.stageName} className="w-full h-full object-cover" />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-5xl font-bold text-muted-foreground bg-secondary">
+              <div className="w-full h-full flex items-center justify-center text-4xl md:text-5xl font-bold text-muted-foreground bg-secondary">
                 {artist.stageName.charAt(0)}
               </div>
             )}
           </div>
-          <div className="absolute bottom-2 right-2 bg-background rounded-full p-1 shadow-lg">
+          <div className="absolute bottom-1 right-1 md:bottom-2 md:right-2 bg-background rounded-full p-1 shadow-lg">
             <RoleBadges role={(artist as any).userRole ?? "artist"} isVerified={artist.isVerified} verificationType={(artist as any).verificationType} size="md" />
           </div>
         </div>
-        <div className="pt-4 md:pt-16 flex-1 flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="pt-2 md:pt-16 flex-1 flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6">
           <div className="space-y-2">
-            <h1 className="text-5xl font-extrabold tracking-tighter flex items-center gap-3">
+            <h1 className="text-3xl md:text-5xl font-extrabold tracking-tighter flex items-center gap-2 md:gap-3 flex-wrap">
               {artist.stageName}
               <RoleBadges role={(artist as any).userRole ?? "artist"} isVerified={artist.isVerified} verificationType={(artist as any).verificationType} size="lg" />
             </h1>
-            <div className="flex items-center gap-4 text-muted-foreground font-medium">
+            <div className="flex flex-wrap items-center gap-3 md:gap-4 text-muted-foreground font-medium text-sm">
               <span className="flex items-center gap-1"><Users className="w-4 h-4" /> {artist.followerCount?.toLocaleString() || 0} followers</span>
               <span className="flex items-center gap-1"><Music className="w-4 h-4" /> {artist.songCount || 0} tracks</span>
               {artist.labelName && (
@@ -222,15 +222,15 @@ export default function ArtistDetail() {
               )}
             </div>
           </div>
-          <div className="flex gap-3">
-            <Button size="lg" className="rounded-full px-8 font-bold" onClick={() => { if (artist.songs?.[0]) play({ id: artist.songs[0].id, title: artist.songs[0].title, artistName: artist.songs[0].artistName ?? "", artistId: artist.songs[0].artistId, artistUserRole: (artist.songs[0] as any).artistUserRole ?? (artist as any).userRole ?? null, artistIsVerified: (artist.songs[0] as any).artistIsVerified ?? (artist as any).isVerified ?? false, coverUrl: artist.songs[0].coverUrl, streamUrl: artist.songs[0].streamUrl, duration: artist.songs[0].duration }); }}>
-              <Play className="w-5 h-5 mr-2 fill-current" /> Play
+          <div className="flex flex-wrap gap-2 md:gap-3">
+            <Button size="sm" className="rounded-full px-5 md:px-8 font-bold md:text-base md:h-11" onClick={() => { if (artist.songs?.[0]) play({ id: artist.songs[0].id, title: artist.songs[0].title, artistName: artist.songs[0].artistName ?? "", artistId: artist.songs[0].artistId, artistUserRole: (artist.songs[0] as any).artistUserRole ?? (artist as any).userRole ?? null, artistIsVerified: (artist.songs[0] as any).artistIsVerified ?? (artist as any).isVerified ?? false, coverUrl: artist.songs[0].coverUrl, streamUrl: artist.songs[0].streamUrl, duration: artist.songs[0].duration }); }}>
+              <Play className="w-4 h-4 mr-1.5 fill-current" /> Play
             </Button>
             {user && (
               <Button 
                 variant={artist.isFollowed ? "outline" : "secondary"} 
-                size="lg" 
-                className="rounded-full px-6"
+                size="sm"
+                className="rounded-full px-4 md:px-6 md:text-base md:h-11"
                 onClick={handleFollowToggle}
                 disabled={followMutation.isPending || unfollowMutation.isPending}
               >
@@ -240,8 +240,8 @@ export default function ArtistDetail() {
             {user && (artist as any).userId && user.id !== (artist as any).userId && (
               <Button
                 variant="outline"
-                size="lg"
-                className="rounded-full px-6 gap-2"
+                size="sm"
+                className="rounded-full px-4 md:px-6 gap-1.5 md:text-base md:h-11"
                 onClick={() => navigate(`/messages?new=${(artist as any).userId}`)}
               >
                 <MessageCircle className="w-4 h-4" />

@@ -74,7 +74,7 @@ export default function Feedback() {
     <div className="space-y-8 pb-24">
       <div>
         <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Beta Program</p>
-        <h1 className="text-4xl font-extrabold tracking-tight mb-2">Beta Feedback</h1>
+        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-2">Beta Feedback</h1>
         <p className="text-muted-foreground max-w-2xl">
           Cotopia is in active beta. Your feedback directly shapes the platform — report bugs you hit,
           suggest features you'd love to see, or share general thoughts. We read everything.

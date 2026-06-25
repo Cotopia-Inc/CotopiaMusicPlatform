@@ -359,7 +359,7 @@ export default function AdminUsers() {
     <>
     <div className="space-y-8 pb-24 max-w-6xl mx-auto">
       <div>
-        <h1 className="text-4xl font-extrabold tracking-tight mb-2">User Management</h1>
+        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-2">User Management</h1>
         <p className="text-muted-foreground">Manage user accounts, roles, and access.</p>
       </div>
 

@@ -218,7 +218,7 @@ export default function SongDetail() {
 
         {/* Header */}
         <div className="flex flex-col md:flex-row gap-8 items-end">
-          <div className="w-56 h-56 rounded-xl shadow-2xl overflow-hidden bg-secondary border border-border flex-shrink-0">
+          <div className="w-40 h-40 md:w-56 md:h-56 rounded-xl shadow-2xl overflow-hidden bg-secondary border border-border flex-shrink-0">
             {song.coverUrl ? (
               <img src={song.coverUrl} alt={song.title} className="w-full h-full object-cover" />
             ) : (
@@ -235,7 +235,7 @@ export default function SongDetail() {
             }`}>
               {song.releaseType === "ep" ? "EP" : song.releaseType === "album" ? "Album" : "Single"}
             </Badge>
-            <h1 className="text-5xl md:text-6xl font-extrabold tracking-tighter leading-none">{song.title}</h1>
+            <h1 className="text-3xl md:text-5xl font-extrabold tracking-tighter leading-none">{song.title}</h1>
             <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
               <UserLink
                 username={song.artistName}
@@ -407,9 +407,9 @@ export default function SongDetail() {
         )}
       </div>
 
-      {/* ── Chat Panel ── */}
+      {/* ── Chat Panel (desktop only) ── */}
       <div
-        className="w-80 flex-shrink-0 flex flex-col bg-card border border-border rounded-xl overflow-hidden"
+        className="hidden md:flex w-80 flex-shrink-0 flex-col bg-card border border-border rounded-xl overflow-hidden"
         style={{ height: "calc(100vh - 11rem)" }}
       >
         {/* Header */}

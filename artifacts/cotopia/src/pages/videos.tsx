@@ -114,9 +114,9 @@ export default function Videos() {
 
   return (
     <div className="space-y-8 pb-24">
-      <div className="flex items-center justify-between">
-        <h1 className="text-4xl font-extrabold tracking-tight">Videos</h1>
-        <div className="relative w-64">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight">Videos</h1>
+        <div className="relative w-full sm:w-64">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             placeholder="Search videos..."

@@ -18,7 +18,7 @@ export default function Home() {
   return (
     <div className="space-y-14 pb-24">
       {/* Hero */}
-      <section className="relative rounded-2xl overflow-hidden min-h-[280px] flex items-end p-8 border border-border/50 group cursor-pointer">
+      <section className="relative rounded-2xl overflow-hidden min-h-[220px] md:min-h-[280px] flex items-end p-5 md:p-8 border border-border/50 group cursor-pointer">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-background" />
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1571330735066-03aaa9429d89?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-10" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent z-10" />
@@ -27,7 +27,7 @@ export default function Home() {
             <Radio className="w-4 h-4 text-primary" />
             <span className="text-xs font-semibold uppercase tracking-widest text-primary">Everyday Radio</span>
           </div>
-          <h2 className="text-4xl md:text-5xl font-extrabold tracking-tighter leading-none">
+          <h2 className="text-3xl md:text-5xl font-extrabold tracking-tighter leading-none">
             The sound of<br />
             <span className="text-primary">tomorrow</span>, today.
           </h2>
@@ -363,7 +363,7 @@ export default function Home() {
             <span className="text-sm text-muted-foreground hover:text-primary transition-colors cursor-pointer">See all →</span>
           </Link>
         </div>
-        <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-6">
+        <div className="grid grid-cols-4 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4 md:gap-6">
           {isLoading ? (
             Array(8).fill(0).map((_, i) => (
               <div key={i} className="space-y-3 text-center">

@@ -191,7 +191,7 @@ export default function AdminEnforcement() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Admin</p>
-          <h1 className="text-4xl font-extrabold tracking-tight mb-2">Enforcement</h1>
+          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-2">Enforcement</h1>
           <p className="text-muted-foreground">Issue and manage tiered community enforcement actions.</p>
         </div>
         {availableActions.length > 0 && (

@@ -306,8 +306,8 @@ export default function VideoDetail() {
             <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/80" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
-            {/* Play button (centered, shifted left so it clears chat) */}
-            <div className="absolute inset-0 pr-72 flex items-center justify-center">
+            {/* Play button (centered, shifted left so it clears chat on desktop) */}
+            <div className="absolute inset-0 md:pr-72 flex items-center justify-center">
               <button
                 onClick={handlePlayVideo}
                 className="bg-primary text-primary-foreground rounded-full p-5 hover:scale-110 transition-transform duration-300 shadow-2xl shadow-primary/40"
@@ -337,8 +337,8 @@ export default function VideoDetail() {
           </div>
         )}
 
-        {/* ── Chat overlay panel ── */}
-        <div className="absolute right-0 top-0 bottom-0 w-72 flex flex-col bg-black/75 backdrop-blur-md border-l border-white/10">
+        {/* ── Chat overlay panel (desktop only) ── */}
+        <div className="hidden md:flex absolute right-0 top-0 bottom-0 w-72 flex-col bg-black/75 backdrop-blur-md border-l border-white/10">
           {/* Chat header */}
           <div className="px-3 py-2.5 border-b border-white/10 flex items-center justify-between flex-shrink-0">
             <div className="flex items-center gap-2">
@@ -512,7 +512,7 @@ export default function VideoDetail() {
       <div className="space-y-3 px-1">
         {/* Title + metadata */}
         <div className="space-y-1.5">
-          <h1 className="text-3xl font-extrabold tracking-tight leading-tight">{video.title}</h1>
+          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight leading-tight">{video.title}</h1>
           <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
             <UserLink
               username={video.artistName}
