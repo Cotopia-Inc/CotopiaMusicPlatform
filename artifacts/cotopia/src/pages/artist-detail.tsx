@@ -1,8 +1,8 @@
 import { useParams, Link, useLocation } from "wouter";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useGetArtist, getGetArtistQueryKey, useFollowArtist, useUnfollowArtist, useTrackAnalyticsEvent } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Play, Users, Music, MessageCircle, ArrowLeft, Volume2, VolumeX, ShieldCheck, Loader2 } from "lucide-react";
+import { Play, Users, Music, MessageCircle, ArrowLeft, Volume2, VolumeX, ShieldCheck, Loader2, UserCog, Search } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { RoleBadges } from "@/components/role-badges";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,15 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SongMenu } from "@/components/song-menu";
 import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+
+function getAuthHeader(): Record<string, string> {
+  const token = localStorage.getItem("cotopia_token");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+const ADMIN_ROLES = ["admin", "master_admin"];
 
 export default function ArtistDetail() {
   const { id } = useParams();
@@ -32,6 +41,57 @@ export default function ArtistDetail() {
   const trackEvent = useTrackAnalyticsEvent();
   const { toast } = useToast();
   const [isClaiming, setIsClaiming] = useState(false);
+  const [assignOpen, setAssignOpen] = useState(false);
+  const [assignSearch, setAssignSearch] = useState("");
+  const [assignResults, setAssignResults] = useState<{ id: number; username: string; displayName: string | null; role: string }[]>([]);
+  const [assignSelected, setAssignSelected] = useState<{ id: number; username: string } | null>(null);
+  const [assignLoading, setAssignLoading] = useState(false);
+  const [assignSearching, setAssignSearching] = useState(false);
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isAdmin = ADMIN_ROLES.includes((user as any)?.role ?? "");
+
+  const searchUsers = useCallback((q: string) => {
+    if (!q.trim()) { setAssignResults([]); return; }
+    setAssignSearching(true);
+    fetch(`${import.meta.env.BASE_URL}api/admin/user-directory?search=${encodeURIComponent(q)}&limit=8`, { headers: getAuthHeader() })
+      .then(r => r.json())
+      .then((data: any[]) => setAssignResults(data))
+      .catch(() => setAssignResults([]))
+      .finally(() => setAssignSearching(false));
+  }, []);
+
+  function handleAssignSearchChange(val: string) {
+    setAssignSearch(val);
+    setAssignSelected(null);
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(() => searchUsers(val), 300);
+  }
+
+  async function handleAssignConfirm() {
+    if (!assignSelected) return;
+    setAssignLoading(true);
+    try {
+      const res = await fetch(`${import.meta.env.BASE_URL}api/admin/artists/${artistId}/assign`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...getAuthHeader() },
+        body: JSON.stringify({ userId: assignSelected.id }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error((body as any).error ?? "Assignment failed");
+      }
+      toast({ title: "Artist profile assigned", description: `Linked to @${assignSelected.username}` });
+      queryClient.invalidateQueries({ queryKey: getGetArtistQueryKey(artistId) });
+      setAssignOpen(false);
+      setAssignSearch("");
+      setAssignSelected(null);
+      setAssignResults([]);
+    } catch (err: any) {
+      toast({ variant: "destructive", title: "Could not assign", description: err.message });
+    } finally {
+      setAssignLoading(false);
+    }
+  }
 
   async function handleClaim() {
     if (!user) return;
@@ -203,6 +263,17 @@ export default function ArtistDetail() {
                   : <><ShieldCheck className="w-4 h-4" />Claim Artist Profile</>}
               </Button>
             )}
+            {isAdmin && (
+              <Button
+                variant="outline"
+                size="lg"
+                className="rounded-full px-6 gap-2 border-violet-500/50 text-violet-400 hover:bg-violet-500/10 hover:text-violet-300"
+                onClick={() => { setAssignOpen(true); setAssignSearch(""); setAssignSelected(null); setAssignResults([]); }}
+              >
+                <UserCog className="w-4 h-4" />
+                Assign to User
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -297,6 +368,78 @@ export default function ArtistDetail() {
           </TabsContent>
         </Tabs>
       </div>
+      {/* Admin: Assign to User dialog */}
+      <Dialog open={assignOpen} onOpenChange={setAssignOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserCog className="w-5 h-5 text-violet-400" />
+              Assign Artist Profile
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Link <span className="font-semibold text-foreground">{artist?.stageName}</span> to any user account.
+            This overrides the normal username-matching requirement.
+          </p>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              className="pl-9"
+              placeholder="Search by username…"
+              value={assignSearch}
+              onChange={e => handleAssignSearchChange(e.target.value)}
+              autoFocus
+            />
+            {assignSearching && (
+              <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
+            )}
+          </div>
+          {assignResults.length > 0 && !assignSelected && (
+            <div className="border border-border rounded-md divide-y divide-border max-h-48 overflow-y-auto">
+              {assignResults.map(u => (
+                <button
+                  key={u.id}
+                  onClick={() => { setAssignSelected({ id: u.id, username: u.username }); setAssignSearch(u.displayName ?? u.username); setAssignResults([]); }}
+                  className="w-full text-left px-3 py-2 hover:bg-secondary/50 transition-colors flex items-center gap-3"
+                >
+                  <div className="w-7 h-7 rounded-full bg-secondary flex items-center justify-center text-xs font-bold flex-shrink-0">
+                    {(u.displayName ?? u.username)[0].toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">{u.displayName ?? u.username}</p>
+                    <p className="text-xs text-muted-foreground truncate">@{u.username} · {u.role.replace("_", " ")}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+          {assignSelected && (
+            <div className="flex items-center gap-3 px-3 py-2 bg-violet-500/10 border border-violet-500/30 rounded-md">
+              <div className="w-7 h-7 rounded-full bg-violet-500/20 flex items-center justify-center text-xs font-bold flex-shrink-0 text-violet-300">
+                {assignSelected.username[0].toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-violet-300">@{assignSelected.username}</p>
+                <p className="text-xs text-muted-foreground">Selected</p>
+              </div>
+              <button onClick={() => { setAssignSelected(null); setAssignSearch(""); }} className="text-muted-foreground hover:text-foreground text-xs">
+                Clear
+              </button>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setAssignOpen(false)}>Cancel</Button>
+            <Button
+              onClick={handleAssignConfirm}
+              disabled={!assignSelected || assignLoading}
+              className="gap-2"
+            >
+              {assignLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserCog className="w-4 h-4" />}
+              Assign Profile
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

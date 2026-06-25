@@ -1330,6 +1330,48 @@ router.patch("/admin/copyright-concerns/:id", requireAuth, requireRole(...ADMIN_
   res.json(updated);
 });
 
+// ── Artist profile assignment ─────────────────────────────────────────────────
+
+router.post("/admin/artists/:id/assign", requireAuth, requireRole(...ADMIN_ROLES), async (req: AuthRequest, res): Promise<void> => {
+  const artistId = Number(req.params.id);
+  if (isNaN(artistId)) {
+    res.status(400).json({ error: "Invalid artist id" });
+    return;
+  }
+
+  const { userId } = req.body as { userId?: number };
+  if (!userId || typeof userId !== "number") {
+    res.status(400).json({ error: "userId (number) is required" });
+    return;
+  }
+
+  const [artist] = await db.select().from(artistsTable).where(eq(artistsTable.id, artistId)).limit(1);
+  if (!artist) {
+    res.status(404).json({ error: "Artist not found" });
+    return;
+  }
+
+  const [targetUser] = await db
+    .select({ id: usersTable.id, username: usersTable.username, role: usersTable.role })
+    .from(usersTable)
+    .where(eq(usersTable.id, userId))
+    .limit(1);
+  if (!targetUser) {
+    res.status(404).json({ error: "User not found" });
+    return;
+  }
+
+  const prevUserId = artist.userId;
+  await db.update(artistsTable).set({ userId }).where(eq(artistsTable.id, artistId));
+
+  req.log.info(
+    { artistId, prevUserId, newUserId: userId, assignedBy: req.user!.userId },
+    "Admin manually assigned artist profile to user",
+  );
+
+  res.json({ success: true, artistId, assignedTo: { id: targetUser.id, username: targetUser.username } });
+});
+
 // ── Broadcasts ───────────────────────────────────────────────────────────────
 
 router.get("/admin/broadcasts", requireAuth, requireRole(...ADMIN_ROLES), async (_req, res): Promise<void> => {
