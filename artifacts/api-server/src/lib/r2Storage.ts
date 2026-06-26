@@ -1,43 +1,20 @@
-import { S3Client, PutObjectCommand, GetObjectCommand, HeadBucketCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { randomUUID } from "crypto";
 
 /**
- * Returns true when Cloudflare R2 credentials are configured.
- * Set these env vars in Render (or any non-Replit host):
- *   R2_ACCOUNT_ID        — Cloudflare account ID
- *   R2_ACCESS_KEY_ID     — R2 API token access key  (from R2 → Manage R2 API tokens)
- *   R2_SECRET_ACCESS_KEY — R2 API token secret key
- *   R2_BUCKET_NAME       — bucket name (e.g. "cotopia")
+ * Returns true when Cloudflare R2 is configured via REST API + public URL.
+ * Required env vars (set in Render):
+ *   R2_ACCOUNT_ID  — Cloudflare account ID
+ *   R2_BUCKET_NAME — R2 bucket name (e.g. "cotopia")
+ *   R2_API_TOKEN   — Cloudflare global API token with R2:Edit permission
+ *   R2_PUBLIC_URL  — public development URL (e.g. https://pub-xxx.r2.dev)
  */
 export function r2Available(): boolean {
   return Boolean(
     process.env.R2_ACCOUNT_ID &&
-    process.env.R2_ACCESS_KEY_ID &&
-    process.env.R2_SECRET_ACCESS_KEY &&
-    process.env.R2_BUCKET_NAME,
+    process.env.R2_BUCKET_NAME &&
+    process.env.R2_API_TOKEN &&
+    process.env.R2_PUBLIC_URL,
   );
-}
-
-function getClient(): S3Client {
-  // Trim all credential strings — copy-paste from Cloudflare can introduce
-  // invisible trailing newlines/spaces that cause "Invalid character in header" errors.
-  const accountId = process.env.R2_ACCOUNT_ID!.trim();
-  const accessKeyId = process.env.R2_ACCESS_KEY_ID!.trim();
-  const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY!.trim();
-
-  return new S3Client({
-    region: "auto",
-    endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
-    // REQUIRED for R2: use path-style URLs (https://endpoint/bucket/key)
-    // instead of virtual-hosted style (https://bucket.endpoint/key) which R2 does not support.
-    forcePathStyle: true,
-    credentials: { accessKeyId, secretAccessKey },
-  });
-}
-
-function getBucket(): string {
-  return process.env.R2_BUCKET_NAME!;
 }
 
 /**
@@ -49,59 +26,70 @@ function objectPathToKey(objectPath: string): string {
 }
 
 /**
- * Upload a buffer to R2. Returns the same objectPath format used throughout
- * the app (/objects/uploads/<uuid>) so the DB schema doesn't change.
+ * Upload a buffer to R2 using Cloudflare's REST API.
+ * Uses a Bearer token (global API token) instead of S3-compatible credentials,
+ * which avoids the "Invalid character in header" issue with the S3 SDK.
  */
 export async function saveFileToR2(
   buffer: Buffer,
-  originalName: string,
+  _originalName: string,
   contentType: string,
 ): Promise<{ objectPath: string; size: number }> {
-  const client = getClient();
-  const bucket = getBucket();
+  const accountId = process.env.R2_ACCOUNT_ID!.trim();
+  const bucket = process.env.R2_BUCKET_NAME!.trim();
+  const apiToken = process.env.R2_API_TOKEN!.trim();
   const id = randomUUID();
   const key = `uploads/${id}`;
 
-  await client.send(
-    new PutObjectCommand({
-      Bucket: bucket,
-      Key: key,
-      Body: buffer,
-      ContentType: contentType,
-      Metadata: { originalName: encodeURIComponent(originalName) },
-    }),
-  );
+  const url = `https://api.cloudflare.com/client/v4/accounts/${accountId}/r2/buckets/${bucket}/objects/${key}`;
+
+  const response = await fetch(url, {
+    method: "PUT",
+    headers: {
+      "Authorization": `Bearer ${apiToken}`,
+      "Content-Type": contentType,
+    },
+    body: buffer,
+  });
+
+  if (!response.ok) {
+    const text = await response.text().catch(() => "");
+    throw new Error(`R2 upload failed (HTTP ${response.status}): ${text}`);
+  }
 
   return { objectPath: `/objects/uploads/${id}`, size: buffer.length };
 }
 
 /**
- * Generate a presigned GET URL for a stored object.
- * Expires in 7 days — long enough for streaming sessions without
- * needing to re-sign constantly.
+ * Returns the public CDN URL for a stored object.
+ * Uses R2's public development URL — no presigned URLs or expiry needed.
  */
-export async function getR2SignedUrl(objectPath: string): Promise<string> {
-  const client = getClient();
-  const bucket = getBucket();
+export function getR2PublicUrl(objectPath: string): string {
+  const publicBase = process.env.R2_PUBLIC_URL!.replace(/\/$/, "");
   const key = objectPathToKey(objectPath);
-
-  const command = new GetObjectCommand({ Bucket: bucket, Key: key });
-  return getSignedUrl(client, command, { expiresIn: 604800 });
+  return `${publicBase}/${key}`;
 }
 
 /**
- * Quick connectivity check — tries HeadBucket to verify credentials and
- * bucket access without writing any data. Returns null on success, or an
- * error message string if the connection fails.
+ * Quick connectivity check — does a HEAD request to the API to verify the
+ * token is valid and the bucket exists. Returns null on success, error string on failure.
  */
 export async function checkR2Connectivity(): Promise<string | null> {
   try {
-    const client = getClient();
-    const bucket = getBucket();
-    await client.send(new HeadBucketCommand({ Bucket: bucket }));
-    return null;
+    const accountId = process.env.R2_ACCOUNT_ID!.trim();
+    const bucket = process.env.R2_BUCKET_NAME!.trim();
+    const apiToken = process.env.R2_API_TOKEN!.trim();
+
+    const url = `https://api.cloudflare.com/client/v4/accounts/${accountId}/r2/buckets/${bucket}`;
+    const response = await fetch(url, {
+      headers: { "Authorization": `Bearer ${apiToken}` },
+    });
+
+    if (response.ok) return null;
+
+    const text = await response.text().catch(() => "");
+    return `HTTP ${response.status}: ${text.slice(0, 200)}`;
   } catch (err: unknown) {
-    const e = err as { name?: string; message?: string; $metadata?: { httpStatusCode?: number } };
-    return `${e.name ?? "Error"} (HTTP ${e.$metadata?.httpStatusCode ?? "?"}) — ${e.message ?? String(err)}`;
+    return String(err);
   }
 }

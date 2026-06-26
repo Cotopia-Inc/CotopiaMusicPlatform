@@ -3,15 +3,16 @@ import express from "express";
 import { randomUUID } from "crypto";
 import { objectStorageClient, ObjectStorageService, ObjectNotFoundError } from "../lib/objectStorage";
 import { saveFile, readFile, FileNotFoundError } from "../lib/localFileStorage";
-import { r2Available, saveFileToR2, getR2SignedUrl, checkR2Connectivity } from "../lib/r2Storage";
+import { r2Available, saveFileToR2, getR2PublicUrl, checkR2Connectivity } from "../lib/r2Storage";
+
 const router: IRouter = Router();
 const storageService = new ObjectStorageService();
 
 /**
  * Priority order for storage backends:
  * 1. GCS via Replit Object Storage (dev on Replit)
- * 2. Cloudflare R2 (production on Render or any host)
- * 3. Local disk (local dev fallback — ephemeral, not for production)
+ * 2. Cloudflare R2 via REST API + public URL (production on Render)
+ * 3. Local disk (local dev fallback — ephemeral)
  */
 function gcsAvailable(): boolean {
   return Boolean(process.env.PRIVATE_OBJECT_DIR && process.env.DEFAULT_OBJECT_STORAGE_BUCKET_ID);
@@ -24,10 +25,10 @@ function parseBucketPath(path: string): { bucketName: string; objectName: string
 }
 
 /**
- * GET /storage/status
+ * GET /storage/status  (public — no auth required)
  *
- * Admin-only endpoint: shows which backend is active and whether R2 connectivity
- * is healthy. Hit https://<your-render-url>/api/storage/status to verify setup.
+ * Shows which backend is active and whether R2 connectivity is healthy.
+ * Hit https://<your-render-url>/api/storage/status to verify your setup.
  */
 router.get("/storage/status", async (req: Request, res: Response) => {
   const backend = gcsAvailable() ? "gcs" : r2Available() ? "r2" : "local";
@@ -42,9 +43,9 @@ router.get("/storage/status", async (req: Request, res: Response) => {
     r2Configured: r2Available(),
     r2Vars: {
       R2_ACCOUNT_ID: Boolean(process.env.R2_ACCOUNT_ID),
-      R2_ACCESS_KEY_ID: Boolean(process.env.R2_ACCESS_KEY_ID),
-      R2_SECRET_ACCESS_KEY: Boolean(process.env.R2_SECRET_ACCESS_KEY),
       R2_BUCKET_NAME: Boolean(process.env.R2_BUCKET_NAME),
+      R2_API_TOKEN: Boolean(process.env.R2_API_TOKEN),
+      R2_PUBLIC_URL: Boolean(process.env.R2_PUBLIC_URL),
     },
     r2ConnectivityError: r2Check,
     r2Healthy: backend === "r2" && r2Check === null,
@@ -106,11 +107,8 @@ router.post(
         res.json({ objectPath, metadata: { name, size, contentType } });
       }
     } catch (error: unknown) {
-      const e = error as { name?: string; message?: string; $metadata?: { httpStatusCode?: number } };
-      const detail = e.$metadata
-        ? `${e.name} (HTTP ${e.$metadata.httpStatusCode}): ${e.message}`
-        : String(error);
-      req.log.error({ err: error, r2Detail: detail }, "Error saving uploaded file");
+      const detail = error instanceof Error ? error.message : String(error);
+      req.log.error({ err: error, detail }, "Error saving uploaded file");
       res.status(500).json({ error: "Failed to upload file", detail });
     }
   },
@@ -119,9 +117,10 @@ router.post(
 /**
  * GET /storage/objects/*path
  *
- * Serve a stored file. When using R2, redirects the browser to a 7-day
- * presigned Cloudflare URL so media streams directly from the CDN edge
- * without proxying through the app server.
+ * Serve a stored file.
+ * - GCS: streams the file through the server
+ * - R2:  302-redirects to the public CDN URL — Cloudflare serves the file directly
+ * - Local: streams from disk
  */
 router.get("/storage/objects/*path", async (req: Request, res: Response) => {
   try {
@@ -135,18 +134,18 @@ router.get("/storage/objects/*path", async (req: Request, res: Response) => {
       const contentType = (metadata.contentType as string) ?? "application/octet-stream";
 
       res.setHeader("Content-Type", contentType);
-      res.setHeader("Cache-Control", "private, max-age=3600");
+      res.setHeader("Cache-Control", "public, max-age=86400");
       if (metadata.size) res.setHeader("Content-Length", String(metadata.size));
 
       objectFile.createReadStream().pipe(res);
     } else if (r2Available()) {
-      const signedUrl = await getR2SignedUrl(objectPath);
-      res.redirect(302, signedUrl);
+      const publicUrl = getR2PublicUrl(objectPath);
+      res.redirect(302, publicUrl);
     } else {
       const { buffer, meta } = await readFile(objectPath);
       res.setHeader("Content-Type", meta.contentType);
       res.setHeader("Content-Length", String(buffer.length));
-      res.setHeader("Cache-Control", "private, max-age=3600");
+      res.setHeader("Cache-Control", "public, max-age=86400");
       res.send(buffer);
     }
   } catch (error) {
