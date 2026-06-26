@@ -1,4 +1,4 @@
-import { useAdminListUsers, getAdminListUsersQueryKey, useAdminUpdateUser, useAdminGetUserAgreements, getAdminGetUserAgreementsQueryKey, type AgreementRecord } from "@workspace/api-client-react";
+import { useAdminListUsers, getAdminListUsersQueryKey, useAdminUpdateUser, useAdminGetUserAgreements, getAdminGetUserAgreementsQueryKey, useAdminGetUser, getAdminGetUserQueryKey, type AgreementRecord, type AdminUserProfile } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { UserLink } from "@/components/user-link";
-import { AlertTriangle, ScrollText, Monitor, Globe, FileText, Users, Bot, ChevronDown, ChevronUp, Trash2, Clock, UserX, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { AlertTriangle, ScrollText, Monitor, Globe, FileText, Users, Bot, ChevronDown, ChevronUp, Trash2, Clock, UserX, CheckCircle, XCircle, Loader2, ClipboardList } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { CopyrightStrikeModal, type StrikeTarget } from "@/components/copyright-strike-modal";
 import { useAuth } from "@/lib/auth";
@@ -22,6 +22,80 @@ const AGREEMENT_LABELS: Record<string, { label: string; icon: ReactNode; color: 
   ai_policy:            { label: "AI Content Policy",      icon: <Bot className="w-3.5 h-3.5" />,       color: "bg-amber-500/15 text-amber-400 border-amber-500/30" },
   submission_agreement: { label: "Submission Agreement",   icon: <ScrollText className="w-3.5 h-3.5" />, color: "bg-rose-500/15 text-rose-400 border-rose-500/30" },
 };
+
+function ProfileDialog({ userId, username, open, onClose }: { userId: number; username: string; open: boolean; onClose: () => void }) {
+  const { data: profile, isLoading } = useAdminGetUser(userId, {
+    query: { enabled: open && !!userId, queryKey: getAdminGetUserQueryKey(userId) },
+  });
+
+  const field = (label: string, value: string | null | undefined) => (
+    <div className="flex flex-col gap-0.5">
+      <span className="text-[10px] uppercase tracking-widest text-muted-foreground/60 font-medium">{label}</span>
+      <span className="text-sm text-foreground">{value || <span className="text-muted-foreground/40 italic">Not provided</span>}</span>
+    </div>
+  );
+
+  return (
+    <Dialog open={open} onOpenChange={v => { if (!v) onClose(); }}>
+      <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <ClipboardList className="w-5 h-5 text-primary" />
+            Full Profile — <span className="font-mono text-primary">@{username}</span>
+          </DialogTitle>
+        </DialogHeader>
+        <div className="flex-1 overflow-y-auto space-y-5 pr-1 py-2">
+          {isLoading ? (
+            <div className="space-y-3">{Array(8).fill(0).map((_, i) => <Skeleton key={i} className="h-10 w-full rounded-lg" />)}</div>
+          ) : !profile ? (
+            <p className="text-sm text-muted-foreground text-center py-8">Failed to load profile.</p>
+          ) : (
+            <>
+              <div className="rounded-lg border border-border bg-secondary/20 p-4">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">Account Info</p>
+                <div className="grid grid-cols-2 gap-4">
+                  {field("Email", profile.email)}
+                  {field("Username", `@${profile.username}`)}
+                  {field("Display Name", profile.displayName)}
+                  {field("Role", profile.role)}
+                  {field("Joined", format(new Date(profile.createdAt), "MMM d, yyyy"))}
+                  {field("Status", profile.isActive ? "Active" : "Inactive")}
+                </div>
+                {profile.bio && (
+                  <div className="mt-4">
+                    {field("Bio", profile.bio)}
+                  </div>
+                )}
+              </div>
+
+              <div className="rounded-lg border border-border bg-secondary/20 p-4">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">Identity & Demographics</p>
+                <div className="grid grid-cols-2 gap-4">
+                  {field("Legal Name", profile.realName)}
+                  {field("Date of Birth", profile.dateOfBirth)}
+                  {field("Phone", profile.phone)}
+                  {field("Sex", profile.sex)}
+                  {field("Race / Ethnicity", profile.race)}
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-border bg-secondary/20 p-4">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">Address</p>
+                <div className="grid grid-cols-2 gap-4">
+                  {field("Street Address", profile.address)}
+                  {field("City", profile.city)}
+                  {field("State", profile.state)}
+                  {field("ZIP / Postal Code", profile.postalCode)}
+                  {field("Country", profile.country)}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 function AgreementsDialog({ userId, username, open, onClose }: { userId: number; username: string; open: boolean; onClose: () => void }) {
   const { data: records, isLoading } = useAdminGetUserAgreements(userId, {
@@ -303,6 +377,7 @@ export default function AdminUsers() {
   const { user: currentUser } = useAuth();
   const isMasterAdmin = currentUser?.role === "master_admin";
   const [strikeTarget, setStrikeTarget] = useState<StrikeTarget | null>(null);
+  const [profileUser, setProfileUser] = useState<{ id: number; username: string } | null>(null);
   const [agreementsUser, setAgreementsUser] = useState<{ id: number; username: string } | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; username: string } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -423,6 +498,14 @@ export default function AdminUsers() {
                       <Button
                         variant="outline"
                         size="sm"
+                        className="text-xs gap-1 text-violet-400 border-violet-500/20 hover:bg-violet-500/10"
+                        onClick={() => setProfileUser({ id: user.id, username: user.username })}
+                      >
+                        <ClipboardList className="w-3 h-3" />Full Profile
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
                         className="text-xs gap-1 text-primary/80 border-primary/20 hover:bg-primary/10"
                         onClick={() => setAgreementsUser({ id: user.id, username: user.username })}
                       >
@@ -482,6 +565,15 @@ export default function AdminUsers() {
       onClose={() => setStrikeTarget(null)}
       onSuccess={() => queryClient.invalidateQueries({ queryKey: ["admin-strikes-summary"] })}
     />
+
+    {profileUser && (
+      <ProfileDialog
+        userId={profileUser.id}
+        username={profileUser.username}
+        open={!!profileUser}
+        onClose={() => setProfileUser(null)}
+      />
+    )}
 
     {agreementsUser && (
       <AgreementsDialog

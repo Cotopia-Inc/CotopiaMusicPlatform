@@ -1662,6 +1662,25 @@ paths:
                 $ref: "#/components/schemas/AdminUserList"
 
   /admin/users/{id}:
+    get:
+      operationId: adminGetUser
+      tags: [admin]
+      summary: Get full profile for a user (admin)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUserProfile"
+        "404":
+          description: Not found
     patch:
       operationId: adminUpdateUser
       tags: [admin]
@@ -3748,6 +3767,57 @@ components:
           type: boolean
 
     # ── Admin ─────────────────────────────────────────────────────────────────
+    AdminUserProfile:
+      type: object
+      required: [id, email, username, role, createdAt]
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        username:
+          type: string
+        displayName:
+          type: ["string", "null"]
+        avatarUrl:
+          type: ["string", "null"]
+        bio:
+          type: ["string", "null"]
+        bannerUrl:
+          type: ["string", "null"]
+        profileVideoUrl:
+          type: ["string", "null"]
+        role:
+          type: string
+        isActive:
+          type: boolean
+        isVerified:
+          type: boolean
+        isSuspended:
+          type: boolean
+        createdAt:
+          type: string
+        realName:
+          type: ["string", "null"]
+        dateOfBirth:
+          type: ["string", "null"]
+        phone:
+          type: ["string", "null"]
+        sex:
+          type: ["string", "null"]
+        race:
+          type: ["string", "null"]
+        address:
+          type: ["string", "null"]
+        city:
+          type: ["string", "null"]
+        state:
+          type: ["string", "null"]
+        postalCode:
+          type: ["string", "null"]
+        country:
+          type: ["string", "null"]
+
     AdminUserList:
       type: object
       required: [items, total]

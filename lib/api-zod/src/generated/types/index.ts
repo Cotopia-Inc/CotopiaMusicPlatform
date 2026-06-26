@@ -26,6 +26,7 @@ export * from './adminUploadSongInput';
 export * from './adminUploadSongInputReleaseType';
 export * from './adminUploadVideoInput';
 export * from './adminUserList';
+export * from './adminUserProfile';
 export * from './adminUserUpdate';
 export * from './adminUserUpdateRole';
 export * from './agreementRecord';

@@ -19,18 +19,18 @@ async function getArtistRow(id: number, userId?: number) {
       id: artistsTable.id,
       userId: artistsTable.userId,
       stageName: artistsTable.stageName,
-      bio: artistsTable.bio,
+      bio: sql<string | null>`COALESCE(${artistsTable.bio}, ${usersTable.bio})`,
       bannerUrl: artistsTable.bannerUrl,
       genre: artistsTable.genre,
       labelId: artistsTable.labelId,
       createdAt: artistsTable.createdAt,
       avatarUrl: sql<string | null>`COALESCE(${artistsTable.avatarUrl}, ${usersTable.avatarUrl})`,
-      isVerified: usersTable.isVerified,
+      isVerified: sql<boolean>`COALESCE(${usersTable.isVerified}, false)`,
       profileVideoUrl: usersTable.profileVideoUrl,
       userRole: usersTable.role,
     })
     .from(artistsTable)
-    .innerJoin(usersTable, eq(artistsTable.userId, usersTable.id))
+    .leftJoin(usersTable, eq(artistsTable.userId, usersTable.id))
     .where(eq(artistsTable.id, id))
     .limit(1);
 

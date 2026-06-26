@@ -91,6 +91,32 @@ router.get("/admin/users", requireAuth, requireRole(...ADMIN_ROLES), async (req:
   res.json({ items, total: totalRow[0]?.count ?? 0 });
 });
 
+router.get("/admin/users/:id", requireAuth, requireRole(...ADMIN_ROLES), async (req: AuthRequest, res): Promise<void> => {
+  const idRaw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const id = parseInt(idRaw, 10);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+
+  const [user] = await db
+    .select({
+      id: usersTable.id, email: usersTable.email, username: usersTable.username,
+      displayName: usersTable.displayName, avatarUrl: usersTable.avatarUrl,
+      bio: usersTable.bio, bannerUrl: usersTable.bannerUrl,
+      profileVideoUrl: usersTable.profileVideoUrl, role: usersTable.role,
+      isActive: usersTable.isActive, isVerified: usersTable.isVerified,
+      isSuspended: usersTable.isSuspended, createdAt: usersTable.createdAt,
+      realName: usersTable.realName, dateOfBirth: usersTable.dateOfBirth,
+      phone: usersTable.phone, sex: usersTable.sex, race: usersTable.race,
+      address: usersTable.address, city: usersTable.city, state: usersTable.state,
+      postalCode: usersTable.postalCode, country: usersTable.country,
+    })
+    .from(usersTable)
+    .where(eq(usersTable.id, id))
+    .limit(1);
+
+  if (!user) { res.status(404).json({ error: "User not found" }); return; }
+  res.json(user);
+});
+
 router.patch("/admin/users/:id", requireAuth, requireRole(...ADMIN_ROLES), async (req: AuthRequest, res): Promise<void> => {
   const idRaw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const id = parseInt(idRaw, 10);

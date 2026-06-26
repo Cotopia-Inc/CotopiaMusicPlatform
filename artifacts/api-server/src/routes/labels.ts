@@ -14,7 +14,7 @@ const router = Router();
 
 async function getLabelRow(id: number, userId?: number) {
   const [label] = await db
-    .select({ id: labelsTable.id, userId: labelsTable.userId, name: labelsTable.name, bio: labelsTable.bio, logoUrl: labelsTable.logoUrl, bannerUrl: labelsTable.bannerUrl, profileVideoUrl: usersTable.profileVideoUrl, createdAt: labelsTable.createdAt, isVerified: usersTable.isVerified, userRole: usersTable.role })
+    .select({ id: labelsTable.id, userId: labelsTable.userId, name: labelsTable.name, bio: sql<string | null>`COALESCE(${labelsTable.bio}, ${usersTable.bio})`, logoUrl: labelsTable.logoUrl, bannerUrl: labelsTable.bannerUrl, profileVideoUrl: usersTable.profileVideoUrl, createdAt: labelsTable.createdAt, isVerified: usersTable.isVerified, userRole: usersTable.role })
     .from(labelsTable)
     .innerJoin(usersTable, eq(labelsTable.userId, usersTable.id))
     .where(eq(labelsTable.id, id))

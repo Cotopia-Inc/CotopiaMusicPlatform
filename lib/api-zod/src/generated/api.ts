@@ -2246,6 +2246,40 @@ export const AdminListUsersResponse = zod.object({
 
 
 /**
+ * @summary Get full profile for a user (admin)
+ */
+export const AdminGetUserParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const AdminGetUserResponse = zod.object({
+  "id": zod.number(),
+  "email": zod.string(),
+  "username": zod.string(),
+  "displayName": zod.string().nullish(),
+  "avatarUrl": zod.string().nullish(),
+  "bio": zod.string().nullish(),
+  "bannerUrl": zod.string().nullish(),
+  "profileVideoUrl": zod.string().nullish(),
+  "role": zod.string(),
+  "isActive": zod.boolean().optional(),
+  "isVerified": zod.boolean().optional(),
+  "isSuspended": zod.boolean().optional(),
+  "createdAt": zod.string(),
+  "realName": zod.string().nullish(),
+  "dateOfBirth": zod.string().nullish(),
+  "phone": zod.string().nullish(),
+  "sex": zod.string().nullish(),
+  "race": zod.string().nullish(),
+  "address": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "state": zod.string().nullish(),
+  "postalCode": zod.string().nullish(),
+  "country": zod.string().nullish()
+})
+
+
+/**
  * @summary Update a user (admin)
  */
 export const AdminUpdateUserParams = zod.object({

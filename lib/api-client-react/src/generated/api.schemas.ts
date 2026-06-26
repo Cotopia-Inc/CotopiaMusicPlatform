@@ -940,6 +940,47 @@ export interface CompanyPostUpdate {
   isPinned?: boolean;
 }
 
+export interface AdminUserProfile {
+  id: number;
+  email: string;
+  username: string;
+  /** @nullable */
+  displayName?: string | null;
+  /** @nullable */
+  avatarUrl?: string | null;
+  /** @nullable */
+  bio?: string | null;
+  /** @nullable */
+  bannerUrl?: string | null;
+  /** @nullable */
+  profileVideoUrl?: string | null;
+  role: string;
+  isActive?: boolean;
+  isVerified?: boolean;
+  isSuspended?: boolean;
+  createdAt: string;
+  /** @nullable */
+  realName?: string | null;
+  /** @nullable */
+  dateOfBirth?: string | null;
+  /** @nullable */
+  phone?: string | null;
+  /** @nullable */
+  sex?: string | null;
+  /** @nullable */
+  race?: string | null;
+  /** @nullable */
+  address?: string | null;
+  /** @nullable */
+  city?: string | null;
+  /** @nullable */
+  state?: string | null;
+  /** @nullable */
+  postalCode?: string | null;
+  /** @nullable */
+  country?: string | null;
+}
+
 export interface AdminUserList {
   items: User[];
   total: number;
