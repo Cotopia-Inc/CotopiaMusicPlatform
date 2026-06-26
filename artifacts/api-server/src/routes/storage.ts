@@ -3,13 +3,16 @@ import express from "express";
 import { randomUUID } from "crypto";
 import { objectStorageClient, ObjectStorageService, ObjectNotFoundError } from "../lib/objectStorage";
 import { saveFile, readFile, FileNotFoundError } from "../lib/localFileStorage";
+import { r2Available, saveFileToR2, getR2SignedUrl } from "../lib/r2Storage";
 
 const router: IRouter = Router();
 const storageService = new ObjectStorageService();
 
 /**
- * Returns true when running inside Replit with GCS object storage configured.
- * Falls back to local disk on other platforms (e.g. Render).
+ * Priority order for storage backends:
+ * 1. GCS via Replit Object Storage (dev on Replit)
+ * 2. Cloudflare R2 (production on Render or any host)
+ * 3. Local disk (local dev fallback — ephemeral, not for production)
  */
 function gcsAvailable(): boolean {
   return Boolean(process.env.PRIVATE_OBJECT_DIR && process.env.DEFAULT_OBJECT_STORAGE_BUCKET_ID);
@@ -25,8 +28,7 @@ function parseBucketPath(path: string): { bucketName: string; objectName: string
  * POST /storage/uploads/upload
  *
  * Server-mediated upload: browser POSTs the raw file bytes; the server
- * writes them to GCS (Replit Object Storage, persistent) when running on
- * Replit, or to local disk as a fallback on other platforms.
+ * writes them to the appropriate persistent storage backend.
  *
  * Headers:
  *   Content-Type   — file MIME type
@@ -53,7 +55,7 @@ router.post(
 
     try {
       if (gcsAvailable()) {
-        // Replit: write to GCS — files persist across restarts
+        // Replit dev: write to GCS — files persist across restarts
         const id = randomUUID();
         const privateDir = storageService.getPrivateObjectDir();
         const fullPath = `${privateDir}/uploads/${id}`;
@@ -68,8 +70,13 @@ router.post(
           objectPath: `/objects/uploads/${id}`,
           metadata: { name, size: body.length, contentType },
         });
+      } else if (r2Available()) {
+        // Production (Render): write to Cloudflare R2 — persistent, CDN-backed
+        const { objectPath, size } = await saveFileToR2(body, name, contentType);
+        req.log.info({ objectPath, size, backend: "r2" }, "File saved to Cloudflare R2");
+        res.json({ objectPath, metadata: { name, size, contentType } });
       } else {
-        // Non-Replit fallback: local disk (ephemeral — configure STORAGE_DIR for persistence)
+        // Local dev fallback: local disk (ephemeral — configure STORAGE_DIR for persistence)
         const { objectPath, size } = await saveFile(body, name, contentType);
         req.log.info({ objectPath, size, backend: "local" }, "File saved to local disk");
         res.json({ objectPath, metadata: { name, size, contentType } });
@@ -84,7 +91,9 @@ router.post(
 /**
  * GET /storage/objects/*path
  *
- * Serve a stored file from GCS (Replit) or local disk (fallback).
+ * Serve a stored file. When using R2, redirects the browser to a 7-day
+ * presigned Cloudflare URL so media streams directly from the CDN edge
+ * without proxying through the app server.
  */
 router.get("/storage/objects/*path", async (req: Request, res: Response) => {
   try {
@@ -102,6 +111,10 @@ router.get("/storage/objects/*path", async (req: Request, res: Response) => {
       if (metadata.size) res.setHeader("Content-Length", String(metadata.size));
 
       objectFile.createReadStream().pipe(res);
+    } else if (r2Available()) {
+      // Redirect to a presigned R2 URL — Cloudflare serves the file directly
+      const signedUrl = await getR2SignedUrl(objectPath);
+      res.redirect(302, signedUrl);
     } else {
       const { buffer, meta } = await readFile(objectPath);
       res.setHeader("Content-Type", meta.contentType);
