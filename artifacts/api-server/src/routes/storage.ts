@@ -3,7 +3,8 @@ import express from "express";
 import { randomUUID } from "crypto";
 import { objectStorageClient, ObjectStorageService, ObjectNotFoundError } from "../lib/objectStorage";
 import { saveFile, readFile, FileNotFoundError } from "../lib/localFileStorage";
-import { r2Available, saveFileToR2, getR2SignedUrl } from "../lib/r2Storage";
+import { r2Available, saveFileToR2, getR2SignedUrl, checkR2Connectivity } from "../lib/r2Storage";
+import { requireAuth, requireRole } from "../lib/auth";
 
 const router: IRouter = Router();
 const storageService = new ObjectStorageService();
@@ -23,6 +24,34 @@ function parseBucketPath(path: string): { bucketName: string; objectName: string
   const parts = path.split("/");
   return { bucketName: parts[1], objectName: parts.slice(2).join("/") };
 }
+
+/**
+ * GET /storage/status
+ *
+ * Admin-only endpoint: shows which backend is active and whether R2 connectivity
+ * is healthy. Hit https://<your-render-url>/api/storage/status to verify setup.
+ */
+router.get("/storage/status", requireAuth, requireRole("admin", "master_admin", "editor", "moderator"), async (req: Request, res: Response) => {
+  const backend = gcsAvailable() ? "gcs" : r2Available() ? "r2" : "local";
+  let r2Check: string | null = null;
+
+  if (backend === "r2") {
+    r2Check = await checkR2Connectivity();
+  }
+
+  res.json({
+    backend,
+    r2Configured: r2Available(),
+    r2Vars: {
+      R2_ACCOUNT_ID: Boolean(process.env.R2_ACCOUNT_ID),
+      R2_ACCESS_KEY_ID: Boolean(process.env.R2_ACCESS_KEY_ID),
+      R2_SECRET_ACCESS_KEY: Boolean(process.env.R2_SECRET_ACCESS_KEY),
+      R2_BUCKET_NAME: Boolean(process.env.R2_BUCKET_NAME),
+    },
+    r2ConnectivityError: r2Check,
+    r2Healthy: backend === "r2" && r2Check === null,
+  });
+});
 
 /**
  * POST /storage/uploads/upload
@@ -55,7 +84,6 @@ router.post(
 
     try {
       if (gcsAvailable()) {
-        // Replit dev: write to GCS — files persist across restarts
         const id = randomUUID();
         const privateDir = storageService.getPrivateObjectDir();
         const fullPath = `${privateDir}/uploads/${id}`;
@@ -71,19 +99,21 @@ router.post(
           metadata: { name, size: body.length, contentType },
         });
       } else if (r2Available()) {
-        // Production (Render): write to Cloudflare R2 — persistent, CDN-backed
         const { objectPath, size } = await saveFileToR2(body, name, contentType);
         req.log.info({ objectPath, size, backend: "r2" }, "File saved to Cloudflare R2");
         res.json({ objectPath, metadata: { name, size, contentType } });
       } else {
-        // Local dev fallback: local disk (ephemeral — configure STORAGE_DIR for persistence)
         const { objectPath, size } = await saveFile(body, name, contentType);
         req.log.info({ objectPath, size, backend: "local" }, "File saved to local disk");
         res.json({ objectPath, metadata: { name, size, contentType } });
       }
-    } catch (error) {
-      req.log.error({ err: error }, "Error saving uploaded file");
-      res.status(500).json({ error: "Failed to upload file" });
+    } catch (error: unknown) {
+      const e = error as { name?: string; message?: string; $metadata?: { httpStatusCode?: number } };
+      const detail = e.$metadata
+        ? `${e.name} (HTTP ${e.$metadata.httpStatusCode}): ${e.message}`
+        : String(error);
+      req.log.error({ err: error, r2Detail: detail }, "Error saving uploaded file");
+      res.status(500).json({ error: "Failed to upload file", detail });
     }
   },
 );
@@ -112,7 +142,6 @@ router.get("/storage/objects/*path", async (req: Request, res: Response) => {
 
       objectFile.createReadStream().pipe(res);
     } else if (r2Available()) {
-      // Redirect to a presigned R2 URL — Cloudflare serves the file directly
       const signedUrl = await getR2SignedUrl(objectPath);
       res.redirect(302, signedUrl);
     } else {

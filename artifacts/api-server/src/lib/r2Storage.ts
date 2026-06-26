@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, GetObjectCommand, HeadBucketCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { randomUUID } from "crypto";
 
@@ -6,7 +6,7 @@ import { randomUUID } from "crypto";
  * Returns true when Cloudflare R2 credentials are configured.
  * Set these env vars in Render (or any non-Replit host):
  *   R2_ACCOUNT_ID        — Cloudflare account ID
- *   R2_ACCESS_KEY_ID     — R2 API token access key
+ *   R2_ACCESS_KEY_ID     — R2 API token access key  (from R2 → Manage R2 API tokens)
  *   R2_SECRET_ACCESS_KEY — R2 API token secret key
  *   R2_BUCKET_NAME       — bucket name (e.g. "cotopia")
  */
@@ -23,6 +23,9 @@ function getClient(): S3Client {
   return new S3Client({
     region: "auto",
     endpoint: `https://${process.env.R2_ACCOUNT_ID!}.r2.cloudflarestorage.com`,
+    // REQUIRED for R2: use path-style URLs (https://endpoint/bucket/key)
+    // instead of virtual-hosted style (https://bucket.endpoint/key) which R2 does not support.
+    forcePathStyle: true,
     credentials: {
       accessKeyId: process.env.R2_ACCESS_KEY_ID!,
       secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
@@ -81,4 +84,21 @@ export async function getR2SignedUrl(objectPath: string): Promise<string> {
 
   const command = new GetObjectCommand({ Bucket: bucket, Key: key });
   return getSignedUrl(client, command, { expiresIn: 604800 });
+}
+
+/**
+ * Quick connectivity check — tries HeadBucket to verify credentials and
+ * bucket access without writing any data. Returns null on success, or an
+ * error message string if the connection fails.
+ */
+export async function checkR2Connectivity(): Promise<string | null> {
+  try {
+    const client = getClient();
+    const bucket = getBucket();
+    await client.send(new HeadBucketCommand({ Bucket: bucket }));
+    return null;
+  } catch (err: unknown) {
+    const e = err as { name?: string; message?: string; $metadata?: { httpStatusCode?: number } };
+    return `${e.name ?? "Error"} (HTTP ${e.$metadata?.httpStatusCode ?? "?"}) — ${e.message ?? String(err)}`;
+  }
 }
