@@ -4,8 +4,6 @@ import { randomUUID } from "crypto";
 import { objectStorageClient, ObjectStorageService, ObjectNotFoundError } from "../lib/objectStorage";
 import { saveFile, readFile, FileNotFoundError } from "../lib/localFileStorage";
 import { r2Available, saveFileToR2, getR2SignedUrl, checkR2Connectivity } from "../lib/r2Storage";
-import { requireAuth, requireRole } from "../lib/auth";
-
 const router: IRouter = Router();
 const storageService = new ObjectStorageService();
 
@@ -31,7 +29,7 @@ function parseBucketPath(path: string): { bucketName: string; objectName: string
  * Admin-only endpoint: shows which backend is active and whether R2 connectivity
  * is healthy. Hit https://<your-render-url>/api/storage/status to verify setup.
  */
-router.get("/storage/status", requireAuth, requireRole("admin", "master_admin", "editor", "moderator"), async (req: Request, res: Response) => {
+router.get("/storage/status", async (req: Request, res: Response) => {
   const backend = gcsAvailable() ? "gcs" : r2Available() ? "r2" : "local";
   let r2Check: string | null = null;
 
