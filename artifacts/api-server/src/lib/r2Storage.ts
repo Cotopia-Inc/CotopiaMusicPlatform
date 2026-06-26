@@ -20,16 +20,19 @@ export function r2Available(): boolean {
 }
 
 function getClient(): S3Client {
+  // Trim all credential strings — copy-paste from Cloudflare can introduce
+  // invisible trailing newlines/spaces that cause "Invalid character in header" errors.
+  const accountId = process.env.R2_ACCOUNT_ID!.trim();
+  const accessKeyId = process.env.R2_ACCESS_KEY_ID!.trim();
+  const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY!.trim();
+
   return new S3Client({
     region: "auto",
-    endpoint: `https://${process.env.R2_ACCOUNT_ID!}.r2.cloudflarestorage.com`,
+    endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
     // REQUIRED for R2: use path-style URLs (https://endpoint/bucket/key)
     // instead of virtual-hosted style (https://bucket.endpoint/key) which R2 does not support.
     forcePathStyle: true,
-    credentials: {
-      accessKeyId: process.env.R2_ACCESS_KEY_ID!,
-      secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
-    },
+    credentials: { accessKeyId, secretAccessKey },
   });
 }
 
