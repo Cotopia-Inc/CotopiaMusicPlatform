@@ -16,7 +16,7 @@ export default function CompanyHub() {
   const { toast } = useToast();
   const qc = useQueryClient();
   const isMasterAdmin = user?.role === "master_admin";
-  const isAdmin = isMasterAdmin || user?.role === "editor";
+  const isAdmin = isMasterAdmin || user?.role === "admin";
   const [deletingPostId, setDeletingPostId] = useState<number | null>(null);
   const deletePostMutation = useDeleteCompanyPost();
 

@@ -184,7 +184,7 @@ export default function AdminCompany() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    if (user && user.role !== "admin" && user.role !== "master_admin" && user.role !== "editor") navigate("/");
+    if (user && user.role !== "admin" && user.role !== "master_admin") navigate("/");
   }, [user, navigate]);
 
   const { data: posts, isLoading } = useListCompanyPosts(
