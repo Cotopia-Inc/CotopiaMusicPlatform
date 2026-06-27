@@ -55,21 +55,15 @@ router.post("/submissions", requireAuth, requireVerifiedEmail, async (req: AuthR
 
   const d = parsed.data;
 
-  // Find the submitter's artist profile — only auto-create for artist/label roles,
-  // never for staff (admin, mod, editor) or plain listeners.
+  // Find or auto-create an artist profile for any authenticated user.
   let [artist] = await db.select().from(artistsTable).where(eq(artistsTable.userId, req.user!.userId)).limit(1);
   if (!artist) {
-    const [user] = await db.select({ username: usersTable.username, role: usersTable.role }).from(usersTable).where(eq(usersTable.id, req.user!.userId)).limit(1);
-    if (user?.role === "artist" || user?.role === "label") {
-      const stageName = user.username || "Unknown Artist";
-      [artist] = await db.insert(artistsTable).values({
-        userId: req.user!.userId,
-        stageName,
-      }).returning();
-    } else {
-      res.status(400).json({ error: "No artist profile linked to your account. Please contact support to set one up." });
-      return;
-    }
+    const [user] = await db.select({ username: usersTable.username, displayName: usersTable.displayName }).from(usersTable).where(eq(usersTable.id, req.user!.userId)).limit(1);
+    const stageName = user?.displayName || user?.username || "Unknown Artist";
+    [artist] = await db.insert(artistsTable).values({
+      userId: req.user!.userId,
+      stageName,
+    }).returning();
   }
 
   // Extra metadata stored as JSON
@@ -135,21 +129,15 @@ router.post("/submissions/bulk", requireAuth, requireVerifiedEmail, async (req: 
 
   const d = parsed.data;
 
-  // Find the submitter's artist profile — only auto-create for artist/label roles,
-  // never for staff (admin, mod, editor) or plain listeners.
+  // Find or auto-create an artist profile for any authenticated user.
   let [artist] = await db.select().from(artistsTable).where(eq(artistsTable.userId, req.user!.userId)).limit(1);
   if (!artist) {
-    const [user] = await db.select({ username: usersTable.username, role: usersTable.role }).from(usersTable).where(eq(usersTable.id, req.user!.userId)).limit(1);
-    if (user?.role === "artist" || user?.role === "label") {
-      const stageName = user.username || "Unknown Artist";
-      [artist] = await db.insert(artistsTable).values({
-        userId: req.user!.userId,
-        stageName,
-      }).returning();
-    } else {
-      res.status(400).json({ error: "No artist profile linked to your account. Please contact support to set one up." });
-      return;
-    }
+    const [user] = await db.select({ username: usersTable.username, displayName: usersTable.displayName }).from(usersTable).where(eq(usersTable.id, req.user!.userId)).limit(1);
+    const stageName = user?.displayName || user?.username || "Unknown Artist";
+    [artist] = await db.insert(artistsTable).values({
+      userId: req.user!.userId,
+      stageName,
+    }).returning();
   }
 
   const metaFields = {

@@ -32,8 +32,7 @@ async function findOrCreateArtistProfile(userId: number): Promise<number | null>
   if (!user) return null;
   const [existing] = await db.select({ id: artistsTable.id }).from(artistsTable).where(eq(artistsTable.userId, userId)).limit(1);
   if (existing) return existing.id;
-  // Only auto-create for artist/label role users — staff and listeners must use the artist assign flow.
-  if (user.role !== "artist" && user.role !== "label") return null;
+  // Auto-create for any user — all roles can have content uploaded for them.
   const [created] = await db.insert(artistsTable).values({ userId, stageName: user.displayName ?? user.username }).returning({ id: artistsTable.id });
   return created.id;
 }
