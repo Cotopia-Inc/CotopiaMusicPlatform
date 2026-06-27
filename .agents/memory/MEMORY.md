@@ -1,7 +1,7 @@
 - [Cotopia array vs paginated endpoints](cotopia-endpoints.md) — artists/labels/company-posts/submissions return plain arrays, not {items,total}; only songs/videos/discover are paginated
 - [Cotopia catalog setup](cotopia-catalog.md) — bcryptjs and @types/bcryptjs in pnpm catalog; scripts needs @workspace/db workspace:* dependency
 - [Orval codegen type collision fix](orval-codegen-collision.md) — now automated via fix-zod-collisions.cjs in codegen script; add new names to the collisions array if needed
-- [Cotopia file storage](cotopia-file-storage.md) — uploads use local disk (localFileStorage.ts); POST /api/storage/uploads/upload; use ../lib/useUpload in frontend (NOT @workspace/object-storage-web); GCS/Replit sidecar removed
+- [Cotopia file storage](cotopia-file-storage.md) — 3-tier backend: GCS (Replit dev) → R2 REST API + public URL (Render prod) → local disk; use Cloudflare REST API not S3 SDK; R2_API_TOKEN not access-key pairs
 - [Cotopia hook and schema quirks](cotopia-hook-quirks.md) — useUpload uses onSuccess (not onChange/onUpload); useListArtists returns Artist[] directly; conditional Orval hooks need queryKey in options; AnalyticsEventInputContentType only allows song/video/playlist/user; follows table uses targetType/targetId (not followeeType/followeeId)
 - [Cotopia RBAC role separation](cotopia-rbac-roles.md) — MOD_ROLES excludes editor; editor≠moderator by design; copyright concerns use escalation flow not direct strikes
 - [Cotopia role badges everywhere](cotopia-role-badges-everywhere.md) — global invariant: every rendered user name needs RoleBadges from a real backend role field; second user refs need aliased self-join; external free-text names stay unbadged
