@@ -38,8 +38,8 @@ router.get("/home", async (_req, res): Promise<void> => {
   const rotatedFeaturedVideos = rotateFeatured(featuredVideos, 4, rotation);
 
   const [rawArtistsAll, rawLabelsAll, announcements] = await Promise.all([
-    db.select({ id: artistsTable.id, userId: artistsTable.userId, stageName: artistsTable.stageName, bio: artistsTable.bio, avatarUrl: sql<string | null>`COALESCE(${artistsTable.avatarUrl}, ${usersTable.avatarUrl})`, bannerUrl: artistsTable.bannerUrl, genre: artistsTable.genre, labelId: artistsTable.labelId, createdAt: artistsTable.createdAt, isVerified: usersTable.isVerified }).from(artistsTable).leftJoin(usersTable, eq(artistsTable.userId, usersTable.id)).orderBy(desc(artistsTable.createdAt)).limit(20),
-    db.select({ id: labelsTable.id, userId: labelsTable.userId, name: labelsTable.name, bio: labelsTable.bio, logoUrl: labelsTable.logoUrl, bannerUrl: labelsTable.bannerUrl, createdAt: labelsTable.createdAt, isVerified: usersTable.isVerified }).from(labelsTable).innerJoin(usersTable, eq(labelsTable.userId, usersTable.id)).orderBy(desc(labelsTable.createdAt)).limit(20),
+    db.select({ id: artistsTable.id, userId: artistsTable.userId, stageName: artistsTable.stageName, bio: artistsTable.bio, avatarUrl: sql<string | null>`COALESCE(${artistsTable.avatarUrl}, ${usersTable.avatarUrl})`, bannerUrl: sql<string | null>`COALESCE(${artistsTable.bannerUrl}, ${usersTable.bannerUrl})`, genre: artistsTable.genre, labelId: artistsTable.labelId, createdAt: artistsTable.createdAt, isVerified: usersTable.isVerified }).from(artistsTable).leftJoin(usersTable, eq(artistsTable.userId, usersTable.id)).orderBy(desc(artistsTable.createdAt)).limit(20),
+    db.select({ id: labelsTable.id, userId: labelsTable.userId, name: labelsTable.name, bio: labelsTable.bio, logoUrl: sql<string | null>`COALESCE(${labelsTable.logoUrl}, ${usersTable.avatarUrl})`, bannerUrl: sql<string | null>`COALESCE(${labelsTable.bannerUrl}, ${usersTable.bannerUrl})`, createdAt: labelsTable.createdAt, isVerified: usersTable.isVerified }).from(labelsTable).innerJoin(usersTable, eq(labelsTable.userId, usersTable.id)).orderBy(desc(labelsTable.createdAt)).limit(20),
     db.select().from(companyPostsTable).orderBy(desc(companyPostsTable.isPinned), desc(companyPostsTable.createdAt)).limit(3),
   ]);
   // Deduplicate by userId before filtering — guard against multiple records per user from repeated seed runs.
@@ -125,7 +125,7 @@ router.get("/home", async (_req, res): Promise<void> => {
     } else if (p.contentType === "artist") {
       const rows = await db.select({
         id: artistsTable.id, userId: artistsTable.userId, stageName: artistsTable.stageName,
-        bio: artistsTable.bio, avatarUrl: sql<string | null>`COALESCE(${artistsTable.avatarUrl}, ${usersTable.avatarUrl})`, bannerUrl: artistsTable.bannerUrl,
+        bio: artistsTable.bio, avatarUrl: sql<string | null>`COALESCE(${artistsTable.avatarUrl}, ${usersTable.avatarUrl})`, bannerUrl: sql<string | null>`COALESCE(${artistsTable.bannerUrl}, ${usersTable.bannerUrl})`,
         genre: artistsTable.genre, labelId: artistsTable.labelId, createdAt: artistsTable.createdAt,
         isVerified: usersTable.isVerified,
       }).from(artistsTable)

@@ -19,10 +19,11 @@ router.get("/label/me", requireAuth, async (req: AuthRequest, res): Promise<void
       userId: labelsTable.userId,
       name: labelsTable.name,
       bio: labelsTable.bio,
-      logoUrl: labelsTable.logoUrl,
-      bannerUrl: labelsTable.bannerUrl,
+      logoUrl: sql<string | null>`COALESCE(${labelsTable.logoUrl}, ${usersTable.avatarUrl})`,
+      bannerUrl: sql<string | null>`COALESCE(${labelsTable.bannerUrl}, ${usersTable.bannerUrl})`,
     })
     .from(labelsTable)
+    .innerJoin(usersTable, eq(labelsTable.userId, usersTable.id))
     .where(eq(labelsTable.userId, req.user!.userId))
     .limit(1);
 

@@ -65,7 +65,7 @@ async function expandPick(pick: typeof editorPicksTable.$inferSelect, editorUser
     const rows = await db
       .select({
         id: artistsTable.id, userId: artistsTable.userId, stageName: artistsTable.stageName,
-        bio: artistsTable.bio, avatarUrl: sql<string | null>`COALESCE(${artistsTable.avatarUrl}, ${usersTable.avatarUrl})`, bannerUrl: artistsTable.bannerUrl,
+        bio: artistsTable.bio, avatarUrl: sql<string | null>`COALESCE(${artistsTable.avatarUrl}, ${usersTable.avatarUrl})`, bannerUrl: sql<string | null>`COALESCE(${artistsTable.bannerUrl}, ${usersTable.bannerUrl})`,
         genre: artistsTable.genre, labelId: artistsTable.labelId, createdAt: artistsTable.createdAt,
         isVerified: usersTable.isVerified,
       })
