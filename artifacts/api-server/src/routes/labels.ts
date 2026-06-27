@@ -14,7 +14,7 @@ const router = Router();
 
 async function getLabelRow(id: number, userId?: number) {
   const [label] = await db
-    .select({ id: labelsTable.id, userId: labelsTable.userId, name: labelsTable.name, bio: sql<string | null>`COALESCE(${labelsTable.bio}, ${usersTable.bio})`, logoUrl: labelsTable.logoUrl, bannerUrl: labelsTable.bannerUrl, profileVideoUrl: usersTable.profileVideoUrl, createdAt: labelsTable.createdAt, isVerified: usersTable.isVerified, userRole: usersTable.role })
+    .select({ id: labelsTable.id, userId: labelsTable.userId, name: labelsTable.name, bio: sql<string | null>`COALESCE(${labelsTable.bio}, ${usersTable.bio})`, logoUrl: sql<string | null>`COALESCE(${labelsTable.logoUrl}, ${usersTable.avatarUrl})`, bannerUrl: sql<string | null>`COALESCE(${labelsTable.bannerUrl}, ${usersTable.bannerUrl})`, profileVideoUrl: usersTable.profileVideoUrl, createdAt: labelsTable.createdAt, isVerified: usersTable.isVerified, userRole: usersTable.role })
     .from(labelsTable)
     .innerJoin(usersTable, eq(labelsTable.userId, usersTable.id))
     .where(eq(labelsTable.id, id))
@@ -45,7 +45,7 @@ router.get("/labels", optionalAuth, async (req: AuthRequest, res): Promise<void>
 
   const conditions = q ? [ilike(labelsTable.name, `%${q}%`)] : [];
   const labels = await db
-    .select({ id: labelsTable.id, userId: labelsTable.userId, name: labelsTable.name, bio: labelsTable.bio, logoUrl: labelsTable.logoUrl, bannerUrl: labelsTable.bannerUrl, createdAt: labelsTable.createdAt, isVerified: usersTable.isVerified, userRole: usersTable.role })
+    .select({ id: labelsTable.id, userId: labelsTable.userId, name: labelsTable.name, bio: labelsTable.bio, logoUrl: sql<string | null>`COALESCE(${labelsTable.logoUrl}, ${usersTable.avatarUrl})`, bannerUrl: sql<string | null>`COALESCE(${labelsTable.bannerUrl}, ${usersTable.bannerUrl})`, createdAt: labelsTable.createdAt, isVerified: usersTable.isVerified, userRole: usersTable.role })
     .from(labelsTable)
     .innerJoin(usersTable, eq(labelsTable.userId, usersTable.id))
     .where(conditions.length ? and(...conditions) : undefined)
@@ -78,7 +78,7 @@ router.get("/labels", optionalAuth, async (req: AuthRequest, res): Promise<void>
 
 router.get("/labels/featured", async (_req, res): Promise<void> => {
   const rawLabels = await db
-    .select({ id: labelsTable.id, userId: labelsTable.userId, name: labelsTable.name, bio: labelsTable.bio, logoUrl: labelsTable.logoUrl, bannerUrl: labelsTable.bannerUrl, createdAt: labelsTable.createdAt, isVerified: usersTable.isVerified, userRole: usersTable.role })
+    .select({ id: labelsTable.id, userId: labelsTable.userId, name: labelsTable.name, bio: labelsTable.bio, logoUrl: sql<string | null>`COALESCE(${labelsTable.logoUrl}, ${usersTable.avatarUrl})`, bannerUrl: sql<string | null>`COALESCE(${labelsTable.bannerUrl}, ${usersTable.bannerUrl})`, createdAt: labelsTable.createdAt, isVerified: usersTable.isVerified, userRole: usersTable.role })
     .from(labelsTable)
     .innerJoin(usersTable, eq(labelsTable.userId, usersTable.id))
     .orderBy(desc(labelsTable.createdAt))

@@ -20,7 +20,7 @@ async function getArtistRow(id: number, userId?: number) {
       userId: artistsTable.userId,
       stageName: artistsTable.stageName,
       bio: sql<string | null>`COALESCE(${artistsTable.bio}, ${usersTable.bio})`,
-      bannerUrl: artistsTable.bannerUrl,
+      bannerUrl: sql<string | null>`COALESCE(${artistsTable.bannerUrl}, ${usersTable.bannerUrl})`,
       genre: artistsTable.genre,
       labelId: artistsTable.labelId,
       createdAt: artistsTable.createdAt,
@@ -79,7 +79,7 @@ router.get("/artists", optionalAuth, async (req: AuthRequest, res): Promise<void
       stageName: artistsTable.stageName,
       bio: artistsTable.bio,
       avatarUrl: sql<string | null>`COALESCE(${artistsTable.avatarUrl}, ${usersTable.avatarUrl})`,
-      bannerUrl: artistsTable.bannerUrl,
+      bannerUrl: sql<string | null>`COALESCE(${artistsTable.bannerUrl}, ${usersTable.bannerUrl})`,
       genre: artistsTable.genre,
       labelId: artistsTable.labelId,
       createdAt: artistsTable.createdAt,
@@ -115,7 +115,7 @@ router.get("/artists", optionalAuth, async (req: AuthRequest, res): Promise<void
 
 router.get("/artists/new", async (_req, res): Promise<void> => {
   const artists = await db
-    .select({ id: artistsTable.id, userId: artistsTable.userId, stageName: artistsTable.stageName, bio: artistsTable.bio, avatarUrl: sql<string | null>`COALESCE(${artistsTable.avatarUrl}, ${usersTable.avatarUrl})`, bannerUrl: artistsTable.bannerUrl, genre: artistsTable.genre, labelId: artistsTable.labelId, createdAt: artistsTable.createdAt, isVerified: usersTable.isVerified, userRole: usersTable.role })
+    .select({ id: artistsTable.id, userId: artistsTable.userId, stageName: artistsTable.stageName, bio: artistsTable.bio, avatarUrl: sql<string | null>`COALESCE(${artistsTable.avatarUrl}, ${usersTable.avatarUrl})`, bannerUrl: sql<string | null>`COALESCE(${artistsTable.bannerUrl}, ${usersTable.bannerUrl})`, genre: artistsTable.genre, labelId: artistsTable.labelId, createdAt: artistsTable.createdAt, isVerified: usersTable.isVerified, userRole: usersTable.role })
     .from(artistsTable)
     .innerJoin(usersTable, eq(artistsTable.userId, usersTable.id))
     .where(or(eq(usersTable.role, "artist"), eq(usersTable.role, "label")))
@@ -133,7 +133,7 @@ router.get("/artists/new", async (_req, res): Promise<void> => {
 
 router.get("/artists/featured", async (_req, res): Promise<void> => {
   const artists = await db
-    .select({ id: artistsTable.id, userId: artistsTable.userId, stageName: artistsTable.stageName, bio: artistsTable.bio, avatarUrl: sql<string | null>`COALESCE(${artistsTable.avatarUrl}, ${usersTable.avatarUrl})`, bannerUrl: artistsTable.bannerUrl, genre: artistsTable.genre, labelId: artistsTable.labelId, createdAt: artistsTable.createdAt, isVerified: usersTable.isVerified, userRole: usersTable.role })
+    .select({ id: artistsTable.id, userId: artistsTable.userId, stageName: artistsTable.stageName, bio: artistsTable.bio, avatarUrl: sql<string | null>`COALESCE(${artistsTable.avatarUrl}, ${usersTable.avatarUrl})`, bannerUrl: sql<string | null>`COALESCE(${artistsTable.bannerUrl}, ${usersTable.bannerUrl})`, genre: artistsTable.genre, labelId: artistsTable.labelId, createdAt: artistsTable.createdAt, isVerified: usersTable.isVerified, userRole: usersTable.role })
     .from(artistsTable)
     .innerJoin(usersTable, eq(artistsTable.userId, usersTable.id))
     .where(or(eq(usersTable.role, "artist"), eq(usersTable.role, "label")))

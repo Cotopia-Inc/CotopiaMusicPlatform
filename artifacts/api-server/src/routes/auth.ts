@@ -207,7 +207,7 @@ router.patch("/auth/me", requireAuth, async (req: AuthRequest, res): Promise<voi
   const [user] = await db.update(usersTable).set(parsed.data).where(eq(usersTable.id, req.user!.userId)).returning();
 
   const needsArtistSync = parsed.data.bio !== undefined || parsed.data.bannerUrl !== undefined || parsed.data.avatarUrl !== undefined;
-  const needsLabelSync = parsed.data.bio !== undefined || parsed.data.bannerUrl !== undefined;
+  const needsLabelSync = parsed.data.bio !== undefined || parsed.data.bannerUrl !== undefined || parsed.data.avatarUrl !== undefined;
   if (needsArtistSync || needsLabelSync) {
     if (user.role === "artist" && needsArtistSync) {
       const patch: Record<string, unknown> = {};
@@ -219,6 +219,7 @@ router.patch("/auth/me", requireAuth, async (req: AuthRequest, res): Promise<voi
       const patch: Record<string, unknown> = {};
       if (parsed.data.bio !== undefined) patch["bio"] = parsed.data.bio;
       if (parsed.data.bannerUrl !== undefined) patch["bannerUrl"] = parsed.data.bannerUrl;
+      if (parsed.data.avatarUrl !== undefined) patch["logoUrl"] = parsed.data.avatarUrl;
       await db.update(labelsTable).set(patch as any).where(eq(labelsTable.userId, req.user!.userId));
     }
   }
