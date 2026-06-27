@@ -119,6 +119,7 @@ export * from './paymentResponse';
 export * from './playlist';
 export * from './playlistDetail';
 export * from './playlistInput';
+export * from './playlistReorderInput';
 export * from './playlistSongInput';
 export * from './playlistUpdate';
 export * from './publicUser';

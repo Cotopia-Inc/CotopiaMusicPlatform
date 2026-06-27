@@ -547,6 +547,11 @@ export interface PlaylistSongInput {
   songId: number;
 }
 
+export interface PlaylistReorderInput {
+  /** Ordered array of song IDs representing the new playlist order */
+  songIds: number[];
+}
+
 export type ChatMessageContentType = typeof ChatMessageContentType[keyof typeof ChatMessageContentType];
 
 

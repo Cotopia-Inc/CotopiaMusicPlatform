@@ -4,7 +4,7 @@ import { db, playlistsTable, playlistItemsTable, songsTable, artistsTable, album
 import {
   GetPlaylistParams, UpdatePlaylistParams, UpdatePlaylistBody, DeletePlaylistParams,
   CreatePlaylistBody, AddSongToPlaylistParams, AddSongToPlaylistBody,
-  RemoveSongFromPlaylistParams,
+  RemoveSongFromPlaylistParams, ReorderPlaylistSongsParams, ReorderPlaylistSongsBody,
 } from "@workspace/api-zod";
 import { requireAuth, type AuthRequest } from "../lib/auth";
 import { avg } from "drizzle-orm";
@@ -154,6 +154,28 @@ router.delete("/playlists/:id/songs/:songId", requireAuth, async (req: AuthReque
   await db.delete(playlistItemsTable).where(
     and(eq(playlistItemsTable.playlistId, params.data.id), eq(playlistItemsTable.songId, params.data.songId))
   );
+  res.sendStatus(204);
+});
+
+router.put("/playlists/:id/songs/reorder", requireAuth, async (req: AuthRequest, res): Promise<void> => {
+  const params = ReorderPlaylistSongsParams.safeParse(req.params);
+  if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
+  const parsed = ReorderPlaylistSongsBody.safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+
+  const [existing] = await db.select({ userId: playlistsTable.userId }).from(playlistsTable).where(eq(playlistsTable.id, params.data.id)).limit(1);
+  if (!existing) { res.status(404).json({ error: "Playlist not found" }); return; }
+  if (existing.userId !== req.user!.userId) { res.status(403).json({ error: "Not your playlist" }); return; }
+
+  // Update each song's position in bulk
+  await Promise.all(
+    parsed.data.songIds.map((songId, idx) =>
+      db.update(playlistItemsTable)
+        .set({ position: idx })
+        .where(and(eq(playlistItemsTable.playlistId, params.data.id), eq(playlistItemsTable.songId, songId)))
+    )
+  );
+
   res.sendStatus(204);
 });
 

@@ -1119,6 +1119,27 @@ paths:
         "204":
           description: No content
 
+  /playlists/{id}/songs/reorder:
+    put:
+      operationId: reorderPlaylistSongs
+      tags: [playlists]
+      summary: Reorder songs in a playlist
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlaylistReorderInput"
+      responses:
+        "204":
+          description: No content
+
   # ── Comments ──────────────────────────────────────────────────────────────
   /comments/{id}:
     delete:
@@ -3334,6 +3355,16 @@ components:
       properties:
         songId:
           type: integer
+
+    PlaylistReorderInput:
+      type: object
+      required: [songIds]
+      properties:
+        songIds:
+          type: array
+          items:
+            type: integer
+          description: Ordered array of song IDs representing the new playlist order
 
     # ── Chat ─────────────────────────────────────────────────────────────────
     ChatMessage:

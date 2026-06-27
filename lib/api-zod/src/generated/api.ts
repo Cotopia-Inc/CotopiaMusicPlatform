@@ -1208,6 +1208,18 @@ export const RemoveSongFromPlaylistParams = zod.object({
 
 
 /**
+ * @summary Reorder songs in a playlist
+ */
+export const ReorderPlaylistSongsParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ReorderPlaylistSongsBody = zod.object({
+  "songIds": zod.array(zod.number()).describe('Ordered array of song IDs representing the new playlist order')
+})
+
+
+/**
  * @summary Delete a comment
  */
 export const DeleteCommentParams = zod.object({

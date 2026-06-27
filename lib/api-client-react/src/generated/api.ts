@@ -101,6 +101,7 @@ import type {
   Playlist,
   PlaylistDetail,
   PlaylistInput,
+  PlaylistReorderInput,
   PlaylistSongInput,
   PlaylistUpdate,
   PublicUser,
@@ -4156,6 +4157,78 @@ export const useRemoveSongFromPlaylist = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getRemoveSongFromPlaylistMutationOptions(options));
+    }
+
+export const getReorderPlaylistSongsUrl = (id: number,) => {
+
+
+
+
+  return `/api/playlists/${id}/songs/reorder`
+}
+
+/**
+ * @summary Reorder songs in a playlist
+ */
+export const reorderPlaylistSongs = async (id: number,
+    playlistReorderInput: PlaylistReorderInput, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getReorderPlaylistSongsUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      playlistReorderInput,)
+  }
+);}
+
+
+
+
+export const getReorderPlaylistSongsMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reorderPlaylistSongs>>, TError,{id: number;data: BodyType<PlaylistReorderInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reorderPlaylistSongs>>, TError,{id: number;data: BodyType<PlaylistReorderInput>}, TContext> => {
+
+const mutationKey = ['reorderPlaylistSongs'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reorderPlaylistSongs>>, {id: number;data: BodyType<PlaylistReorderInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  reorderPlaylistSongs(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReorderPlaylistSongsMutationResult = NonNullable<Awaited<ReturnType<typeof reorderPlaylistSongs>>>
+    export type ReorderPlaylistSongsMutationBody = BodyType<PlaylistReorderInput>
+    export type ReorderPlaylistSongsMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Reorder songs in a playlist
+ */
+export const useReorderPlaylistSongs = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reorderPlaylistSongs>>, TError,{id: number;data: BodyType<PlaylistReorderInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof reorderPlaylistSongs>>,
+        TError,
+        {id: number;data: BodyType<PlaylistReorderInput>},
+        TContext
+      > => {
+      return useMutation(getReorderPlaylistSongsMutationOptions(options));
     }
 
 export const getDeleteCommentUrl = (id: number,) => {
