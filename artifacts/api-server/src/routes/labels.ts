@@ -52,7 +52,17 @@ router.get("/labels", optionalAuth, async (req: AuthRequest, res): Promise<void>
     .orderBy(desc(labelsTable.createdAt))
     .limit(limit);
 
-  const withCounts = await Promise.all(labels.map(async (l) => {
+  // Deduplicate — guard against multiple label records per user (e.g. from repeated seed runs).
+  // Ordered by desc(createdAt) so the most recent record wins.
+  const seen = new Set<number>();
+  const unique = labels.filter(l => {
+    if (!l.userId) return true;
+    if (seen.has(l.userId)) return false;
+    seen.add(l.userId);
+    return true;
+  });
+
+  const withCounts = await Promise.all(unique.map(async (l) => {
     const [fc] = await db.select({ count: count() }).from(followsTable).where(and(eq(followsTable.targetType, "label"), eq(followsTable.targetId, l.id)));
     const [ac] = await db.select({ count: count() }).from(artistsTable).where(eq(artistsTable.labelId, l.id));
     let isFollowed = false;
@@ -67,12 +77,21 @@ router.get("/labels", optionalAuth, async (req: AuthRequest, res): Promise<void>
 });
 
 router.get("/labels/featured", async (_req, res): Promise<void> => {
-  const labels = await db
+  const rawLabels = await db
     .select({ id: labelsTable.id, userId: labelsTable.userId, name: labelsTable.name, bio: labelsTable.bio, logoUrl: labelsTable.logoUrl, bannerUrl: labelsTable.bannerUrl, createdAt: labelsTable.createdAt, isVerified: usersTable.isVerified, userRole: usersTable.role })
     .from(labelsTable)
     .innerJoin(usersTable, eq(labelsTable.userId, usersTable.id))
     .orderBy(desc(labelsTable.createdAt))
     .limit(6);
+
+  // Deduplicate — guard against multiple label records per user (e.g. from repeated seed runs).
+  const seenFeatured = new Set<number>();
+  const labels = rawLabels.filter(l => {
+    if (!l.userId) return true;
+    if (seenFeatured.has(l.userId)) return false;
+    seenFeatured.add(l.userId);
+    return true;
+  });
 
   const withCounts = await Promise.all(labels.map(async (l) => {
     const [fc] = await db.select({ count: count() }).from(followsTable).where(and(eq(followsTable.targetType, "label"), eq(followsTable.targetId, l.id)));

@@ -150,10 +150,19 @@ router.get("/discover", async (_req, res): Promise<void> => {
 
   const [newArtistsAll, newLabelsAll] = await Promise.all([
     db.select({ id: artistsTable.id, userId: artistsTable.userId, stageName: artistsTable.stageName, bio: artistsTable.bio, avatarUrl: sql<string | null>`COALESCE(${artistsTable.avatarUrl}, ${usersTable.avatarUrl})`, bannerUrl: artistsTable.bannerUrl, genre: artistsTable.genre, labelId: artistsTable.labelId, createdAt: artistsTable.createdAt, isVerified: usersTable.isVerified }).from(artistsTable).leftJoin(usersTable, eq(artistsTable.userId, usersTable.id)).orderBy(desc(artistsTable.createdAt)).limit(30),
-    db.select().from(labelsTable).orderBy(desc(labelsTable.createdAt)).limit(20),
+    db.select({ id: labelsTable.id, userId: labelsTable.userId, name: labelsTable.name, bio: labelsTable.bio, logoUrl: labelsTable.logoUrl, bannerUrl: labelsTable.bannerUrl, createdAt: labelsTable.createdAt, isVerified: usersTable.isVerified }).from(labelsTable).innerJoin(usersTable, eq(labelsTable.userId, usersTable.id)).orderBy(desc(labelsTable.createdAt)).limit(20),
   ]);
-  const newArtistsRaw = newArtistsAll.filter(a => a.avatarUrl).slice(0, 8);
-  const newLabelsRaw = newLabelsAll.filter(l => l.logoUrl).slice(0, 6);
+
+  // Deduplicate by userId — guard against multiple records per user from repeated seed runs.
+  const seenDiscoverArtists = new Set<number>();
+  const newArtistsRaw = newArtistsAll
+    .filter(a => { if (!a.userId) return true; if (seenDiscoverArtists.has(a.userId)) return false; seenDiscoverArtists.add(a.userId); return true; })
+    .filter(a => a.avatarUrl).slice(0, 8);
+
+  const seenDiscoverLabels = new Set<number>();
+  const newLabelsRaw = newLabelsAll
+    .filter(l => { if (!l.userId) return true; if (seenDiscoverLabels.has(l.userId)) return false; seenDiscoverLabels.add(l.userId); return true; })
+    .filter(l => l.logoUrl).slice(0, 6);
 
   const newArtists = await Promise.all(newArtistsRaw.map(async (a) => {
     const [fc] = await db.select({ count: count() }).from(followsTable).where(and(eq(followsTable.targetType, "artist"), eq(followsTable.targetId, a.id)));
