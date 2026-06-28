@@ -245,10 +245,10 @@ export function Sidebar({ onMobileClose }: SidebarProps = {}) {
         <Link href="/">
           <div className="cursor-pointer space-y-0.5">
             <div className="flex items-center gap-2">
-              <Radio className="w-5 h-5 text-primary" />
+              <img src="/logo.jpg" alt="Cotopia" className="w-7 h-7 rounded-md object-cover flex-shrink-0" />
               <h1 className="text-xl font-extrabold tracking-tighter text-foreground">Everyday Radio</h1>
             </div>
-            <p className="text-[10px] text-muted-foreground tracking-widest uppercase pl-7">Powered by Cotopia</p>
+            <p className="text-[10px] text-muted-foreground tracking-widest uppercase pl-9">Powered by Cotopia</p>
           </div>
         </Link>
       </div>

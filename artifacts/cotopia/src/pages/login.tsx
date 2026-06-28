@@ -49,10 +49,10 @@ export default function Login() {
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
         <div className="relative z-10">
           <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <Radio className="w-6 h-6 text-primary" />
+            <img src="/logo.jpg" alt="Cotopia" className="w-7 h-7 rounded-md object-cover flex-shrink-0" />
             <span className="text-xl font-extrabold tracking-tighter">Everyday Radio</span>
           </Link>
-          <p className="text-[11px] text-muted-foreground tracking-widest uppercase mt-0.5 pl-8">Powered by Cotopia</p>
+          <p className="text-[11px] text-muted-foreground tracking-widest uppercase mt-0.5 pl-9">Powered by Cotopia</p>
         </div>
         <div className="relative z-10 space-y-4 max-w-md">
           <h1 className="text-5xl font-extrabold tracking-tight leading-none">The sound of tomorrow.</h1>
@@ -66,7 +66,7 @@ export default function Login() {
           {/* Mobile logo */}
           <div className="flex lg:hidden flex-col items-center gap-1">
             <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-              <Radio className="w-6 h-6 text-primary" />
+              <img src="/logo.jpg" alt="Cotopia" className="w-7 h-7 rounded-md object-cover flex-shrink-0" />
               <span className="text-xl font-extrabold tracking-tighter">Everyday Radio</span>
             </Link>
             <p className="text-[10px] text-muted-foreground tracking-widest uppercase">Powered by Cotopia</p>
