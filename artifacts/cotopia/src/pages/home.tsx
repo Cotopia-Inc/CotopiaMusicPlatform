@@ -24,7 +24,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent z-10" />
         <div className="relative z-20 space-y-4 max-w-xl">
           <div className="flex items-center gap-2">
-            <Radio className="w-4 h-4 text-primary" />
+            <img src="/logo.jpg" alt="Cotopia" className="w-4 h-4 rounded-sm object-cover flex-shrink-0" />
             <span className="text-xs font-semibold uppercase tracking-widest text-primary">Everyday Radio</span>
           </div>
           <h2 className="text-3xl md:text-5xl font-extrabold tracking-tighter leading-none">
