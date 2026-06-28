@@ -127,10 +127,7 @@ export default function VerifyEmail() {
         </div>
 
         <p className="text-center text-xs text-muted-foreground">
-          Check your spam folder if you don't see it.{" "}
-          <span className="block text-muted-foreground/60 mt-1">
-            (During development, the code is logged to the server console.)
-          </span>
+          Check your spam folder if you don't see it.
         </p>
       </div>
     </div>
