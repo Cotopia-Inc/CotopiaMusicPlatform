@@ -450,7 +450,7 @@ export default function MessagesPage() {
         ) : (
           <>
             {/* Thread header */}
-            <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card/50 backdrop-blur flex-shrink-0">
+            <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card/50 backdrop-blur flex-shrink-0 relative z-10">
               <button className="md:hidden p-1.5 rounded-md hover:bg-secondary text-muted-foreground" onClick={() => { setSelectedConvId(null); setNewConvUser(null); }}>
                 <ArrowLeft className="w-4 h-4" />
               </button>
