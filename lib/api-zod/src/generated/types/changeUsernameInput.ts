@@ -7,5 +7,11 @@
  */
 
 export interface ChangeUsernameInput {
+  /**
+     * 3–30 characters. Letters, numbers, underscores, and hyphens only. No spaces.
+     * @minLength 3
+     * @maxLength 30
+     * @pattern ^[a-zA-Z0-9_-]+$
+     */
   username: string;
 }

@@ -19,10 +19,17 @@ export const HealthCheckResponse = zod.object({
 /**
  * @summary Register a new user
  */
+export const registerBodyUsernameMin = 3;
+export const registerBodyUsernameMax = 30;
+
+
+export const registerBodyUsernameRegExp = new RegExp('^[a-zA-Z0-9_-]+$');
+
+
 export const RegisterBody = zod.object({
   "email": zod.string(),
   "password": zod.string(),
-  "username": zod.string(),
+  "username": zod.string().min(registerBodyUsernameMin).max(registerBodyUsernameMax).regex(registerBodyUsernameRegExp).describe('3–30 characters. Letters, numbers, underscores, and hyphens only. No spaces.'),
   "displayName": zod.string().optional(),
   "role": zod.enum(['listener', 'artist', 'label', 'business']),
   "ageConfirmed": zod.boolean().describe('User confirms they are at least 18 or the age of legal majority in their jurisdiction.')
@@ -148,8 +155,15 @@ export const ChangePasswordResponse = zod.object({
 /**
  * @summary Change current user username
  */
+export const changeUsernameBodyUsernameMin = 3;
+export const changeUsernameBodyUsernameMax = 30;
+
+
+export const changeUsernameBodyUsernameRegExp = new RegExp('^[a-zA-Z0-9_-]+$');
+
+
 export const ChangeUsernameBody = zod.object({
-  "username": zod.string()
+  "username": zod.string().min(changeUsernameBodyUsernameMin).max(changeUsernameBodyUsernameMax).regex(changeUsernameBodyUsernameRegExp).describe('3–30 characters. Letters, numbers, underscores, and hyphens only. No spaces.')
 })
 
 export const ChangeUsernameResponse = zod.object({

@@ -75,7 +75,7 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     return;
   }
 
-  const existingUsername = await db.select().from(usersTable).where(eq(usersTable.username, username)).limit(1);
+  const existingUsername = await db.select().from(usersTable).where(ilike(usersTable.username, username)).limit(1);
   if (existingUsername.length > 0) {
     res.status(400).json({ error: "Username already taken" });
     return;
@@ -350,7 +350,7 @@ router.post("/auth/change-username", requireAuth, async (req: AuthRequest, res):
   }
   const { username } = parsed.data;
 
-  const [existing] = await db.select().from(usersTable).where(eq(usersTable.username, username)).limit(1);
+  const [existing] = await db.select().from(usersTable).where(ilike(usersTable.username, username)).limit(1);
   if (existing && existing.id !== req.user!.userId) {
     res.status(400).json({ error: "Username already taken" });
     return;

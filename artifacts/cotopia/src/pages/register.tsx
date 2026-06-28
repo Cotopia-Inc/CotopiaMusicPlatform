@@ -13,7 +13,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Radio } from "lucide-react";
 
 const formSchema = z.object({
-  username: z.string().min(3, "Username must be at least 3 characters"),
+  username: z.string()
+    .min(3, "Username must be at least 3 characters")
+    .max(30, "Username must be 30 characters or fewer")
+    .regex(/^[a-zA-Z0-9_-]+$/, "Only letters, numbers, underscores, and hyphens — no spaces"),
   email: z.string().email("Please enter a valid email"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   role: z.nativeEnum(RegisterInputRole),
@@ -93,6 +96,7 @@ export default function Register() {
                 <FormItem>
                   <FormLabel>Username</FormLabel>
                   <FormControl><Input placeholder="johndoe" {...field} className="bg-secondary/50 border-secondary h-11" /></FormControl>
+                  <p className="text-[11px] text-muted-foreground/70">Letters, numbers, _ and - only. No spaces.</p>
                   <FormMessage />
                 </FormItem>
               )} />

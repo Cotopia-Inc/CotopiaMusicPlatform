@@ -2786,6 +2786,10 @@ components:
           type: string
         username:
           type: string
+          minLength: 3
+          maxLength: 30
+          pattern: '^[a-zA-Z0-9_-]+$'
+          description: "3–30 characters. Letters, numbers, underscores, and hyphens only. No spaces."
         displayName:
           type: string
         role:
@@ -2919,6 +2923,10 @@ components:
       properties:
         username:
           type: string
+          minLength: 3
+          maxLength: 30
+          pattern: '^[a-zA-Z0-9_-]+$'
+          description: "3–30 characters. Letters, numbers, underscores, and hyphens only. No spaces."
 
     DemographicsInput:
       type: object
