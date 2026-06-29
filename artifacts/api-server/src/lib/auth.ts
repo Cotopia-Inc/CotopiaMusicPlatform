@@ -25,7 +25,7 @@ export interface AuthRequest extends Request {
 export async function requireAuth(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
   const auth = req.headers.authorization;
   if (!auth?.startsWith("Bearer ")) {
-    res.status(401).json({ error: "Unauthorized" });
+    res.status(401).json({ error: "Please sign in to continue." });
     return;
   }
   const token = auth.slice(7);
@@ -56,7 +56,7 @@ export async function requireAuth(req: AuthRequest, res: Response, next: NextFun
     req.user = { userId: payload.userId, role: fresh?.role ?? payload.role };
     next();
   } catch {
-    res.status(401).json({ error: "Invalid token" });
+    res.status(401).json({ error: "Your session has expired. Please sign in again." });
   }
 }
 
@@ -80,7 +80,7 @@ export async function optionalAuth(req: AuthRequest, _res: Response, next: NextF
 
 export async function requireVerifiedEmail(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
   if (!req.user) {
-    res.status(401).json({ error: "Unauthorized" });
+    res.status(401).json({ error: "Please sign in to continue." });
     return;
   }
   const [settings] = await db
@@ -106,11 +106,11 @@ export async function requireVerifiedEmail(req: AuthRequest, res: Response, next
 export function requireRole(...roles: string[]) {
   return (req: AuthRequest, res: Response, next: NextFunction): void => {
     if (!req.user) {
-      res.status(401).json({ error: "Unauthorized" });
+      res.status(401).json({ error: "Please sign in to continue." });
       return;
     }
     if (!roles.includes(req.user.role)) {
-      res.status(403).json({ error: "Forbidden" });
+      res.status(403).json({ error: "You don't have permission to do that." });
       return;
     }
     next();

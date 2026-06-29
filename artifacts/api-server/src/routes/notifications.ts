@@ -41,7 +41,7 @@ router.post("/notifications/read-all", requireAuth, async (req: AuthRequest, res
 
 router.patch("/notifications/:id/read", requireAuth, async (req: AuthRequest, res): Promise<void> => {
   const id = parseInt(req.params.id as string, 10);
-  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid ID — please try again." }); return; }
 
   const [notif] = await db
     .update(notificationsTable)
@@ -49,20 +49,20 @@ router.patch("/notifications/:id/read", requireAuth, async (req: AuthRequest, re
     .where(and(eq(notificationsTable.id, id), eq(notificationsTable.userId, req.user!.userId)))
     .returning();
 
-  if (!notif) { res.status(404).json({ error: "Not found" }); return; }
+  if (!notif) { res.status(404).json({ error: "Item not found." }); return; }
   res.json(notif);
 });
 
 router.delete("/notifications/:id", requireAuth, async (req: AuthRequest, res): Promise<void> => {
   const id = parseInt(req.params.id as string, 10);
-  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid ID — please try again." }); return; }
 
   const deleted = await db
     .delete(notificationsTable)
     .where(and(eq(notificationsTable.id, id), eq(notificationsTable.userId, req.user!.userId)))
     .returning();
 
-  if (!deleted.length) { res.status(404).json({ error: "Not found" }); return; }
+  if (!deleted.length) { res.status(404).json({ error: "Item not found." }); return; }
   res.json({ success: true });
 });
 

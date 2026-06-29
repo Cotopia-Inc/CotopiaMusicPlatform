@@ -21,7 +21,7 @@ router.post("/payments/initiate", requireAuth, async (req: AuthRequest, res): Pr
   }
 
   if (submission.userId !== req.user!.userId) {
-    res.status(403).json({ error: "Forbidden" });
+    res.status(403).json({ error: "This payment doesn't belong to your account." });
     return;
   }
 
@@ -69,7 +69,7 @@ router.post("/payments/capture", requireAuth, async (req: AuthRequest, res): Pro
   }
 
   if (submission.userId !== req.user!.userId) {
-    res.status(403).json({ error: "Forbidden" });
+    res.status(403).json({ error: "This payment doesn't belong to your account." });
     return;
   }
 

@@ -149,26 +149,29 @@ function truncate(text: string, maxLength = 300): string {
 }
 
 function buildErrorMessage(response: Response, data: unknown): string {
-  const prefix = `HTTP ${response.status} ${response.statusText}`;
-
   if (typeof data === "string") {
     const text = data.trim();
-    return text ? `${prefix}: ${truncate(text)}` : prefix;
+    if (text) return truncate(text);
+  } else {
+    const title = getStringField(data, "title");
+    const detail = getStringField(data, "detail");
+    const message =
+      getStringField(data, "message") ??
+      getStringField(data, "error_description") ??
+      getStringField(data, "error");
+
+    if (title && detail) return `${title} — ${detail}`;
+    if (detail) return detail;
+    if (message) return message;
+    if (title) return title;
   }
 
-  const title = getStringField(data, "title");
-  const detail = getStringField(data, "detail");
-  const message =
-    getStringField(data, "message") ??
-    getStringField(data, "error_description") ??
-    getStringField(data, "error");
-
-  if (title && detail) return `${prefix}: ${title} — ${detail}`;
-  if (detail) return `${prefix}: ${detail}`;
-  if (message) return `${prefix}: ${message}`;
-  if (title) return `${prefix}: ${title}`;
-
-  return prefix;
+  // Friendly status-based fallbacks when the API gives no message
+  if (response.status === 401) return "Please sign in to continue.";
+  if (response.status === 403) return "You don't have permission to do that.";
+  if (response.status === 404) return "The requested resource was not found.";
+  if (response.status >= 500) return "Something went wrong. Please try again later.";
+  return "Something went wrong. Please try again.";
 }
 
 export class ApiError<T = unknown> extends Error {

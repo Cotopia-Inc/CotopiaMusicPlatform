@@ -227,7 +227,7 @@ router.patch("/videos/:id", requireAuth, async (req: AuthRequest, res): Promise<
   if (!isAdmin) {
     const [artist] = await db.select().from(artistsTable).where(eq(artistsTable.userId, req.user!.userId)).limit(1);
     if (!artist || existing.artistId !== artist.id) {
-      res.status(403).json({ error: "Forbidden" });
+      res.status(403).json({ error: "You don't have permission to modify this content." });
       return;
     }
   }
@@ -248,7 +248,7 @@ router.delete("/videos/:id", requireAuth, async (req: AuthRequest, res): Promise
   const isAdmin = req.user!.role === "admin" || req.user!.role === "master_admin";
   if (!isAdmin) {
     const [artist] = await db.select().from(artistsTable).where(eq(artistsTable.userId, req.user!.userId)).limit(1);
-    if (!artist || existing.artistId !== artist.id) { res.status(403).json({ error: "Forbidden" }); return; }
+    if (!artist || existing.artistId !== artist.id) { res.status(403).json({ error: "You don't have permission to modify this content." }); return; }
   }
   await db.delete(videosTable).where(eq(videosTable.id, params.data.id));
   res.sendStatus(204);

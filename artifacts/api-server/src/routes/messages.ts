@@ -274,8 +274,8 @@ router.delete("/messages/msg/:msgId", requireAuth, async (req: AuthRequest, res)
   const msgId = parseInt(String(req.params["msgId"] ?? "0"), 10);
 
   const [msg] = await db.select().from(directMessagesTable).where(eq(directMessagesTable.id, msgId)).limit(1);
-  if (!msg) { res.status(404).json({ error: "Not found" }); return; }
-  if (msg.senderId !== userId) { res.status(403).json({ error: "Not your message" }); return; }
+  if (!msg) { res.status(404).json({ error: "Message not found." }); return; }
+  if (msg.senderId !== userId) { res.status(403).json({ error: "You can only delete your own messages." }); return; }
 
   await db.delete(directMessagesTable).where(eq(directMessagesTable.id, msgId));
   res.json({ success: true });
@@ -287,7 +287,7 @@ router.put("/messages/:id/mute", requireAuth, async (req: AuthRequest, res): Pro
   const convId = parseInt(String(req.params["id"] ?? "0"), 10);
 
   const [conv] = await db.select().from(conversationsTable).where(eq(conversationsTable.id, convId)).limit(1);
-  if (!conv) { res.status(404).json({ error: "Not found" }); return; }
+  if (!conv) { res.status(404).json({ error: "Conversation not found." }); return; }
   if (conv.participant1Id !== userId && conv.participant2Id !== userId) {
     res.status(403).json({ error: "Not a participant" }); return;
   }
@@ -310,7 +310,7 @@ router.put("/messages/:id/read", requireAuth, async (req: AuthRequest, res): Pro
   const convId = parseInt(String(req.params["id"] ?? "0"), 10);
 
   const [conv] = await db.select().from(conversationsTable).where(eq(conversationsTable.id, convId)).limit(1);
-  if (!conv) { res.status(404).json({ error: "Not found" }); return; }
+  if (!conv) { res.status(404).json({ error: "Conversation not found." }); return; }
   if (conv.participant1Id !== userId && conv.participant2Id !== userId) {
     res.status(403).json({ error: "Not a participant" }); return;
   }
@@ -332,7 +332,7 @@ router.delete("/messages/:id", requireAuth, async (req: AuthRequest, res): Promi
   const convId = parseInt(String(req.params["id"] ?? "0"), 10);
 
   const [conv] = await db.select().from(conversationsTable).where(eq(conversationsTable.id, convId)).limit(1);
-  if (!conv) { res.status(404).json({ error: "Not found" }); return; }
+  if (!conv) { res.status(404).json({ error: "Conversation not found." }); return; }
   if (conv.participant1Id !== userId && conv.participant2Id !== userId) {
     res.status(403).json({ error: "Not a participant" }); return;
   }

@@ -41,11 +41,11 @@ router.get("/editorial-playlists", optionalAuth, async (_req, res): Promise<void
 // ── Get editorial playlist detail ─────────────────────────────────────────
 router.get("/editorial-playlists/:id", optionalAuth, async (req, res): Promise<void> => {
   const id = parseInt(req.params.id as string, 10);
-  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid ID — please try again." }); return; }
 
   const [playlist] = await db.select().from(playlistsTable)
     .where(and(eq(playlistsTable.id, id), eq(playlistsTable.isEditorial, true)));
-  if (!playlist) { res.status(404).json({ error: "Not found" }); return; }
+  if (!playlist) { res.status(404).json({ error: "Item not found." }); return; }
 
   const items = await db
     .select({
@@ -99,7 +99,7 @@ router.post("/editorial-playlists", requireAuth, requireRole(...EDITORIAL_ROLES)
 // ── Update editorial playlist ─────────────────────────────────────────────
 router.patch("/editorial-playlists/:id", requireAuth, requireRole(...EDITORIAL_ROLES), async (req: AuthRequest, res): Promise<void> => {
   const id = parseInt(req.params.id as string, 10);
-  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid ID — please try again." }); return; }
 
   const { name, description, coverUrl, isPublic, playlistType } = req.body as {
     name?: string;
@@ -120,7 +120,7 @@ router.patch("/editorial-playlists/:id", requireAuth, requireRole(...EDITORIAL_R
     .where(and(eq(playlistsTable.id, id), eq(playlistsTable.isEditorial, true)))
     .returning();
 
-  if (!updated) { res.status(404).json({ error: "Not found" }); return; }
+  if (!updated) { res.status(404).json({ error: "Item not found." }); return; }
 
   const [countRow] = await db.select({ count: count() }).from(playlistItemsTable).where(eq(playlistItemsTable.playlistId, id));
   res.json({ ...updated, songCount: countRow?.count ?? 0 });
@@ -129,7 +129,7 @@ router.patch("/editorial-playlists/:id", requireAuth, requireRole(...EDITORIAL_R
 // ── Delete editorial playlist ─────────────────────────────────────────────
 router.delete("/editorial-playlists/:id", requireAuth, requireRole(...EDITORIAL_ROLES), async (req: AuthRequest, res): Promise<void> => {
   const id = parseInt(req.params.id as string, 10);
-  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid ID — please try again." }); return; }
 
   await db.delete(playlistsTable).where(and(eq(playlistsTable.id, id), eq(playlistsTable.isEditorial, true)));
   res.status(204).end();
@@ -138,7 +138,7 @@ router.delete("/editorial-playlists/:id", requireAuth, requireRole(...EDITORIAL_
 // ── Add song to editorial playlist ────────────────────────────────────────
 router.post("/editorial-playlists/:id/songs", requireAuth, requireRole(...EDITORIAL_ROLES), async (req: AuthRequest, res): Promise<void> => {
   const id = parseInt(req.params.id as string, 10);
-  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid ID — please try again." }); return; }
 
   const { songId } = req.body as { songId?: number };
   if (!songId) { res.status(400).json({ error: "songId is required" }); return; }
@@ -164,7 +164,7 @@ router.post("/editorial-playlists/:id/songs", requireAuth, requireRole(...EDITOR
 router.delete("/editorial-playlists/:id/songs/:songId", requireAuth, requireRole(...EDITORIAL_ROLES), async (req: AuthRequest, res): Promise<void> => {
   const id = parseInt(req.params.id as string, 10);
   const songId = parseInt(req.params.songId as string, 10);
-  if (isNaN(id) || isNaN(songId)) { res.status(400).json({ error: "Invalid id" }); return; }
+  if (isNaN(id) || isNaN(songId)) { res.status(400).json({ error: "Invalid ID — please try again." }); return; }
 
   await db.delete(playlistItemsTable)
     .where(and(eq(playlistItemsTable.playlistId, id), eq(playlistItemsTable.songId, songId)));

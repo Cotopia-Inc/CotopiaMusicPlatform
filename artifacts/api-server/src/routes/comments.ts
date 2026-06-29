@@ -21,7 +21,7 @@ router.delete("/comments/:id", requireAuth, async (req: AuthRequest, res): Promi
 
   const moderatorRoles = ["admin", "master_admin", "moderator"];
   if (comment.userId !== req.user!.userId && !moderatorRoles.includes(req.user!.role)) {
-    res.status(403).json({ error: "Forbidden" });
+    res.status(403).json({ error: "You don't have permission to delete this comment." });
     return;
   }
 

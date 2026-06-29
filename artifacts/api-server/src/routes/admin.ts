@@ -93,7 +93,7 @@ router.get("/admin/users", requireAuth, requireRole(...ADMIN_ROLES), async (req:
 router.get("/admin/users/:id", requireAuth, requireRole(...ADMIN_ROLES), async (req: AuthRequest, res): Promise<void> => {
   const idRaw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const id = parseInt(idRaw, 10);
-  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid ID — please try again." }); return; }
 
   const [user] = await db
     .select({
@@ -119,7 +119,7 @@ router.get("/admin/users/:id", requireAuth, requireRole(...ADMIN_ROLES), async (
 router.patch("/admin/users/:id", requireAuth, requireRole(...ADMIN_ROLES), async (req: AuthRequest, res): Promise<void> => {
   const idRaw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const id = parseInt(idRaw, 10);
-  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid ID — please try again." }); return; }
 
   const parsed = AdminUpdateUserBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
@@ -134,7 +134,7 @@ router.patch("/admin/users/:id", requireAuth, requireRole(...ADMIN_ROLES), async
 router.patch("/admin/users/:id/role", requireAuth, requireRole(...ADMIN_ROLES), async (req: AuthRequest, res): Promise<void> => {
   const idRaw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const id = parseInt(idRaw, 10);
-  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid ID — please try again." }); return; }
 
   const parsed = AdminChangeUserRoleBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
@@ -672,7 +672,7 @@ router.get("/admin/messages", requireAuth, requireRole(...ADMIN_ROLES, "moderato
 router.get("/admin/messages/:convId", requireAuth, requireRole(...ADMIN_ROLES, "moderator"), async (req: AuthRequest, res): Promise<void> => {
   const convId = parseInt(String(req.params["convId"] ?? "0"), 10);
   const [conv] = await db.select().from(conversationsTable).where(eq(conversationsTable.id, convId)).limit(1);
-  if (!conv) { res.status(404).json({ error: "Not found" }); return; }
+  if (!conv) { res.status(404).json({ error: "Item not found." }); return; }
 
   const messages = await db
     .select({
@@ -694,16 +694,16 @@ router.get("/admin/messages/:convId", requireAuth, requireRole(...ADMIN_ROLES, "
 router.put("/admin/messages/msg/:msgId", requireAuth, requireRole(...ADMIN_ROLES, "moderator"), async (req: AuthRequest, res): Promise<void> => {
   const msgId = parseInt(String(req.params["msgId"] ?? "0"), 10);
   const { body } = req.body as { body: string };
-  if (!body?.trim()) { res.status(400).json({ error: "body required" }); return; }
+  if (!body?.trim()) { res.status(400).json({ error: "Message body is required." }); return; }
   const [updated] = await db.update(directMessagesTable).set({ body: body.trim(), isEdited: true, editedAt: new Date() }).where(eq(directMessagesTable.id, msgId)).returning();
-  if (!updated) { res.status(404).json({ error: "Not found" }); return; }
+  if (!updated) { res.status(404).json({ error: "Item not found." }); return; }
   res.json(updated);
 });
 
 router.delete("/admin/messages/msg/:msgId", requireAuth, requireRole(...ADMIN_ROLES, "moderator"), async (req: AuthRequest, res): Promise<void> => {
   const msgId = parseInt(String(req.params["msgId"] ?? "0"), 10);
   const [msg] = await db.select({ id: directMessagesTable.id }).from(directMessagesTable).where(eq(directMessagesTable.id, msgId)).limit(1);
-  if (!msg) { res.status(404).json({ error: "Not found" }); return; }
+  if (!msg) { res.status(404).json({ error: "Item not found." }); return; }
   await db.delete(directMessagesTable).where(eq(directMessagesTable.id, msgId));
   res.json({ success: true });
 });
@@ -731,7 +731,7 @@ router.get("/admin/dmca", requireAuth, requireRole(...ADMIN_ROLES), async (req: 
 router.get("/admin/dmca/:claimId", requireAuth, requireRole(...ADMIN_ROLES), async (req: AuthRequest, res): Promise<void> => {
   const id = parseInt(String(req.params["claimId"] ?? "0"), 10);
   const [claim] = await db.select().from(dmcaClaimsTable).where(eq(dmcaClaimsTable.id, id)).limit(1);
-  if (!claim) { res.status(404).json({ error: "Not found" }); return; }
+  if (!claim) { res.status(404).json({ error: "Item not found." }); return; }
   res.json(claim);
 });
 
@@ -740,14 +740,14 @@ router.patch("/admin/dmca/:claimId", requireAuth, requireRole(...ADMIN_ROLES), a
   const { status, adminNotes } = req.body as { status?: string; adminNotes?: string };
 
   const validStatuses = ["received", "under_review", "removed", "rejected", "counter_notice_received", "restored", "closed"];
-  if (status && !validStatuses.includes(status)) { res.status(400).json({ error: "Invalid status" }); return; }
+  if (status && !validStatuses.includes(status)) { res.status(400).json({ error: "Invalid status value." }); return; }
 
   const updateData: Record<string, unknown> = { updatedAt: new Date() };
   if (status) updateData.status = status;
   if (adminNotes !== undefined) updateData.adminNotes = adminNotes;
 
   const [updated] = await db.update(dmcaClaimsTable).set(updateData).where(eq(dmcaClaimsTable.id, id)).returning();
-  if (!updated) { res.status(404).json({ error: "Not found" }); return; }
+  if (!updated) { res.status(404).json({ error: "Item not found." }); return; }
 
   await db.insert(adminAuditLogsTable).values({
     adminUserId: req.user!.userId,
@@ -766,7 +766,7 @@ router.post("/admin/dmca/:claimId/strike", requireAuth, requireRole(...ADMIN_ROL
   const { userId, contentType, contentId, strikeReason } = req.body as Record<string, unknown>;
 
   if (!userId || !contentType || !contentId || !strikeReason) {
-    res.status(400).json({ error: "userId, contentType, contentId, and strikeReason are required" });
+    res.status(400).json({ error: "Please provide all required fields to issue a strike." });
     return;
   }
 
@@ -951,7 +951,7 @@ router.post("/admin/strikes", requireAuth, requireRole(...ADMIN_ROLES), async (r
   const { userId, contentType, contentId, contentTitle, strikeReason, internalNotes, dmcaClaimId } = req.body as Record<string, unknown>;
 
   if (!contentType || !strikeReason) {
-    res.status(400).json({ error: "contentType and strikeReason are required" });
+    res.status(400).json({ error: "Please provide the content type and reason for this strike." });
     return;
   }
 
@@ -987,7 +987,7 @@ router.post("/admin/strikes", requireAuth, requireRole(...ADMIN_ROLES), async (r
   }
 
   if (!resolvedUserId) {
-    res.status(400).json({ error: "userId is required (or provide contentType + contentId to resolve it)" });
+    res.status(400).json({ error: "A user ID is required for this action." });
     return;
   }
 
@@ -1050,7 +1050,7 @@ router.post("/admin/strikes", requireAuth, requireRole(...ADMIN_ROLES), async (r
 
 router.patch("/admin/strikes/:id/resolve", requireAuth, requireRole(...ADMIN_ROLES), async (req: AuthRequest, res): Promise<void> => {
   const id = parseInt(String(req.params["id"] ?? "0"), 10);
-  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid ID — please try again." }); return; }
 
   const { resolvedReason } = req.body as { resolvedReason?: string };
 
@@ -1078,7 +1078,7 @@ router.patch("/admin/strikes/:id/resolve", requireAuth, requireRole(...ADMIN_ROL
 router.get("/admin/users/:id/strikes", requireAuth, requireRole(...ADMIN_ROLES), async (req: AuthRequest, res): Promise<void> => {
   const idRaw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const id = parseInt(idRaw, 10);
-  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid ID — please try again." }); return; }
 
   const strikes = await db
     .select({
@@ -1107,7 +1107,7 @@ router.get("/admin/users/:id/strikes", requireAuth, requireRole(...ADMIN_ROLES),
 // ── DELETE /admin/users/:id (master_admin only) ───────────────────────────
 router.delete("/admin/users/:id", requireAuth, requireRole("master_admin"), async (req: AuthRequest, res): Promise<void> => {
   const id = Number(req.params.id);
-  if (!id) { res.status(400).json({ error: "Invalid user id" }); return; }
+  if (!id) { res.status(400).json({ error: "Invalid user ID." }); return; }
   if (id === req.user!.userId) { res.status(400).json({ error: "Cannot delete your own account" }); return; }
 
   const [target] = await db.select({ role: usersTable.role }).from(usersTable).where(eq(usersTable.id, id));
@@ -1138,7 +1138,7 @@ router.get("/admin/deletion-requests", requireAuth, requireRole("master_admin"),
 // ── POST /admin/users/:id/deletion-request/approve ────────────────────────
 router.post("/admin/users/:id/deletion-request/approve", requireAuth, requireRole("master_admin"), async (req: AuthRequest, res): Promise<void> => {
   const id = Number(req.params.id);
-  if (!id) { res.status(400).json({ error: "Invalid user id" }); return; }
+  if (!id) { res.status(400).json({ error: "Invalid user ID." }); return; }
   if (id === req.user!.userId) { res.status(400).json({ error: "Cannot delete your own account" }); return; }
 
   const [target] = await db.select({ role: usersTable.role }).from(usersTable).where(eq(usersTable.id, id));
@@ -1152,7 +1152,7 @@ router.post("/admin/users/:id/deletion-request/approve", requireAuth, requireRol
 // ── POST /admin/users/:id/deletion-request/deny ───────────────────────────
 router.post("/admin/users/:id/deletion-request/deny", requireAuth, requireRole("master_admin"), async (req: AuthRequest, res): Promise<void> => {
   const id = Number(req.params.id);
-  if (!id) { res.status(400).json({ error: "Invalid user id" }); return; }
+  if (!id) { res.status(400).json({ error: "Invalid user ID." }); return; }
   await db.update(usersTable).set({ deletionRequestedAt: null }).where(eq(usersTable.id, id));
   res.json({ ok: true });
 });
@@ -1160,7 +1160,7 @@ router.post("/admin/users/:id/deletion-request/deny", requireAuth, requireRole("
 // ── GET /admin/users/:id/agreements ────────────────────────────────────────
 router.get("/admin/users/:id/agreements", requireAuth, requireRole(...ADMIN_ROLES, "editor", "moderator"), async (req: AuthRequest, res): Promise<void> => {
   const id = Number(req.params.id);
-  if (!id) { res.status(400).json({ error: "Invalid user id" }); return; }
+  if (!id) { res.status(400).json({ error: "Invalid user ID." }); return; }
 
   const records = await db
     .select()
@@ -1259,7 +1259,7 @@ router.get("/admin/user-directory", requireAuth, requireRole(...ADMIN_ROLES, "mo
 router.post("/admin/copyright-concerns", requireAuth, requireRole(...ADMIN_ROLES, "moderator"), async (req: AuthRequest, res): Promise<void> => {
   const { contentType, contentId, contentTitle, concern } = req.body as Record<string, unknown>;
   if (!concern || typeof concern !== "string" || !concern.trim()) {
-    res.status(400).json({ error: "concern is required" }); return;
+    res.status(400).json({ error: "A concern description is required." }); return;
   }
   const [row] = await db.insert(copyrightConcernsTable).values({
     reporterId: req.user!.userId,
@@ -1323,12 +1323,12 @@ router.get("/admin/copyright-concerns", requireAuth, requireRole(...ADMIN_ROLES,
 
 router.patch("/admin/copyright-concerns/:id", requireAuth, requireRole(...ADMIN_ROLES), async (req: AuthRequest, res): Promise<void> => {
   const id = parseInt(String(req.params["id"] ?? "0"), 10);
-  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid ID — please try again." }); return; }
 
   const { status, adminNotes } = req.body as Record<string, unknown>;
   const validStatuses = ["dismissed", "strike_issued", "reviewed"];
   if (!status || !validStatuses.includes(String(status))) {
-    res.status(400).json({ error: "status must be one of: dismissed | strike_issued | reviewed" }); return;
+    res.status(400).json({ error: "Status must be one of: dismissed, strike_issued, or reviewed." }); return;
   }
 
   const [concern] = await db.select().from(copyrightConcernsTable).where(eq(copyrightConcernsTable.id, id)).limit(1);
@@ -1365,13 +1365,13 @@ router.patch("/admin/copyright-concerns/:id", requireAuth, requireRole(...ADMIN_
 router.post("/admin/artists/:id/assign", requireAuth, requireRole(...ADMIN_ROLES), async (req: AuthRequest, res): Promise<void> => {
   const artistId = Number(req.params.id);
   if (isNaN(artistId)) {
-    res.status(400).json({ error: "Invalid artist id" });
+    res.status(400).json({ error: "Invalid artist ID." });
     return;
   }
 
   const { userId } = req.body as { userId?: number };
   if (!userId || typeof userId !== "number") {
-    res.status(400).json({ error: "userId (number) is required" });
+    res.status(400).json({ error: "A valid user ID is required." });
     return;
   }
 
@@ -1411,7 +1411,7 @@ router.post("/admin/artists/:id/assign", requireAuth, requireRole(...ADMIN_ROLES
 router.delete("/admin/artists/:id/assign", requireAuth, requireRole(...ADMIN_ROLES), async (req: AuthRequest, res): Promise<void> => {
   const artistId = Number(req.params.id);
   if (isNaN(artistId)) {
-    res.status(400).json({ error: "Invalid artist id" });
+    res.status(400).json({ error: "Invalid artist ID." });
     return;
   }
 

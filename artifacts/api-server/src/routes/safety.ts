@@ -220,7 +220,7 @@ router.get("/admin/reports", requireAuth, requireRole(...MOD_ROLES), async (req:
 
 router.patch("/admin/reports/:id", requireAuth, requireRole(...MOD_ROLES), async (req: AuthRequest, res): Promise<void> => {
   const id = parseInt(String(req.params["id"] ?? "0"), 10);
-  if (Number.isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  if (Number.isNaN(id)) { res.status(400).json({ error: "Invalid ID — please try again." }); return; }
   const { status, adminNotes } = req.body as { status?: string; adminNotes?: string };
 
   const updateData: Record<string, unknown> = {};
@@ -337,7 +337,7 @@ router.get("/admin/feedback", requireAuth, requireRole(...ADMIN_ROLES), async (r
 
 router.patch("/admin/feedback/:id", requireAuth, requireRole(...ADMIN_ROLES), async (req: AuthRequest, res): Promise<void> => {
   const id = parseInt(String(req.params["id"] ?? "0"), 10);
-  if (Number.isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  if (Number.isNaN(id)) { res.status(400).json({ error: "Invalid ID — please try again." }); return; }
   const { status, adminNotes } = req.body as { status?: string; adminNotes?: string };
 
   const updateData: Record<string, unknown> = {};
@@ -494,7 +494,7 @@ router.get("/admin/enforcement", requireAuth, requireRole(...MOD_ROLES), async (
 
 router.patch("/admin/enforcement/:id/lift", requireAuth, requireRole(...ADMIN_ROLES), async (req: AuthRequest, res): Promise<void> => {
   const id = parseInt(String(req.params["id"] ?? "0"), 10);
-  if (Number.isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  if (Number.isNaN(id)) { res.status(400).json({ error: "Invalid ID — please try again." }); return; }
 
   const [existing] = await db.select().from(enforcementActionsTable).where(eq(enforcementActionsTable.id, id)).limit(1);
   if (!existing) { res.status(404).json({ error: "Action not found" }); return; }

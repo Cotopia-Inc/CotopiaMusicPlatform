@@ -109,7 +109,7 @@ router.post(
     } catch (error: unknown) {
       const detail = error instanceof Error ? error.message : String(error);
       req.log.error({ err: error, detail }, "Error saving uploaded file");
-      res.status(500).json({ error: "Failed to upload file", detail });
+      res.status(500).json({ error: "File upload failed. Please try again." });
     }
   },
 );
@@ -154,7 +154,7 @@ router.get("/storage/objects/*path", async (req: Request, res: Response) => {
       return;
     }
     req.log.error({ err: error }, "Error serving stored file");
-    res.status(500).json({ error: "Failed to serve file" });
+    res.status(500).json({ error: "Could not retrieve the file. Please try again." });
   }
 });
 

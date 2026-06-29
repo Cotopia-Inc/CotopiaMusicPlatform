@@ -10,7 +10,7 @@ const router = Router();
 
 router.get("/artist/analytics", requireAuth, async (req: AuthRequest, res): Promise<void> => {
   if (req.user!.role !== "artist") {
-    res.status(403).json({ error: "Forbidden: artist role required" });
+    res.status(403).json({ error: "An artist account is required to view analytics." });
     return;
   }
 
