@@ -60,7 +60,7 @@ export function Layout({ children }: LayoutProps) {
 
         <Link href="/">
           <div className="flex items-center gap-2 cursor-pointer">
-            <Radio className="w-4 h-4 text-primary" />
+            <img src="/logo.jpg" alt="Cotopia" className="w-5 h-5 rounded-sm object-cover flex-shrink-0" />
             <span className="text-base font-extrabold tracking-tighter">Everyday Radio</span>
           </div>
         </Link>
