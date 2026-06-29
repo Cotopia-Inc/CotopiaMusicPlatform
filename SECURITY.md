@@ -19,7 +19,7 @@ We recommend always running the latest version.
 
 If you believe you have found a security vulnerability in Cotopia, please report it responsibly through one of the following channels:
 
-- **Email:** security@cotopia.com
+- **Email:** techsupport@cotopia.org
 - **GitHub Private Disclosure:** Use [GitHub's private security advisory](../../security/advisories/new) feature to report confidentially.
 
 ### What to Include
