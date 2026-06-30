@@ -210,7 +210,6 @@ function BadgeForm({ initial, onSave, onCancel }: {
   const [isActive, setIsActive] = useState(initial?.isActive ?? true);
 
   const isValidHex = (v: string) => /^#[0-9a-fA-F]{6}$/.test(v.trim());
-  const colorWarning = color.trim() && !isValidHex(color) ? "Not a valid hex code — will be saved as the default purple." : null;
 
   function validate() {
     if (!name.trim()) return "Badge name is required.";
@@ -313,9 +312,9 @@ function BadgeForm({ initial, onSave, onCancel }: {
                 value={color}
                 onChange={e => setColor(e.target.value)}
                 placeholder="#7c3aed"
-                className={`bg-secondary/50 font-mono text-xs ${colorWarning ? "border-amber-500" : "border-secondary"}`}
+                className="bg-secondary/50 border-secondary font-mono text-xs"
               />
-              {colorWarning && <p className="text-[11px] text-amber-400">{colorWarning}</p>}
+              <p className="text-[11px] text-muted-foreground">Hex (#7c3aed) or any CSS color name (gold, crimson…)</p>
             </div>
           </div>
         </div>

@@ -169,7 +169,7 @@ router.post("/admin/badges", requireAuth, requireRole(...ADMIN_ROLES), async (re
       description: String(description).trim(),
       category: typeof category === "string" ? category : "achievement",
       icon: typeof icon === "string" && icon.trim() ? icon.trim() : "🏆",
-      color: typeof color === "string" && /^#[0-9a-fA-F]{6}$/.test(color) ? color : "#7c3aed",
+      color: typeof color === "string" && color.trim() ? color.trim() : "#7c3aed",
       isVisible: typeof isVisible === "boolean" ? isVisible : true,
       isActive: typeof isActive === "boolean" ? isActive : true,
     }).returning();
@@ -200,7 +200,7 @@ router.patch("/admin/badges/:id", requireAuth, requireRole(...ADMIN_ROLES), asyn
     if (description !== undefined) patch.description = String(description).trim();
     if (category !== undefined) patch.category = category;
     if (icon !== undefined && typeof icon === "string" && icon.trim()) patch.icon = icon.trim();
-    if (color !== undefined && typeof color === "string" && /^#[0-9a-fA-F]{6}$/.test(color)) patch.color = color;
+    if (color !== undefined && typeof color === "string" && color.trim()) patch.color = color.trim();
     if (isVisible !== undefined) patch.isVisible = isVisible;
     if (isActive !== undefined) patch.isActive = isActive;
 
