@@ -25,6 +25,13 @@ const CATEGORY_OPTIONS = [
   { value: "admin", label: "Admin" },
 ];
 
+const EMOJI_OPTIONS = [
+  "🏆","🥇","🥈","🥉","🏅","🎖️","🏵️","⭐","🌟","💫","✨","🔥",
+  "🎵","🎶","🎤","🎧","🎸","🎹","🎺","🎻","🥁","🎼","📻","🎙️",
+  "👑","💎","💜","🌈","🚀","🛡️","⚡","🔮","🎀","🌙","🌞","🌊",
+  "🦋","🍀","🦁","🦅","🦄","🎯","🎨","🎭","🎬","🎪","🎠","🎡",
+];
+
 const CATEGORY_META: Record<string, { label: string; className: string }> = {
   achievement: { label: "Achievement", className: "bg-violet-500/15 text-violet-400 border-violet-500/30" },
   beta: { label: "Beta", className: "bg-amber-500/15 text-amber-400 border-amber-500/30" },
@@ -231,9 +238,31 @@ function BadgeForm({ initial, onSave, onCancel }: {
           <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Name</label>
           <Input value={name} onChange={e => setName(e.target.value)} placeholder="Badge name" className="bg-secondary/50 border-secondary" />
         </div>
-        <div className="space-y-1.5">
-          <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Icon (emoji)</label>
-          <Input value={icon} onChange={e => setIcon(e.target.value)} placeholder="🏆" className="bg-secondary/50 border-secondary w-20" maxLength={4} />
+        <div className="space-y-1.5 md:col-span-2">
+          <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Icon</label>
+          <div className="flex items-center gap-3">
+            <span className="text-3xl w-10 h-10 flex items-center justify-center bg-secondary/50 border border-secondary rounded-md flex-shrink-0">{icon || "🏆"}</span>
+            <Input
+              value={icon}
+              onChange={e => setIcon(e.target.value)}
+              placeholder="🏆"
+              className="bg-secondary/50 border-secondary w-32 text-lg"
+            />
+          </div>
+          <div className="flex flex-wrap gap-1 mt-2">
+            {EMOJI_OPTIONS.map(e => (
+              <button
+                key={e}
+                type="button"
+                onClick={() => setIcon(e)}
+                className={`text-xl w-9 h-9 flex items-center justify-center rounded-md transition-colors hover:bg-secondary ${icon === e ? "bg-primary/20 ring-1 ring-primary" : "bg-secondary/30"}`}
+                title={e}
+              >
+                {e}
+              </button>
+            ))}
+          </div>
+          <p className="text-[11px] text-muted-foreground">Click to pick, or type/paste any emoji in the field above.</p>
         </div>
         <div className="space-y-1.5 md:col-span-2">
           <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Description</label>
