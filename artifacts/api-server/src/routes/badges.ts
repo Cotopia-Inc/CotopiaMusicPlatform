@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { eq, and, desc, inArray, sql } from "drizzle-orm";
+import { eq, and, ne, desc, inArray, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { db, badgesTable, userBadgesTable, usersTable } from "@workspace/db";
 import { requireAuth, requireRole, type AuthRequest } from "../lib/auth";
@@ -150,50 +150,67 @@ router.get("/admin/badges", requireAuth, requireRole(...ADMIN_ROLES), async (_re
 
 // ── Admin: create badge ────────────────────────────────────────────────────
 router.post("/admin/badges", requireAuth, requireRole(...ADMIN_ROLES), async (req: AuthRequest, res): Promise<void> => {
-  const { name, description, category, icon, color, isVisible, isActive } = req.body as Record<string, unknown>;
+  try {
+    const { name, description, category, icon, color, isVisible, isActive } = req.body as Record<string, unknown>;
 
-  if (!name || typeof name !== "string" || !name.trim()) {
-    res.status(400).json({ error: "Badge name is required" }); return;
+    if (!name || typeof name !== "string" || !name.trim()) {
+      res.status(400).json({ error: "Badge name is required." }); return;
+    }
+    if (!description || typeof description !== "string" || !description.trim()) {
+      res.status(400).json({ error: "A description is required." }); return;
+    }
+
+    // Check for duplicate name
+    const [existing] = await db.select({ id: badgesTable.id }).from(badgesTable).where(eq(badgesTable.name, String(name).trim())).limit(1);
+    if (existing) { res.status(409).json({ error: `A badge named "${String(name).trim()}" already exists. Please choose a different name.` }); return; }
+
+    const [badge] = await db.insert(badgesTable).values({
+      name: String(name).trim(),
+      description: String(description).trim(),
+      category: typeof category === "string" ? category : "achievement",
+      icon: typeof icon === "string" && icon.trim() ? icon.trim() : "🏆",
+      color: typeof color === "string" && /^#[0-9a-fA-F]{6}$/.test(color) ? color : "#7c3aed",
+      isVisible: typeof isVisible === "boolean" ? isVisible : true,
+      isActive: typeof isActive === "boolean" ? isActive : true,
+    }).returning();
+
+    res.status(201).json(badge);
+  } catch (err) {
+    req.log.error(err, "Failed to create badge");
+    res.status(500).json({ error: "Something went wrong while saving the badge. Please try again." });
   }
-  if (!description || typeof description !== "string" || !description.trim()) {
-    res.status(400).json({ error: "Badge description is required" }); return;
-  }
-
-  // Check for duplicate name
-  const [existing] = await db.select({ id: badgesTable.id }).from(badgesTable).where(eq(badgesTable.name, String(name).trim())).limit(1);
-  if (existing) { res.status(409).json({ error: `A badge named "${String(name).trim()}" already exists` }); return; }
-
-  const [badge] = await db.insert(badgesTable).values({
-    name: String(name).trim(),
-    description: String(description).trim(),
-    category: typeof category === "string" ? category : "achievement",
-    icon: typeof icon === "string" ? icon : "🏆",
-    color: typeof color === "string" ? color : "#7c3aed",
-    isVisible: typeof isVisible === "boolean" ? isVisible : true,
-    isActive: typeof isActive === "boolean" ? isActive : true,
-  }).returning();
-
-  res.status(201).json(badge);
 });
 
 // ── Admin: update badge ────────────────────────────────────────────────────
 router.patch("/admin/badges/:id", requireAuth, requireRole(...ADMIN_ROLES), async (req: AuthRequest, res): Promise<void> => {
-  const id = Number(req.params.id);
-  if (isNaN(id) || id <= 0) { res.status(400).json({ error: "Invalid badge id" }); return; }
+  try {
+    const id = Number(req.params.id);
+    if (isNaN(id) || id <= 0) { res.status(400).json({ error: "Invalid badge id." }); return; }
 
-  const { name, description, category, icon, color, isVisible, isActive } = req.body as Record<string, unknown>;
-  const patch: Record<string, unknown> = {};
-  if (name !== undefined) patch.name = String(name).trim();
-  if (description !== undefined) patch.description = String(description).trim();
-  if (category !== undefined) patch.category = category;
-  if (icon !== undefined) patch.icon = icon;
-  if (color !== undefined) patch.color = color;
-  if (isVisible !== undefined) patch.isVisible = isVisible;
-  if (isActive !== undefined) patch.isActive = isActive;
+    const { name, description, category, icon, color, isVisible, isActive } = req.body as Record<string, unknown>;
+    const patch: Record<string, unknown> = {};
+    if (name !== undefined) {
+      if (typeof name !== "string" || !name.trim()) { res.status(400).json({ error: "Badge name cannot be empty." }); return; }
+      // Check for duplicate name (excluding current badge)
+      const [dup] = await db.select({ id: badgesTable.id }).from(badgesTable)
+        .where(and(eq(badgesTable.name, String(name).trim()), ne(badgesTable.id, id))).limit(1);
+      if (dup) { res.status(409).json({ error: `A badge named "${String(name).trim()}" already exists. Please choose a different name.` }); return; }
+      patch.name = String(name).trim();
+    }
+    if (description !== undefined) patch.description = String(description).trim();
+    if (category !== undefined) patch.category = category;
+    if (icon !== undefined && typeof icon === "string" && icon.trim()) patch.icon = icon.trim();
+    if (color !== undefined && typeof color === "string" && /^#[0-9a-fA-F]{6}$/.test(color)) patch.color = color;
+    if (isVisible !== undefined) patch.isVisible = isVisible;
+    if (isActive !== undefined) patch.isActive = isActive;
 
-  const [updated] = await db.update(badgesTable).set(patch).where(eq(badgesTable.id, id)).returning();
-  if (!updated) { res.status(404).json({ error: "Badge not found" }); return; }
-  res.json(updated);
+    const [updated] = await db.update(badgesTable).set(patch).where(eq(badgesTable.id, id)).returning();
+    if (!updated) { res.status(404).json({ error: "Badge not found." }); return; }
+    res.json(updated);
+  } catch (err) {
+    req.log.error(err, "Failed to update badge");
+    res.status(500).json({ error: "Something went wrong while saving the badge. Please try again." });
+  }
 });
 
 // ── Admin: list all user badge awards ─────────────────────────────────────

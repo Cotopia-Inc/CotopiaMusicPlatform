@@ -209,9 +209,22 @@ function BadgeForm({ initial, onSave, onCancel }: {
   const [isVisible, setIsVisible] = useState(initial?.isVisible ?? true);
   const [isActive, setIsActive] = useState(initial?.isActive ?? true);
 
+  const isValidHex = (v: string) => /^#[0-9a-fA-F]{6}$/.test(v);
+  const colorError = color && !isValidHex(color) ? "Color must be a hex code like #7c3aed. Use the color picker on the left." : null;
+
+  function validate() {
+    if (!name.trim()) return "Badge name is required.";
+    if (!description.trim()) return "A description is required.";
+    if (colorError) return colorError;
+    return null;
+  }
+
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const body = { name, description, category, icon, color, isVisible, isActive };
+      const validationError = validate();
+      if (validationError) throw new Error(validationError);
+
+      const body = { name: name.trim(), description: description.trim(), category, icon, color, isVisible, isActive };
       const url = initial
         ? `${import.meta.env.BASE_URL}api/admin/badges/${initial.id}`
         : `${import.meta.env.BASE_URL}api/admin/badges`;
@@ -220,14 +233,22 @@ function BadgeForm({ initial, onSave, onCancel }: {
         headers: authHeaders(),
         body: JSON.stringify(body),
       });
-      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? "Failed to save");
+      if (!res.ok) {
+        let msg = "Something went wrong. Please try again.";
+        try { msg = (await res.json()).error ?? msg; } catch { /* non-JSON error */ }
+        throw new Error(msg);
+      }
       return res.json();
     },
     onSuccess: () => {
-      toast({ title: initial ? "Badge updated" : "Badge created" });
+      toast({ title: initial ? "Badge updated!" : "Badge created!" });
       onSave();
     },
-    onError: (e: unknown) => toast({ variant: "destructive", title: e instanceof Error ? e.message : "Save failed" }),
+    onError: (e: unknown) => toast({
+      variant: "destructive",
+      title: "Couldn't save badge",
+      description: e instanceof Error ? e.message : "Something went wrong. Please try again.",
+    }),
   });
 
   return (
@@ -281,8 +302,22 @@ function BadgeForm({ initial, onSave, onCancel }: {
         <div className="space-y-1.5">
           <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Color</label>
           <div className="flex items-center gap-2">
-            <input type="color" value={color} onChange={e => setColor(e.target.value)} className="w-9 h-9 rounded cursor-pointer border border-secondary bg-transparent" />
-            <Input value={color} onChange={e => setColor(e.target.value)} className="bg-secondary/50 border-secondary font-mono text-xs" />
+            <input
+              type="color"
+              value={isValidHex(color) ? color : "#7c3aed"}
+              onChange={e => setColor(e.target.value)}
+              className="w-9 h-9 rounded cursor-pointer border border-secondary bg-transparent flex-shrink-0"
+              title="Click to pick a color"
+            />
+            <div className="flex-1 space-y-1">
+              <Input
+                value={color}
+                onChange={e => setColor(e.target.value)}
+                placeholder="#7c3aed"
+                className={`bg-secondary/50 font-mono text-xs ${colorError ? "border-destructive" : "border-secondary"}`}
+              />
+              {colorError && <p className="text-[11px] text-destructive">{colorError}</p>}
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-6">
