@@ -14,6 +14,8 @@ export interface AdminListenerItem {
   email: string;
   /** @nullable */
   avatarUrl?: string | null;
+  /** @nullable */
+  role?: string | null;
   isVerified?: boolean;
   isSuspended?: boolean;
   favoriteCount?: number;

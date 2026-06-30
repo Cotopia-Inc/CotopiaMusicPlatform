@@ -13,4 +13,5 @@ export const EditorPickInputContentType = {
   song: 'song',
   video: 'video',
   artist: 'artist',
+  playlist: 'playlist',
 } as const;

@@ -1639,7 +1639,7 @@ export const GetHomeFeedResponse = zod.object({
 })),
   "editorPicks": zod.array(zod.object({
   "id": zod.number(),
-  "contentType": zod.enum(['song', 'video', 'artist']),
+  "contentType": zod.enum(['song', 'video', 'artist', 'playlist']),
   "contentId": zod.number(),
   "editorId": zod.number().nullish(),
   "editorUsername": zod.string().nullish(),
@@ -1699,6 +1699,16 @@ export const GetHomeFeedResponse = zod.object({
   "songCount": zod.number().optional(),
   "isFollowed": zod.boolean().optional(),
   "isVerified": zod.boolean().optional(),
+  "createdAt": zod.string()
+}).nullish(),
+  "playlist": zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "coverUrl": zod.string().nullish(),
+  "isPublic": zod.boolean(),
+  "songCount": zod.number(),
   "createdAt": zod.string()
 }).nullish()
 }))
@@ -2023,7 +2033,7 @@ export const DeleteCompanyPostParams = zod.object({
  */
 export const ListEditorPicksResponseItem = zod.object({
   "id": zod.number(),
-  "contentType": zod.enum(['song', 'video', 'artist']),
+  "contentType": zod.enum(['song', 'video', 'artist', 'playlist']),
   "contentId": zod.number(),
   "editorId": zod.number().nullish(),
   "editorUsername": zod.string().nullish(),
@@ -2084,6 +2094,16 @@ export const ListEditorPicksResponseItem = zod.object({
   "isFollowed": zod.boolean().optional(),
   "isVerified": zod.boolean().optional(),
   "createdAt": zod.string()
+}).nullish(),
+  "playlist": zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "coverUrl": zod.string().nullish(),
+  "isPublic": zod.boolean(),
+  "songCount": zod.number(),
+  "createdAt": zod.string()
 }).nullish()
 })
 export const ListEditorPicksResponse = zod.array(ListEditorPicksResponseItem)
@@ -2093,7 +2113,7 @@ export const ListEditorPicksResponse = zod.array(ListEditorPicksResponseItem)
  * @summary Add an editor pick (editor/admin only)
  */
 export const AddEditorPickBody = zod.object({
-  "contentType": zod.enum(['song', 'video', 'artist']),
+  "contentType": zod.enum(['song', 'video', 'artist', 'playlist']),
   "contentId": zod.number(),
   "note": zod.string().optional(),
   "displayOrder": zod.number().optional()
@@ -2114,7 +2134,7 @@ export const UpdateEditorPickBody = zod.object({
 
 export const UpdateEditorPickResponse = zod.object({
   "id": zod.number(),
-  "contentType": zod.enum(['song', 'video', 'artist']),
+  "contentType": zod.enum(['song', 'video', 'artist', 'playlist']),
   "contentId": zod.number(),
   "editorId": zod.number().nullish(),
   "editorUsername": zod.string().nullish(),
@@ -2174,6 +2194,16 @@ export const UpdateEditorPickResponse = zod.object({
   "songCount": zod.number().optional(),
   "isFollowed": zod.boolean().optional(),
   "isVerified": zod.boolean().optional(),
+  "createdAt": zod.string()
+}).nullish(),
+  "playlist": zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "coverUrl": zod.string().nullish(),
+  "isPublic": zod.boolean(),
+  "songCount": zod.number(),
   "createdAt": zod.string()
 }).nullish()
 })
@@ -2627,6 +2657,7 @@ export const AdminListListenersResponse = zod.object({
   "displayName": zod.string().nullish(),
   "email": zod.string(),
   "avatarUrl": zod.string().nullish(),
+  "role": zod.string().nullish(),
   "isVerified": zod.boolean().optional(),
   "isSuspended": zod.boolean().optional(),
   "favoriteCount": zod.number().optional(),

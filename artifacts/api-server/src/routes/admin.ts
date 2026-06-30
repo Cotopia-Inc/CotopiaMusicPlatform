@@ -333,7 +333,7 @@ router.get("/admin/listeners", requireAuth, requireRole(...ADMIN_ROLES, "moderat
   const [listeners, [totalRow]] = await Promise.all([
     db.select({
       id: usersTable.id, username: usersTable.username, displayName: usersTable.displayName,
-      email: usersTable.email, avatarUrl: usersTable.avatarUrl,
+      email: usersTable.email, avatarUrl: usersTable.avatarUrl, role: usersTable.role,
       isVerified: usersTable.isVerified, isSuspended: usersTable.isSuspended,
       createdAt: usersTable.createdAt,
     })

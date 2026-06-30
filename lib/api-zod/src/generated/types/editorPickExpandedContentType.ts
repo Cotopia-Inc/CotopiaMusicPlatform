@@ -13,4 +13,5 @@ export const EditorPickExpandedContentType = {
   song: 'song',
   video: 'video',
   artist: 'artist',
+  playlist: 'playlist',
 } as const;

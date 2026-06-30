@@ -7,6 +7,7 @@
  */
 import type { Artist } from './artist';
 import type { EditorPickExpandedContentType } from './editorPickExpandedContentType';
+import type { Playlist } from './playlist';
 import type { Song } from './song';
 import type { Video } from './video';
 
@@ -25,4 +26,5 @@ export interface EditorPickExpanded {
   song?: Song | null;
   video?: Video | null;
   artist?: Artist | null;
+  playlist?: Playlist | null;
 }

@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { useListEditorPicks, useAddEditorPick, useDeleteEditorPick, useUpdateEditorPick, useListSongs, useListVideos, useListArtists, getListEditorPicksQueryKey, getListSongsQueryKey, getListVideosQueryKey, getListArtistsQueryKey } from "@workspace/api-client-react";
+import { useListEditorPicks, useAddEditorPick, useDeleteEditorPick, useUpdateEditorPick, useListSongs, useListVideos, useListArtists, useListPlaylists, getListEditorPicksQueryKey, getListSongsQueryKey, getListVideosQueryKey, getListArtistsQueryKey, getListPlaylistsQueryKey } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
 import { useLocation } from "wouter";
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Sparkles, Plus, Trash2, Music, Video, User, X, Search, ChevronUp, ChevronDown, MessageSquare } from "lucide-react";
+import { Sparkles, Plus, Trash2, Music, Video, User, X, Search, ChevronUp, ChevronDown, MessageSquare, ListMusic } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,7 +13,7 @@ import { RoleBadges } from "@/components/role-badges";
 import { UserLink } from "@/components/user-link";
 
 const EDITOR_ROLES = ["editor", "admin", "master_admin"];
-type ContentType = "song" | "video" | "artist";
+type ContentType = "song" | "video" | "artist" | "playlist";
 
 export default function EditorPicksPage() {
   const { user } = useAuth();
@@ -74,40 +74,54 @@ export default function EditorPicksPage() {
   const { data: artistsData } = useListArtists(undefined, {
     query: { enabled: selectedType === "artist" && search.length > 0, queryKey: getListArtistsQueryKey() }
   });
+  const { data: playlistsData } = useListPlaylists({
+    query: { enabled: selectedType === "playlist", queryKey: getListPlaylistsQueryKey() }
+  });
 
   const songs = songsData?.items ?? [];
   const videos = videosData?.items ?? [];
   const artists = (Array.isArray(artistsData) ? artistsData : []).filter((a: { stageName: string }) =>
     search ? a.stageName.toLowerCase().includes(search.toLowerCase()) : true
   ).slice(0, 12);
+  const playlists = (Array.isArray(playlistsData) ? playlistsData : []).filter((p: { name: string }) =>
+    search ? p.name.toLowerCase().includes(search.toLowerCase()) : true
+  ).slice(0, 12);
 
   function contentLabel(p: (typeof picks)[0]) {
     if (p.contentType === "song") return p.song?.title ?? `Song #${p.contentId}`;
     if (p.contentType === "video") return p.video?.title ?? `Video #${p.contentId}`;
+    if (p.contentType === "playlist") return (p as any).playlist?.name ?? `Playlist #${p.contentId}`;
     return (p.artist as any)?.stageName ?? `Artist #${p.contentId}`;
   }
 
   function contentArt(p: (typeof picks)[0]) {
     if (p.contentType === "song") return p.song?.coverUrl ?? null;
     if (p.contentType === "video") return p.video?.thumbnailUrl ?? null;
+    if (p.contentType === "playlist") return (p as any).playlist?.coverUrl ?? null;
     return (p.artist as any)?.avatarUrl ?? null;
   }
 
   function contentSub(p: (typeof picks)[0]) {
     if (p.contentType === "song") return p.song?.artistName ?? "";
     if (p.contentType === "video") return p.video?.artistName ?? "";
+    if (p.contentType === "playlist") {
+      const sc = (p as any).playlist?.songCount ?? 0;
+      return `${sc} song${sc !== 1 ? "s" : ""}`;
+    }
     return (p.artist as any)?.genre ?? "";
   }
 
   const TypeIcon = ({ type }: { type: ContentType }) => {
     if (type === "song") return <Music className="w-3.5 h-3.5" />;
     if (type === "video") return <Video className="w-3.5 h-3.5" />;
+    if (type === "playlist") return <ListMusic className="w-3.5 h-3.5" />;
     return <User className="w-3.5 h-3.5" />;
   };
 
   const typeColor = (type: ContentType) =>
     type === "song" ? "text-purple-400 bg-purple-400/10" :
     type === "video" ? "text-blue-400 bg-blue-400/10" :
+    type === "playlist" ? "text-emerald-400 bg-emerald-400/10" :
     "text-amber-400 bg-amber-400/10";
 
   return (
@@ -135,8 +149,8 @@ export default function EditorPicksPage() {
           <h2 className="font-semibold text-sm">Add a recommendation</h2>
 
           {/* Type tabs */}
-          <div className="flex gap-2">
-            {(["song", "video", "artist"] as ContentType[]).map(t => (
+          <div className="flex gap-2 flex-wrap">
+            {(["song", "video", "artist", "playlist"] as ContentType[]).map(t => (
               <button
                 key={t}
                 onClick={() => { setSelectedType(t); setSearch(""); }}
@@ -163,7 +177,7 @@ export default function EditorPicksPage() {
           </div>
 
           {/* Results */}
-          {search.length > 0 && (
+          {(search.length > 0 || selectedType === "playlist") && (
             <div className="space-y-1 max-h-64 overflow-y-auto">
               {selectedType === "song" && songs.map(s => (
                 <button
@@ -216,6 +230,24 @@ export default function EditorPicksPage() {
                   <Plus className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                 </button>
               ))}
+              {selectedType === "playlist" && playlists.map((pl: any) => (
+                <button
+                  key={pl.id}
+                  onClick={() => addMutation.mutate({ data: { contentType: "playlist", contentId: pl.id } })}
+                  disabled={addMutation.isPending}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-secondary/60 transition-colors text-left"
+                >
+                  <div className="w-9 h-9 rounded bg-secondary overflow-hidden flex-shrink-0">
+                    {pl.coverUrl ? <img src={pl.coverUrl} alt={pl.name} className="w-full h-full object-cover" /> : <ListMusic className="w-4 h-4 m-auto mt-2.5 text-muted-foreground/40" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{pl.name}</p>
+                    <p className="text-xs text-muted-foreground truncate">{pl.songCount ?? 0} songs</p>
+                  </div>
+                  <Plus className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                </button>
+              ))}
+
               {search.length > 0 && selectedType === "song" && songs.length === 0 && (
                 <p className="text-sm text-muted-foreground py-4 text-center">No songs found</p>
               )}
@@ -224,6 +256,9 @@ export default function EditorPicksPage() {
               )}
               {search.length > 0 && selectedType === "artist" && artists.length === 0 && (
                 <p className="text-sm text-muted-foreground py-4 text-center">No artists found</p>
+              )}
+              {selectedType === "playlist" && playlists.length === 0 && (
+                <p className="text-sm text-muted-foreground py-4 text-center">No playlists found — create a playlist first</p>
               )}
             </div>
           )}
@@ -271,7 +306,7 @@ export default function EditorPicksPage() {
                   </div>
 
                   {/* Art */}
-                  <div className={`w-10 h-10 rounded ${pick.contentType === "artist" ? "rounded-full" : "rounded-md"} bg-secondary overflow-hidden flex-shrink-0`}>
+                  <div className={`w-10 h-10 ${pick.contentType === "artist" ? "rounded-full" : "rounded-md"} bg-secondary overflow-hidden flex-shrink-0`}>
                     {contentArt(pick)
                       ? <img src={contentArt(pick) ?? undefined} alt={contentLabel(pick)} className="w-full h-full object-cover" />
                       : <div className="w-full h-full flex items-center justify-center"><TypeIcon type={pick.contentType as ContentType} /></div>
@@ -295,6 +330,9 @@ export default function EditorPicksPage() {
                     )}
                     {pick.contentType === "artist" && (pick.artist as any)?.genre && (
                       <p className="text-xs text-muted-foreground truncate mt-0.5">{(pick.artist as any).genre}</p>
+                    )}
+                    {pick.contentType === "playlist" && (
+                      <p className="text-xs text-muted-foreground truncate mt-0.5">{contentSub(pick)}</p>
                     )}
                     {pick.note && (
                       <p className="text-xs text-primary/80 italic truncate mt-0.5">"{pick.note}"</p>

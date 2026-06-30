@@ -111,9 +111,9 @@ export default function AdminAnalytics() {
           <CardContent>
             <div className="flex flex-wrap gap-3">
               {Object.entries(data.usersByRole).sort(([, a], [, b]) => b - a).map(([role, cnt]) => (
-                <div key={role} className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium ${roleColors[role] ?? "bg-muted text-muted-foreground"}`}>
-                  <span className="capitalize">{role === "listener" ? "Creator" : role.replace("_", " ")}</span>
-                  <span className="font-bold">{cnt}</span>
+                <div key={role} className={`flex items-center gap-2 px-3 py-2 rounded-lg ${roleColors[role] ?? "bg-muted text-muted-foreground"}`}>
+                  <RoleTag role={role} />
+                  <span className="text-sm font-bold">{cnt}</span>
                 </div>
               ))}
             </div>

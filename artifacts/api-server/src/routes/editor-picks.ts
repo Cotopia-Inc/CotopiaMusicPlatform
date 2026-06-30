@@ -1,13 +1,13 @@
 import { Router } from "express";
 import { eq, desc, sql } from "drizzle-orm";
-import { db, editorPicksTable, songsTable, videosTable, artistsTable, albumsTable, usersTable } from "@workspace/db";
+import { db, editorPicksTable, songsTable, videosTable, artistsTable, albumsTable, usersTable, playlistsTable } from "@workspace/db";
 import { requireAuth, requireRole, type AuthRequest } from "../lib/auth";
 import { z } from "zod";
 
 const router = Router();
 
 const AddPickBody = z.object({
-  contentType: z.enum(["song", "video", "artist"]),
+  contentType: z.enum(["song", "video", "artist", "playlist"]),
   contentId: z.number().int().positive(),
   note: z.string().optional(),
   displayOrder: z.number().int().default(0),
@@ -24,6 +24,7 @@ async function expandPick(pick: typeof editorPicksTable.$inferSelect, editorUser
   let song = null;
   let video = null;
   let artist = null;
+  let playlist = null;
 
   if (pick.contentType === "song") {
     const rows = await db
@@ -74,9 +75,25 @@ async function expandPick(pick: typeof editorPicksTable.$inferSelect, editorUser
       .where(eq(artistsTable.id, pick.contentId))
       .limit(1);
     artist = rows[0] ?? null;
+  } else if (pick.contentType === "playlist") {
+    const rows = await db
+      .select({
+        id: playlistsTable.id,
+        userId: playlistsTable.userId,
+        name: playlistsTable.name,
+        description: playlistsTable.description,
+        coverUrl: playlistsTable.coverUrl,
+        isPublic: playlistsTable.isPublic,
+        createdAt: playlistsTable.createdAt,
+        songCount: sql<number>`(SELECT COUNT(*)::int FROM playlist_items WHERE playlist_id = ${playlistsTable.id})`,
+      })
+      .from(playlistsTable)
+      .where(eq(playlistsTable.id, pick.contentId))
+      .limit(1);
+    playlist = rows[0] ?? null;
   }
 
-  return { ...pick, editorUsername: editorUsername ?? null, song, video, artist };
+  return { ...pick, editorUsername: editorUsername ?? null, song, video, artist, playlist };
 }
 
 router.get("/editor-picks", async (_req, res): Promise<void> => {
@@ -99,7 +116,7 @@ router.get("/editor-picks", async (_req, res): Promise<void> => {
     picks.map((p) => expandPick(p as any, p.editorUsername))
   );
 
-  res.json(expanded.filter((p) => p.song || p.video || p.artist));
+  res.json(expanded.filter((p) => p.song || p.video || p.artist || p.playlist));
 });
 
 router.post("/editor-picks", requireAuth, requireRole("editor", "admin", "master_admin"), async (req: AuthRequest, res): Promise<void> => {

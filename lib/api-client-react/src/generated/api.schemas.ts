@@ -869,6 +869,7 @@ export const EditorPickExpandedContentType = {
   song: 'song',
   video: 'video',
   artist: 'artist',
+  playlist: 'playlist',
 } as const;
 
 export interface EditorPickExpanded {
@@ -886,6 +887,7 @@ export interface EditorPickExpanded {
   song?: Song | null;
   video?: Video | null;
   artist?: Artist | null;
+  playlist?: Playlist | null;
 }
 
 export interface HomeFeed {
@@ -1365,6 +1367,8 @@ export interface AdminListenerItem {
   email: string;
   /** @nullable */
   avatarUrl?: string | null;
+  /** @nullable */
+  role?: string | null;
   isVerified?: boolean;
   isSuspended?: boolean;
   favoriteCount?: number;
@@ -1485,6 +1489,7 @@ export const EditorPickInputContentType = {
   song: 'song',
   video: 'video',
   artist: 'artist',
+  playlist: 'playlist',
 } as const;
 
 export interface EditorPickInput {

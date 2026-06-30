@@ -4408,6 +4408,8 @@ components:
           type: string
         avatarUrl:
           type: ["string", "null"]
+        role:
+          type: ["string", "null"]
         isVerified:
           type: boolean
         isSuspended:
@@ -4547,7 +4549,7 @@ components:
           type: integer
         contentType:
           type: string
-          enum: [song, video, artist]
+          enum: [song, video, artist, playlist]
         contentId:
           type: integer
         editorId:
@@ -4572,6 +4574,10 @@ components:
           allOf:
             - $ref: "#/components/schemas/Artist"
           nullable: true
+        playlist:
+          allOf:
+            - $ref: "#/components/schemas/Playlist"
+          nullable: true
 
     EditorPickInput:
       type: object
@@ -4579,7 +4585,7 @@ components:
       properties:
         contentType:
           type: string
-          enum: [song, video, artist]
+          enum: [song, video, artist, playlist]
         contentId:
           type: integer
         note:

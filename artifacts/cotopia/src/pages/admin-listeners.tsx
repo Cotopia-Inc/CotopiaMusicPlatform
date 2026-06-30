@@ -5,10 +5,10 @@ import { useLocation } from "wouter";
 import { useEffect } from "react";
 import { Eye, Search, Heart, MessageSquare, UserCheck } from "lucide-react";
 import { UserLink } from "@/components/user-link";
+import { RoleTag } from "@/components/role-badges";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
 
 function StatPill({ icon: Icon, value, label }: { icon: React.ElementType; value: number; label: string }) {
@@ -94,6 +94,7 @@ export default function AdminListeners() {
                           isVerified={(u as any).isVerified}
                           className="text-sm font-medium"
                         />
+                        <RoleTag role={(u as any).role ?? undefined} />
                         {(u as any).isSuspended && (
                           <span className="text-[9px] font-bold text-red-400 bg-red-500/10 px-1.5 py-0.5 rounded uppercase">Suspended</span>
                         )}
