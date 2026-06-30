@@ -429,6 +429,7 @@ async function seed() {
     { name: "Rising Star", description: "Rapidly growing artist on the platform with impressive engagement.", category: "achievement", icon: "⭐", color: "#f97316" },
     { name: "First Upload", description: "Successfully submitted and got first track approved on the platform.", category: "achievement", icon: "🚀", color: "#7c3aed" },
     { name: "Early Supporter", description: "Among the earliest supporters and champions of Everyday Radio.", category: "beta", icon: "💜", color: "#a855f7" },
+    { name: "Profile Complete", description: "Filled out a full profile with display name, avatar, and bio.", category: "achievement", icon: "🪪", color: "#14b8a6" },
   ];
 
   for (const badge of starterBadges) {

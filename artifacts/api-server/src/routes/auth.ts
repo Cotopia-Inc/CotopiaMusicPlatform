@@ -233,6 +233,12 @@ router.patch("/auth/me", requireAuth, async (req: AuthRequest, res): Promise<voi
     }
   }
 
+  // Auto-award "Profile Complete" badge when bio + avatarUrl + displayName are all present
+  if (user.bio && user.avatarUrl && user.displayName) {
+    awardBadgeByName(user.id, "Profile Complete", { reason: "Completed full profile" })
+      .catch(err => logger.error(err, "Failed to auto-award Profile Complete badge"));
+  }
+
   const { passwordHash: _, ...userOut } = user;
   res.json(userOut);
 });
