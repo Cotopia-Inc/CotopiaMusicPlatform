@@ -426,6 +426,7 @@ export default function VideoDetail() {
                               role={msg.role ?? undefined}
                               isVerified={msg.isVerified}
                               artistId={msg.artistId}
+                              primaryBadge={(msg as any).primaryBadge ?? null}
                               className="text-[10px] font-semibold text-primary flex-shrink-0"
                             />
                             <span className={`text-[10px] break-words leading-relaxed flex-1 min-w-0 ${isDeleting ? "opacity-40" : "text-white/80"}`}>

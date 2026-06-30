@@ -1,4 +1,6 @@
 import { useGetMe, getGetMeQueryKey, useUpdateMe, useChangePassword, useChangeUsername, useSendOtp, useVerifyOtp, useGetMySettings, getGetMySettingsQueryKey, useUpdateMySettings, type UserSettingsUpdate } from "@workspace/api-client-react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { BadgeList, type UserBadgeData } from "@/components/badge-chip";
 import { useAuth } from "@/lib/auth";
 import { usePlatformConfig } from "@/lib/platform-config";
 import { Button } from "@/components/ui/button";
@@ -17,6 +19,91 @@ import { ImageCropModal } from "@/components/image-crop-modal";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { MessageSquare } from "lucide-react";
+
+function FeaturedBadgesSection({ userId }: { userId: number }) {
+  const { toast } = useToast();
+
+  const { data: userBadges } = useQuery<UserBadgeData[]>({
+    queryKey: ["user-badges", userId],
+    queryFn: async () => {
+      const res = await fetch(`${import.meta.env.BASE_URL}api/users/${userId}/badges`);
+      return res.ok ? res.json() : [];
+    },
+    enabled: !!userId,
+  });
+
+  const featuredMutation = useMutation({
+    mutationFn: async (badgeIds: number[]) => {
+      const res = await fetch(`${import.meta.env.BASE_URL}api/users/${userId}/featured-badges`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${localStorage.getItem("cotopia_token")}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ badgeIds }),
+      });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? "Failed to update");
+      return res.json();
+    },
+    onSuccess: () => toast({ title: "Featured badges updated" }),
+    onError: (e: unknown) => toast({ variant: "destructive", title: e instanceof Error ? e.message : "Update failed" }),
+  });
+
+  const activeBadges = (userBadges ?? []).filter(ub => ub.badge.isActive && ub.badge.isVisible);
+  const featuredIds = (userBadges ?? [])
+    .filter(ub => ub.isFeatured)
+    .sort((a, b) => (a.featureOrder ?? 99) - (b.featureOrder ?? 99))
+    .map(ub => ub.badgeId);
+
+  function toggleFeatured(badgeId: number) {
+    const newIds = featuredIds.includes(badgeId)
+      ? featuredIds.filter(id => id !== badgeId)
+      : featuredIds.length < 3 ? [...featuredIds, badgeId] : featuredIds;
+    featuredMutation.mutate(newIds);
+  }
+
+  if (activeBadges.length === 0) return null;
+
+  return (
+    <div className="space-y-2">
+      <div>
+        <label className="text-sm font-medium">Featured Badges <span className="text-muted-foreground text-xs">(up to 3)</span></label>
+        <p className="text-xs text-muted-foreground mt-0.5">Choose which badges to highlight on your public profile.</p>
+      </div>
+      <div className="grid grid-cols-1 gap-1.5">
+        {activeBadges.map(ub => {
+          const isFeatured = featuredIds.includes(ub.badgeId);
+          const canAdd = featuredIds.length < 3;
+          return (
+            <button
+              key={ub.id}
+              onClick={() => toggleFeatured(ub.badgeId)}
+              disabled={!isFeatured && !canAdd}
+              className={`flex items-center gap-3 rounded-lg border px-3 py-2 text-left transition-colors ${
+                isFeatured
+                  ? "border-primary bg-primary/10"
+                  : !canAdd
+                  ? "border-border opacity-40 cursor-not-allowed"
+                  : "border-border hover:border-border/80 hover:bg-secondary/30"
+              }`}
+            >
+              <span className="text-lg flex-shrink-0">{ub.badge.icon}</span>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-sm">{ub.badge.name}</p>
+                <p className="text-xs text-muted-foreground truncate">{ub.badge.description}</p>
+              </div>
+              {isFeatured && (
+                <span className="text-xs font-semibold text-primary flex-shrink-0">#{featuredIds.indexOf(ub.badgeId) + 1}</span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+      {activeBadges.length > 0 && (
+        <div className="pt-1">
+          <BadgeList userBadges={(userBadges ?? []).filter(ub => ub.isFeatured).sort((a, b) => (a.featureOrder ?? 99) - (b.featureOrder ?? 99))} size="md" />
+        </div>
+      )}
+    </div>
+  );
+}
 
 function DangerZone({ profile }: { profile: any }) {
   const { toast } = useToast();
@@ -524,6 +611,9 @@ export default function Profile() {
           <label className="text-sm font-medium">Bio <span className="text-muted-foreground text-xs">(optional)</span></label>
           <Textarea value={bio} onChange={e => setBio(e.target.value)} placeholder="Tell creators about yourself…" rows={4} className="bg-secondary/50 border-secondary resize-none" />
         </div>
+
+        {/* Featured Badges */}
+        {profile && <FeaturedBadgesSection userId={(profile as any).id} />}
 
         {/* Banner Image */}
         <div className="space-y-2">

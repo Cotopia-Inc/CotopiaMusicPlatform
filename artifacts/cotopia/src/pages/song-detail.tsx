@@ -477,6 +477,7 @@ export default function SongDetail() {
                           role={msg.role ?? undefined}
                           isVerified={msg.isVerified}
                           artistId={msg.artistId}
+                          primaryBadge={(msg as any).primaryBadge ?? null}
                           className="text-[11px] font-semibold text-foreground"
                         />
                         <span className="text-[10px] text-muted-foreground/60">{formatTime(msg.createdAt)}</span>

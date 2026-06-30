@@ -196,11 +196,24 @@ export default function UserProfile() {
         </div>
       )}
 
-      {/* Badges */}
-      {userBadges && userBadges.length > 0 && (
+      {/* Featured Badges */}
+      {userBadges && userBadges.filter(ub => ub.isFeatured && ub.badge.isActive && ub.badge.isVisible).length > 0 && (
         <div className="px-6 pt-5 max-w-2xl space-y-2">
-          <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">Badges</p>
-          <BadgeList userBadges={userBadges} size="md" />
+          <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">Featured Badges</p>
+          <BadgeList
+            userBadges={[...userBadges.filter(ub => ub.isFeatured && ub.badge.isActive && ub.badge.isVisible)].sort((a, b) => (a.featureOrder ?? 99) - (b.featureOrder ?? 99))}
+            size="md"
+          />
+        </div>
+      )}
+
+      {/* All Badges */}
+      {userBadges && userBadges.filter(ub => !ub.isFeatured && ub.badge.isActive && ub.badge.isVisible).length > 0 && (
+        <div className="px-6 pt-4 max-w-2xl space-y-2">
+          <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">
+            {userBadges.some(ub => ub.isFeatured) ? "Other Badges" : "Badges"}
+          </p>
+          <BadgeList userBadges={userBadges.filter(ub => !ub.isFeatured && ub.badge.isActive && ub.badge.isVisible)} size="sm" />
         </div>
       )}
     </div>

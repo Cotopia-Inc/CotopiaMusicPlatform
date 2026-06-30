@@ -17,7 +17,13 @@ export interface BadgeData {
 export interface UserBadgeData {
   id: number;
   userId: number;
+  username?: string;
+  displayName?: string | null;
   badgeId: number;
+  awardedByAdminId?: number | null;
+  awardedByUsername?: string | null;
+  isFeatured?: boolean;
+  featureOrder?: number | null;
   awardedAt: string;
   reason?: string | null;
   badge: BadgeData;

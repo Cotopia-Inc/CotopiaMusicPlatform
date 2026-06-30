@@ -503,12 +503,20 @@ function HistoryTab() {
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-bold text-sm" style={{ color: ub.badge.color }}>{ub.badge.name}</span>
                   <span className="text-muted-foreground text-xs">→</span>
-                  <span className="text-sm font-semibold">@{(ub as any).username ?? "unknown"}</span>
+                  <span className="text-sm font-semibold">@{ub.username ?? "unknown"}</span>
                 </div>
-                {ub.reason && <p className="text-xs text-muted-foreground mt-0.5">{ub.reason}</p>}
-                <p className="text-xs text-muted-foreground/60 mt-0.5">
-                  {formatDistanceToNow(new Date(ub.awardedAt), { addSuffix: true })}
-                </p>
+                <div className="flex items-center gap-1 mt-0.5">
+                  <p className="text-xs text-muted-foreground/60">
+                    {formatDistanceToNow(new Date(ub.awardedAt), { addSuffix: true })}
+                    {ub.awardedByUsername && (
+                      <span> · by <span className="font-medium text-muted-foreground">@{ub.awardedByUsername}</span></span>
+                    )}
+                    {!ub.awardedByAdminId && (
+                      <span className="ml-1 text-[10px] text-muted-foreground/40">(auto-awarded)</span>
+                    )}
+                  </p>
+                </div>
+                {ub.reason && <p className="text-xs text-muted-foreground mt-0.5 italic">{ub.reason}</p>}
               </div>
               <Button
                 variant="ghost"
