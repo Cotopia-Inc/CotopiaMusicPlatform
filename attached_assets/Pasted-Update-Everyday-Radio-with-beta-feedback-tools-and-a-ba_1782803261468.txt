@@ -1,0 +1,142 @@
+Update Everyday Radio with beta feedback tools and a badge system.
+
+Important: Do not break any existing working features. The beta site is live, so make careful, reversible changes. Keep the existing design, branding, roles, permissions, uploads, comments, chat, and admin dashboard working.
+
+Add these beta feedback features:
+
+1. Add a “Suggest a Feature” form
+
+* Add a visible button or link called “Suggest a Feature.”
+* It should be easy to find from the user dashboard, creator dashboard, and footer/navigation if appropriate.
+* Fields:
+
+  * Feature title
+  * Feature description
+  * Why this would help
+  * Category: music, videos, podcasts, profile, upload, discovery, payments, community, other
+  * Priority: nice to have, important, urgent
+* Save all submissions to the database.
+* Attach the logged-in user ID/email if the user is logged in.
+* Show a success message after submission.
+* Add an admin dashboard page where admins can view, filter, and update feature suggestions.
+* Admin statuses: new, reviewed, planned, in progress, completed, declined.
+
+2. Add a “How was your experience?” beta feedback form
+
+* Add a small feedback prompt after key actions:
+
+  * after uploading content
+  * after submitting content
+  * after using the site for the first time if possible
+* Fields:
+
+  * Rating from 1 to 5
+  * What worked well?
+  * What was confusing?
+  * Did anything break?
+  * Would you recommend Everyday Radio to another creator or listener?
+* Save all responses to the database.
+* Add an admin dashboard page to review feedback.
+
+3. Add a “Report a Bug” form
+
+* Add a visible “Report a Bug” link/button.
+* Fields:
+
+  * What happened?
+  * What page were you on?
+  * What were you trying to do?
+  * Device/browser if available
+  * Screenshot upload if easy to support, otherwise skip for now
+  * Severity: low, medium, high, urgent
+* Save bug reports to the database.
+* Admin statuses: new, confirmed, investigating, fixed, closed.
+* Add an admin dashboard page for bug reports.
+
+4. Add a badge system
+   Create badge database tables and UI support.
+
+Each badge should have:
+
+* badge name
+* badge description
+* badge category
+* badge icon or emoji
+* badge color
+* badge visibility
+* active/inactive status
+* created date
+
+Each user badge record should have:
+
+* user ID
+* badge ID
+* awarded date
+* awarded by admin ID if manually awarded
+* reason/note
+
+Badge categories:
+
+* Beta
+* Creator
+* Community
+* Admin
+* Achievement
+
+Create these starter badges:
+
+* Founding Member — Joined during beta
+* Founding Artist — Uploaded approved content during beta
+* Beta Tester — Helped test Everyday Radio
+* Bug Hunter — Reported a confirmed issue
+* Community Builder — Helped grow the community
+* Verified Artist — Approved artist profile
+* Staff Pick — Selected by Everyday Radio team
+* Rising Star — Creator showing strong early engagement
+* First Upload — Uploaded first approved song, video, or podcast
+* Early Supporter — Supported creators during beta
+
+5. Admin badge management
+   Add a Badges section to the admin dashboard:
+
+* View badges
+* Create badge
+* Edit badge
+* Activate/deactivate badge
+* Assign badge to a user
+* Remove badge from a user
+* Search users when assigning badges
+* See badge history
+
+6. User badge display
+
+* Show earned badges on user profiles.
+* Show badge name and description on hover/tap.
+* Show awarded date on profile if appropriate.
+* Let users feature up to 3 badges on their profile if not too difficult.
+* In comments/live chat, show only one primary badge beside the username to keep it clean.
+
+7. Automatic badge logic for beta
+   Keep automatic logic simple:
+
+* Award Founding Member to users who join during beta.
+* Award First Upload after first approved upload.
+* Award Founding Artist after first approved creator upload during beta.
+  Everything else can be manually awarded by admin for now.
+
+8. Testing requirements
+   After building, test:
+
+* Logged-in user can submit feature suggestions.
+* Logged-in user can submit experience feedback.
+* Logged-in user can report bugs.
+* Admin can view all feedback, feature suggestions, and bug reports.
+* Admin can create/edit/disable badges.
+* Admin can assign/remove badges.
+* Badges appear correctly on user profiles.
+* Comments/chat still work.
+* Uploads still work.
+* Existing roles and permissions still work.
+* No fake/demo data should appear publicly unless clearly marked as test data.
+
+Keep the beta safe, clean, and stable.
