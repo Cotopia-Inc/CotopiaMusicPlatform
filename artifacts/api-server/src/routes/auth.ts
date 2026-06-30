@@ -6,6 +6,9 @@ import { RegisterBody, LoginBody, UpdateMeBody, SendOtpBody, VerifyOtpBody, Chan
 import { signToken, requireAuth, type AuthRequest } from "../lib/auth";
 import { logger } from "../lib/logger";
 import { Resend } from "resend";
+import { awardBadgeByName } from "./badges";
+
+const BETA_END_DATE = new Date("2026-12-31T23:59:59Z");
 
 const router = Router();
 
@@ -121,6 +124,11 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     finalUser = updated;
   }
   // When verification is required, the verify-email page sends the OTP on mount — no dupe here.
+
+  // Auto-award Founding Member badge during beta window
+  if (new Date() <= BETA_END_DATE) {
+    awardBadgeByName(finalUser.id, "Founding Member", { reason: "Joined during the founding beta period" }).catch(() => {});
+  }
 
   const token = signToken({ userId: finalUser.id, role: finalUser.role });
   const { passwordHash: _, ...userOut } = finalUser;

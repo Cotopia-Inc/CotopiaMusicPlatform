@@ -6,7 +6,7 @@ import {
   BarChart3, Upload, ListMusic, Shield, Mail, Sparkles,
   MessageSquare, FileText, Eye, BookOpen, MessageCircle,
   AlertOctagon, ScrollText, Scale, ShieldOff, Search, X,
-  Megaphone, ShieldCheck, Flag, Lightbulb, Bug, Star,
+  Megaphone, ShieldCheck, Flag, Lightbulb, Bug, Star, Award,
 } from "lucide-react";
 import { RoleBadges } from "@/components/role-badges";
 import { useAuth } from "@/lib/auth";
@@ -206,6 +206,7 @@ export function Sidebar({ onMobileClose }: SidebarProps = {}) {
     { href: "/admin/feature-suggestions", label: "Feature Suggestions", icon: Lightbulb },
     { href: "/admin/experience-feedback", label: "Experience Ratings", icon: Star },
     { href: "/admin/bug-reports", label: "Bug Reports", icon: Bug },
+    { href: "/admin/badges", label: "Badges", icon: Award },
     { href: "/admin/beta-analytics", label: "Beta Analytics", icon: BarChart3 },
     { href: "/admin/settings", label: "Settings", icon: Settings },
   ];

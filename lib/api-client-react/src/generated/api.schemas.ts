@@ -1821,6 +1821,77 @@ export interface AdminUpdateBugReportBody {
   adminNotes?: string;
 }
 
+export interface Badge {
+  id: number;
+  name: string;
+  description: string;
+  category: string;
+  icon: string;
+  color: string;
+  isVisible: boolean;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export type BadgeInputCategory = typeof BadgeInputCategory[keyof typeof BadgeInputCategory];
+
+
+export const BadgeInputCategory = {
+  achievement: 'achievement',
+  beta: 'beta',
+  community: 'community',
+  creator: 'creator',
+  admin: 'admin',
+} as const;
+
+export interface BadgeInput {
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  name?: string;
+  /**
+     * @minLength 1
+     * @maxLength 500
+     */
+  description?: string;
+  category?: BadgeInputCategory;
+  /** @maxLength 10 */
+  icon?: string;
+  /** @maxLength 20 */
+  color?: string;
+  isVisible?: boolean;
+  isActive?: boolean;
+}
+
+export interface UserBadgeExpanded {
+  id: number;
+  userId: number;
+  /** @nullable */
+  username?: string | null;
+  /** @nullable */
+  displayName?: string | null;
+  /** @nullable */
+  avatarUrl?: string | null;
+  badgeId: number;
+  /** @nullable */
+  awardedByAdminId?: number | null;
+  /** @nullable */
+  awardedByUsername?: string | null;
+  /** @nullable */
+  reason?: string | null;
+  awardedAt: string;
+  badge: Badge;
+}
+
+export interface BadgeAssignInput {
+  userId: number;
+  badgeId: number;
+  /** @maxLength 500 */
+  reason?: string;
+}
+
 export type SendOtp200 = {
   ok?: boolean;
 };
@@ -2002,5 +2073,9 @@ offset?: number;
 export type AdminListBugReports200 = {
   items: BugReport[];
   total: number;
+};
+
+export type AdminListUserBadgesParams = {
+userId?: number;
 };
 

@@ -3531,3 +3531,194 @@ export const UpdateMySettingsResponse = zod.object({
 })
 
 
+/**
+ * @summary List all active visible badges (public)
+ */
+export const ListBadgesResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "category": zod.string(),
+  "icon": zod.string(),
+  "color": zod.string(),
+  "isVisible": zod.boolean(),
+  "isActive": zod.boolean(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().optional()
+})
+export const ListBadgesResponse = zod.array(ListBadgesResponseItem)
+
+
+/**
+ * @summary Get all badges earned by a user (public)
+ */
+export const GetUserBadgesParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetUserBadgesResponseItem = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "username": zod.string().nullish(),
+  "displayName": zod.string().nullish(),
+  "avatarUrl": zod.string().nullish(),
+  "badgeId": zod.number(),
+  "awardedByAdminId": zod.number().nullish(),
+  "awardedByUsername": zod.string().nullish(),
+  "reason": zod.string().nullish(),
+  "awardedAt": zod.string(),
+  "badge": zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "category": zod.string(),
+  "icon": zod.string(),
+  "color": zod.string(),
+  "isVisible": zod.boolean(),
+  "isActive": zod.boolean(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().optional()
+})
+})
+export const GetUserBadgesResponse = zod.array(GetUserBadgesResponseItem)
+
+
+/**
+ * @summary List all badges including inactive (admin)
+ */
+export const AdminListBadgesResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "category": zod.string(),
+  "icon": zod.string(),
+  "color": zod.string(),
+  "isVisible": zod.boolean(),
+  "isActive": zod.boolean(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().optional()
+})
+export const AdminListBadgesResponse = zod.array(AdminListBadgesResponseItem)
+
+
+/**
+ * @summary Create a new badge
+ */
+export const adminCreateBadgeBodyNameMax = 100;
+
+export const adminCreateBadgeBodyDescriptionMax = 500;
+
+export const adminCreateBadgeBodyIconMax = 10;
+
+export const adminCreateBadgeBodyColorMax = 20;
+
+
+
+export const AdminCreateBadgeBody = zod.object({
+  "name": zod.string().min(1).max(adminCreateBadgeBodyNameMax).optional(),
+  "description": zod.string().min(1).max(adminCreateBadgeBodyDescriptionMax).optional(),
+  "category": zod.enum(['achievement', 'beta', 'community', 'creator', 'admin']).optional(),
+  "icon": zod.string().max(adminCreateBadgeBodyIconMax).optional(),
+  "color": zod.string().max(adminCreateBadgeBodyColorMax).optional(),
+  "isVisible": zod.boolean().optional(),
+  "isActive": zod.boolean().optional()
+})
+
+
+/**
+ * @summary Update a badge
+ */
+export const AdminUpdateBadgeParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const adminUpdateBadgeBodyNameMax = 100;
+
+export const adminUpdateBadgeBodyDescriptionMax = 500;
+
+export const adminUpdateBadgeBodyIconMax = 10;
+
+export const adminUpdateBadgeBodyColorMax = 20;
+
+
+
+export const AdminUpdateBadgeBody = zod.object({
+  "name": zod.string().min(1).max(adminUpdateBadgeBodyNameMax).optional(),
+  "description": zod.string().min(1).max(adminUpdateBadgeBodyDescriptionMax).optional(),
+  "category": zod.enum(['achievement', 'beta', 'community', 'creator', 'admin']).optional(),
+  "icon": zod.string().max(adminUpdateBadgeBodyIconMax).optional(),
+  "color": zod.string().max(adminUpdateBadgeBodyColorMax).optional(),
+  "isVisible": zod.boolean().optional(),
+  "isActive": zod.boolean().optional()
+})
+
+export const AdminUpdateBadgeResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "category": zod.string(),
+  "icon": zod.string(),
+  "color": zod.string(),
+  "isVisible": zod.boolean(),
+  "isActive": zod.boolean(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().optional()
+})
+
+
+/**
+ * @summary List all badge awards (history), optionally filtered by userId
+ */
+export const AdminListUserBadgesQueryParams = zod.object({
+  "userId": zod.coerce.number().optional()
+})
+
+export const AdminListUserBadgesResponseItem = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "username": zod.string().nullish(),
+  "displayName": zod.string().nullish(),
+  "avatarUrl": zod.string().nullish(),
+  "badgeId": zod.number(),
+  "awardedByAdminId": zod.number().nullish(),
+  "awardedByUsername": zod.string().nullish(),
+  "reason": zod.string().nullish(),
+  "awardedAt": zod.string(),
+  "badge": zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "category": zod.string(),
+  "icon": zod.string(),
+  "color": zod.string(),
+  "isVisible": zod.boolean(),
+  "isActive": zod.boolean(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().optional()
+})
+})
+export const AdminListUserBadgesResponse = zod.array(AdminListUserBadgesResponseItem)
+
+
+/**
+ * @summary Assign a badge to a user
+ */
+export const adminAssignBadgeBodyReasonMax = 500;
+
+
+
+export const AdminAssignBadgeBody = zod.object({
+  "userId": zod.number(),
+  "badgeId": zod.number(),
+  "reason": zod.string().max(adminAssignBadgeBodyReasonMax).optional()
+})
+
+
+/**
+ * @summary Remove a badge from a user
+ */
+export const AdminRemoveUserBadgeParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+

@@ -32,6 +32,7 @@ import type {
   AdminListFeatureSuggestionsParams,
   AdminListListenersParams,
   AdminListSubmissionsParams,
+  AdminListUserBadgesParams,
   AdminListUsersParams,
   AdminListenerList,
   AdminRoleChangeInput,
@@ -52,6 +53,9 @@ import type {
   ArtistProfile,
   ArtistUpdate,
   AuthResponse,
+  Badge,
+  BadgeAssignInput,
+  BadgeInput,
   Broadcast,
   BroadcastInput,
   BugReport,
@@ -140,6 +144,7 @@ import type {
   UploadUrlRequest,
   UploadUrlResponse,
   User,
+  UserBadgeExpanded,
   UserSettings,
   UserSettingsUpdate,
   UserUpdate,
@@ -10595,5 +10600,604 @@ export const useUpdateMySettings = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getUpdateMySettingsMutationOptions(options));
+    }
+
+export const getListBadgesUrl = () => {
+
+
+
+
+  return `/api/badges`
+}
+
+/**
+ * @summary List all active visible badges (public)
+ */
+export const listBadges = async ( options?: RequestInit): Promise<Badge[]> => {
+
+  return customFetch<Badge[]>(getListBadgesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListBadgesQueryKey = () => {
+    return [
+    `/api/badges`
+    ] as const;
+    }
+
+
+export const getListBadgesQueryOptions = <TData = Awaited<ReturnType<typeof listBadges>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listBadges>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListBadgesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listBadges>>> = ({ signal }) => listBadges({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listBadges>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListBadgesQueryResult = NonNullable<Awaited<ReturnType<typeof listBadges>>>
+export type ListBadgesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List all active visible badges (public)
+ */
+
+export function useListBadges<TData = Awaited<ReturnType<typeof listBadges>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listBadges>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListBadgesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetUserBadgesUrl = (id: number,) => {
+
+
+
+
+  return `/api/users/${id}/badges`
+}
+
+/**
+ * @summary Get all badges earned by a user (public)
+ */
+export const getUserBadges = async (id: number, options?: RequestInit): Promise<UserBadgeExpanded[]> => {
+
+  return customFetch<UserBadgeExpanded[]>(getGetUserBadgesUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetUserBadgesQueryKey = (id: number,) => {
+    return [
+    `/api/users/${id}/badges`
+    ] as const;
+    }
+
+
+export const getGetUserBadgesQueryOptions = <TData = Awaited<ReturnType<typeof getUserBadges>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getUserBadges>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetUserBadgesQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getUserBadges>>> = ({ signal }) => getUserBadges(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUserBadges>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetUserBadgesQueryResult = NonNullable<Awaited<ReturnType<typeof getUserBadges>>>
+export type GetUserBadgesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get all badges earned by a user (public)
+ */
+
+export function useGetUserBadges<TData = Awaited<ReturnType<typeof getUserBadges>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getUserBadges>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetUserBadgesQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getAdminListBadgesUrl = () => {
+
+
+
+
+  return `/api/admin/badges`
+}
+
+/**
+ * @summary List all badges including inactive (admin)
+ */
+export const adminListBadges = async ( options?: RequestInit): Promise<Badge[]> => {
+
+  return customFetch<Badge[]>(getAdminListBadgesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getAdminListBadgesQueryKey = () => {
+    return [
+    `/api/admin/badges`
+    ] as const;
+    }
+
+
+export const getAdminListBadgesQueryOptions = <TData = Awaited<ReturnType<typeof adminListBadges>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof adminListBadges>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminListBadgesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminListBadges>>> = ({ signal }) => adminListBadges({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminListBadges>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type AdminListBadgesQueryResult = NonNullable<Awaited<ReturnType<typeof adminListBadges>>>
+export type AdminListBadgesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List all badges including inactive (admin)
+ */
+
+export function useAdminListBadges<TData = Awaited<ReturnType<typeof adminListBadges>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof adminListBadges>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getAdminListBadgesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getAdminCreateBadgeUrl = () => {
+
+
+
+
+  return `/api/admin/badges`
+}
+
+/**
+ * @summary Create a new badge
+ */
+export const adminCreateBadge = async (badgeInput: BadgeInput, options?: RequestInit): Promise<Badge> => {
+
+  return customFetch<Badge>(getAdminCreateBadgeUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      badgeInput,)
+  }
+);}
+
+
+
+
+export const getAdminCreateBadgeMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminCreateBadge>>, TError,{data: BodyType<BadgeInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminCreateBadge>>, TError,{data: BodyType<BadgeInput>}, TContext> => {
+
+const mutationKey = ['adminCreateBadge'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminCreateBadge>>, {data: BodyType<BadgeInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  adminCreateBadge(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminCreateBadgeMutationResult = NonNullable<Awaited<ReturnType<typeof adminCreateBadge>>>
+    export type AdminCreateBadgeMutationBody = BodyType<BadgeInput>
+    export type AdminCreateBadgeMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create a new badge
+ */
+export const useAdminCreateBadge = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminCreateBadge>>, TError,{data: BodyType<BadgeInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof adminCreateBadge>>,
+        TError,
+        {data: BodyType<BadgeInput>},
+        TContext
+      > => {
+      return useMutation(getAdminCreateBadgeMutationOptions(options));
+    }
+
+export const getAdminUpdateBadgeUrl = (id: number,) => {
+
+
+
+
+  return `/api/admin/badges/${id}`
+}
+
+/**
+ * @summary Update a badge
+ */
+export const adminUpdateBadge = async (id: number,
+    badgeInput: BadgeInput, options?: RequestInit): Promise<Badge> => {
+
+  return customFetch<Badge>(getAdminUpdateBadgeUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      badgeInput,)
+  }
+);}
+
+
+
+
+export const getAdminUpdateBadgeMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminUpdateBadge>>, TError,{id: number;data: BodyType<BadgeInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminUpdateBadge>>, TError,{id: number;data: BodyType<BadgeInput>}, TContext> => {
+
+const mutationKey = ['adminUpdateBadge'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminUpdateBadge>>, {id: number;data: BodyType<BadgeInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  adminUpdateBadge(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminUpdateBadgeMutationResult = NonNullable<Awaited<ReturnType<typeof adminUpdateBadge>>>
+    export type AdminUpdateBadgeMutationBody = BodyType<BadgeInput>
+    export type AdminUpdateBadgeMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update a badge
+ */
+export const useAdminUpdateBadge = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminUpdateBadge>>, TError,{id: number;data: BodyType<BadgeInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof adminUpdateBadge>>,
+        TError,
+        {id: number;data: BodyType<BadgeInput>},
+        TContext
+      > => {
+      return useMutation(getAdminUpdateBadgeMutationOptions(options));
+    }
+
+export const getAdminListUserBadgesUrl = (params?: AdminListUserBadgesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/admin/user-badges?${stringifiedParams}` : `/api/admin/user-badges`
+}
+
+/**
+ * @summary List all badge awards (history), optionally filtered by userId
+ */
+export const adminListUserBadges = async (params?: AdminListUserBadgesParams, options?: RequestInit): Promise<UserBadgeExpanded[]> => {
+
+  return customFetch<UserBadgeExpanded[]>(getAdminListUserBadgesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getAdminListUserBadgesQueryKey = (params?: AdminListUserBadgesParams,) => {
+    return [
+    `/api/admin/user-badges`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getAdminListUserBadgesQueryOptions = <TData = Awaited<ReturnType<typeof adminListUserBadges>>, TError = ErrorType<unknown>>(params?: AdminListUserBadgesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof adminListUserBadges>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminListUserBadgesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminListUserBadges>>> = ({ signal }) => adminListUserBadges(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminListUserBadges>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type AdminListUserBadgesQueryResult = NonNullable<Awaited<ReturnType<typeof adminListUserBadges>>>
+export type AdminListUserBadgesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List all badge awards (history), optionally filtered by userId
+ */
+
+export function useAdminListUserBadges<TData = Awaited<ReturnType<typeof adminListUserBadges>>, TError = ErrorType<unknown>>(
+ params?: AdminListUserBadgesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof adminListUserBadges>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getAdminListUserBadgesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getAdminAssignBadgeUrl = () => {
+
+
+
+
+  return `/api/admin/user-badges`
+}
+
+/**
+ * @summary Assign a badge to a user
+ */
+export const adminAssignBadge = async (badgeAssignInput: BadgeAssignInput, options?: RequestInit): Promise<UserBadgeExpanded> => {
+
+  return customFetch<UserBadgeExpanded>(getAdminAssignBadgeUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      badgeAssignInput,)
+  }
+);}
+
+
+
+
+export const getAdminAssignBadgeMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminAssignBadge>>, TError,{data: BodyType<BadgeAssignInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminAssignBadge>>, TError,{data: BodyType<BadgeAssignInput>}, TContext> => {
+
+const mutationKey = ['adminAssignBadge'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminAssignBadge>>, {data: BodyType<BadgeAssignInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  adminAssignBadge(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminAssignBadgeMutationResult = NonNullable<Awaited<ReturnType<typeof adminAssignBadge>>>
+    export type AdminAssignBadgeMutationBody = BodyType<BadgeAssignInput>
+    export type AdminAssignBadgeMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Assign a badge to a user
+ */
+export const useAdminAssignBadge = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminAssignBadge>>, TError,{data: BodyType<BadgeAssignInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof adminAssignBadge>>,
+        TError,
+        {data: BodyType<BadgeAssignInput>},
+        TContext
+      > => {
+      return useMutation(getAdminAssignBadgeMutationOptions(options));
+    }
+
+export const getAdminRemoveUserBadgeUrl = (id: number,) => {
+
+
+
+
+  return `/api/admin/user-badges/${id}`
+}
+
+/**
+ * @summary Remove a badge from a user
+ */
+export const adminRemoveUserBadge = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getAdminRemoveUserBadgeUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getAdminRemoveUserBadgeMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminRemoveUserBadge>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminRemoveUserBadge>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['adminRemoveUserBadge'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminRemoveUserBadge>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  adminRemoveUserBadge(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminRemoveUserBadgeMutationResult = NonNullable<Awaited<ReturnType<typeof adminRemoveUserBadge>>>
+
+    export type AdminRemoveUserBadgeMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Remove a badge from a user
+ */
+export const useAdminRemoveUserBadge = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminRemoveUserBadge>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof adminRemoveUserBadge>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getAdminRemoveUserBadgeMutationOptions(options));
     }
 

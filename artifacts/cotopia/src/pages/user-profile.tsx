@@ -1,5 +1,5 @@
 import { useParams, Link, useLocation } from "wouter";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState } from "react";
 import { useGetPublicUser } from "@workspace/api-client-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -11,6 +11,7 @@ import { Slider } from "@/components/ui/slider";
 import { useAuth } from "@/lib/auth";
 import { ReportModal } from "@/components/report-modal";
 import { useToast } from "@/hooks/use-toast";
+import { BadgeList, type UserBadgeData } from "@/components/badge-chip";
 
 const authHeaders = () => ({
   Authorization: `Bearer ${localStorage.getItem("cotopia_token")}`,
@@ -26,6 +27,16 @@ export default function UserProfile() {
   const queryClient = useQueryClient();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [volume, setVolume] = useState(0);
+
+  const { data: userBadges } = useQuery<UserBadgeData[]>({
+    queryKey: ["user-badges", Number(id)],
+    queryFn: async () => {
+      const res = await fetch(`${import.meta.env.BASE_URL}api/users/${id}/badges`);
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!id,
+  });
 
   const targetId = Number(id);
   const { data: blockedIds } = useQuery({
@@ -182,6 +193,14 @@ export default function UserProfile() {
             <CalendarDays className="w-3.5 h-3.5" />
             Joined {formatDistanceToNow(new Date(user.createdAt), { addSuffix: true })}
           </div>
+        </div>
+      )}
+
+      {/* Badges */}
+      {userBadges && userBadges.length > 0 && (
+        <div className="px-6 pt-5 max-w-2xl space-y-2">
+          <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">Badges</p>
+          <BadgeList userBadges={userBadges} size="md" />
         </div>
       )}
     </div>

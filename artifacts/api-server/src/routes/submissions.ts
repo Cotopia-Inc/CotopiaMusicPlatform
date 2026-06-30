@@ -9,6 +9,9 @@ import {
 } from "@workspace/api-zod";
 import { requireAuth, requireVerifiedEmail, type AuthRequest } from "../lib/auth";
 import { publishContent } from "../lib/publisher";
+import { awardBadgeByName } from "./badges";
+
+const BETA_END_DATE = new Date("2026-12-31T23:59:59Z");
 
 const router = Router();
 
@@ -451,6 +454,11 @@ router.post("/submissions/:id/review", requireAuth, async (req: AuthRequest, res
       if (!submission.contentId) { res.status(400).json({ error: "Submission has no content to publish" }); return; }
       if (notes) update.adminNotes = notes;
       auditAction = "submission_published";
+      // Auto-award badges: First Upload (always) and Founding Artist (during beta window)
+      awardBadgeByName(submission.userId, "First Upload", { reason: "First approved submission" }).catch(() => {});
+      if (new Date() <= BETA_END_DATE) {
+        awardBadgeByName(submission.userId, "Founding Artist", { reason: "Content approved during founding beta period" }).catch(() => {});
+      }
       if (hasFutureDate) {
         update.status = "admin_approved";
         if (submission.type === "song") {

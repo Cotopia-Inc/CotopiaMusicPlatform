@@ -14,6 +14,7 @@ import {
   followsTable,
   favoritesTable,
   chatMessagesTable,
+  badgesTable,
 } from "@workspace/db";
 import bcrypt from "bcryptjs";
 
@@ -415,6 +416,25 @@ async function seed() {
     await db.insert(companyPostsTable).values({ ...post, type: post.type as any }).onConflictDoNothing();
   }
   console.log(`✓ ${posts.length} company posts created`);
+
+  // ── Badges ──────────────────────────────────────────────────────────────
+  const starterBadges = [
+    { name: "Founding Member", description: "Joined Everyday Radio during the founding beta period.", category: "beta", icon: "🌟", color: "#f59e0b" },
+    { name: "Founding Artist", description: "Had music approved on Everyday Radio during the founding beta period.", category: "beta", icon: "🎸", color: "#8b5cf6" },
+    { name: "Beta Tester", description: "Actively tested the platform during the early beta phase.", category: "beta", icon: "🧪", color: "#06b6d4" },
+    { name: "Bug Hunter", description: "Found and reported critical bugs that improved the platform.", category: "community", icon: "🐛", color: "#ef4444" },
+    { name: "Community Builder", description: "Made outstanding contributions to the Everyday Radio community.", category: "community", icon: "🏗️", color: "#10b981" },
+    { name: "Verified Artist", description: "Identity and artistry officially verified by the Everyday Radio team.", category: "creator", icon: "✅", color: "#3b82f6" },
+    { name: "Staff Pick", description: "Content has been personally selected and featured by the editorial team.", category: "achievement", icon: "🎖️", color: "#ec4899" },
+    { name: "Rising Star", description: "Rapidly growing artist on the platform with impressive engagement.", category: "achievement", icon: "⭐", color: "#f97316" },
+    { name: "First Upload", description: "Successfully submitted and got first track approved on the platform.", category: "achievement", icon: "🚀", color: "#7c3aed" },
+    { name: "Early Supporter", description: "Among the earliest supporters and champions of Everyday Radio.", category: "beta", icon: "💜", color: "#a855f7" },
+  ];
+
+  for (const badge of starterBadges) {
+    await db.insert(badgesTable).values(badge).onConflictDoNothing();
+  }
+  console.log(`✓ ${starterBadges.length} starter badges seeded`);
 
   console.log("\n✅ Seed complete!");
   console.log("\nDemo accounts (all use password: password123):");

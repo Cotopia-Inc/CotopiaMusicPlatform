@@ -55,6 +55,8 @@ tags:
     description: Editorial playlist management
   - name: safety
     description: User-facing safety, reporting, feedback, and messaging settings
+  - name: badges
+    description: Achievement badges
 
 paths:
   /healthz:
@@ -2906,6 +2908,152 @@ paths:
         "401":
           description: Unauthenticated
 
+  # ── Badges ────────────────────────────────────────────────────────────────
+  /badges:
+    get:
+      operationId: listBadges
+      tags: [badges]
+      summary: List all active visible badges (public)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Badge"
+
+  /users/{id}/badges:
+    get:
+      operationId: getUserBadges
+      tags: [badges]
+      summary: Get all badges earned by a user (public)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserBadgeExpanded"
+
+  /admin/badges:
+    get:
+      operationId: adminListBadges
+      tags: [badges]
+      summary: List all badges including inactive (admin)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Badge"
+    post:
+      operationId: adminCreateBadge
+      tags: [badges]
+      summary: Create a new badge
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BadgeInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Badge"
+
+  /admin/badges/{id}:
+    patch:
+      operationId: adminUpdateBadge
+      tags: [badges]
+      summary: Update a badge
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BadgeInput"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Badge"
+
+  /admin/user-badges:
+    get:
+      operationId: adminListUserBadges
+      tags: [badges]
+      summary: List all badge awards (history), optionally filtered by userId
+      parameters:
+        - in: query
+          name: userId
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserBadgeExpanded"
+    post:
+      operationId: adminAssignBadge
+      tags: [badges]
+      summary: Assign a badge to a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BadgeAssignInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserBadgeExpanded"
+
+  /admin/user-badges/{id}:
+    delete:
+      operationId: adminRemoveUserBadge
+      tags: [badges]
+      summary: Remove a badge from a user
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: No content
+
 components:
   schemas:
     HealthStatus:
@@ -5116,3 +5264,93 @@ components:
           enum: [new, confirmed, investigating, fixed, closed]
         adminNotes:
           type: string
+
+    # ── Badges ────────────────────────────────────────────────────────────────
+    Badge:
+      type: object
+      required: [id, name, description, category, icon, color, isVisible, isActive, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        icon:
+          type: string
+        color:
+          type: string
+        isVisible:
+          type: boolean
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    BadgeInput:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: string
+          minLength: 1
+          maxLength: 500
+        category:
+          type: string
+          enum: [achievement, beta, community, creator, admin]
+        icon:
+          type: string
+          maxLength: 10
+        color:
+          type: string
+          maxLength: 20
+        isVisible:
+          type: boolean
+        isActive:
+          type: boolean
+
+    UserBadgeExpanded:
+      type: object
+      required: [id, userId, badgeId, awardedAt, badge]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        username:
+          type: ["string", "null"]
+        displayName:
+          type: ["string", "null"]
+        avatarUrl:
+          type: ["string", "null"]
+        badgeId:
+          type: integer
+        awardedByAdminId:
+          type: ["integer", "null"]
+        awardedByUsername:
+          type: ["string", "null"]
+        reason:
+          type: ["string", "null"]
+        awardedAt:
+          type: string
+        badge:
+          $ref: "#/components/schemas/Badge"
+
+    BadgeAssignInput:
+      type: object
+      required: [userId, badgeId]
+      properties:
+        userId:
+          type: integer
+        badgeId:
+          type: integer
+        reason:
+          type: string
+          maxLength: 500
