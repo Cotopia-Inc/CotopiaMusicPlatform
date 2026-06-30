@@ -270,10 +270,10 @@ function Router() {
         <ProtectedRoute><Layout><Feedback /></Layout></ProtectedRoute>
       </Route>
       <Route path="/suggest-feature">
-        <ProtectedRoute><Layout><SuggestFeature /></Layout></ProtectedRoute>
+        <Layout><SuggestFeature /></Layout>
       </Route>
       <Route path="/report-bug">
-        <ProtectedRoute><Layout><ReportBug /></Layout></ProtectedRoute>
+        <Layout><ReportBug /></Layout>
       </Route>
 
       {/* About / Our Promise — public */}
@@ -368,13 +368,13 @@ function Router() {
         <RoleRoute roles={ADMIN_ROLES}><AdminBetaAnalytics /></RoleRoute>
       </Route>
       <Route path="/admin/feature-suggestions">
-        <RoleRoute roles={ADMIN_ROLES}><AdminFeatureSuggestions /></RoleRoute>
+        <RoleRoute roles={[...EDITOR_ROLES, "moderator"]}><AdminFeatureSuggestions /></RoleRoute>
       </Route>
       <Route path="/admin/experience-feedback">
         <RoleRoute roles={ADMIN_ROLES}><AdminExperienceFeedback /></RoleRoute>
       </Route>
       <Route path="/admin/bug-reports">
-        <RoleRoute roles={ADMIN_ROLES}><AdminBugReports /></RoleRoute>
+        <RoleRoute roles={MOD_ROLES}><AdminBugReports /></RoleRoute>
       </Route>
       <Route path="/admin/discover">
         <RoleRoute roles={EDITOR_ROLES}><AdminDiscover /></RoleRoute>

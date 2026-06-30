@@ -568,6 +568,20 @@ export function Sidebar({ onMobileClose }: SidebarProps = {}) {
                 </div>
               </div>
             </Link>
+            <div className="flex gap-1.5">
+              <Link href="/suggest-feature" className="flex-1">
+                <Button variant="ghost" size="sm" className="w-full justify-start gap-1.5 text-[11px] text-muted-foreground hover:text-foreground px-2 h-7">
+                  <Lightbulb className="w-3 h-3 text-violet-400 flex-shrink-0" />
+                  Suggest
+                </Button>
+              </Link>
+              <Link href="/report-bug" className="flex-1">
+                <Button variant="ghost" size="sm" className="w-full justify-start gap-1.5 text-[11px] text-muted-foreground hover:text-foreground px-2 h-7">
+                  <Bug className="w-3 h-3 text-red-400 flex-shrink-0" />
+                  Report Bug
+                </Button>
+              </Link>
+            </div>
             <Button variant="outline" size="sm" className="w-full justify-start gap-2 text-xs" onClick={() => { logout(); navigate("/login"); }}>
               <LogOut className="w-3.5 h-3.5" />
               Sign out

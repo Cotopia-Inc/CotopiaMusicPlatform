@@ -8,7 +8,10 @@ import { optionalAuth, requireAuth, requireRole, type AuthRequest } from "../lib
 
 const router = Router();
 
-const ALLOWED_ROLES = ["admin", "master_admin", "moderator"] as const;
+// Per-spec role sets — feature: admin/editor/moderator; experience: admin only; bug: admin/moderator
+const FEATURE_ROLES = ["admin", "master_admin", "editor", "moderator"] as const;
+const EXPERIENCE_ADMIN_ROLES = ["admin", "master_admin"] as const;
+const BUG_ROLES = ["admin", "master_admin", "moderator"] as const;
 
 // ── Feature Suggestions ───────────────────────────────────────────────────
 
@@ -25,9 +28,15 @@ router.post("/beta-feedback/feature-suggestions", optionalAuth, async (req: Auth
   const parsed = FeatureSuggestionInputSchema.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
 
+  let resolvedEmail: string | null = parsed.data.userEmail ?? null;
+  if (req.user?.userId && !resolvedEmail) {
+    const [u] = await db.select({ email: usersTable.email }).from(usersTable).where(eq(usersTable.id, req.user.userId)).limit(1);
+    resolvedEmail = u?.email ?? null;
+  }
+
   const [row] = await db.insert(featureSuggestionsTable).values({
     userId: req.user?.userId ?? null,
-    userEmail: parsed.data.userEmail ?? null,
+    userEmail: resolvedEmail,
     title: parsed.data.title,
     description: parsed.data.description,
     why: parsed.data.why ?? null,
@@ -45,7 +54,7 @@ router.post("/beta-feedback/feature-suggestions", optionalAuth, async (req: Auth
   res.status(201).json({ ...row, username });
 });
 
-router.get("/admin/beta-feedback/feature-suggestions", requireAuth, requireRole(...ALLOWED_ROLES), async (req: AuthRequest, res): Promise<void> => {
+router.get("/admin/beta-feedback/feature-suggestions", requireAuth, requireRole(...FEATURE_ROLES), async (req: AuthRequest, res): Promise<void> => {
   const limit = Math.min(Number(req.query.limit) || 50, 100);
   const offset = Number(req.query.offset) || 0;
   const status = req.query.status as string | undefined;
@@ -82,7 +91,7 @@ const AdminUpdateFeatureSuggestionSchema = z.object({
   adminNotes: z.string().optional(),
 });
 
-router.patch("/admin/beta-feedback/feature-suggestions/:id", requireAuth, requireRole(...ALLOWED_ROLES), async (req: AuthRequest, res): Promise<void> => {
+router.patch("/admin/beta-feedback/feature-suggestions/:id", requireAuth, requireRole(...FEATURE_ROLES), async (req: AuthRequest, res): Promise<void> => {
   const idRaw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const id = parseInt(idRaw, 10);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid ID" }); return; }
@@ -139,7 +148,7 @@ router.post("/beta-feedback/experience-feedback", optionalAuth, async (req: Auth
   res.status(201).json({ ...row, username });
 });
 
-router.get("/admin/beta-feedback/experience-feedback", requireAuth, requireRole(...ALLOWED_ROLES), async (req: AuthRequest, res): Promise<void> => {
+router.get("/admin/beta-feedback/experience-feedback", requireAuth, requireRole(...EXPERIENCE_ADMIN_ROLES), async (req: AuthRequest, res): Promise<void> => {
   const limit = Math.min(Number(req.query.limit) || 50, 100);
   const offset = Number(req.query.offset) || 0;
   const trigger = req.query.trigger as string | undefined;
@@ -184,9 +193,15 @@ router.post("/beta-feedback/bug-reports", optionalAuth, async (req: AuthRequest,
   const parsed = BugReportInputSchema.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
 
+  let resolvedEmail: string | null = parsed.data.userEmail ?? null;
+  if (req.user?.userId && !resolvedEmail) {
+    const [u] = await db.select({ email: usersTable.email }).from(usersTable).where(eq(usersTable.id, req.user.userId)).limit(1);
+    resolvedEmail = u?.email ?? null;
+  }
+
   const [row] = await db.insert(bugReportsTable).values({
     userId: req.user?.userId ?? null,
-    userEmail: parsed.data.userEmail ?? null,
+    userEmail: resolvedEmail,
     whatHappened: parsed.data.whatHappened,
     pageUrl: parsed.data.pageUrl ?? null,
     whatTrying: parsed.data.whatTrying ?? null,
@@ -204,7 +219,7 @@ router.post("/beta-feedback/bug-reports", optionalAuth, async (req: AuthRequest,
   res.status(201).json({ ...row, username });
 });
 
-router.get("/admin/beta-feedback/bug-reports", requireAuth, requireRole(...ALLOWED_ROLES), async (req: AuthRequest, res): Promise<void> => {
+router.get("/admin/beta-feedback/bug-reports", requireAuth, requireRole(...BUG_ROLES), async (req: AuthRequest, res): Promise<void> => {
   const limit = Math.min(Number(req.query.limit) || 50, 100);
   const offset = Number(req.query.offset) || 0;
   const status = req.query.status as string | undefined;
@@ -241,7 +256,7 @@ const AdminUpdateBugReportSchema = z.object({
   adminNotes: z.string().optional(),
 });
 
-router.patch("/admin/beta-feedback/bug-reports/:id", requireAuth, requireRole(...ALLOWED_ROLES), async (req: AuthRequest, res): Promise<void> => {
+router.patch("/admin/beta-feedback/bug-reports/:id", requireAuth, requireRole(...BUG_ROLES), async (req: AuthRequest, res): Promise<void> => {
   const idRaw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const id = parseInt(idRaw, 10);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid ID" }); return; }
