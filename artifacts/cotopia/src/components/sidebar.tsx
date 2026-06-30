@@ -175,8 +175,8 @@ export function Sidebar({ onMobileClose }: SidebarProps = {}) {
 
   const userLinks = [
     { href: "/library", label: "My Library", icon: Library },
-    { href: "/submit", label: "Submit Music", icon: Send },
-    { href: "/submissions", label: "My Submissions", icon: Radio },
+    { href: "/submit", label: "Review Music", icon: Send },
+    { href: "/submissions", label: "My Reviews", icon: Radio },
     { href: "/feedback", label: "Beta Feedback", icon: MessageSquare },
     { href: "/profile", label: "Profile", icon: Settings },
   ];

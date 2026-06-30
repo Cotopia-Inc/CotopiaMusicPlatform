@@ -1096,7 +1096,7 @@ export default function Submit() {
           })()}
           <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
             <Button onClick={() => setLocation("/submissions")} className="gap-2">
-              <FileText className="w-4 h-4" />View My Submissions
+              <FileText className="w-4 h-4" />View My Reviews
             </Button>
             <Button variant="outline" onClick={() => {
               setStep(0); setPaypalOrderId(null); setPaymentInitiated(false); setSubmissionIds([]); setSuccessTitles([]);

@@ -161,7 +161,7 @@ export default function NotificationsPage() {
                 {n.submissionId && (
                   <Link href="/submissions">
                     <span className="text-xs text-primary hover:underline cursor-pointer mt-1.5 inline-block">
-                      View my submissions →
+                      View my reviews →
                     </span>
                   </Link>
                 )}
