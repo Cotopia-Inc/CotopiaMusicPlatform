@@ -176,6 +176,10 @@ router.post("/admin/badges", requireAuth, requireRole(...ADMIN_ROLES), async (re
 
     res.status(201).json(badge);
   } catch (err) {
+    if (err && typeof err === "object" && (err as { code?: string }).code === "23505") {
+      res.status(409).json({ error: "A badge with that name already exists. Please choose a different name." });
+      return;
+    }
     req.log.error(err, "Failed to create badge");
     res.status(500).json({ error: "Something went wrong while saving the badge. Please try again." });
   }
@@ -200,7 +204,7 @@ router.patch("/admin/badges/:id", requireAuth, requireRole(...ADMIN_ROLES), asyn
     if (description !== undefined) patch.description = String(description).trim();
     if (category !== undefined) patch.category = category;
     if (icon !== undefined && typeof icon === "string" && icon.trim()) patch.icon = icon.trim();
-    if (color !== undefined && typeof color === "string" && color.trim()) patch.color = color.trim();
+    if (color !== undefined && typeof color === "string") patch.color = color.trim() ? color.trim() : null;
     if (isVisible !== undefined) patch.isVisible = isVisible;
     if (isActive !== undefined) patch.isActive = isActive;
 
@@ -208,6 +212,10 @@ router.patch("/admin/badges/:id", requireAuth, requireRole(...ADMIN_ROLES), asyn
     if (!updated) { res.status(404).json({ error: "Badge not found." }); return; }
     res.json(updated);
   } catch (err) {
+    if (err && typeof err === "object" && (err as { code?: string }).code === "23505") {
+      res.status(409).json({ error: "A badge with that name already exists. Please choose a different name." });
+      return;
+    }
     req.log.error(err, "Failed to update badge");
     res.status(500).json({ error: "Something went wrong while saving the badge. Please try again." });
   }
@@ -358,7 +366,7 @@ export async function awardBadgeByName(userId: number, badgeName: string, option
 }
 
 // ── Helper: get primary badge for multiple users ───────────────────────────
-export async function getPrimaryBadgesForUsers(userIds: number[]): Promise<Map<number, { id: number; name: string; icon: string; color: string; category: string }>> {
+export async function getPrimaryBadgesForUsers(userIds: number[]): Promise<Map<number, { id: number; name: string; icon: string; color: string | null; category: string }>> {
   if (userIds.length === 0) return new Map();
 
   const rows = await db

@@ -5268,7 +5268,7 @@ components:
     # ── Badges ────────────────────────────────────────────────────────────────
     Badge:
       type: object
-      required: [id, name, description, category, icon, color, isVisible, isActive, createdAt]
+      required: [id, name, description, category, icon, isVisible, isActive, createdAt]
       properties:
         id:
           type: integer
@@ -5282,6 +5282,7 @@ components:
           type: string
         color:
           type: string
+          nullable: true
         isVisible:
           type: boolean
         isActive:

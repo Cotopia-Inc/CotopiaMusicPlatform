@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { RoleBadges } from "@/components/role-badges";
 import { Award, Plus, Pencil, Trash2, Loader2, Search, ShieldCheck, History, X, Check } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { DEFAULT_BADGE_COLOR } from "@/components/badge-chip";
 import type { BadgeData, UserBadgeData } from "@/components/badge-chip";
 
 const authHeaders = () => ({
@@ -495,7 +496,7 @@ function AssignTab() {
         <div className="bg-card border border-border rounded-xl p-4 space-y-1">
           <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-2">Preview</p>
           <p className="text-sm">
-            Awarding <span className="font-semibold" style={{ color: selectedBadge.color }}>{selectedBadge.icon} {selectedBadge.name}</span>{" "}
+            Awarding <span className="font-semibold" style={{ color: selectedBadge.color ?? DEFAULT_BADGE_COLOR }}>{selectedBadge.icon} {selectedBadge.name}</span>{" "}
             to <span className="font-semibold">@{selectedUser.username}</span>
           </p>
         </div>
@@ -563,7 +564,7 @@ function HistoryTab() {
               <span className="text-xl flex-shrink-0">{ub.badge.icon}</span>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-bold text-sm" style={{ color: ub.badge.color }}>{ub.badge.name}</span>
+                  <span className="font-bold text-sm" style={{ color: ub.badge.color ?? DEFAULT_BADGE_COLOR }}>{ub.badge.name}</span>
                   <span className="text-muted-foreground text-xs">→</span>
                   <span className="text-sm font-semibold">@{ub.username ?? "unknown"}</span>
                 </div>

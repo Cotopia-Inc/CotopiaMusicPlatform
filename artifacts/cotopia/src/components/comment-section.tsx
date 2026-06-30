@@ -18,7 +18,7 @@ import { Trash2, MessageCircle, CornerDownRight } from "lucide-react";
 import { Link } from "wouter";
 import { formatDistanceToNow } from "date-fns";
 
-type PrimaryBadge = { id: number; name: string; icon: string; color: string; category: string } | null;
+type PrimaryBadge = { id: number; name: string; icon: string; color: string | null; category: string } | null;
 
 interface CommentData {
   id: number;

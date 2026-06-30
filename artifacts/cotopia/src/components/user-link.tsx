@@ -1,12 +1,13 @@
 import { Link } from "wouter";
 import { RoleBadges, type UserRole } from "./role-badges";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { DEFAULT_BADGE_COLOR } from "./badge-chip";
 
 export interface PrimaryBadge {
   id: number;
   name: string;
   icon: string;
-  color: string;
+  color: string | null;
   category: string;
 }
 
@@ -30,7 +31,7 @@ export function UserLink({ username, userId, role, isVerified, artistId, classNa
       <TooltipTrigger asChild>
         <span
           className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full text-[8px] flex-shrink-0 cursor-default"
-          style={{ backgroundColor: `${primaryBadge.color}20`, color: primaryBadge.color }}
+          style={{ backgroundColor: `${primaryBadge.color || DEFAULT_BADGE_COLOR}20`, color: primaryBadge.color || DEFAULT_BADGE_COLOR }}
         >
           {primaryBadge.icon}
         </span>

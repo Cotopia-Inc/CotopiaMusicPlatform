@@ -1,13 +1,15 @@
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatDistanceToNow } from "date-fns";
 
+export const DEFAULT_BADGE_COLOR = "#9ca3af";
+
 export interface BadgeData {
   id: number;
   name: string;
   description: string;
   category: string;
   icon: string;
-  color: string;
+  color: string | null;
   isVisible: boolean;
   isActive: boolean;
   createdAt: string;
@@ -61,13 +63,14 @@ export function BadgeChip({ badge, awardedAt, reason, size = "sm", showTooltip =
   const iconSize = size === "md" ? "text-sm" : size === "sm" ? "text-xs" : "text-[10px]";
   const px = size === "md" ? "px-2 py-1" : size === "sm" ? "px-1.5 py-0.5" : "px-1 py-px";
 
+  const chipColor = badge.color || DEFAULT_BADGE_COLOR;
   const chip = (
     <span
       className={`inline-flex items-center gap-0.5 rounded-full border font-semibold flex-shrink-0 ${px} ${textSize}`}
       style={{
-        borderColor: `${badge.color}40`,
-        backgroundColor: `${badge.color}15`,
-        color: badge.color,
+        borderColor: `${chipColor}40`,
+        backgroundColor: `${chipColor}15`,
+        color: chipColor,
       }}
     >
       <span className={iconSize}>{badge.icon}</span>

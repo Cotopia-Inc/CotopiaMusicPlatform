@@ -12,7 +12,7 @@ export interface Badge {
   description: string;
   category: string;
   icon: string;
-  color: string;
+  color?: string | null;
   isVisible: boolean;
   isActive: boolean;
   createdAt: string;
