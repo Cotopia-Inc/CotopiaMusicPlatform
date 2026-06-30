@@ -127,7 +127,8 @@ router.post("/auth/register", async (req, res): Promise<void> => {
 
   // Auto-award Founding Member badge during beta window
   if (new Date() <= BETA_END_DATE) {
-    awardBadgeByName(finalUser.id, "Founding Member", { reason: "Joined during the founding beta period" }).catch(() => {});
+    awardBadgeByName(finalUser.id, "Founding Member", { reason: "Joined during the founding beta period" })
+      .catch(err => logger.error(err, "Failed to auto-award Founding Member badge"));
   }
 
   const token = signToken({ userId: finalUser.id, role: finalUser.role });

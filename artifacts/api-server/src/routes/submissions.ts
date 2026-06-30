@@ -454,10 +454,39 @@ router.post("/submissions/:id/review", requireAuth, async (req: AuthRequest, res
       if (!submission.contentId) { res.status(400).json({ error: "Submission has no content to publish" }); return; }
       if (notes) update.adminNotes = notes;
       auditAction = "submission_published";
-      // Auto-award badges: First Upload (always) and Founding Artist (during beta window)
-      awardBadgeByName(submission.userId, "First Upload", { reason: "First approved submission" }).catch(() => {});
-      if (new Date() <= BETA_END_DATE) {
-        awardBadgeByName(submission.userId, "Founding Artist", { reason: "Content approved during founding beta period" }).catch(() => {});
+      // Auto-award badges to the actual content owner (artist userId), not the submitter.
+      // When an admin uploads on behalf of an artist the submission.userId is the admin's id;
+      // the real owner is identified via the linked song/video's artistId.
+      {
+        const contentId = submission.contentId;
+        const contentType = submission.type;
+        (async () => {
+          try {
+            let ownerUserId: number | null = null;
+            if (contentType === "song") {
+              const [row] = await db.select({ userId: artistsTable.userId })
+                .from(songsTable)
+                .leftJoin(artistsTable, eq(artistsTable.id, songsTable.artistId))
+                .where(eq(songsTable.id, contentId))
+                .limit(1);
+              ownerUserId = row?.userId ?? null;
+            } else {
+              const [row] = await db.select({ userId: artistsTable.userId })
+                .from(videosTable)
+                .leftJoin(artistsTable, eq(artistsTable.id, videosTable.artistId))
+                .where(eq(videosTable.id, contentId))
+                .limit(1);
+              ownerUserId = row?.userId ?? null;
+            }
+            const awardTo = ownerUserId ?? submission.userId;
+            await awardBadgeByName(awardTo, "First Upload", { reason: "First approved submission" });
+            if (new Date() <= BETA_END_DATE) {
+              await awardBadgeByName(awardTo, "Founding Artist", { reason: "Content approved during founding beta period" });
+            }
+          } catch (err) {
+            req.log.error(err, "Failed to auto-award badge on admin_publish");
+          }
+        })();
       }
       if (hasFutureDate) {
         update.status = "admin_approved";
