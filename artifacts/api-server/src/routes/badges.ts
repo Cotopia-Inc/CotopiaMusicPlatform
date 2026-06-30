@@ -176,12 +176,17 @@ router.post("/admin/badges", requireAuth, requireRole(...ADMIN_ROLES), async (re
 
     res.status(201).json(badge);
   } catch (err) {
-    if (err && typeof err === "object" && (err as { code?: string }).code === "23505") {
+    const code = err && typeof err === "object" ? (err as { code?: string }).code : undefined;
+    req.log.error({ err, code }, "Failed to create badge");
+    if (code === "23505") {
       res.status(409).json({ error: "A badge with that name already exists. Please choose a different name." });
       return;
     }
-    req.log.error(err, "Failed to create badge");
-    res.status(500).json({ error: "Something went wrong while saving the badge. Please try again." });
+    if (code === "23502") {
+      res.status(400).json({ error: "A required badge field is missing. Please fill in all fields and try again." });
+      return;
+    }
+    res.status(500).json({ error: "Something went wrong while saving the badge. Please try again.", code });
   }
 });
 
@@ -212,12 +217,17 @@ router.patch("/admin/badges/:id", requireAuth, requireRole(...ADMIN_ROLES), asyn
     if (!updated) { res.status(404).json({ error: "Badge not found." }); return; }
     res.json(updated);
   } catch (err) {
-    if (err && typeof err === "object" && (err as { code?: string }).code === "23505") {
+    const code = err && typeof err === "object" ? (err as { code?: string }).code : undefined;
+    req.log.error({ err, code }, "Failed to update badge");
+    if (code === "23505") {
       res.status(409).json({ error: "A badge with that name already exists. Please choose a different name." });
       return;
     }
-    req.log.error(err, "Failed to update badge");
-    res.status(500).json({ error: "Something went wrong while saving the badge. Please try again." });
+    if (code === "23502") {
+      res.status(400).json({ error: "A required badge field is missing. Please fill in all fields and try again." });
+      return;
+    }
+    res.status(500).json({ error: "Something went wrong while saving the badge. Please try again.", code });
   }
 });
 

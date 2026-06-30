@@ -234,7 +234,11 @@ function BadgeForm({ initial, onSave, onCancel }: {
       });
       if (!res.ok) {
         let msg = "Something went wrong. Please try again.";
-        try { msg = (await res.json()).error ?? msg; } catch { /* non-JSON error */ }
+        try {
+          const data = await res.json();
+          msg = data.error ?? msg;
+          if (data.code) msg += ` (code: ${data.code})`;
+        } catch { /* non-JSON error */ }
         throw new Error(msg);
       }
       return res.json();
