@@ -190,6 +190,24 @@ router.post("/admin/badges", requireAuth, requireRole(...ADMIN_ROLES), async (re
   }
 });
 
+// ── Admin: delete badge ────────────────────────────────────────────────────
+router.delete("/admin/badges/:id", requireAuth, requireRole(...ADMIN_ROLES), async (req: AuthRequest, res): Promise<void> => {
+  const id = Number(req.params.id);
+  if (isNaN(id) || id <= 0) { res.status(400).json({ error: "Invalid badge id." }); return; }
+
+  const [badge] = await db.select({ id: badgesTable.id, name: badgesTable.name }).from(badgesTable).where(eq(badgesTable.id, id)).limit(1);
+  if (!badge) { res.status(404).json({ error: "Badge not found." }); return; }
+
+  const [{ count }] = await db
+    .select({ count: sql<number>`cast(count(*) as int)` })
+    .from(userBadgesTable)
+    .where(eq(userBadgesTable.badgeId, id));
+
+  await db.delete(badgesTable).where(eq(badgesTable.id, id));
+  req.log.info({ badgeId: id, badgeName: badge.name, revokedFromUsers: count, adminId: req.user!.userId }, "Badge deleted by admin");
+  res.json({ deleted: true, name: badge.name, revokedFromUsers: Number(count) });
+});
+
 // ── Admin: update badge ────────────────────────────────────────────────────
 router.patch("/admin/badges/:id", requireAuth, requireRole(...ADMIN_ROLES), async (req: AuthRequest, res): Promise<void> => {
   try {

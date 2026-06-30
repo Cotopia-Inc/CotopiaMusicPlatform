@@ -90,6 +90,7 @@ function BadgesTab() {
   const qc = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const { data: badges, isLoading } = useQuery<BadgeData[]>({
     queryKey: ["admin-badges"],
@@ -98,6 +99,25 @@ function BadgesTab() {
       if (!res.ok) throw new Error("Failed to load");
       return res.json();
     },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await fetch(`${import.meta.env.BASE_URL}api/admin/badges/${id}`, {
+        method: "DELETE",
+        headers: authHeaders(),
+      });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? "Failed to delete");
+      return res.json() as Promise<{ deleted: boolean; name: string; revokedFromUsers: number }>;
+    },
+    onSuccess: (data) => {
+      setDeletingId(null);
+      const extra = data.revokedFromUsers > 0 ? ` Revoked from ${data.revokedFromUsers} user${data.revokedFromUsers === 1 ? "" : "s"}.` : "";
+      toast({ title: `"${data.name}" deleted.${extra}` });
+      qc.invalidateQueries({ queryKey: ["admin-badges"] });
+      qc.invalidateQueries({ queryKey: ["admin-user-badges"] });
+    },
+    onError: (e: unknown) => toast({ variant: "destructive", title: e instanceof Error ? e.message : "Could not delete badge" }),
   });
 
   const toggleMutation = useMutation({
@@ -164,29 +184,62 @@ function BadgesTab() {
                   </div>
                   <p className="text-sm text-muted-foreground mt-0.5 truncate">{badge.description}</p>
                 </div>
-                <div className="flex items-center gap-3 flex-shrink-0">
-                  <div className="flex flex-col gap-1 text-xs text-muted-foreground">
-                    <label className="flex items-center gap-1.5 cursor-pointer">
-                      <Switch
-                        checked={badge.isActive}
-                        onCheckedChange={(v) => toggleMutation.mutate({ id: badge.id, field: "isActive", value: v })}
-                        className="scale-75"
-                      />
-                      Active
-                    </label>
-                    <label className="flex items-center gap-1.5 cursor-pointer">
-                      <Switch
-                        checked={badge.isVisible}
-                        onCheckedChange={(v) => toggleMutation.mutate({ id: badge.id, field: "isVisible", value: v })}
-                        className="scale-75"
-                      />
-                      Visible
-                    </label>
+                {deletingId === badge.id ? (
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span className="text-xs text-destructive font-medium whitespace-nowrap">Delete this badge?</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-8 h-8 p-0"
+                      onClick={() => setDeletingId(null)}
+                      disabled={deleteMutation.isPending}
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="h-8 px-3 text-xs gap-1"
+                      disabled={deleteMutation.isPending}
+                      onClick={() => deleteMutation.mutate(badge.id)}
+                    >
+                      {deleteMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+                      Delete
+                    </Button>
                   </div>
-                  <Button variant="ghost" size="sm" className="w-8 h-8 p-0" onClick={() => setEditingId(badge.id)}>
-                    <Pencil className="w-3.5 h-3.5" />
-                  </Button>
-                </div>
+                ) : (
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    <div className="flex flex-col gap-1 text-xs text-muted-foreground">
+                      <label className="flex items-center gap-1.5 cursor-pointer">
+                        <Switch
+                          checked={badge.isActive}
+                          onCheckedChange={(v) => toggleMutation.mutate({ id: badge.id, field: "isActive", value: v })}
+                          className="scale-75"
+                        />
+                        Active
+                      </label>
+                      <label className="flex items-center gap-1.5 cursor-pointer">
+                        <Switch
+                          checked={badge.isVisible}
+                          onCheckedChange={(v) => toggleMutation.mutate({ id: badge.id, field: "isVisible", value: v })}
+                          className="scale-75"
+                        />
+                        Visible
+                      </label>
+                    </div>
+                    <Button variant="ghost" size="sm" className="w-8 h-8 p-0" onClick={() => { setEditingId(badge.id); setDeletingId(null); }}>
+                      <Pencil className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-8 h-8 p-0 text-destructive/60 hover:text-destructive"
+                      onClick={() => { setDeletingId(badge.id); setEditingId(null); setShowCreate(false); }}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                )}
               </div>
             )
           ))}
