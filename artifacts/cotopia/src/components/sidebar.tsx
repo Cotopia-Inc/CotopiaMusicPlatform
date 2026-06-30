@@ -175,6 +175,7 @@ export function Sidebar({ onMobileClose }: SidebarProps = {}) {
 
   const userLinks = [
     { href: "/library", label: "My Library", icon: Library },
+    { href: "/creator-dashboard", label: "Creator Dashboard", icon: LayoutDashboard },
     { href: "/submit", label: "Music Review", icon: Send },
     { href: "/submissions", label: "My Reviews", icon: Radio },
     { href: "/feedback", label: "Beta Feedback", icon: MessageSquare },
@@ -185,7 +186,7 @@ export function Sidebar({ onMobileClose }: SidebarProps = {}) {
     { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
     { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
     { href: "/admin/users", label: "Users", icon: Users },
-    { href: "/admin/listeners", label: "Listeners", icon: Eye },
+    { href: "/admin/listeners", label: "Creators", icon: Eye },
     { href: "/admin/upload-song", label: "Upload Song", icon: Upload },
     { href: "/admin/upload-video", label: "Upload Video", icon: Upload },
     { href: "/admin/submissions", label: "Submissions", icon: FileText },

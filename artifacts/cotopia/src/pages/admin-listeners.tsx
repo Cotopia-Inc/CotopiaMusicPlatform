@@ -47,8 +47,8 @@ export default function AdminListeners() {
       <div className="flex items-center gap-3">
         <Eye className="w-6 h-6 text-primary" />
         <div>
-          <h1 className="text-2xl font-bold">Listener Metrics</h1>
-          <p className="text-sm text-muted-foreground">Activity data for all listeners</p>
+          <h1 className="text-2xl font-bold">Creator Metrics</h1>
+          <p className="text-sm text-muted-foreground">Activity data for all creators</p>
         </div>
       </div>
 
@@ -56,7 +56,7 @@ export default function AdminListeners() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Search listeners..."
+            placeholder="Search creators..."
             className="pl-9"
             value={search}
             onChange={e => { setSearch(e.target.value); setPage(0); }}
@@ -67,7 +67,7 @@ export default function AdminListeners() {
       <Card>
         <CardHeader>
           <CardTitle className="text-base font-semibold">
-            Listeners ({total.toLocaleString()})
+            Creators ({total.toLocaleString()})
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
@@ -111,7 +111,7 @@ export default function AdminListeners() {
                   </div>
                 ))}
                 {listeners.length === 0 && (
-                  <p className="text-sm text-muted-foreground text-center py-10">No listeners found</p>
+                  <p className="text-sm text-muted-foreground text-center py-10">No creators found</p>
                 )}
               </div>
 

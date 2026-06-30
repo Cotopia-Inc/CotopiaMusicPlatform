@@ -522,7 +522,7 @@ export default function Profile() {
         {/* Bio */}
         <div className="space-y-2">
           <label className="text-sm font-medium">Bio <span className="text-muted-foreground text-xs">(optional)</span></label>
-          <Textarea value={bio} onChange={e => setBio(e.target.value)} placeholder="Tell listeners about yourself…" rows={4} className="bg-secondary/50 border-secondary resize-none" />
+          <Textarea value={bio} onChange={e => setBio(e.target.value)} placeholder="Tell creators about yourself…" rows={4} className="bg-secondary/50 border-secondary resize-none" />
         </div>
 
         {/* Banner Image */}

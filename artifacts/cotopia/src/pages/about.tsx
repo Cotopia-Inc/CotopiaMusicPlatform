@@ -95,7 +95,7 @@ export default function About() {
             {[
               "Every song can have a community.",
               "Every creator can build an audience.",
-              "Every listener can discover something new.",
+              "Every creator can discover something new.",
             ].map(text => (
               <div key={text} className="p-5 rounded-xl bg-primary/5 border border-primary/15 text-center">
                 <p className="text-sm font-medium text-primary/90">{text}</p>
@@ -192,7 +192,7 @@ export default function About() {
                 "We will continue listening to our community.",
                 "We will continue creating opportunities for discovery.",
                 "We will continue supporting independent voices.",
-                "And we will continue working to make Everyday Radio a place where creators, listeners, and communities can thrive together.",
+                "And we will continue working to make Everyday Radio a place where creators and communities can thrive together.",
               ].map(item => (
                 <li key={item} className="flex items-start gap-3 text-sm text-muted-foreground leading-relaxed">
                   <Heart className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />

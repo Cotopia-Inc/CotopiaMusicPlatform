@@ -124,7 +124,7 @@ export default function Register() {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value={RegisterInputRole.listener}>Listener</SelectItem>
+                      <SelectItem value={RegisterInputRole.listener}>Creator</SelectItem>
                       <SelectItem value={RegisterInputRole.artist}>Artist</SelectItem>
                       <SelectItem value={RegisterInputRole.label}>Label</SelectItem>
                       <SelectItem value={RegisterInputRole.business}>Business</SelectItem>

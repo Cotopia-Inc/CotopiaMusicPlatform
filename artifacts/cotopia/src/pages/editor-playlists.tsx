@@ -263,7 +263,7 @@ export default function EditorPlaylists() {
             <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-secondary/20">
               <div>
                 <p className="text-sm font-medium">Public</p>
-                <p className="text-xs text-muted-foreground">Visible to all listeners</p>
+                <p className="text-xs text-muted-foreground">Visible to all creators</p>
               </div>
               <Switch checked={newForm.isPublic} onCheckedChange={v => setNewForm(f => ({ ...f, isPublic: v }))} />
             </div>
@@ -306,7 +306,7 @@ export default function EditorPlaylists() {
             <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-secondary/20">
               <div>
                 <p className="text-sm font-medium">Public</p>
-                <p className="text-xs text-muted-foreground">Visible to all listeners</p>
+                <p className="text-xs text-muted-foreground">Visible to all creators</p>
               </div>
               <Switch checked={editForm.isPublic} onCheckedChange={v => setEditForm(f => ({ ...f, isPublic: v }))} />
             </div>

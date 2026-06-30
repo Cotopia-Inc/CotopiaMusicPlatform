@@ -25,6 +25,7 @@ import PlaylistDetail from "@/pages/playlist-detail";
 import CompanyHub from "@/pages/company";
 import Submit from "@/pages/submit";
 import Submissions from "@/pages/submissions";
+import CreatorDashboard from "@/pages/creator-dashboard";
 import Profile from "@/pages/profile";
 import Messages from "@/pages/messages";
 
@@ -244,6 +245,9 @@ function Router() {
       </Route>
       <Route path="/submissions">
         <ProtectedRoute><Layout><Submissions /></Layout></ProtectedRoute>
+      </Route>
+      <Route path="/creator-dashboard">
+        <ProtectedRoute><Layout><CreatorDashboard /></Layout></ProtectedRoute>
       </Route>
       <Route path="/users/:id">
         <ProtectedRoute><Layout><UserProfile /></Layout></ProtectedRoute>

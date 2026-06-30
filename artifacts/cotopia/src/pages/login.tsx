@@ -56,7 +56,7 @@ export default function Login() {
         </div>
         <div className="relative z-10 space-y-4 max-w-md">
           <h1 className="text-5xl font-extrabold tracking-tight leading-none">The sound of tomorrow.</h1>
-          <p className="text-lg text-muted-foreground">Join thousands of artists and listeners defining the next generation of music discovery.</p>
+          <p className="text-lg text-muted-foreground">Join thousands of artists and creators defining the next generation of music discovery.</p>
         </div>
       </div>
 

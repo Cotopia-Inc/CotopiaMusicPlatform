@@ -112,7 +112,7 @@ export default function AdminAnalytics() {
             <div className="flex flex-wrap gap-3">
               {Object.entries(data.usersByRole).sort(([, a], [, b]) => b - a).map(([role, cnt]) => (
                 <div key={role} className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium ${roleColors[role] ?? "bg-muted text-muted-foreground"}`}>
-                  <span className="capitalize">{role.replace("_", " ")}</span>
+                  <span className="capitalize">{role === "listener" ? "Creator" : role.replace("_", " ")}</span>
                   <span className="font-bold">{cnt}</span>
                 </div>
               ))}

@@ -212,7 +212,7 @@ export default function AdminBetaAnalytics() {
         ) : !data?.songCompletionRates?.length ? (
           <Card>
             <CardContent className="py-12 text-center text-muted-foreground text-sm">
-              No play data yet — completion rates will appear once listeners start playing songs.
+              No play data yet — completion rates will appear once creators start playing songs.
             </CardContent>
           </Card>
         ) : (

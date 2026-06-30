@@ -229,7 +229,7 @@ export default function LabelDashboard() {
               <Textarea
                 value={bio}
                 onChange={e => setBio(e.target.value)}
-                placeholder="Tell artists and listeners about your label…"
+                placeholder="Tell artists and creators about your label…"
                 rows={4}
                 className="bg-secondary/50 border-secondary resize-none"
               />

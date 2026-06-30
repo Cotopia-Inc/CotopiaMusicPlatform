@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const ALL_ROLES = ["listener", "artist", "label", "business", "moderator", "editor", "admin", "master_admin"] as const;
+const displayRole = (r: string) => r === "listener" ? "Creator" : r.replace("_", " ");
 type Role = typeof ALL_ROLES[number];
 
 const ROLE_COLORS: Record<string, string> = {
@@ -121,7 +122,7 @@ export default function AdminRoles() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="gap-2">
-              {filterRole ? filterRole.replace("_", " ") : "All Roles"}
+              {filterRole ? displayRole(filterRole) : "All Roles"}
               <ChevronDown className="w-4 h-4" />
             </Button>
           </DropdownMenuTrigger>
@@ -130,7 +131,7 @@ export default function AdminRoles() {
             <DropdownMenuSeparator />
             {ALL_ROLES.map(r => (
               <DropdownMenuItem key={r} onClick={() => setFilterRole(r)}>
-                {r.replace("_", " ")}
+                {displayRole(r)}
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
@@ -166,7 +167,7 @@ export default function AdminRoles() {
                     <p className="text-xs text-muted-foreground truncate">{u.email}</p>
                   </div>
                   <span className={`text-[10px] font-bold px-2 py-1 rounded-md border capitalize ${ROLE_COLORS[u.role] ?? "bg-muted text-muted-foreground border-border"}`}>
-                    {u.role.replace("_", " ")}
+                    {displayRole(u.role)}
                   </span>
                   {/* Only allow role change if not same user */}
                   {u.id !== user?.id && (
@@ -187,7 +188,7 @@ export default function AdminRoles() {
                           }).map(r => (
                           <DropdownMenuItem key={r} onClick={() => handleRoleChange(u.id, r)}>
                             <span className={`w-2 h-2 rounded-full mr-2 inline-block ${ROLE_COLORS[r]?.split(" ")[0] ?? "bg-muted"}`} />
-                            {r.replace("_", " ")}
+                            {displayRole(r)}
                           </DropdownMenuItem>
                         ))}
                         <DropdownMenuSeparator />

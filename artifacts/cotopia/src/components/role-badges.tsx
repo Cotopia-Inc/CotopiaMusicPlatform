@@ -95,6 +95,20 @@ export function RoleTag({ role, size = "sm" }: RoleBadgesProps) {
       </span>
     );
   }
+  if (role === "business") {
+    return (
+      <span className={`${textSize} ${px} rounded font-bold uppercase tracking-wider bg-orange-500/15 text-orange-400 border border-orange-400/30 flex-shrink-0`}>
+        Business
+      </span>
+    );
+  }
+  if (role === "listener") {
+    return (
+      <span className={`${textSize} ${px} rounded font-bold uppercase tracking-wider bg-teal-500/15 text-teal-400 border border-teal-400/30 flex-shrink-0`}>
+        Creator
+      </span>
+    );
+  }
   return null;
 }
 
