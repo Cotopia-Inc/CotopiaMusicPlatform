@@ -261,6 +261,16 @@ export default function Profile() {
   const { data: profile, isLoading } = useGetMe({
     query: { enabled: !!user, queryKey: getGetMeQueryKey() }
   });
+
+  const { data: myBadges } = useQuery<UserBadgeData[]>({
+    queryKey: ["user-badges", user?.id],
+    queryFn: async () => {
+      const res = await fetch(`${import.meta.env.BASE_URL}api/users/${user!.id}/badges`);
+      return res.ok ? res.json() : [];
+    },
+    enabled: !!user?.id,
+  });
+
   const qc = useQueryClient();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
@@ -543,6 +553,11 @@ export default function Profile() {
           <RoleBadges role={profile.role} isVerified={profile.isVerified} size="lg" />
         </h1>
         <p className="text-muted-foreground uppercase tracking-widest text-xs font-semibold">{profile.role?.replace("_", " ")}</p>
+        {myBadges && myBadges.length > 0 && (
+          <div className="flex justify-center">
+            <BadgeList userBadges={myBadges} size="sm" />
+          </div>
+        )}
       </div>
 
       {/* Email verification banner */}
