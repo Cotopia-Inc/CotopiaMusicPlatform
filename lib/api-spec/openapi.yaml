@@ -2628,6 +2628,248 @@ paths:
         "401":
           description: Unauthenticated
 
+  # ── Beta Feedback — Feature Suggestions ──────────────────────────────────
+  /beta-feedback/feature-suggestions:
+    post:
+      operationId: createFeatureSuggestion
+      tags: [safety]
+      summary: Submit a feature suggestion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FeatureSuggestionInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeatureSuggestion"
+        "400":
+          description: Validation error
+
+  /admin/beta-feedback/feature-suggestions:
+    get:
+      operationId: adminListFeatureSuggestions
+      tags: [admin]
+      summary: List all feature suggestions (admin)
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+        - in: query
+          name: category
+          schema:
+            type: string
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 50
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, total]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/FeatureSuggestion"
+                  total:
+                    type: integer
+        "403":
+          description: Forbidden
+
+  /admin/beta-feedback/feature-suggestions/{id}:
+    patch:
+      operationId: adminUpdateFeatureSuggestion
+      tags: [admin]
+      summary: Update feature suggestion status/notes (admin)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminUpdateFeatureSuggestionBody"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeatureSuggestion"
+        "404":
+          description: Not found
+
+  # ── Beta Feedback — Experience Feedback ───────────────────────────────────
+  /beta-feedback/experience-feedback:
+    post:
+      operationId: createExperienceFeedback
+      tags: [safety]
+      summary: Submit experience feedback (rating + optional qualitative answers)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExperienceFeedbackInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExperienceFeedback"
+        "400":
+          description: Validation error
+
+  /admin/beta-feedback/experience-feedback:
+    get:
+      operationId: adminListExperienceFeedback
+      tags: [admin]
+      summary: List all experience feedback entries (admin)
+      parameters:
+        - in: query
+          name: trigger
+          schema:
+            type: string
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 50
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, total]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ExperienceFeedback"
+                  total:
+                    type: integer
+        "403":
+          description: Forbidden
+
+  # ── Beta Feedback — Bug Reports ───────────────────────────────────────────
+  /beta-feedback/bug-reports:
+    post:
+      operationId: createBugReport
+      tags: [safety]
+      summary: Submit a bug report
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BugReportInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BugReport"
+        "400":
+          description: Validation error
+
+  /admin/beta-feedback/bug-reports:
+    get:
+      operationId: adminListBugReports
+      tags: [admin]
+      summary: List all bug reports (admin)
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+        - in: query
+          name: severity
+          schema:
+            type: string
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 50
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, total]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/BugReport"
+                  total:
+                    type: integer
+        "403":
+          description: Forbidden
+
+  /admin/beta-feedback/bug-reports/{id}:
+    patch:
+      operationId: adminUpdateBugReport
+      tags: [admin]
+      summary: Update bug report status/notes (admin)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminUpdateBugReportBody"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BugReport"
+        "404":
+          description: Not found
+
   /users/me/settings:
     get:
       operationId: getMySettings
@@ -4686,3 +4928,191 @@ components:
           type: string
         isVisible:
           type: boolean
+
+    # ── Beta Feedback — Feature Suggestions ──────────────────────────────────
+    FeatureSuggestion:
+      type: object
+      required: [id, title, description, category, priority, status, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: ["integer", "null"]
+        userEmail:
+          type: ["string", "null"]
+        username:
+          type: ["string", "null"]
+        title:
+          type: string
+        description:
+          type: string
+        why:
+          type: ["string", "null"]
+        category:
+          type: string
+          enum: [music, videos, podcasts, profile, upload, discovery, payments, community, other]
+        priority:
+          type: string
+          enum: [nice_to_have, important, urgent]
+        status:
+          type: string
+          enum: [new, reviewed, planned, in_progress, completed, declined]
+        adminNotes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    FeatureSuggestionInput:
+      type: object
+      required: [title, description, category]
+      properties:
+        title:
+          type: string
+          minLength: 3
+          maxLength: 200
+        description:
+          type: string
+          minLength: 10
+          maxLength: 2000
+        why:
+          type: string
+          maxLength: 1000
+        category:
+          type: string
+          enum: [music, videos, podcasts, profile, upload, discovery, payments, community, other]
+        priority:
+          type: string
+          enum: [nice_to_have, important, urgent]
+        userEmail:
+          type: string
+          format: email
+
+    AdminUpdateFeatureSuggestionBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [new, reviewed, planned, in_progress, completed, declined]
+        adminNotes:
+          type: string
+
+    # ── Beta Feedback — Experience Feedback ───────────────────────────────────
+    ExperienceFeedback:
+      type: object
+      required: [id, rating, trigger, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: ["integer", "null"]
+        username:
+          type: ["string", "null"]
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        whatWorkedWell:
+          type: ["string", "null"]
+        whatWasConfusing:
+          type: ["string", "null"]
+        didAnythingBreak:
+          type: ["string", "null"]
+        wouldRecommend:
+          type: ["boolean", "null"]
+        trigger:
+          type: string
+          enum: [after_upload, after_submit, first_visit, manual, general]
+        createdAt:
+          type: string
+
+    ExperienceFeedbackInput:
+      type: object
+      required: [rating]
+      properties:
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        whatWorkedWell:
+          type: string
+          maxLength: 1000
+        whatWasConfusing:
+          type: string
+          maxLength: 1000
+        didAnythingBreak:
+          type: string
+          maxLength: 1000
+        wouldRecommend:
+          type: boolean
+        trigger:
+          type: string
+          enum: [after_upload, after_submit, first_visit, manual, general]
+
+    # ── Beta Feedback — Bug Reports ───────────────────────────────────────────
+    BugReport:
+      type: object
+      required: [id, whatHappened, severity, status, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: ["integer", "null"]
+        userEmail:
+          type: ["string", "null"]
+        username:
+          type: ["string", "null"]
+        whatHappened:
+          type: string
+        pageUrl:
+          type: ["string", "null"]
+        whatTrying:
+          type: ["string", "null"]
+        deviceBrowser:
+          type: ["string", "null"]
+        severity:
+          type: string
+          enum: [low, medium, high, urgent]
+        status:
+          type: string
+          enum: [new, confirmed, investigating, fixed, closed]
+        adminNotes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    BugReportInput:
+      type: object
+      required: [whatHappened]
+      properties:
+        whatHappened:
+          type: string
+          minLength: 10
+          maxLength: 2000
+        pageUrl:
+          type: string
+          maxLength: 500
+        whatTrying:
+          type: string
+          maxLength: 1000
+        deviceBrowser:
+          type: string
+          maxLength: 300
+        severity:
+          type: string
+          enum: [low, medium, high, urgent]
+        userEmail:
+          type: string
+          format: email
+
+    AdminUpdateBugReportBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [new, confirmed, investigating, fixed, closed]
+        adminNotes:
+          type: string

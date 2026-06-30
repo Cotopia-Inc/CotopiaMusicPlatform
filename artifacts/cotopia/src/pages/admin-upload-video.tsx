@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
+import { ExperienceFeedbackModal } from "@/components/experience-feedback-modal";
 import { useAdminUploadVideo, useAdminBulkUploadVideos, useAdminGetUploadAccounts } from "@workspace/api-client-react";
 import { useUpload } from "../lib/useUpload";
 import { useAuth } from "@/lib/auth";
@@ -105,6 +106,7 @@ export default function AdminUploadVideo() {
   // ── Single video state ────────────────────────────────────────
   const [form, setForm] = useState({ title: "", userId: 0, genre: "", mood: "", isExplicit: false, description: "", credits: "", duration: 0, videoUrl: "", thumbnailUrl: "", releaseDate: "", isFeatured: false });
   const [singleDone, setSingleDone] = useState<{ id: number; title: string } | null>(null);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   const videoUpload = useUpload({ onSuccess: (res) => setForm(f => ({ ...f, videoUrl: `/api/storage${res.objectPath}` })) });
   const thumbUpload = useUpload({ onSuccess: (res) => setForm(f => ({ ...f, thumbnailUrl: `/api/storage${res.objectPath}` })) });
@@ -122,6 +124,7 @@ export default function AdminUploadVideo() {
       });
       setSingleDone({ id: video.id, title: video.title });
       toast({ title: "Video uploaded for review", description: `"${video.title}" is waiting in Admin › Submissions for your approval` });
+      setFeedbackOpen(true);
     } catch (err: any) {
       toast({ title: "Upload failed", description: err.message ?? "Unknown error", variant: "destructive" });
     }
@@ -503,6 +506,7 @@ export default function AdminUploadVideo() {
           </form>
         </TabsContent>
       </Tabs>
+      <ExperienceFeedbackModal open={feedbackOpen} onClose={() => setFeedbackOpen(false)} trigger="after_upload" />
     </div>
   );
 }

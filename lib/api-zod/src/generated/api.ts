@@ -3284,6 +3284,233 @@ export const ListMyFeedbackResponse = zod.array(ListMyFeedbackResponseItem)
 
 
 /**
+ * @summary Submit a feature suggestion
+ */
+export const createFeatureSuggestionBodyTitleMin = 3;
+export const createFeatureSuggestionBodyTitleMax = 200;
+
+export const createFeatureSuggestionBodyDescriptionMin = 10;
+export const createFeatureSuggestionBodyDescriptionMax = 2000;
+
+export const createFeatureSuggestionBodyWhyMax = 1000;
+
+
+
+export const CreateFeatureSuggestionBody = zod.object({
+  "title": zod.string().min(createFeatureSuggestionBodyTitleMin).max(createFeatureSuggestionBodyTitleMax),
+  "description": zod.string().min(createFeatureSuggestionBodyDescriptionMin).max(createFeatureSuggestionBodyDescriptionMax),
+  "why": zod.string().max(createFeatureSuggestionBodyWhyMax).optional(),
+  "category": zod.enum(['music', 'videos', 'podcasts', 'profile', 'upload', 'discovery', 'payments', 'community', 'other']),
+  "priority": zod.enum(['nice_to_have', 'important', 'urgent']).optional(),
+  "userEmail": zod.string().email().optional()
+})
+
+
+/**
+ * @summary List all feature suggestions (admin)
+ */
+export const adminListFeatureSuggestionsQueryLimitDefault = 50;
+export const adminListFeatureSuggestionsQueryOffsetDefault = 0;
+
+export const AdminListFeatureSuggestionsQueryParams = zod.object({
+  "status": zod.coerce.string().optional(),
+  "category": zod.coerce.string().optional(),
+  "limit": zod.coerce.number().default(adminListFeatureSuggestionsQueryLimitDefault),
+  "offset": zod.coerce.number().default(adminListFeatureSuggestionsQueryOffsetDefault)
+})
+
+export const AdminListFeatureSuggestionsResponse = zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "userId": zod.number().nullish(),
+  "userEmail": zod.string().nullish(),
+  "username": zod.string().nullish(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "why": zod.string().nullish(),
+  "category": zod.enum(['music', 'videos', 'podcasts', 'profile', 'upload', 'discovery', 'payments', 'community', 'other']),
+  "priority": zod.enum(['nice_to_have', 'important', 'urgent']),
+  "status": zod.enum(['new', 'reviewed', 'planned', 'in_progress', 'completed', 'declined']),
+  "adminNotes": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().optional()
+})),
+  "total": zod.number()
+})
+
+
+/**
+ * @summary Update feature suggestion status/notes (admin)
+ */
+export const AdminUpdateFeatureSuggestionParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const AdminUpdateFeatureSuggestionBody = zod.object({
+  "status": zod.enum(['new', 'reviewed', 'planned', 'in_progress', 'completed', 'declined']).optional(),
+  "adminNotes": zod.string().optional()
+})
+
+export const AdminUpdateFeatureSuggestionResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number().nullish(),
+  "userEmail": zod.string().nullish(),
+  "username": zod.string().nullish(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "why": zod.string().nullish(),
+  "category": zod.enum(['music', 'videos', 'podcasts', 'profile', 'upload', 'discovery', 'payments', 'community', 'other']),
+  "priority": zod.enum(['nice_to_have', 'important', 'urgent']),
+  "status": zod.enum(['new', 'reviewed', 'planned', 'in_progress', 'completed', 'declined']),
+  "adminNotes": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().optional()
+})
+
+
+/**
+ * @summary Submit experience feedback (rating + optional qualitative answers)
+ */
+export const createExperienceFeedbackBodyRatingMax = 5;
+
+export const createExperienceFeedbackBodyWhatWorkedWellMax = 1000;
+
+export const createExperienceFeedbackBodyWhatWasConfusingMax = 1000;
+
+export const createExperienceFeedbackBodyDidAnythingBreakMax = 1000;
+
+
+
+export const CreateExperienceFeedbackBody = zod.object({
+  "rating": zod.number().min(1).max(createExperienceFeedbackBodyRatingMax),
+  "whatWorkedWell": zod.string().max(createExperienceFeedbackBodyWhatWorkedWellMax).optional(),
+  "whatWasConfusing": zod.string().max(createExperienceFeedbackBodyWhatWasConfusingMax).optional(),
+  "didAnythingBreak": zod.string().max(createExperienceFeedbackBodyDidAnythingBreakMax).optional(),
+  "wouldRecommend": zod.boolean().optional(),
+  "trigger": zod.enum(['after_upload', 'after_submit', 'first_visit', 'manual', 'general']).optional()
+})
+
+
+/**
+ * @summary List all experience feedback entries (admin)
+ */
+export const adminListExperienceFeedbackQueryLimitDefault = 50;
+export const adminListExperienceFeedbackQueryOffsetDefault = 0;
+
+export const AdminListExperienceFeedbackQueryParams = zod.object({
+  "trigger": zod.coerce.string().optional(),
+  "limit": zod.coerce.number().default(adminListExperienceFeedbackQueryLimitDefault),
+  "offset": zod.coerce.number().default(adminListExperienceFeedbackQueryOffsetDefault)
+})
+
+export const adminListExperienceFeedbackResponseItemsItemRatingMax = 5;
+
+
+
+export const AdminListExperienceFeedbackResponse = zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "userId": zod.number().nullish(),
+  "username": zod.string().nullish(),
+  "rating": zod.number().min(1).max(adminListExperienceFeedbackResponseItemsItemRatingMax),
+  "whatWorkedWell": zod.string().nullish(),
+  "whatWasConfusing": zod.string().nullish(),
+  "didAnythingBreak": zod.string().nullish(),
+  "wouldRecommend": zod.boolean().nullish(),
+  "trigger": zod.enum(['after_upload', 'after_submit', 'first_visit', 'manual', 'general']),
+  "createdAt": zod.string()
+})),
+  "total": zod.number()
+})
+
+
+/**
+ * @summary Submit a bug report
+ */
+export const createBugReportBodyWhatHappenedMin = 10;
+export const createBugReportBodyWhatHappenedMax = 2000;
+
+export const createBugReportBodyPageUrlMax = 500;
+
+export const createBugReportBodyWhatTryingMax = 1000;
+
+export const createBugReportBodyDeviceBrowserMax = 300;
+
+
+
+export const CreateBugReportBody = zod.object({
+  "whatHappened": zod.string().min(createBugReportBodyWhatHappenedMin).max(createBugReportBodyWhatHappenedMax),
+  "pageUrl": zod.string().max(createBugReportBodyPageUrlMax).optional(),
+  "whatTrying": zod.string().max(createBugReportBodyWhatTryingMax).optional(),
+  "deviceBrowser": zod.string().max(createBugReportBodyDeviceBrowserMax).optional(),
+  "severity": zod.enum(['low', 'medium', 'high', 'urgent']).optional(),
+  "userEmail": zod.string().email().optional()
+})
+
+
+/**
+ * @summary List all bug reports (admin)
+ */
+export const adminListBugReportsQueryLimitDefault = 50;
+export const adminListBugReportsQueryOffsetDefault = 0;
+
+export const AdminListBugReportsQueryParams = zod.object({
+  "status": zod.coerce.string().optional(),
+  "severity": zod.coerce.string().optional(),
+  "limit": zod.coerce.number().default(adminListBugReportsQueryLimitDefault),
+  "offset": zod.coerce.number().default(adminListBugReportsQueryOffsetDefault)
+})
+
+export const AdminListBugReportsResponse = zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "userId": zod.number().nullish(),
+  "userEmail": zod.string().nullish(),
+  "username": zod.string().nullish(),
+  "whatHappened": zod.string(),
+  "pageUrl": zod.string().nullish(),
+  "whatTrying": zod.string().nullish(),
+  "deviceBrowser": zod.string().nullish(),
+  "severity": zod.enum(['low', 'medium', 'high', 'urgent']),
+  "status": zod.enum(['new', 'confirmed', 'investigating', 'fixed', 'closed']),
+  "adminNotes": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().optional()
+})),
+  "total": zod.number()
+})
+
+
+/**
+ * @summary Update bug report status/notes (admin)
+ */
+export const AdminUpdateBugReportParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const AdminUpdateBugReportBody = zod.object({
+  "status": zod.enum(['new', 'confirmed', 'investigating', 'fixed', 'closed']).optional(),
+  "adminNotes": zod.string().optional()
+})
+
+export const AdminUpdateBugReportResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number().nullish(),
+  "userEmail": zod.string().nullish(),
+  "username": zod.string().nullish(),
+  "whatHappened": zod.string(),
+  "pageUrl": zod.string().nullish(),
+  "whatTrying": zod.string().nullish(),
+  "deviceBrowser": zod.string().nullish(),
+  "severity": zod.enum(['low', 'medium', 'high', 'urgent']),
+  "status": zod.enum(['new', 'confirmed', 'investigating', 'fixed', 'closed']),
+  "adminNotes": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().optional()
+})
+
+
+/**
  * @summary Get current user's safety and messaging settings
  */
 export const GetMySettingsResponse = zod.object({

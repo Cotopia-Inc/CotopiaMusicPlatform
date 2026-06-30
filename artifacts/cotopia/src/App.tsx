@@ -53,6 +53,11 @@ import AdminReports from "@/pages/admin-reports";
 import AdminEnforcement from "@/pages/admin-enforcement";
 import Feedback from "@/pages/feedback";
 import AdminFeedback from "@/pages/admin-feedback";
+import SuggestFeature from "@/pages/suggest-feature";
+import ReportBug from "@/pages/report-bug";
+import AdminFeatureSuggestions from "@/pages/admin-feature-suggestions";
+import AdminExperienceFeedback from "@/pages/admin-experience-feedback";
+import AdminBugReports from "@/pages/admin-bug-reports";
 import AdminMembers from "@/pages/admin-members";
 import AdminBetaAnalytics from "@/pages/admin-beta-analytics";
 import EditorDashboard from "@/pages/editor-dashboard";
@@ -264,6 +269,12 @@ function Router() {
       <Route path="/feedback">
         <ProtectedRoute><Layout><Feedback /></Layout></ProtectedRoute>
       </Route>
+      <Route path="/suggest-feature">
+        <ProtectedRoute><Layout><SuggestFeature /></Layout></ProtectedRoute>
+      </Route>
+      <Route path="/report-bug">
+        <ProtectedRoute><Layout><ReportBug /></Layout></ProtectedRoute>
+      </Route>
 
       {/* About / Our Promise — public */}
       <Route path="/about" component={About} />
@@ -355,6 +366,15 @@ function Router() {
       </Route>
       <Route path="/admin/beta-analytics">
         <RoleRoute roles={ADMIN_ROLES}><AdminBetaAnalytics /></RoleRoute>
+      </Route>
+      <Route path="/admin/feature-suggestions">
+        <RoleRoute roles={ADMIN_ROLES}><AdminFeatureSuggestions /></RoleRoute>
+      </Route>
+      <Route path="/admin/experience-feedback">
+        <RoleRoute roles={ADMIN_ROLES}><AdminExperienceFeedback /></RoleRoute>
+      </Route>
+      <Route path="/admin/bug-reports">
+        <RoleRoute roles={ADMIN_ROLES}><AdminBugReports /></RoleRoute>
       </Route>
       <Route path="/admin/discover">
         <RoleRoute roles={EDITOR_ROLES}><AdminDiscover /></RoleRoute>

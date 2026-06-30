@@ -1,10 +1,11 @@
 import { useListSubmissions, getListSubmissionsQueryKey } from "@workspace/api-client-react";
 import { Link } from "wouter";
-import { CheckCircle2, Circle, Clock, Music, Video, XCircle, Send } from "lucide-react";
+import { CheckCircle2, Circle, Clock, Music, Video, XCircle, Send, Lightbulb, Bug, Star } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import React from "react";
+import React, { useState } from "react";
+import { ExperienceFeedbackModal } from "@/components/experience-feedback-modal";
 
 const STEPS = ["Received", "In Review", "Approved", "Scheduled", "Published"] as const;
 
@@ -56,6 +57,7 @@ export default function CreatorDashboard() {
   const { data, isLoading } = useListSubmissions({
     query: { queryKey: getListSubmissionsQueryKey() },
   });
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   const submissions = data ?? [];
   const active = submissions.filter(s => s.status !== "rejected");
@@ -65,9 +67,33 @@ export default function CreatorDashboard() {
 
   return (
     <div className="space-y-8 pb-24 max-w-4xl mx-auto">
-      <div className="space-y-1">
-        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">Creator Dashboard</h1>
-        <p className="text-muted-foreground">Track your submissions through the review process.</p>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="space-y-1">
+          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">Creator Dashboard</h1>
+          <p className="text-muted-foreground">Track your submissions through the review process.</p>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
+          <button
+            onClick={() => setFeedbackOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-secondary/50 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+          >
+            <Star className="w-3.5 h-3.5 text-amber-400" />
+            Rate Experience
+          </button>
+          <Link href="/suggest-feature">
+            <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-secondary/50 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
+              <Lightbulb className="w-3.5 h-3.5 text-violet-400" />
+              Suggest a Feature
+            </button>
+          </Link>
+          <Link href="/report-bug">
+            <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-secondary/50 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
+              <Bug className="w-3.5 h-3.5 text-red-400" />
+              Report a Bug
+            </button>
+          </Link>
+        </div>
+        <ExperienceFeedbackModal open={feedbackOpen} onClose={() => setFeedbackOpen(false)} trigger="manual" />
       </div>
 
       <div className="grid grid-cols-3 gap-4">

@@ -23,12 +23,20 @@ import type {
   AdminBulkUploadSongsInput,
   AdminBulkUploadVideosInput,
   AdminChatMessage,
+  AdminListBugReports200,
+  AdminListBugReportsParams,
   AdminListChatMessagesParams,
+  AdminListExperienceFeedback200,
+  AdminListExperienceFeedbackParams,
+  AdminListFeatureSuggestions200,
+  AdminListFeatureSuggestionsParams,
   AdminListListenersParams,
   AdminListSubmissionsParams,
   AdminListUsersParams,
   AdminListenerList,
   AdminRoleChangeInput,
+  AdminUpdateBugReportBody,
+  AdminUpdateFeatureSuggestionBody,
   AdminUploadSongInput,
   AdminUploadVideoInput,
   AdminUserList,
@@ -46,6 +54,8 @@ import type {
   AuthResponse,
   Broadcast,
   BroadcastInput,
+  BugReport,
+  BugReportInput,
   BulkSubmissionInput,
   CeoMessage,
   CeoMessageInput,
@@ -70,6 +80,10 @@ import type {
   EditorialPlaylistDetail,
   EditorialPlaylistInput,
   ErrorEnvelope,
+  ExperienceFeedback,
+  ExperienceFeedbackInput,
+  FeatureSuggestion,
+  FeatureSuggestionInput,
   Feedback,
   FeedbackInput,
   GetChatMessagesParams,
@@ -9825,6 +9839,615 @@ export function useListMyFeedback<TData = Awaited<ReturnType<typeof listMyFeedba
 
 
 
+
+export const getCreateFeatureSuggestionUrl = () => {
+
+
+
+
+  return `/api/beta-feedback/feature-suggestions`
+}
+
+/**
+ * @summary Submit a feature suggestion
+ */
+export const createFeatureSuggestion = async (featureSuggestionInput: FeatureSuggestionInput, options?: RequestInit): Promise<FeatureSuggestion> => {
+
+  return customFetch<FeatureSuggestion>(getCreateFeatureSuggestionUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      featureSuggestionInput,)
+  }
+);}
+
+
+
+
+export const getCreateFeatureSuggestionMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createFeatureSuggestion>>, TError,{data: BodyType<FeatureSuggestionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createFeatureSuggestion>>, TError,{data: BodyType<FeatureSuggestionInput>}, TContext> => {
+
+const mutationKey = ['createFeatureSuggestion'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createFeatureSuggestion>>, {data: BodyType<FeatureSuggestionInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createFeatureSuggestion(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateFeatureSuggestionMutationResult = NonNullable<Awaited<ReturnType<typeof createFeatureSuggestion>>>
+    export type CreateFeatureSuggestionMutationBody = BodyType<FeatureSuggestionInput>
+    export type CreateFeatureSuggestionMutationError = ErrorType<void>
+
+    /**
+ * @summary Submit a feature suggestion
+ */
+export const useCreateFeatureSuggestion = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createFeatureSuggestion>>, TError,{data: BodyType<FeatureSuggestionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createFeatureSuggestion>>,
+        TError,
+        {data: BodyType<FeatureSuggestionInput>},
+        TContext
+      > => {
+      return useMutation(getCreateFeatureSuggestionMutationOptions(options));
+    }
+
+export const getAdminListFeatureSuggestionsUrl = (params?: AdminListFeatureSuggestionsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/admin/beta-feedback/feature-suggestions?${stringifiedParams}` : `/api/admin/beta-feedback/feature-suggestions`
+}
+
+/**
+ * @summary List all feature suggestions (admin)
+ */
+export const adminListFeatureSuggestions = async (params?: AdminListFeatureSuggestionsParams, options?: RequestInit): Promise<AdminListFeatureSuggestions200> => {
+
+  return customFetch<AdminListFeatureSuggestions200>(getAdminListFeatureSuggestionsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getAdminListFeatureSuggestionsQueryKey = (params?: AdminListFeatureSuggestionsParams,) => {
+    return [
+    `/api/admin/beta-feedback/feature-suggestions`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getAdminListFeatureSuggestionsQueryOptions = <TData = Awaited<ReturnType<typeof adminListFeatureSuggestions>>, TError = ErrorType<void>>(params?: AdminListFeatureSuggestionsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof adminListFeatureSuggestions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminListFeatureSuggestionsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminListFeatureSuggestions>>> = ({ signal }) => adminListFeatureSuggestions(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminListFeatureSuggestions>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type AdminListFeatureSuggestionsQueryResult = NonNullable<Awaited<ReturnType<typeof adminListFeatureSuggestions>>>
+export type AdminListFeatureSuggestionsQueryError = ErrorType<void>
+
+
+/**
+ * @summary List all feature suggestions (admin)
+ */
+
+export function useAdminListFeatureSuggestions<TData = Awaited<ReturnType<typeof adminListFeatureSuggestions>>, TError = ErrorType<void>>(
+ params?: AdminListFeatureSuggestionsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof adminListFeatureSuggestions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getAdminListFeatureSuggestionsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getAdminUpdateFeatureSuggestionUrl = (id: number,) => {
+
+
+
+
+  return `/api/admin/beta-feedback/feature-suggestions/${id}`
+}
+
+/**
+ * @summary Update feature suggestion status/notes (admin)
+ */
+export const adminUpdateFeatureSuggestion = async (id: number,
+    adminUpdateFeatureSuggestionBody: AdminUpdateFeatureSuggestionBody, options?: RequestInit): Promise<FeatureSuggestion> => {
+
+  return customFetch<FeatureSuggestion>(getAdminUpdateFeatureSuggestionUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      adminUpdateFeatureSuggestionBody,)
+  }
+);}
+
+
+
+
+export const getAdminUpdateFeatureSuggestionMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminUpdateFeatureSuggestion>>, TError,{id: number;data: BodyType<AdminUpdateFeatureSuggestionBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminUpdateFeatureSuggestion>>, TError,{id: number;data: BodyType<AdminUpdateFeatureSuggestionBody>}, TContext> => {
+
+const mutationKey = ['adminUpdateFeatureSuggestion'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminUpdateFeatureSuggestion>>, {id: number;data: BodyType<AdminUpdateFeatureSuggestionBody>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  adminUpdateFeatureSuggestion(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminUpdateFeatureSuggestionMutationResult = NonNullable<Awaited<ReturnType<typeof adminUpdateFeatureSuggestion>>>
+    export type AdminUpdateFeatureSuggestionMutationBody = BodyType<AdminUpdateFeatureSuggestionBody>
+    export type AdminUpdateFeatureSuggestionMutationError = ErrorType<void>
+
+    /**
+ * @summary Update feature suggestion status/notes (admin)
+ */
+export const useAdminUpdateFeatureSuggestion = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminUpdateFeatureSuggestion>>, TError,{id: number;data: BodyType<AdminUpdateFeatureSuggestionBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof adminUpdateFeatureSuggestion>>,
+        TError,
+        {id: number;data: BodyType<AdminUpdateFeatureSuggestionBody>},
+        TContext
+      > => {
+      return useMutation(getAdminUpdateFeatureSuggestionMutationOptions(options));
+    }
+
+export const getCreateExperienceFeedbackUrl = () => {
+
+
+
+
+  return `/api/beta-feedback/experience-feedback`
+}
+
+/**
+ * @summary Submit experience feedback (rating + optional qualitative answers)
+ */
+export const createExperienceFeedback = async (experienceFeedbackInput: ExperienceFeedbackInput, options?: RequestInit): Promise<ExperienceFeedback> => {
+
+  return customFetch<ExperienceFeedback>(getCreateExperienceFeedbackUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      experienceFeedbackInput,)
+  }
+);}
+
+
+
+
+export const getCreateExperienceFeedbackMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createExperienceFeedback>>, TError,{data: BodyType<ExperienceFeedbackInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createExperienceFeedback>>, TError,{data: BodyType<ExperienceFeedbackInput>}, TContext> => {
+
+const mutationKey = ['createExperienceFeedback'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createExperienceFeedback>>, {data: BodyType<ExperienceFeedbackInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createExperienceFeedback(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateExperienceFeedbackMutationResult = NonNullable<Awaited<ReturnType<typeof createExperienceFeedback>>>
+    export type CreateExperienceFeedbackMutationBody = BodyType<ExperienceFeedbackInput>
+    export type CreateExperienceFeedbackMutationError = ErrorType<void>
+
+    /**
+ * @summary Submit experience feedback (rating + optional qualitative answers)
+ */
+export const useCreateExperienceFeedback = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createExperienceFeedback>>, TError,{data: BodyType<ExperienceFeedbackInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createExperienceFeedback>>,
+        TError,
+        {data: BodyType<ExperienceFeedbackInput>},
+        TContext
+      > => {
+      return useMutation(getCreateExperienceFeedbackMutationOptions(options));
+    }
+
+export const getAdminListExperienceFeedbackUrl = (params?: AdminListExperienceFeedbackParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/admin/beta-feedback/experience-feedback?${stringifiedParams}` : `/api/admin/beta-feedback/experience-feedback`
+}
+
+/**
+ * @summary List all experience feedback entries (admin)
+ */
+export const adminListExperienceFeedback = async (params?: AdminListExperienceFeedbackParams, options?: RequestInit): Promise<AdminListExperienceFeedback200> => {
+
+  return customFetch<AdminListExperienceFeedback200>(getAdminListExperienceFeedbackUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getAdminListExperienceFeedbackQueryKey = (params?: AdminListExperienceFeedbackParams,) => {
+    return [
+    `/api/admin/beta-feedback/experience-feedback`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getAdminListExperienceFeedbackQueryOptions = <TData = Awaited<ReturnType<typeof adminListExperienceFeedback>>, TError = ErrorType<void>>(params?: AdminListExperienceFeedbackParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof adminListExperienceFeedback>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminListExperienceFeedbackQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminListExperienceFeedback>>> = ({ signal }) => adminListExperienceFeedback(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminListExperienceFeedback>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type AdminListExperienceFeedbackQueryResult = NonNullable<Awaited<ReturnType<typeof adminListExperienceFeedback>>>
+export type AdminListExperienceFeedbackQueryError = ErrorType<void>
+
+
+/**
+ * @summary List all experience feedback entries (admin)
+ */
+
+export function useAdminListExperienceFeedback<TData = Awaited<ReturnType<typeof adminListExperienceFeedback>>, TError = ErrorType<void>>(
+ params?: AdminListExperienceFeedbackParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof adminListExperienceFeedback>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getAdminListExperienceFeedbackQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateBugReportUrl = () => {
+
+
+
+
+  return `/api/beta-feedback/bug-reports`
+}
+
+/**
+ * @summary Submit a bug report
+ */
+export const createBugReport = async (bugReportInput: BugReportInput, options?: RequestInit): Promise<BugReport> => {
+
+  return customFetch<BugReport>(getCreateBugReportUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      bugReportInput,)
+  }
+);}
+
+
+
+
+export const getCreateBugReportMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBugReport>>, TError,{data: BodyType<BugReportInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createBugReport>>, TError,{data: BodyType<BugReportInput>}, TContext> => {
+
+const mutationKey = ['createBugReport'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createBugReport>>, {data: BodyType<BugReportInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createBugReport(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateBugReportMutationResult = NonNullable<Awaited<ReturnType<typeof createBugReport>>>
+    export type CreateBugReportMutationBody = BodyType<BugReportInput>
+    export type CreateBugReportMutationError = ErrorType<void>
+
+    /**
+ * @summary Submit a bug report
+ */
+export const useCreateBugReport = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBugReport>>, TError,{data: BodyType<BugReportInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createBugReport>>,
+        TError,
+        {data: BodyType<BugReportInput>},
+        TContext
+      > => {
+      return useMutation(getCreateBugReportMutationOptions(options));
+    }
+
+export const getAdminListBugReportsUrl = (params?: AdminListBugReportsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/admin/beta-feedback/bug-reports?${stringifiedParams}` : `/api/admin/beta-feedback/bug-reports`
+}
+
+/**
+ * @summary List all bug reports (admin)
+ */
+export const adminListBugReports = async (params?: AdminListBugReportsParams, options?: RequestInit): Promise<AdminListBugReports200> => {
+
+  return customFetch<AdminListBugReports200>(getAdminListBugReportsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getAdminListBugReportsQueryKey = (params?: AdminListBugReportsParams,) => {
+    return [
+    `/api/admin/beta-feedback/bug-reports`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getAdminListBugReportsQueryOptions = <TData = Awaited<ReturnType<typeof adminListBugReports>>, TError = ErrorType<void>>(params?: AdminListBugReportsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof adminListBugReports>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminListBugReportsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminListBugReports>>> = ({ signal }) => adminListBugReports(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminListBugReports>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type AdminListBugReportsQueryResult = NonNullable<Awaited<ReturnType<typeof adminListBugReports>>>
+export type AdminListBugReportsQueryError = ErrorType<void>
+
+
+/**
+ * @summary List all bug reports (admin)
+ */
+
+export function useAdminListBugReports<TData = Awaited<ReturnType<typeof adminListBugReports>>, TError = ErrorType<void>>(
+ params?: AdminListBugReportsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof adminListBugReports>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getAdminListBugReportsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getAdminUpdateBugReportUrl = (id: number,) => {
+
+
+
+
+  return `/api/admin/beta-feedback/bug-reports/${id}`
+}
+
+/**
+ * @summary Update bug report status/notes (admin)
+ */
+export const adminUpdateBugReport = async (id: number,
+    adminUpdateBugReportBody: AdminUpdateBugReportBody, options?: RequestInit): Promise<BugReport> => {
+
+  return customFetch<BugReport>(getAdminUpdateBugReportUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      adminUpdateBugReportBody,)
+  }
+);}
+
+
+
+
+export const getAdminUpdateBugReportMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminUpdateBugReport>>, TError,{id: number;data: BodyType<AdminUpdateBugReportBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminUpdateBugReport>>, TError,{id: number;data: BodyType<AdminUpdateBugReportBody>}, TContext> => {
+
+const mutationKey = ['adminUpdateBugReport'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminUpdateBugReport>>, {id: number;data: BodyType<AdminUpdateBugReportBody>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  adminUpdateBugReport(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminUpdateBugReportMutationResult = NonNullable<Awaited<ReturnType<typeof adminUpdateBugReport>>>
+    export type AdminUpdateBugReportMutationBody = BodyType<AdminUpdateBugReportBody>
+    export type AdminUpdateBugReportMutationError = ErrorType<void>
+
+    /**
+ * @summary Update bug report status/notes (admin)
+ */
+export const useAdminUpdateBugReport = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminUpdateBugReport>>, TError,{id: number;data: BodyType<AdminUpdateBugReportBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof adminUpdateBugReport>>,
+        TError,
+        {id: number;data: BodyType<AdminUpdateBugReportBody>},
+        TContext
+      > => {
+      return useMutation(getAdminUpdateBugReportMutationOptions(options));
+    }
 
 export const getGetMySettingsUrl = () => {
 

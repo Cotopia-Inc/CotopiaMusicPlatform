@@ -33,3 +33,6 @@ export * from "./copyright_concerns";
 export * from "./reports";
 export * from "./enforcement_actions";
 export * from "./feedback";
+export * from "./feature_suggestions";
+export * from "./experience_feedback";
+export * from "./bug_reports";

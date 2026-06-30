@@ -27,6 +27,7 @@ import messagesRouter from "./messages";
 import legalRouter from "./legal";
 import blocksRouter from "./blocks";
 import safetyRouter from "./safety";
+import betaFeedbackRouter from "./beta-feedback";
 
 const router: IRouter = Router();
 
@@ -58,5 +59,6 @@ router.use(messagesRouter);
 router.use(legalRouter);
 router.use(blocksRouter);
 router.use(safetyRouter);
+router.use(betaFeedbackRouter);
 
 export default router;

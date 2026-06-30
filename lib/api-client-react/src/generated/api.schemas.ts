@@ -1558,6 +1558,269 @@ export interface CeoMessageInput {
   isVisible: boolean;
 }
 
+export type FeatureSuggestionCategory = typeof FeatureSuggestionCategory[keyof typeof FeatureSuggestionCategory];
+
+
+export const FeatureSuggestionCategory = {
+  music: 'music',
+  videos: 'videos',
+  podcasts: 'podcasts',
+  profile: 'profile',
+  upload: 'upload',
+  discovery: 'discovery',
+  payments: 'payments',
+  community: 'community',
+  other: 'other',
+} as const;
+
+export type FeatureSuggestionPriority = typeof FeatureSuggestionPriority[keyof typeof FeatureSuggestionPriority];
+
+
+export const FeatureSuggestionPriority = {
+  nice_to_have: 'nice_to_have',
+  important: 'important',
+  urgent: 'urgent',
+} as const;
+
+export type FeatureSuggestionStatus = typeof FeatureSuggestionStatus[keyof typeof FeatureSuggestionStatus];
+
+
+export const FeatureSuggestionStatus = {
+  new: 'new',
+  reviewed: 'reviewed',
+  planned: 'planned',
+  in_progress: 'in_progress',
+  completed: 'completed',
+  declined: 'declined',
+} as const;
+
+export interface FeatureSuggestion {
+  id: number;
+  /** @nullable */
+  userId?: number | null;
+  /** @nullable */
+  userEmail?: string | null;
+  /** @nullable */
+  username?: string | null;
+  title: string;
+  description: string;
+  /** @nullable */
+  why?: string | null;
+  category: FeatureSuggestionCategory;
+  priority: FeatureSuggestionPriority;
+  status: FeatureSuggestionStatus;
+  /** @nullable */
+  adminNotes?: string | null;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export type FeatureSuggestionInputCategory = typeof FeatureSuggestionInputCategory[keyof typeof FeatureSuggestionInputCategory];
+
+
+export const FeatureSuggestionInputCategory = {
+  music: 'music',
+  videos: 'videos',
+  podcasts: 'podcasts',
+  profile: 'profile',
+  upload: 'upload',
+  discovery: 'discovery',
+  payments: 'payments',
+  community: 'community',
+  other: 'other',
+} as const;
+
+export type FeatureSuggestionInputPriority = typeof FeatureSuggestionInputPriority[keyof typeof FeatureSuggestionInputPriority];
+
+
+export const FeatureSuggestionInputPriority = {
+  nice_to_have: 'nice_to_have',
+  important: 'important',
+  urgent: 'urgent',
+} as const;
+
+export interface FeatureSuggestionInput {
+  /**
+     * @minLength 3
+     * @maxLength 200
+     */
+  title: string;
+  /**
+     * @minLength 10
+     * @maxLength 2000
+     */
+  description: string;
+  /** @maxLength 1000 */
+  why?: string;
+  category: FeatureSuggestionInputCategory;
+  priority?: FeatureSuggestionInputPriority;
+  userEmail?: string;
+}
+
+export type AdminUpdateFeatureSuggestionBodyStatus = typeof AdminUpdateFeatureSuggestionBodyStatus[keyof typeof AdminUpdateFeatureSuggestionBodyStatus];
+
+
+export const AdminUpdateFeatureSuggestionBodyStatus = {
+  new: 'new',
+  reviewed: 'reviewed',
+  planned: 'planned',
+  in_progress: 'in_progress',
+  completed: 'completed',
+  declined: 'declined',
+} as const;
+
+export interface AdminUpdateFeatureSuggestionBody {
+  status?: AdminUpdateFeatureSuggestionBodyStatus;
+  adminNotes?: string;
+}
+
+export type ExperienceFeedbackTrigger = typeof ExperienceFeedbackTrigger[keyof typeof ExperienceFeedbackTrigger];
+
+
+export const ExperienceFeedbackTrigger = {
+  after_upload: 'after_upload',
+  after_submit: 'after_submit',
+  first_visit: 'first_visit',
+  manual: 'manual',
+  general: 'general',
+} as const;
+
+export interface ExperienceFeedback {
+  id: number;
+  /** @nullable */
+  userId?: number | null;
+  /** @nullable */
+  username?: string | null;
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  rating: number;
+  /** @nullable */
+  whatWorkedWell?: string | null;
+  /** @nullable */
+  whatWasConfusing?: string | null;
+  /** @nullable */
+  didAnythingBreak?: string | null;
+  /** @nullable */
+  wouldRecommend?: boolean | null;
+  trigger: ExperienceFeedbackTrigger;
+  createdAt: string;
+}
+
+export type ExperienceFeedbackInputTrigger = typeof ExperienceFeedbackInputTrigger[keyof typeof ExperienceFeedbackInputTrigger];
+
+
+export const ExperienceFeedbackInputTrigger = {
+  after_upload: 'after_upload',
+  after_submit: 'after_submit',
+  first_visit: 'first_visit',
+  manual: 'manual',
+  general: 'general',
+} as const;
+
+export interface ExperienceFeedbackInput {
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  rating: number;
+  /** @maxLength 1000 */
+  whatWorkedWell?: string;
+  /** @maxLength 1000 */
+  whatWasConfusing?: string;
+  /** @maxLength 1000 */
+  didAnythingBreak?: string;
+  wouldRecommend?: boolean;
+  trigger?: ExperienceFeedbackInputTrigger;
+}
+
+export type BugReportSeverity = typeof BugReportSeverity[keyof typeof BugReportSeverity];
+
+
+export const BugReportSeverity = {
+  low: 'low',
+  medium: 'medium',
+  high: 'high',
+  urgent: 'urgent',
+} as const;
+
+export type BugReportStatus = typeof BugReportStatus[keyof typeof BugReportStatus];
+
+
+export const BugReportStatus = {
+  new: 'new',
+  confirmed: 'confirmed',
+  investigating: 'investigating',
+  fixed: 'fixed',
+  closed: 'closed',
+} as const;
+
+export interface BugReport {
+  id: number;
+  /** @nullable */
+  userId?: number | null;
+  /** @nullable */
+  userEmail?: string | null;
+  /** @nullable */
+  username?: string | null;
+  whatHappened: string;
+  /** @nullable */
+  pageUrl?: string | null;
+  /** @nullable */
+  whatTrying?: string | null;
+  /** @nullable */
+  deviceBrowser?: string | null;
+  severity: BugReportSeverity;
+  status: BugReportStatus;
+  /** @nullable */
+  adminNotes?: string | null;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export type BugReportInputSeverity = typeof BugReportInputSeverity[keyof typeof BugReportInputSeverity];
+
+
+export const BugReportInputSeverity = {
+  low: 'low',
+  medium: 'medium',
+  high: 'high',
+  urgent: 'urgent',
+} as const;
+
+export interface BugReportInput {
+  /**
+     * @minLength 10
+     * @maxLength 2000
+     */
+  whatHappened: string;
+  /** @maxLength 500 */
+  pageUrl?: string;
+  /** @maxLength 1000 */
+  whatTrying?: string;
+  /** @maxLength 300 */
+  deviceBrowser?: string;
+  severity?: BugReportInputSeverity;
+  userEmail?: string;
+}
+
+export type AdminUpdateBugReportBodyStatus = typeof AdminUpdateBugReportBodyStatus[keyof typeof AdminUpdateBugReportBodyStatus];
+
+
+export const AdminUpdateBugReportBodyStatus = {
+  new: 'new',
+  confirmed: 'confirmed',
+  investigating: 'investigating',
+  fixed: 'fixed',
+  closed: 'closed',
+} as const;
+
+export interface AdminUpdateBugReportBody {
+  status?: AdminUpdateBugReportBodyStatus;
+  adminNotes?: string;
+}
+
 export type SendOtp200 = {
   ok?: boolean;
 };
@@ -1704,5 +1967,40 @@ export type MarkConversationRead200 = {
 
 export type GetChatMessagesParams = {
 limit?: number;
+};
+
+export type AdminListFeatureSuggestionsParams = {
+status?: string;
+category?: string;
+limit?: number;
+offset?: number;
+};
+
+export type AdminListFeatureSuggestions200 = {
+  items: FeatureSuggestion[];
+  total: number;
+};
+
+export type AdminListExperienceFeedbackParams = {
+trigger?: string;
+limit?: number;
+offset?: number;
+};
+
+export type AdminListExperienceFeedback200 = {
+  items: ExperienceFeedback[];
+  total: number;
+};
+
+export type AdminListBugReportsParams = {
+status?: string;
+severity?: string;
+limit?: number;
+offset?: number;
+};
+
+export type AdminListBugReports200 = {
+  items: BugReport[];
+  total: number;
 };
 
