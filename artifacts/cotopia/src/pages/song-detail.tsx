@@ -23,6 +23,7 @@ import { useUpload } from "@workspace/object-storage-web";
 import { SongMenu } from "@/components/song-menu";
 import { ReportModal } from "@/components/report-modal";
 import { VerifyEmailBanner } from "@/components/verify-email-banner";
+import { CommentSection } from "@/components/comment-section";
 
 function formatTime(iso: string) {
   const d = new Date(iso);
@@ -405,6 +406,11 @@ export default function SongDetail() {
             <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{(song as any).credits}</p>
           </div>
         )}
+
+        {/* Comments */}
+        <div className="bg-card border border-border rounded-xl p-5">
+          <CommentSection contentType="song" contentId={song.id} />
+        </div>
       </div>
 
       {/* ── Chat Panel (desktop only) ── */}

@@ -10,9 +10,9 @@ const ADMIN_ROLES = ["admin", "master_admin"] as const;
 
 const CATEGORY_PRIORITY: Record<string, number> = {
   admin: 0,
-  beta: 1,
+  community: 1,
   creator: 2,
-  community: 3,
+  beta: 3,
   achievement: 4,
 };
 

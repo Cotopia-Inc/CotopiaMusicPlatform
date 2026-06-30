@@ -409,6 +409,7 @@ router.get("/users/search", async (req, res): Promise<void> => {
   }).from(usersTable).where(or(
     ilike(usersTable.username, `%${q}%`),
     ilike(usersTable.displayName, `%${q}%`),
+    ilike(usersTable.email, `%${q}%`),
   )).limit(20);
   res.json(results);
 });

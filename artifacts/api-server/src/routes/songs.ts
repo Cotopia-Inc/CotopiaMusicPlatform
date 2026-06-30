@@ -12,6 +12,7 @@ import {
 } from "@workspace/api-zod";
 import { isFeatureRotationEnabled, rotateFeatured, FEATURED_POOL_SIZE } from "../lib/featured";
 import { requireAuth, optionalAuth, type AuthRequest } from "../lib/auth";
+import { getPrimaryBadgesForUsers } from "./badges";
 
 const router = Router();
 
@@ -345,10 +346,24 @@ router.get("/songs/:id/comments", async (req, res): Promise<void> => {
       .from(commentsTable)
       .leftJoin(usersTable, eq(commentsTable.userId, usersTable.id))
       .where(eq(commentsTable.parentId, c.id));
-    return { ...c, replies: replies.map(r => ({ ...r, replies: [] })) };
+    return { ...c, replies };
   }));
 
-  res.json(withReplies);
+  const allUserIds = Array.from(new Set([
+    ...topLevel.map(c => c.userId),
+    ...withReplies.flatMap(c => c.replies.map(r => r.userId)),
+  ].filter((id): id is number => id != null)));
+  const badgeMap = await getPrimaryBadgesForUsers(allUserIds);
+
+  res.json(withReplies.map(c => ({
+    ...c,
+    primaryBadge: c.userId != null ? (badgeMap.get(c.userId) ?? null) : null,
+    replies: c.replies.map(r => ({
+      ...r,
+      replies: [],
+      primaryBadge: r.userId != null ? (badgeMap.get(r.userId) ?? null) : null,
+    })),
+  })));
 });
 
 router.post("/songs/:id/comments", requireAuth, async (req: AuthRequest, res): Promise<void> => {
@@ -374,7 +389,10 @@ router.post("/songs/:id/comments", requireAuth, async (req: AuthRequest, res): P
   const [user] = await db.select({ username: usersTable.username, avatarUrl: usersTable.avatarUrl })
     .from(usersTable).where(eq(usersTable.id, req.user!.userId)).limit(1);
 
-  res.status(201).json({ ...comment, username: user?.username, avatarUrl: user?.avatarUrl, replies: [] });
+  const badgeMap = await getPrimaryBadgesForUsers([req.user!.userId]);
+  const primaryBadge = badgeMap.get(req.user!.userId) ?? null;
+
+  res.status(201).json({ ...comment, username: user?.username, avatarUrl: user?.avatarUrl, primaryBadge, replies: [] });
 });
 
 router.post("/songs/:id/rate", requireAuth, async (req: AuthRequest, res): Promise<void> => {

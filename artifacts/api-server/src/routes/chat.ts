@@ -65,7 +65,7 @@ router.get("/chat/:contentType/:contentId", optionalAuth, async (req: AuthReques
         ))
     : [];
 
-  const CATEGORY_PRIORITY: Record<string, number> = { admin: 0, beta: 1, creator: 2, community: 3, achievement: 4 };
+  const CATEGORY_PRIORITY: Record<string, number> = { admin: 0, community: 1, creator: 2, beta: 3, achievement: 4 };
   const primaryBadgeMap = new Map<number, { id: number; name: string; icon: string; color: string; category: string }>();
   for (const row of badgeRows) {
     const ex = primaryBadgeMap.get(row.userId);
@@ -168,7 +168,7 @@ router.post("/chat/:contentType/:contentId", requireAuth, requireVerifiedEmail, 
       eq(badgesTable.isActive, true),
       eq(badgesTable.isVisible, true),
     ));
-  const CATEGORY_PRIORITY_POST: Record<string, number> = { admin: 0, beta: 1, creator: 2, community: 3, achievement: 4 };
+  const CATEGORY_PRIORITY_POST: Record<string, number> = { admin: 0, community: 1, creator: 2, beta: 3, achievement: 4 };
   const senderPrimaryBadge = senderBadgeRows.sort((a, b) =>
     (CATEGORY_PRIORITY_POST[a.category] ?? 99) - (CATEGORY_PRIORITY_POST[b.category] ?? 99)
   )[0] ?? null;
