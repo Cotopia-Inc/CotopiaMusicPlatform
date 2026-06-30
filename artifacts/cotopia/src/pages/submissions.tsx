@@ -3,13 +3,19 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format } from "date-fns";
-import { Trash2 } from "lucide-react";
+import { Trash2, Lightbulb, Bug } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Link } from "wouter";
+import { ExperienceFeedbackModal } from "@/components/experience-feedback-modal";
+import { useAuth } from "@/lib/auth";
+
+const FEEDBACK_KEY = "cotopia_approval_feedback_shown";
 
 export default function Submissions() {
+  const { user } = useAuth();
   const { data, isLoading } = useListSubmissions({
     query: { queryKey: getListSubmissionsQueryKey() }
   });
@@ -17,6 +23,18 @@ export default function Submissions() {
   const qc = useQueryClient();
   const deleteMutation = useDeleteSubmission();
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+
+  useEffect(() => {
+    if (!data || isLoading || !user) return undefined;
+    const hasApproved = data.some(s => s.status === "approved" || s.status === "published");
+    if (!hasApproved) return undefined;
+    const key = `${FEEDBACK_KEY}_${user.id}`;
+    if (localStorage.getItem(key)) return undefined;
+    localStorage.setItem(key, "1");
+    const timer = setTimeout(() => setFeedbackOpen(true), 1200);
+    return () => clearTimeout(timer);
+  }, [data, isLoading, user]);
 
   const handleWithdraw = (id: number) => {
     setDeletingId(id);
@@ -42,9 +60,25 @@ export default function Submissions() {
 
   return (
     <div className="space-y-8 pb-24 max-w-6xl mx-auto">
-      <div className="space-y-2">
-        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">My Reviews</h1>
-        <p className="text-muted-foreground">Track the status of your submitted content.</p>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="space-y-2">
+          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">My Reviews</h1>
+          <p className="text-muted-foreground">Track the status of your submitted content.</p>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <Link href="/suggest-feature">
+            <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-secondary/50 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
+              <Lightbulb className="w-3.5 h-3.5 text-violet-400" />
+              Suggest a Feature
+            </button>
+          </Link>
+          <Link href="/report-bug">
+            <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-secondary/50 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
+              <Bug className="w-3.5 h-3.5 text-red-400" />
+              Report a Bug
+            </button>
+          </Link>
+        </div>
       </div>
 
       <div className="bg-card rounded-xl border border-border overflow-hidden">
@@ -114,6 +148,8 @@ export default function Submissions() {
           </TableBody>
         </Table>
       </div>
+
+      <ExperienceFeedbackModal open={feedbackOpen} onClose={() => setFeedbackOpen(false)} trigger="after_submit" />
     </div>
   );
 }
