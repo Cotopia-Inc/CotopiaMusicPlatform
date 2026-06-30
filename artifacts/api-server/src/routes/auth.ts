@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import { eq, ilike, or, and, gt } from "drizzle-orm";
 import { db, usersTable, artistsTable, labelsTable, emailOtpsTable, agreementAcceptancesTable, appSettingsTable } from "@workspace/db";
 import { RegisterBody, LoginBody, UpdateMeBody, SendOtpBody, VerifyOtpBody, ChangePasswordBody, ChangeUsernameBody, SaveDemographicsBody } from "@workspace/api-zod";
-import { signToken, requireAuth, type AuthRequest } from "../lib/auth";
+import { signToken, requireAuth, optionalAuth, type AuthRequest } from "../lib/auth";
 import { logger } from "../lib/logger";
 import { Resend } from "resend";
 import { awardBadgeByName } from "./badges";
@@ -396,9 +396,18 @@ router.get("/platform-config", async (_req, res): Promise<void> => {
 });
 
 // ── User search ────────────────────────────────────────────────────────────
-router.get("/users/search", async (req, res): Promise<void> => {
+router.get("/users/search", optionalAuth, async (req: AuthRequest, res): Promise<void> => {
   const q = String(req.query.q ?? "").trim();
   if (!q || q.length < 2) { res.json([]); return; }
+
+  const isAdmin = req.user?.role && ["admin", "master_admin", "editor", "moderator"].includes(req.user.role);
+
+  const conditions = [
+    ilike(usersTable.username, `%${q}%`),
+    ilike(usersTable.displayName, `%${q}%`),
+    ...(isAdmin ? [ilike(usersTable.email, `%${q}%`)] : []),
+  ];
+
   const results = await db.select({
     id: usersTable.id,
     username: usersTable.username,
@@ -406,11 +415,7 @@ router.get("/users/search", async (req, res): Promise<void> => {
     avatarUrl: usersTable.avatarUrl,
     role: usersTable.role,
     isVerified: usersTable.isVerified,
-  }).from(usersTable).where(or(
-    ilike(usersTable.username, `%${q}%`),
-    ilike(usersTable.displayName, `%${q}%`),
-    ilike(usersTable.email, `%${q}%`),
-  )).limit(20);
+  }).from(usersTable).where(or(...conditions)).limit(20);
   res.json(results);
 });
 
