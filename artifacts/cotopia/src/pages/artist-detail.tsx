@@ -5,6 +5,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Play, Users, Music, MessageCircle, ArrowLeft, Volume2, VolumeX, ShieldCheck, Loader2, UserCog, UserMinus, Search } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { RoleBadges } from "@/components/role-badges";
+import { BadgeList } from "@/components/badge-chip";
+import { useGetUserBadges, getGetUserBadgesQueryKey } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { usePlayer } from "@/lib/player";
@@ -34,6 +36,11 @@ export default function ArtistDetail() {
 
   const { data: artist, isLoading } = useGetArtist(artistId, {
     query: { enabled: !!artistId, queryKey: getGetArtistQueryKey(artistId) }
+  });
+
+  const artistUserId = (artist as any)?.userId as number | null | undefined;
+  const { data: artistBadges } = useGetUserBadges(artistUserId!, {
+    query: { enabled: !!artistUserId, queryKey: getGetUserBadgesQueryKey(artistUserId!) }
   });
 
   const followMutation = useFollowArtist();
@@ -243,6 +250,9 @@ export default function ArtistDetail() {
                 <span className="text-primary">Label: {artist.labelName}</span>
               )}
             </div>
+            {artistBadges && artistBadges.length > 0 && (
+              <BadgeList userBadges={artistBadges as any} size="sm" />
+            )}
           </div>
           <div className="flex flex-wrap gap-2 md:gap-3">
             <Button size="sm" className="rounded-full px-5 md:px-8 font-bold md:text-base md:h-11" onClick={() => { if (artist.songs?.[0]) play({ id: artist.songs[0].id, title: artist.songs[0].title, artistName: artist.songs[0].artistName ?? "", artistId: artist.songs[0].artistId, artistUserRole: (artist.songs[0] as any).artistUserRole ?? (artist as any).userRole ?? null, artistIsVerified: (artist.songs[0] as any).artistIsVerified ?? (artist as any).isVerified ?? false, coverUrl: artist.songs[0].coverUrl, streamUrl: artist.songs[0].streamUrl, duration: artist.songs[0].duration }); }}>

@@ -6,6 +6,8 @@ import { Users, Music, Play, Volume2, VolumeX, UserPlus, X, Search, Loader2, Shi
 import { Slider } from "@/components/ui/slider";
 import { UserLink } from "@/components/user-link";
 import { RoleBadges } from "@/components/role-badges";
+import { BadgeList } from "@/components/badge-chip";
+import { useGetUserBadges, getGetUserBadgesQueryKey } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/auth";
@@ -30,6 +32,11 @@ export default function LabelDetail() {
 
   const { data: label, isLoading } = useGetLabel(labelId, {
     query: { enabled: !!labelId, queryKey: getGetLabelQueryKey(labelId) }
+  });
+
+  const labelUserId = (label as any)?.userId as number | null | undefined;
+  const { data: labelBadges } = useGetUserBadges(labelUserId!, {
+    query: { enabled: !!labelUserId, queryKey: getGetUserBadgesQueryKey(labelUserId!) }
   });
 
   const followMutation = useFollowLabel();
@@ -184,6 +191,9 @@ export default function LabelDetail() {
               <span className="flex items-center gap-1"><Users className="w-4 h-4" /> {label.followerCount?.toLocaleString() || 0} followers</span>
               <span className="flex items-center gap-1"><Music className="w-4 h-4" /> {label.artistCount || 0} artists</span>
             </div>
+            {labelBadges && labelBadges.length > 0 && (
+              <BadgeList userBadges={labelBadges as any} size="sm" />
+            )}
           </div>
           <div className="flex gap-3">
             {user && !isOwner && (
