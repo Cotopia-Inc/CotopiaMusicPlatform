@@ -31,7 +31,6 @@ export default function ReportBug() {
     whatHappened: "",
     pageUrl: typeof window !== "undefined" ? window.location.href : "",
     whatTrying: "",
-    deviceBrowser: typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 200) : "",
     severity: "medium",
     userEmail: "",
   });
@@ -44,7 +43,6 @@ export default function ReportBug() {
       };
       if (form.pageUrl.trim()) body.pageUrl = form.pageUrl;
       if (form.whatTrying.trim()) body.whatTrying = form.whatTrying;
-      if (form.deviceBrowser.trim()) body.deviceBrowser = form.deviceBrowser;
       if (form.userEmail.trim()) body.userEmail = form.userEmail;
       const res = await fetch(`${import.meta.env.BASE_URL}api/beta-feedback/bug-reports`, {
         method: "POST",
@@ -71,7 +69,7 @@ export default function ReportBug() {
         <p className="text-muted-foreground">Our team will investigate this. Your report helps make Cotopia more reliable for everyone.</p>
         <Button variant="outline" onClick={() => {
           setSubmitted(false);
-          setForm({ whatHappened: "", pageUrl: window.location.href, whatTrying: "", deviceBrowser: navigator.userAgent.slice(0, 200), severity: "medium", userEmail: "" });
+          setForm({ whatHappened: "", pageUrl: window.location.href, whatTrying: "", severity: "medium", userEmail: "" });
         }}>
           Report another bug
         </Button>
@@ -145,18 +143,6 @@ export default function ReportBug() {
             onChange={(e) => set("pageUrl")(e.target.value)}
             maxLength={500}
           />
-        </div>
-
-        <div className="space-y-1.5">
-          <Label htmlFor="deviceBrowser">Browser / device info <span className="text-muted-foreground">(optional)</span></Label>
-          <Input
-            id="deviceBrowser"
-            placeholder="Browser name, version, device type"
-            value={form.deviceBrowser}
-            onChange={(e) => set("deviceBrowser")(e.target.value)}
-            maxLength={300}
-          />
-          <p className="text-xs text-muted-foreground">We pre-filled this from your browser — edit or clear if you like.</p>
         </div>
 
         <div className="space-y-1.5">
