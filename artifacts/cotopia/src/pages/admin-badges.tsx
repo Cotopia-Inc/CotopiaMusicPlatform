@@ -209,13 +209,12 @@ function BadgeForm({ initial, onSave, onCancel }: {
   const [isVisible, setIsVisible] = useState(initial?.isVisible ?? true);
   const [isActive, setIsActive] = useState(initial?.isActive ?? true);
 
-  const isValidHex = (v: string) => /^#[0-9a-fA-F]{6}$/.test(v);
-  const colorError = color && !isValidHex(color) ? "Color must be a hex code like #7c3aed. Use the color picker on the left." : null;
+  const isValidHex = (v: string) => /^#[0-9a-fA-F]{6}$/.test(v.trim());
+  const colorWarning = color.trim() && !isValidHex(color) ? "Not a valid hex code — will be saved as the default purple." : null;
 
   function validate() {
     if (!name.trim()) return "Badge name is required.";
     if (!description.trim()) return "A description is required.";
-    if (colorError) return colorError;
     return null;
   }
 
@@ -304,7 +303,7 @@ function BadgeForm({ initial, onSave, onCancel }: {
           <div className="flex items-center gap-2">
             <input
               type="color"
-              value={isValidHex(color) ? color : "#7c3aed"}
+              value={isValidHex(color) ? color.trim() : "#7c3aed"}
               onChange={e => setColor(e.target.value)}
               className="w-9 h-9 rounded cursor-pointer border border-secondary bg-transparent flex-shrink-0"
               title="Click to pick a color"
@@ -314,9 +313,9 @@ function BadgeForm({ initial, onSave, onCancel }: {
                 value={color}
                 onChange={e => setColor(e.target.value)}
                 placeholder="#7c3aed"
-                className={`bg-secondary/50 font-mono text-xs ${colorError ? "border-destructive" : "border-secondary"}`}
+                className={`bg-secondary/50 font-mono text-xs ${colorWarning ? "border-amber-500" : "border-secondary"}`}
               />
-              {colorError && <p className="text-[11px] text-destructive">{colorError}</p>}
+              {colorWarning && <p className="text-[11px] text-amber-400">{colorWarning}</p>}
             </div>
           </div>
         </div>
