@@ -205,7 +205,7 @@ function BadgeForm({ initial, onSave, onCancel }: {
   const [description, setDescription] = useState(initial?.description ?? "");
   const [category, setCategory] = useState(initial?.category ?? "achievement");
   const [icon, setIcon] = useState(initial?.icon ?? "🏆");
-  const [color, setColor] = useState(initial?.color ?? "#7c3aed");
+  const [color, setColor] = useState(initial?.color ?? "");
   const [isVisible, setIsVisible] = useState(initial?.isVisible ?? true);
   const [isActive, setIsActive] = useState(initial?.isActive ?? true);
 
@@ -302,7 +302,7 @@ function BadgeForm({ initial, onSave, onCancel }: {
           <div className="flex items-center gap-2">
             <input
               type="color"
-              value={isValidHex(color) ? color.trim() : "#7c3aed"}
+              value={isValidHex(color) ? color.trim() : "#888888"}
               onChange={e => setColor(e.target.value)}
               className="w-9 h-9 rounded cursor-pointer border border-secondary bg-transparent flex-shrink-0"
               title="Click to pick a color"
@@ -311,10 +311,10 @@ function BadgeForm({ initial, onSave, onCancel }: {
               <Input
                 value={color}
                 onChange={e => setColor(e.target.value)}
-                placeholder="#7c3aed"
+                placeholder="e.g. gold, #762af8"
                 className="bg-secondary/50 border-secondary font-mono text-xs"
               />
-              <p className="text-[11px] text-muted-foreground">Hex (#7c3aed) or any CSS color name (gold, crimson…)</p>
+              <p className="text-[11px] text-muted-foreground">Any hex code or CSS color name. Leave blank for no color.</p>
             </div>
           </div>
         </div>

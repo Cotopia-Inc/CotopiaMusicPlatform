@@ -7,7 +7,7 @@ export const badgesTable = pgTable("badges", {
   description: text("description").notNull(),
   category: text("category").notNull().default("achievement"),
   icon: text("icon").notNull().default("🏆"),
-  color: text("color").notNull().default("#7c3aed"),
+  color: text("color"),
   isVisible: boolean("is_visible").notNull().default(true),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),

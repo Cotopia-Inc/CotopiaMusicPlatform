@@ -66,7 +66,7 @@ router.get("/chat/:contentType/:contentId", optionalAuth, async (req: AuthReques
     : [];
 
   const CATEGORY_PRIORITY: Record<string, number> = { admin: 0, community: 1, creator: 2, beta: 3, achievement: 4 };
-  const primaryBadgeMap = new Map<number, { id: number; name: string; icon: string; color: string; category: string }>();
+  const primaryBadgeMap = new Map<number, { id: number; name: string; icon: string; color: string | null; category: string }>();
   for (const row of badgeRows) {
     const ex = primaryBadgeMap.get(row.userId);
     if (!ex || (CATEGORY_PRIORITY[row.category] ?? 99) < (CATEGORY_PRIORITY[ex.category] ?? 99)) {

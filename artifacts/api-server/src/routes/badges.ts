@@ -169,7 +169,7 @@ router.post("/admin/badges", requireAuth, requireRole(...ADMIN_ROLES), async (re
       description: String(description).trim(),
       category: typeof category === "string" ? category : "achievement",
       icon: typeof icon === "string" && icon.trim() ? icon.trim() : "🏆",
-      color: typeof color === "string" && color.trim() ? color.trim() : "#7c3aed",
+      color: typeof color === "string" && color.trim() ? color.trim() : null,
       isVisible: typeof isVisible === "boolean" ? isVisible : true,
       isActive: typeof isActive === "boolean" ? isActive : true,
     }).returning();
@@ -378,7 +378,7 @@ export async function getPrimaryBadgesForUsers(userIds: number[]): Promise<Map<n
       eq(badgesTable.isVisible, true),
     ));
 
-  const result = new Map<number, { id: number; name: string; icon: string; color: string; category: string }>();
+  const result = new Map<number, { id: number; name: string; icon: string; color: string | null; category: string }>();
   for (const row of rows) {
     const existing = result.get(row.userId);
     if (!existing || primaryBadgeSort(row, existing) < 0) {
