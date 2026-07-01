@@ -48,12 +48,31 @@ export default function Submissions() {
     });
   };
 
+  const STATUS_LABELS: Record<string, string> = {
+    pending_review: "Received",
+    pending_moderator_review: "In Review",
+    moderator_approved: "In Review",
+    escalated_to_admin: "In Review",
+    pending_admin_final_review: "In Review",
+    admin_approved: "Scheduled",
+    approved: "Approved",
+    published: "Published",
+    rejected: "Declined",
+    moderator_rejected: "Declined",
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'approved':
+      case 'admin_approved':
       case 'published': return 'bg-green-500/10 text-green-500 border-green-500/20';
-      case 'rejected': return 'bg-red-500/10 text-red-500 border-red-500/20';
-      case 'pending_review': return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
+      case 'rejected':
+      case 'moderator_rejected': return 'bg-red-500/10 text-red-500 border-red-500/20';
+      case 'pending_review':
+      case 'pending_moderator_review':
+      case 'moderator_approved':
+      case 'escalated_to_admin':
+      case 'pending_admin_final_review': return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
       default: return 'bg-secondary text-secondary-foreground border-secondary-foreground/20';
     }
   };
@@ -113,7 +132,7 @@ export default function Submissions() {
                   <TableCell className="font-semibold">{sub.title}</TableCell>
                   <TableCell>
                     <Badge variant="outline" className={getStatusColor(sub.status)}>
-                      {sub.status.replace('_', ' ')}
+                      {STATUS_LABELS[sub.status] ?? sub.status.replace(/_/g, ' ')}
                     </Badge>
                   </TableCell>
                   <TableCell className="capitalize">{sub.paymentStatus || 'N/A'}</TableCell>

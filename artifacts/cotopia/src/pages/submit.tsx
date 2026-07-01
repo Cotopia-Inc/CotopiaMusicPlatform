@@ -37,26 +37,26 @@ const PLAN_NAMES: Record<string, string> = {
   premium: "Featured Placement",
 };
 
-function getPlanFeatures(tab: "song" | "video"): Record<string, string[]> {
+function getPlanFeatures(_tab: "song" | "video"): Record<string, string[]> {
   return {
     single: [
-      `1 ${tab}`,
-      "Standard review",
+      "One content submission",
+      "Professional review",
       "Artist profile listing",
-      "Standard placement",
+      "Eligible for publishing if approved",
     ],
     basic: [
-      `Up to 20 ${tab}s per batch`,
+      "Batch review",
       "Faster processing",
-      "Standard placement",
       "Artist profile listing",
+      "Eligible for publishing if approved",
     ],
     premium: [
-      "Homepage feature eligibility",
-      tab === "song" ? "Featured music section" : "Featured video section",
       "Priority review",
+      "Featured placement consideration",
+      "Homepage eligibility",
       "Playlist consideration",
-      "Social media consideration when applicable",
+      "Social media consideration when appropriate",
     ],
   };
 }
@@ -621,8 +621,8 @@ export default function Submit() {
         <div className="flex items-center gap-2 text-primary text-sm font-medium">
           <Radio className="w-4 h-4" /><span>EVERYDAY RADIO</span>
         </div>
-        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">Submit Your Content</h1>
-        <p className="text-muted-foreground">Get your music or video in front of our audience. One flat fee covers your entire batch.</p>
+        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">Choose Your Creator Service</h1>
+        <p className="text-muted-foreground">Select the publishing and review option that best fits your release.</p>
       </div>
 
       <VerifyEmailBanner action="submit content" />
@@ -777,7 +777,7 @@ export default function Submit() {
 
           <div className="flex justify-end pt-2">
             <Button onClick={handleStep0Next} className="gap-2 px-6" disabled={activeFiles.length === 0}>
-              Next: Choose Plan <ChevronRight className="w-4 h-4" />
+              Next: Choose Your Service <ChevronRight className="w-4 h-4" />
             </Button>
           </div>
         </div>
@@ -791,8 +791,8 @@ export default function Submit() {
               <Star className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h2 className="font-bold text-lg">Submission Plan</h2>
-              <p className="text-xs text-muted-foreground">One fee covers your entire batch of {activeFiles.length} {tab}{activeFiles.length !== 1 ? "s" : ""}</p>
+              <h2 className="font-bold text-lg">Choose Your Creator Service</h2>
+              <p className="text-xs text-muted-foreground">Select the publishing and review option that best fits your release.</p>
             </div>
           </div>
 
@@ -809,10 +809,10 @@ export default function Submit() {
                   : <Zap className="w-5 h-5 text-amber-400" />;
               const perLabel = "/ submission";
               const subtitle = p === "single"
-                ? `Submit one ${tab} for review and publishing consideration.`
+                ? `Perfect for creators releasing one ${tab}.`
                 : p === "basic"
-                ? `Submit up to 20 ${tab}s under one batch submission.`
-                : "Premium featured placement consideration.";
+                ? `Submit multiple ${tab}s together while saving time.`
+                : "Premium review with consideration for additional visibility throughout Everyday Radio.";
               return (
                 <button key={p} type="button"
                   onClick={() => !locked && setPlan(p)}
@@ -1028,9 +1028,16 @@ export default function Submit() {
               <p className="text-xs text-blue-300"><strong>Demo Mode:</strong> This is a simulated PayPal payment. No real charges.</p>
             </div>
 
+            <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+              <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-amber-300 leading-relaxed">
+                <strong>Important Notice:</strong> Approval is based on Everyday Radio's publishing guidelines. Purchasing a Creator Service does not guarantee publication or featured placement.
+              </p>
+            </div>
+
             {!paymentInitiated ? (
               <Button className="w-full h-12 text-base gap-3 bg-[#0070ba] hover:bg-[#005ea6] text-white" onClick={handleCreateAndInitiate} disabled={!allLegalChecked || isCreating}>
-                {isCreating ? <><Loader2 className="w-4 h-4 animate-spin" />Processing…</> : <><CreditCard className="w-5 h-5" />Pay ${price.toFixed(2)} with PayPal</>}
+                {isCreating ? <><Loader2 className="w-4 h-4 animate-spin" />Processing…</> : <><CreditCard className="w-5 h-5" />Continue to Secure Checkout — ${price.toFixed(2)}</>}
               </Button>
             ) : (
               <div className="space-y-3">
@@ -1063,9 +1070,9 @@ export default function Submit() {
             <CheckCircle className="w-10 h-10 text-green-400" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-2xl font-extrabold">Batch Submitted!</h2>
+            <h2 className="text-2xl font-extrabold">Creator Service Received</h2>
             <p className="text-muted-foreground max-w-md mx-auto">
-              {successTitles.length} {tab}{successTitles.length !== 1 ? "s" : ""} submitted for review.
+              Thank you for your submission. Your content has been added to the review queue. You will receive updates as your submission moves through the review process.
             </p>
           </div>
           {successTitles.length > 1 && (
@@ -1080,7 +1087,7 @@ export default function Submit() {
           )}
           <div className="flex items-center justify-center gap-2 p-4 rounded-lg bg-primary/10 border border-primary/20 max-w-xs mx-auto">
             <Radio className="w-4 h-4 text-primary" />
-            <p className="text-sm font-medium">Status: <span className="text-primary">Pending Review</span></p>
+            <p className="text-sm font-medium">Status: <span className="text-primary">Received</span></p>
           </div>
           {(() => {
             const inactiveCount = tab === "song" ? videoFiles.length : songFiles.length;
@@ -1141,6 +1148,41 @@ export default function Submit() {
           </div>
         </div>
       )}
+
+      {/* ── FAQ ── */}
+      {step < 3 && (
+        <div className="bg-card rounded-xl border border-border shadow-sm p-6 space-y-4">
+          <h3 className="font-bold text-sm">Frequently Asked Questions</h3>
+          <div className="space-y-4 text-sm">
+            <div>
+              <p className="font-medium mb-1">What does the Creator Service fee cover?</p>
+              <p className="text-muted-foreground text-xs leading-relaxed">
+                The Creator Service fee covers the cost of professional review, content processing, and platform hosting. It ensures your submission receives dedicated attention from our editorial team.
+              </p>
+            </div>
+            <div>
+              <p className="font-medium mb-1">Does payment guarantee my content will be published?</p>
+              <p className="text-muted-foreground text-xs leading-relaxed">
+                No. Purchasing a Creator Service does not guarantee publication or featured placement. All submissions are reviewed against Everyday Radio's publishing guidelines and editorial standards.
+              </p>
+            </div>
+            <div>
+              <p className="font-medium mb-1">Can I resubmit if my content is declined?</p>
+              <p className="text-muted-foreground text-xs leading-relaxed">
+                Yes. If your submission is declined, you are welcome to make the necessary adjustments and submit again. Each submission requires a new Creator Service purchase.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Beta notice ── */}
+      <div className="flex items-start gap-3 p-4 rounded-xl border border-border bg-secondary/30 text-sm text-muted-foreground">
+        <Radio className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+        <p className="leading-relaxed">
+          <span className="text-foreground font-medium">Everyday Radio is currently in Beta.</span> Thank you for helping us improve the platform. Your feedback helps shape future updates.
+        </p>
+      </div>
     </div>
   );
 }

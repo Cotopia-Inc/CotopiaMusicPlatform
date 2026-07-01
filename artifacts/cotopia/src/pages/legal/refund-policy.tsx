@@ -35,9 +35,9 @@ export default function RefundPolicy() {
         </div>
       </div>
 
-      <Section title="1. Submission Fees">
-        <p>Submission fees are charged to cover the cost of review, processing, and platform hosting services associated with your content batch.</p>
-        <p><strong className="text-foreground">Submission fees are non-refundable once review has begun.</strong> Review begins immediately or within 24 hours of successful payment capture.</p>
+      <Section title="1. Creator Service Fees">
+        <p>Creator Service fees are charged to cover the cost of professional review, content processing, and platform hosting services associated with your submission.</p>
+        <p><strong className="text-foreground">Creator Service fees are non-refundable once review has begun.</strong> Review begins immediately or within 24 hours of successful payment capture.</p>
         <p>In the event of a technical payment error that results in a double charge, please contact us within 7 days at <a href="mailto:support@cotopia.org" className="text-primary hover:underline">support@cotopia.org</a> and we will investigate and issue a correction where verified.</p>
       </Section>
 
@@ -47,9 +47,9 @@ export default function RefundPolicy() {
         <p>If your campaign has not yet started, please contact us at <a href="mailto:support@cotopia.org" className="text-primary hover:underline">support@cotopia.org</a> within 24 hours of payment to request a cancellation review.</p>
       </Section>
 
-      <Section title="3. Rejected Submissions">
-        <p>If your submission is rejected during review (due to content violations, quality standards, or ineligibility), the submission fee is still non-refundable, as review work has been performed.</p>
-        <p>We will provide a reason for rejection. You may resubmit corrected content by paying a new submission fee.</p>
+      <Section title="3. Declined Submissions">
+        <p>If your submission is declined during review (due to content violations, quality standards, or ineligibility), the Creator Service fee is still non-refundable, as review work has been performed.</p>
+        <p>We will provide a reason for the decision. You may resubmit corrected content by purchasing a new Creator Service.</p>
       </Section>
 
       <Section title="4. Fraudulent Chargebacks">

@@ -1,0 +1,241 @@
+Update all submission pages, payment pages, package cards, confirmation pages, admin pages (where appropriate), emails, and user-facing text to use more professional, creator-friendly language.
+
+IMPORTANT
+
+Do not change any functionality.
+
+Do not change pricing.
+
+Do not change business logic.
+
+Only improve wording throughout the submission process.
+
+----------------------------------------
+GENERAL LANGUAGE
+----------------------------------------
+
+Avoid wording that sounds like users are "paying to upload."
+
+Instead, use language that explains they are purchasing a professional review and publishing service.
+
+Replace words like:
+
+Upload Fee
+Submission Fee
+Pay to Upload
+Purchase Upload
+
+with language such as:
+
+Publishing Review
+Creator Submission Service
+Content Review
+Publishing Consideration
+Featured Placement
+Creator Services
+
+----------------------------------------
+PAGE TITLE
+----------------------------------------
+
+Change
+
+Submission Plan
+
+to
+
+Choose Your Creator Service
+
+Subtitle:
+
+Select the publishing and review option that best fits your release.
+
+----------------------------------------
+PLAN NAMES
+----------------------------------------
+
+Rename plans:
+
+Single Track
+
+to
+
+Single Submission
+
+Basic
+
+to
+
+Batch Submission
+
+Premium
+
+to
+
+Featured Placement
+
+----------------------------------------
+SINGLE SUBMISSION
+----------------------------------------
+
+Title:
+
+Single Submission
+
+Description:
+
+Perfect for creators releasing one song or one video.
+
+Included:
+
+• One content submission
+• Professional review
+• Artist profile listing
+• Eligible for publishing if approved
+
+----------------------------------------
+BATCH SUBMISSION
+----------------------------------------
+
+Title:
+
+Batch Submission
+
+Description:
+
+Submit multiple songs or videos together while saving money.
+
+Included:
+
+• Batch review
+• Faster processing
+• Artist profile listing
+• Eligible for publishing if approved
+
+----------------------------------------
+FEATURED PLACEMENT
+----------------------------------------
+
+Title:
+
+Featured Placement
+
+Description:
+
+Premium review with consideration for additional visibility throughout Everyday Radio.
+
+Included:
+
+• Priority review
+• Featured placement consideration
+• Homepage eligibility
+• Playlist consideration
+• Social media consideration when appropriate
+
+----------------------------------------
+IMPORTANT NOTICE
+----------------------------------------
+
+Display this notice on all payment pages:
+
+Approval is based on Everyday Radio's publishing guidelines.
+
+Purchasing a Creator Service does not guarantee publication or featured placement.
+
+----------------------------------------
+PAYMENT BUTTON
+----------------------------------------
+
+Instead of:
+
+Pay Now
+
+Use:
+
+Continue to Secure Checkout
+
+----------------------------------------
+CONFIRMATION PAGE
+----------------------------------------
+
+Instead of:
+
+Payment Successful
+
+Use:
+
+Creator Service Received
+
+Thank you for your submission.
+
+Your content has been added to the review queue.
+
+You will receive updates as your submission moves through the review process.
+
+----------------------------------------
+ADMIN REVIEW STATUS
+----------------------------------------
+
+Use professional workflow statuses:
+
+Received
+
+In Review
+
+Additional Information Requested
+
+Approved
+
+Scheduled
+
+Published
+
+Featured
+
+Declined
+
+----------------------------------------
+HELP SECTION
+----------------------------------------
+
+Add a short FAQ.
+
+Why is there a Creator Service fee?
+
+The Creator Service helps support content review, moderation, publishing, platform operations, and continued development of Everyday Radio.
+
+Does payment guarantee approval?
+
+No.
+
+Every submission is reviewed to ensure it meets Everyday Radio's quality and community guidelines.
+
+Can I submit more than once?
+
+Yes.
+
+Creators may submit as many songs or videos as they would like.
+
+----------------------------------------
+BETA MESSAGE
+----------------------------------------
+
+Display a small message:
+
+Everyday Radio is currently in Beta.
+
+Thank you for helping us improve the platform.
+
+Your feedback helps shape future updates.
+
+----------------------------------------
+STYLE
+----------------------------------------
+
+Keep the existing theme.
+
+Do not redesign the UI.
+
+Only improve wording and consistency.
+
+Do not modify working functionality.
