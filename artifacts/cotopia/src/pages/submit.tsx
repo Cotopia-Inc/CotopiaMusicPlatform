@@ -26,6 +26,16 @@ const MOODS = ["Energetic", "Chill", "Romantic", "Dark", "Happy", "Melancholic",
 const MAX_FILES_PER_TYPE = 20;
 const MAX_FILES_TOTAL = 20;
 
+// Package-level file limits per plan and content type.
+// These are separate from MAX_FILES_PER_TYPE / MAX_FILES_TOTAL (the raw upload cap).
+// The upload widget still accepts up to 20 files, but the selected creator service
+// controls how many files may be submitted and billed under that package.
+const PACKAGE_LIMITS: Record<"single" | "basic" | "premium", Record<"song" | "video", number>> = {
+  single:  { song: 1,  video: 1 },
+  basic:   { song: 10, video: 5 },
+  premium: { song: 1,  video: 1 },
+};
+
 const PLAN_PRICES = {
   song:  { single: 9.99,  basic: 19.99, premium: 49.99 },
   video: { single: 14.99, basic: 29.99, premium: 79.99 },
@@ -37,21 +47,24 @@ const PLAN_NAMES: Record<string, string> = {
   premium: "Featured Placement",
 };
 
-function getPlanFeatures(_tab: "song" | "video"): Record<string, string[]> {
+function getPlanFeatures(tab: "song" | "video"): Record<string, string[]> {
+  const batchLimit = PACKAGE_LIMITS.basic[tab];
   return {
     single: [
-      "One content submission",
+      `One ${tab} submission (1 file only)`,
       "Professional review",
       "Artist profile listing",
       "Eligible for publishing if approved",
     ],
     basic: [
+      `Up to ${batchLimit} ${tab}s per batch`,
       "Batch review",
       "Faster processing",
       "Artist profile listing",
       "Eligible for publishing if approved",
     ],
     premium: [
+      `One selected ${tab} only (1 file only)`,
       "Priority review",
       "Featured placement consideration",
       "Homepage eligibility",
@@ -414,10 +427,12 @@ export default function Submit() {
   const videoAllUploaded = videoFiles.length > 0 && videoUrls.every(u => u !== null);
   const allUploaded = tab === "song" ? songAllUploaded : videoAllUploaded;
 
-  // Auto-snap plan to the only valid tier whenever file count changes (tab switch, add, remove)
+  // Auto-snap plan whenever file count changes.
+  // premium is valid for 1 file (same as single), so don't override it when going to/from 1 file.
   useEffect(() => {
-    if (activeFiles.length === 1) setPlan("single");
-    else if (activeFiles.length > 1) setPlan("basic");
+    if (activeFiles.length > 1 && plan !== "basic") setPlan("basic");
+    else if (activeFiles.length <= 1 && plan === "basic") setPlan("single");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeFiles.length]);
   const price = PLAN_PRICES[tab][plan];
   const effectiveSongType = songReleaseType || detectReleaseType(songFiles.length, "song");
@@ -510,6 +525,18 @@ export default function Submit() {
       toast({ title: "Track title required", description: `Track ${emptyTitle + 1} is missing a title.`, variant: "destructive" });
       return;
     }
+    // Package limit check — the upload widget accepts up to 20 files, but the selected
+    // creator service has its own cap. 'basic' is the highest-capacity plan.
+    const maxAllowed = PACKAGE_LIMITS.basic[tab];
+    if (activeFiles.length > maxAllowed) {
+      toast({
+        title: "Too many files for this service",
+        description: `This creator service covers up to ${maxAllowed} file${maxAllowed !== 1 ? "s" : ""}. Please remove extra files or choose another service.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Warn when the inactive tab also has files — those need a separate submission
     const inactiveCount = tab === "song" ? videoFiles.length : songFiles.length;
     const inactiveType  = tab === "song" ? "video" : "song";
@@ -521,9 +548,24 @@ export default function Submit() {
       });
     }
 
-    // Lock plan to match file count
-    setPlan(activeFiles.length === 1 ? "single" : "basic");
+    // Snap plan to match file count — preserve premium if already valid (1 file)
+    if (activeFiles.length > 1) setPlan("basic");
+    else if (plan === "basic") setPlan("single");
     setStep(1);
+  }
+
+  // ── Step 1 → Step 2 transition with package-limit guard ──────────────────
+  function handleStep1Next() {
+    const pkgLimit = PACKAGE_LIMITS[plan][tab];
+    if (activeFiles.length > pkgLimit) {
+      toast({
+        title: "Too many files for this service",
+        description: `This creator service covers up to ${pkgLimit} file${pkgLimit !== 1 ? "s" : ""}. Please remove extra files or choose another service.`,
+        variant: "destructive",
+      });
+      return;
+    }
+    setStep(2);
   }
 
   // ── Payment flow ──────────────────────────────────────────────────────────
@@ -808,9 +850,11 @@ export default function Submit() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {(["single", "basic", "premium"] as const).map(p => {
               const isSelected = plan === p;
+              const pkgLimit = PACKAGE_LIMITS[p][tab];
               const locked =
-                (p === "single" && activeFiles.length > 1) ||
-                ((p === "basic" || p === "premium") && activeFiles.length === 1);
+                (p === "single" && activeFiles.length > PACKAGE_LIMITS.single[tab]) ||
+                (p === "basic" && (activeFiles.length < 2 || activeFiles.length > PACKAGE_LIMITS.basic[tab])) ||
+                (p === "premium" && activeFiles.length > PACKAGE_LIMITS.premium[tab]);
               const icon = p === "single"
                 ? <Music className={`w-5 h-5 ${locked ? "text-muted-foreground" : "text-primary"}`} />
                 : p === "basic"
@@ -818,10 +862,10 @@ export default function Submit() {
                   : <Zap className="w-5 h-5 text-amber-400" />;
               const perLabel = "/ submission";
               const subtitle = p === "single"
-                ? `Perfect for creators releasing one ${tab}.`
+                ? `One ${tab} — perfect for a standalone release.`
                 : p === "basic"
-                ? `Submit multiple ${tab}s together while saving time.`
-                : "Premium review with consideration for additional visibility throughout Everyday Radio.";
+                ? `Up to ${pkgLimit} ${tab}s per batch — save time with a multi-file review.`
+                : `One ${tab} — priority review with featured placement consideration.`;
               return (
                 <button key={p} type="button"
                   onClick={() => !locked && setPlan(p)}
@@ -837,7 +881,11 @@ export default function Submit() {
                     <div className="absolute top-3 right-3 flex items-center gap-1 bg-destructive/10 border border-destructive/20 rounded-full px-2 py-0.5">
                       <AlertCircle className="w-2.5 h-2.5 text-destructive" />
                       <span className="text-[9px] text-destructive font-medium">
-                        {p === "single" ? "1 file max" : "2+ files needed"}
+                        {p === "basic" && activeFiles.length < 2
+                          ? "2+ files needed"
+                          : p === "basic" && activeFiles.length > pkgLimit
+                            ? `Max ${pkgLimit} ${tab}s`
+                            : "1 file max"}
                       </span>
                     </div>
                   )}
@@ -863,8 +911,12 @@ export default function Submit() {
                       <AlertCircle className="w-3 h-3 text-destructive flex-shrink-0" />
                       <span className="text-[10px] text-destructive/80">
                         {p === "single"
-                          ? `You have ${activeFiles.length} files — choose Batch Submission or Featured Placement.`
-                          : "You have 1 file — only Single Submission is available."}
+                          ? `You have ${activeFiles.length} files — Single covers 1 ${tab} only.`
+                          : p === "premium"
+                            ? `You have ${activeFiles.length} file${activeFiles.length !== 1 ? "s" : ""} — Featured Placement covers 1 ${tab} only.`
+                            : activeFiles.length < 2
+                              ? `You have 1 file — Batch needs 2 or more ${tab}s.`
+                              : `You have ${activeFiles.length} ${tab}s — Batch covers up to ${pkgLimit}. Remove ${activeFiles.length - pkgLimit} file${activeFiles.length - pkgLimit !== 1 ? "s" : ""}.`}
                       </span>
                     </div>
                   )}
@@ -889,7 +941,7 @@ export default function Submit() {
             <Button type="button" variant="outline" onClick={() => setStep(0)} className="gap-2">
               <ChevronLeft className="w-4 h-4" />Back
             </Button>
-            <Button onClick={() => setStep(2)} className="gap-2 px-6">
+            <Button onClick={handleStep1Next} className="gap-2 px-6">
               Next: Payment <ChevronRight className="w-4 h-4" />
             </Button>
           </div>

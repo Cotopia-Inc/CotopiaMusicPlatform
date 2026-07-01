@@ -127,6 +127,12 @@ router.post("/submissions", requireAuth, requireVerifiedEmail, async (req: AuthR
   res.status(201).json(enriched);
 });
 
+// TODO: Before live payments, enforce the same package file limits on the backend/server
+// so users cannot bypass frontend rules. Add a check here that rejects batches where
+// files.length exceeds the plan's limit:
+//   single  → 1 file  (song or video)
+//   basic   → 10 songs / 5 videos
+//   premium → 1 file  (song or video)
 router.post("/submissions/bulk", requireAuth, requireVerifiedEmail, async (req: AuthRequest, res): Promise<void> => {
   const parsed = CreateBulkSubmissionBody.safeParse(req.body);
   if (!parsed.success) {
