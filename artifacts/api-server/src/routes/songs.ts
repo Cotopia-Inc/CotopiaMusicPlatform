@@ -37,6 +37,8 @@ async function getSongWithArtist(id: number, userId?: number) {
       isFeatured: songsTable.isFeatured,
       status: songsTable.status,
       createdAt: songsTable.createdAt,
+      lyrics: songsTable.lyrics,
+      credits: songsTable.credits,
     })
     .from(songsTable)
     .leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id))

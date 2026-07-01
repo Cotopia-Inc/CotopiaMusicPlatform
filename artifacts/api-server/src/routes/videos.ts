@@ -34,6 +34,7 @@ async function getVideoWithArtist(id: number, userId?: number) {
       isFeatured: videosTable.isFeatured,
       status: videosTable.status,
       description: videosTable.description,
+      credits: videosTable.credits,
       createdAt: videosTable.createdAt,
     })
     .from(videosTable)
