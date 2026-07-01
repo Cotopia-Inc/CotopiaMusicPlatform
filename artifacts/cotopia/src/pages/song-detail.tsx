@@ -3,7 +3,7 @@ import {
   useGetSong, getGetSongQueryKey,
   useGetChatMessages, getGetChatMessagesQueryKey, usePostChatMessage,
   useRateSong, useFavoriteSong, useUnfavoriteSong,
-  useDeleteSong, useUpdateSong, useTrackAnalyticsEvent,
+  useDeleteSong, useUpdateSong, useUpdateArtist, useTrackAnalyticsEvent,
 } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Play, Pause, Heart, Star, Send, Radio, Users, MessageCircle, ArrowLeft, Trash2, Edit2, X, Save, Upload, ImageIcon } from "lucide-react";
@@ -14,6 +14,7 @@ import { usePlatformConfig } from "@/lib/platform-config";
 import { usePlayer } from "@/lib/player";
 import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
@@ -87,11 +88,15 @@ export default function SongDetail() {
   const unfavoriteMutation = useUnfavoriteSong();
   const deleteSongMutation = useDeleteSong();
   const updateSongMutation = useUpdateSong();
+  const updateArtistMutation = useUpdateArtist();
   const [, navigate] = useLocation();
   const [editOpen, setEditOpen] = useState(false);
   const [editTitle, setEditTitle] = useState("");
   const [editGenre, setEditGenre] = useState("");
   const [editCoverUrl, setEditCoverUrl] = useState("");
+  const [editLyrics, setEditLyrics] = useState("");
+  const [editCredits, setEditCredits] = useState("");
+  const [editStageName, setEditStageName] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const coverUpload = useUpload({
     onSuccess: (res) => setEditCoverUrl(`/api/storage${res.objectPath}`),
@@ -163,23 +168,37 @@ export default function SongDetail() {
     setEditTitle(song?.title ?? "");
     setEditGenre(song?.genre ?? "");
     setEditCoverUrl(song?.coverUrl ?? "");
+    setEditLyrics((song as any)?.lyrics ?? "");
+    setEditCredits((song as any)?.credits ?? "");
+    setEditStageName(song?.artistName ?? "");
     setConfirmDelete(false);
     setEditOpen(true);
   };
 
   const handleSaveEdit = () => {
     if (!song) return;
-    updateSongMutation.mutate(
-      { id: songId, data: { title: editTitle.trim(), genre: editGenre.trim() || undefined, coverUrl: editCoverUrl || undefined } },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getGetSongQueryKey(songId) });
-          setEditOpen(false);
-          toast({ title: "Track updated" });
-        },
-        onError: () => toast({ variant: "destructive", title: "Failed to update track" }),
-      }
-    );
+    const stageNameChanged = editStageName.trim() && editStageName.trim() !== song.artistName;
+    const songPromise = new Promise<void>((resolve, reject) => {
+      updateSongMutation.mutate(
+        { id: songId, data: { title: editTitle.trim(), genre: editGenre.trim() || undefined, coverUrl: editCoverUrl || undefined, lyrics: editLyrics.trim() || undefined, credits: editCredits.trim() || undefined } },
+        { onSuccess: () => resolve(), onError: reject }
+      );
+    });
+    const artistPromise = stageNameChanged && song.artistId
+      ? new Promise<void>((resolve, reject) => {
+          updateArtistMutation.mutate(
+            { id: song.artistId!, data: { stageName: editStageName.trim() } },
+            { onSuccess: () => resolve(), onError: reject }
+          );
+        })
+      : Promise.resolve();
+    Promise.all([songPromise, artistPromise])
+      .then(() => {
+        queryClient.invalidateQueries({ queryKey: getGetSongQueryKey(songId) });
+        setEditOpen(false);
+        toast({ title: "Track updated" });
+      })
+      .catch(() => toast({ variant: "destructive", title: "Failed to update track" }));
   };
 
   const handleDeleteSong = () => {
@@ -342,6 +361,10 @@ export default function SongDetail() {
                   <button onClick={() => setEditOpen(false)}><X className="w-3.5 h-3.5 text-muted-foreground" /></button>
                 </div>
                 <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Stage Name</label>
+                  <Input value={editStageName} onChange={e => setEditStageName(e.target.value)} placeholder="Your artist name…" className="h-8 text-sm bg-secondary/50" />
+                </div>
+                <div>
                   <label className="text-xs text-muted-foreground mb-1 block">Title</label>
                   <Input value={editTitle} onChange={e => setEditTitle(e.target.value)} className="h-8 text-sm bg-secondary/50" />
                 </div>
@@ -370,10 +393,18 @@ export default function SongDetail() {
                     </label>
                   </div>
                 </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Lyrics</label>
+                  <Textarea value={editLyrics} onChange={e => setEditLyrics(e.target.value)} placeholder="Add lyrics…" className="text-sm bg-secondary/50 min-h-[100px] resize-y" />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Credits</label>
+                  <Textarea value={editCredits} onChange={e => setEditCredits(e.target.value)} placeholder="Produced by, written by…" className="text-sm bg-secondary/50 min-h-[60px] resize-y" />
+                </div>
                 <div className="flex justify-end gap-2">
                   <Button variant="ghost" size="sm" onClick={() => setEditOpen(false)} className="h-7 text-xs">Cancel</Button>
-                  <Button size="sm" onClick={handleSaveEdit} disabled={updateSongMutation.isPending || !editTitle.trim() || coverUpload.isUploading} className="h-7 text-xs gap-1.5">
-                    <Save className="w-3 h-3" /> {updateSongMutation.isPending ? "Saving…" : "Save"}
+                  <Button size="sm" onClick={handleSaveEdit} disabled={updateSongMutation.isPending || updateArtistMutation.isPending || !editTitle.trim() || coverUpload.isUploading} className="h-7 text-xs gap-1.5">
+                    <Save className="w-3 h-3" /> {(updateSongMutation.isPending || updateArtistMutation.isPending) ? "Saving…" : "Save"}
                   </Button>
                 </div>
               </div>

@@ -1,8 +1,8 @@
 import { useParams, Link, useLocation } from "wouter";
 import { useEffect, useRef, useState, useCallback } from "react";
-import { useGetArtist, getGetArtistQueryKey, useFollowArtist, useUnfollowArtist, useTrackAnalyticsEvent } from "@workspace/api-client-react";
+import { useGetArtist, getGetArtistQueryKey, useFollowArtist, useUnfollowArtist, useTrackAnalyticsEvent, useUpdateArtist } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Play, Users, Music, MessageCircle, ArrowLeft, Volume2, VolumeX, ShieldCheck, Loader2, UserCog, UserMinus, Search } from "lucide-react";
+import { Play, Users, Music, MessageCircle, ArrowLeft, Volume2, VolumeX, ShieldCheck, Loader2, UserCog, UserMinus, Search, Edit2, Save, X } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { RoleBadges } from "@/components/role-badges";
 import { BadgeList } from "@/components/badge-chip";
@@ -16,6 +16,7 @@ import { SongMenu } from "@/components/song-menu";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 function getAuthHeader(): Record<string, string> {
   const token = localStorage.getItem("cotopia_token");
@@ -55,6 +56,11 @@ export default function ArtistDetail() {
   const [assignLoading, setAssignLoading] = useState(false);
   const [assignSearching, setAssignSearching] = useState(false);
   const [unlinkLoading, setUnlinkLoading] = useState(false);
+  const [editProfileOpen, setEditProfileOpen] = useState(false);
+  const [editStageName, setEditStageName] = useState("");
+  const [editBio, setEditBio] = useState("");
+  const [editGenre, setEditGenre] = useState("");
+  const updateArtistMutation = useUpdateArtist();
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isAdmin = ADMIN_ROLES.includes((user as any)?.role ?? "");
 
@@ -280,6 +286,22 @@ export default function ArtistDetail() {
                 Message
               </Button>
             )}
+            {user?.id === (artist as any).userId && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-full px-4 md:px-6 gap-1.5 md:text-base md:h-11"
+                onClick={() => {
+                  setEditStageName(artist.stageName ?? "");
+                  setEditBio((artist as any).bio ?? "");
+                  setEditGenre(artist.genre ?? "");
+                  setEditProfileOpen(true);
+                }}
+              >
+                <Edit2 className="w-4 h-4" />
+                Edit Profile
+              </Button>
+            )}
             {user &&
               user.id !== (artist as any).userId &&
               (user as any).username?.trim().toLowerCase() === artist.stageName.trim().toLowerCase() && (
@@ -322,6 +344,50 @@ export default function ArtistDetail() {
           </div>
         </div>
       </div>
+
+      {editProfileOpen && (
+        <div className="bg-secondary/40 rounded-xl border border-border p-4 space-y-3 mx-4 md:mx-8">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold">Edit Profile</span>
+            <button onClick={() => setEditProfileOpen(false)}><X className="w-3.5 h-3.5 text-muted-foreground" /></button>
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground mb-1 block">Stage Name</label>
+            <Input value={editStageName} onChange={e => setEditStageName(e.target.value)} placeholder="Your artist name…" className="h-8 text-sm bg-secondary/50" />
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground mb-1 block">Genre</label>
+            <Input value={editGenre} onChange={e => setEditGenre(e.target.value)} placeholder="e.g. Hip-Hop, Electronic…" className="h-8 text-sm bg-secondary/50" />
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground mb-1 block">Bio</label>
+            <Textarea value={editBio} onChange={e => setEditBio(e.target.value)} placeholder="Tell your fans about yourself…" className="text-sm bg-secondary/50 min-h-[80px] resize-y" />
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="ghost" size="sm" onClick={() => setEditProfileOpen(false)} className="h-7 text-xs">Cancel</Button>
+            <Button
+              size="sm"
+              disabled={updateArtistMutation.isPending || !editStageName.trim()}
+              className="h-7 text-xs gap-1.5"
+              onClick={() => {
+                updateArtistMutation.mutate(
+                  { id: artistId, data: { stageName: editStageName.trim(), bio: editBio.trim() || undefined, genre: editGenre.trim() || undefined } },
+                  {
+                    onSuccess: () => {
+                      queryClient.invalidateQueries({ queryKey: getGetArtistQueryKey(artistId) });
+                      setEditProfileOpen(false);
+                      toast({ title: "Profile updated" });
+                    },
+                    onError: () => toast({ variant: "destructive", title: "Failed to update profile" }),
+                  }
+                );
+              }}
+            >
+              <Save className="w-3 h-3" /> {updateArtistMutation.isPending ? "Saving…" : "Save"}
+            </Button>
+          </div>
+        </div>
+      )}
 
       <div className="px-8">
         <Tabs defaultValue="tracks">

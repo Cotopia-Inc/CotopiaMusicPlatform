@@ -3,7 +3,7 @@ import {
   useGetVideo, getGetVideoQueryKey,
   useGetChatMessages, getGetChatMessagesQueryKey, usePostChatMessage,
   useRateVideo, useFavoriteVideo, useUnfavoriteVideo, useTrackAnalyticsEvent,
-  useDeleteVideo, useUpdateVideo,
+  useDeleteVideo, useUpdateVideo, useUpdateArtist,
 } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Play, Heart, Star, Send, Radio, Users, MessageCircle, Maximize2, ArrowLeft, Trash2, Edit2, X, Save, Upload, ImageIcon, ListPlus, Pencil, Shield, ShieldOff, Check } from "lucide-react";
@@ -15,6 +15,7 @@ import { useAuth } from "@/lib/auth";
 import { usePlatformConfig } from "@/lib/platform-config";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
@@ -163,10 +164,14 @@ export default function VideoDetail() {
   const deleteVideoMutation = useDeleteVideo();
   const updateVideoMutation = useUpdateVideo();
   const [, navigate] = useLocation();
+  const updateArtistMutation = useUpdateArtist();
   const [editOpen, setEditOpen] = useState(false);
   const [editTitle, setEditTitle] = useState("");
   const [editGenre, setEditGenre] = useState("");
   const [editThumbnailUrl, setEditThumbnailUrl] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editCredits, setEditCredits] = useState("");
+  const [editStageName, setEditStageName] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const thumbnailUpload = useUpload({
     onSuccess: (res) => setEditThumbnailUrl(`/api/storage${res.objectPath}`),
@@ -238,23 +243,37 @@ export default function VideoDetail() {
     setEditTitle(video?.title ?? "");
     setEditGenre(video?.genre ?? "");
     setEditThumbnailUrl(video?.thumbnailUrl ?? "");
+    setEditDescription((video as any)?.description ?? "");
+    setEditCredits((video as any)?.credits ?? "");
+    setEditStageName((video as any)?.artistName ?? "");
     setConfirmDelete(false);
     setEditOpen(true);
   };
 
   const handleSaveEdit = () => {
     if (!video) return;
-    updateVideoMutation.mutate(
-      { id: videoId, data: { title: editTitle.trim(), genre: editGenre.trim() || undefined, thumbnailUrl: editThumbnailUrl || undefined } },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getGetVideoQueryKey(videoId) });
-          setEditOpen(false);
-          toast({ title: "Video updated" });
-        },
-        onError: () => toast({ variant: "destructive", title: "Failed to update video" }),
-      }
-    );
+    const stageNameChanged = editStageName.trim() && editStageName.trim() !== (video as any).artistName;
+    const videoPromise = new Promise<void>((resolve, reject) => {
+      updateVideoMutation.mutate(
+        { id: videoId, data: { title: editTitle.trim(), genre: editGenre.trim() || undefined, thumbnailUrl: editThumbnailUrl || undefined, description: editDescription.trim() || undefined, credits: editCredits.trim() || undefined } },
+        { onSuccess: () => resolve(), onError: reject }
+      );
+    });
+    const artistPromise = stageNameChanged && (video as any).artistId
+      ? new Promise<void>((resolve, reject) => {
+          updateArtistMutation.mutate(
+            { id: (video as any).artistId, data: { stageName: editStageName.trim() } },
+            { onSuccess: () => resolve(), onError: reject }
+          );
+        })
+      : Promise.resolve();
+    Promise.all([videoPromise, artistPromise])
+      .then(() => {
+        queryClient.invalidateQueries({ queryKey: getGetVideoQueryKey(videoId) });
+        setEditOpen(false);
+        toast({ title: "Video updated" });
+      })
+      .catch(() => toast({ variant: "destructive", title: "Failed to update video" }));
   };
 
   const handleDeleteVideo = () => {
@@ -629,6 +648,10 @@ export default function VideoDetail() {
                   <button onClick={() => setEditOpen(false)}><X className="w-3.5 h-3.5 text-muted-foreground" /></button>
                 </div>
                 <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Stage Name</label>
+                  <Input value={editStageName} onChange={e => setEditStageName(e.target.value)} placeholder="Your artist name…" className="h-8 text-sm bg-secondary/50" />
+                </div>
+                <div>
                   <label className="text-xs text-muted-foreground mb-1 block">Title</label>
                   <Input value={editTitle} onChange={e => setEditTitle(e.target.value)} className="h-8 text-sm bg-secondary/50" />
                 </div>
@@ -657,10 +680,18 @@ export default function VideoDetail() {
                     </label>
                   </div>
                 </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Description</label>
+                  <Textarea value={editDescription} onChange={e => setEditDescription(e.target.value)} placeholder="What's this video about…" className="text-sm bg-secondary/50 min-h-[80px] resize-y" />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Credits</label>
+                  <Textarea value={editCredits} onChange={e => setEditCredits(e.target.value)} placeholder="Directed by, produced by…" className="text-sm bg-secondary/50 min-h-[60px] resize-y" />
+                </div>
                 <div className="flex justify-end gap-2">
                   <Button variant="ghost" size="sm" onClick={() => setEditOpen(false)} className="h-7 text-xs">Cancel</Button>
-                  <Button size="sm" onClick={handleSaveEdit} disabled={updateVideoMutation.isPending || !editTitle.trim() || thumbnailUpload.isUploading} className="h-7 text-xs gap-1.5">
-                    <Save className="w-3 h-3" /> {updateVideoMutation.isPending ? "Saving…" : "Save"}
+                  <Button size="sm" onClick={handleSaveEdit} disabled={updateVideoMutation.isPending || updateArtistMutation.isPending || !editTitle.trim() || thumbnailUpload.isUploading} className="h-7 text-xs gap-1.5">
+                    <Save className="w-3 h-3" /> {(updateVideoMutation.isPending || updateArtistMutation.isPending) ? "Saving…" : "Save"}
                   </Button>
                 </div>
               </div>
