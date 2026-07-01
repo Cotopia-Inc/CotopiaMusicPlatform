@@ -12,8 +12,13 @@ const STEPS = ["Received", "In Review", "Approved", "Scheduled", "Published"] as
 function statusToStep(status: string): number {
   switch (status) {
     case "draft": return 0;
-    case "pending_review": return 1;
+    case "pending_review":
+    case "pending_moderator_review":
+    case "moderator_approved":
+    case "escalated_to_admin":
+    case "pending_admin_final_review": return 1;
     case "approved": return 2;
+    case "admin_approved": return 3;
     case "published": return 4;
     default: return 0;
   }
@@ -60,8 +65,9 @@ export default function CreatorDashboard() {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   const submissions = data ?? [];
-  const active = submissions.filter(s => s.status !== "rejected");
-  const rejected = submissions.filter(s => s.status === "rejected");
+  const REJECTED_STATUSES = ["rejected", "moderator_rejected"];
+  const active = submissions.filter(s => !REJECTED_STATUSES.includes(s.status));
+  const rejected = submissions.filter(s => REJECTED_STATUSES.includes(s.status));
   const published = submissions.filter(s => s.status === "published");
   const inProgress = active.filter(s => s.status !== "published");
 
