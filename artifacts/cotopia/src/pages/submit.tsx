@@ -155,6 +155,7 @@ interface SharedMeta {
   genre: string;
   mood: string;
   description: string;
+  lyrics: string;
   credits: string;
   releaseDate: string;
   isExplicit: boolean;
@@ -199,6 +200,13 @@ function MetadataSection({ meta, onChange, type }: { meta: SharedMeta; onChange:
         <Label>Description <span className="text-muted-foreground text-xs">(optional, shared across all tracks)</span></Label>
         <Textarea placeholder="Tell us about this release — the story, the inspiration, the vibe..." rows={2} value={meta.description} onChange={e => set({ description: e.target.value })} className="bg-secondary/50 border-secondary resize-none" />
       </div>
+
+      {type === "song" && (
+        <div className="space-y-2">
+          <Label>Lyrics <span className="text-muted-foreground text-xs">(optional, shared across all tracks)</span></Label>
+          <Textarea placeholder="Paste your song lyrics here..." rows={4} value={meta.lyrics} onChange={e => set({ lyrics: e.target.value })} className="bg-secondary/50 border-secondary resize-none font-mono text-sm" />
+        </div>
+      )}
 
       <div className="space-y-2">
         <Label>Credits <span className="text-muted-foreground text-xs">(optional, shared across all tracks)</span></Label>
@@ -353,7 +361,7 @@ function FileList({
 }
 
 // ── Main component ─────────────────────────────────────────────────────────────
-const defaultMeta: SharedMeta = { artistName: "", labelName: "", genre: "", mood: "", description: "", credits: "", releaseDate: "", isExplicit: false, coverUrl: "" };
+const defaultMeta: SharedMeta = { artistName: "", labelName: "", genre: "", mood: "", description: "", lyrics: "", credits: "", releaseDate: "", isExplicit: false, coverUrl: "" };
 
 export default function Submit() {
   const { user } = useAuth();
@@ -567,6 +575,7 @@ export default function Submit() {
           genre: meta.genre || undefined,
           mood: meta.mood || undefined,
           description: descriptionWithRelease || undefined,
+          lyrics: tab === "song" ? (meta.lyrics || undefined) : undefined,
           credits: meta.credits || undefined,
           coverUrl: meta.coverUrl || undefined,
           releaseDate: meta.releaseDate || undefined,

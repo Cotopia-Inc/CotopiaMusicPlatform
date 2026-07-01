@@ -14,6 +14,7 @@ export interface AdminBulkUploadVideosInput {
   mood?: string;
   isExplicit?: boolean;
   description?: string;
+  credits?: string;
   thumbnailUrl?: string;
   releaseDate?: string;
   isFeatured?: boolean;

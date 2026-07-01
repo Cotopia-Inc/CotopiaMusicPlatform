@@ -725,6 +725,7 @@ export interface SubmissionInput {
   genre?: string;
   mood?: string;
   description?: string;
+  lyrics?: string;
   credits?: string;
   fileUrl?: string;
   coverUrl?: string;
@@ -762,6 +763,7 @@ export interface BulkSubmissionInput {
   genre?: string;
   mood?: string;
   description?: string;
+  lyrics?: string;
   credits?: string;
   coverUrl?: string;
   releaseDate?: string;
@@ -1269,6 +1271,7 @@ export interface AdminUploadSongInput {
   releaseDate?: string;
   releaseType?: AdminUploadSongInputReleaseType;
   isFeatured?: boolean;
+  lyrics?: string;
   credits?: string;
 }
 
@@ -1299,6 +1302,8 @@ export interface AdminBulkUploadSongsInput {
   coverUrl?: string;
   releaseDate?: string;
   isFeatured?: boolean;
+  lyrics?: string;
+  credits?: string;
   songs: AdminBulkUploadSongsInputSongsItem[];
 }
 
@@ -1332,6 +1337,7 @@ export interface AdminBulkUploadVideosInput {
   mood?: string;
   isExplicit?: boolean;
   description?: string;
+  credits?: string;
   thumbnailUrl?: string;
   releaseDate?: string;
   isFeatured?: boolean;

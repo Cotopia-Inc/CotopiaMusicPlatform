@@ -17,6 +17,7 @@ export interface BulkSubmissionInput {
   genre?: string;
   mood?: string;
   description?: string;
+  lyrics?: string;
   credits?: string;
   coverUrl?: string;
   releaseDate?: string;

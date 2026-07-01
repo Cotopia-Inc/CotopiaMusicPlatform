@@ -19,5 +19,7 @@ export interface AdminBulkUploadSongsInput {
   coverUrl?: string;
   releaseDate?: string;
   isFeatured?: boolean;
+  lyrics?: string;
+  credits?: string;
   songs: AdminBulkUploadSongsInputSongsItem[];
 }

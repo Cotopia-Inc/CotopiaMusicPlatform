@@ -130,6 +130,7 @@ export default function AdminUploadSong() {
     coverUrl: "",
     releaseDate: "",
     isFeatured: false,
+    lyrics: "",
     credits: "",
   });
   const [singleDone, setSingleDone] = useState<{ id: number; title: string } | null>(null);
@@ -164,6 +165,7 @@ export default function AdminUploadSong() {
           releaseDate: form.releaseDate || undefined,
           releaseType: "single",
           isFeatured: form.isFeatured,
+          lyrics: form.lyrics || undefined,
           credits: form.credits || undefined,
         },
       });
@@ -280,7 +282,7 @@ export default function AdminUploadSong() {
         </div>
         <div className="flex gap-3">
           <Link href={`/songs/${singleDone.id}`}><Button variant="outline">View Song</Button></Link>
-          <Button onClick={() => { setSingleDone(null); setForm({ title: "", userId: 0, genre: "", mood: "", isExplicit: false, duration: 0, streamUrl: "", coverUrl: "", releaseDate: "", isFeatured: false, credits: "" }); }}>
+          <Button onClick={() => { setSingleDone(null); setForm({ title: "", userId: 0, genre: "", mood: "", isExplicit: false, duration: 0, streamUrl: "", coverUrl: "", releaseDate: "", isFeatured: false, lyrics: "", credits: "" }); }}>
             Upload Another
           </Button>
         </div>
@@ -437,6 +439,18 @@ export default function AdminUploadSong() {
                 <p className="text-xs text-muted-foreground">Mark this song as containing explicit lyrics</p>
               </div>
               <Switch checked={form.isExplicit} onCheckedChange={v => setForm(f => ({ ...f, isExplicit: v }))} />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="lyrics">Lyrics <span className="text-muted-foreground text-xs">(optional)</span></Label>
+              <Textarea
+                id="lyrics"
+                placeholder="Paste song lyrics here..."
+                rows={4}
+                value={form.lyrics}
+                onChange={e => setForm(f => ({ ...f, lyrics: e.target.value }))}
+                className="resize-none text-sm font-mono"
+              />
             </div>
 
             <div className="space-y-2">

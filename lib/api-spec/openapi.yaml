@@ -3939,6 +3939,8 @@ components:
           type: string
         description:
           type: string
+        lyrics:
+          type: string
         credits:
           type: string
         fileUrl:
@@ -3970,6 +3972,8 @@ components:
         mood:
           type: string
         description:
+          type: string
+        lyrics:
           type: string
         credits:
           type: string
@@ -4658,6 +4662,8 @@ components:
           enum: [single, ep, album]
         isFeatured:
           type: boolean
+        lyrics:
+          type: string
         credits:
           type: string
 
@@ -4686,6 +4692,10 @@ components:
           type: string
         isFeatured:
           type: boolean
+        lyrics:
+          type: string
+        credits:
+          type: string
         songs:
           type: array
           items:
@@ -4747,6 +4757,8 @@ components:
         isExplicit:
           type: boolean
         description:
+          type: string
+        credits:
           type: string
         thumbnailUrl:
           type: string

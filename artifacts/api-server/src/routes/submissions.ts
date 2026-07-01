@@ -74,6 +74,7 @@ router.post("/submissions", requireAuth, requireVerifiedEmail, async (req: AuthR
     labelName: d.labelName,
     mood: d.mood,
     description: d.description,
+    credits: d.credits,
     releaseDate: d.releaseDate,
     isExplicit: d.isExplicit ?? false,
     artistName: d.artistName,
@@ -92,6 +93,8 @@ router.post("/submissions", requireAuth, requireVerifiedEmail, async (req: AuthR
       status: "draft",
       duration: 0,
       releaseDate: d.releaseDate ?? null,
+      lyrics: d.lyrics ?? null,
+      credits: d.credits ?? null,
     }).returning();
     contentId = song.id;
   } else {
@@ -105,6 +108,7 @@ router.post("/submissions", requireAuth, requireVerifiedEmail, async (req: AuthR
       status: "draft",
       duration: 0,
       releaseDate: d.releaseDate ?? null,
+      credits: d.credits ?? null,
     }).returning();
     contentId = video.id;
   }
@@ -147,6 +151,7 @@ router.post("/submissions/bulk", requireAuth, requireVerifiedEmail, async (req: 
     labelName: d.labelName,
     mood: d.mood,
     description: d.description,
+    credits: d.credits,
     releaseDate: d.releaseDate,
     isExplicit: d.isExplicit ?? false,
     artistName: d.artistName,
@@ -168,6 +173,8 @@ router.post("/submissions/bulk", requireAuth, requireVerifiedEmail, async (req: 
         status: "draft",
         duration: 0,
         releaseDate: d.releaseDate ?? null,
+        lyrics: d.lyrics ?? null,
+        credits: d.credits ?? null,
       }).returning();
       contentId = song.id;
     } else {
@@ -181,6 +188,7 @@ router.post("/submissions/bulk", requireAuth, requireVerifiedEmail, async (req: 
         status: "draft",
         duration: 0,
         releaseDate: d.releaseDate ?? null,
+        credits: d.credits ?? null,
       }).returning();
       contentId = video.id;
     }

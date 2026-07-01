@@ -1362,6 +1362,7 @@ export const CreateSubmissionBody = zod.object({
   "genre": zod.string().optional(),
   "mood": zod.string().optional(),
   "description": zod.string().optional(),
+  "lyrics": zod.string().optional(),
   "credits": zod.string().optional(),
   "fileUrl": zod.string().optional(),
   "coverUrl": zod.string().optional(),
@@ -1385,6 +1386,7 @@ export const CreateBulkSubmissionBody = zod.object({
   "genre": zod.string().optional(),
   "mood": zod.string().optional(),
   "description": zod.string().optional(),
+  "lyrics": zod.string().optional(),
   "credits": zod.string().optional(),
   "coverUrl": zod.string().optional(),
   "releaseDate": zod.string().optional(),
@@ -2569,6 +2571,7 @@ export const AdminUploadSongBody = zod.object({
   "releaseDate": zod.string().optional(),
   "releaseType": zod.enum(['single', 'ep', 'album']).optional(),
   "isFeatured": zod.boolean().optional(),
+  "lyrics": zod.string().optional(),
   "credits": zod.string().optional()
 })
 
@@ -2587,6 +2590,8 @@ export const AdminBulkUploadSongsBody = zod.object({
   "coverUrl": zod.string().optional(),
   "releaseDate": zod.string().optional(),
   "isFeatured": zod.boolean().optional(),
+  "lyrics": zod.string().optional(),
+  "credits": zod.string().optional(),
   "songs": zod.array(zod.object({
   "title": zod.string(),
   "streamUrl": zod.string(),
@@ -2606,6 +2611,7 @@ export const AdminBulkUploadVideosBody = zod.object({
   "mood": zod.string().optional(),
   "isExplicit": zod.boolean().optional(),
   "description": zod.string().optional(),
+  "credits": zod.string().optional(),
   "thumbnailUrl": zod.string().optional(),
   "releaseDate": zod.string().optional(),
   "isFeatured": zod.boolean().optional(),

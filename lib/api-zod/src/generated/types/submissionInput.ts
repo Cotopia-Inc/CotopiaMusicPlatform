@@ -17,6 +17,7 @@ export interface SubmissionInput {
   genre?: string;
   mood?: string;
   description?: string;
+  lyrics?: string;
   credits?: string;
   fileUrl?: string;
   coverUrl?: string;
