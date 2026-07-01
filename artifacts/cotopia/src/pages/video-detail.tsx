@@ -6,7 +6,7 @@ import {
   useDeleteVideo, useUpdateVideo, useUpdateArtist,
 } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Play, Heart, Star, Send, Radio, Users, MessageCircle, Maximize2, ArrowLeft, Trash2, Edit2, X, Save, Upload, ImageIcon, ListPlus, Pencil, Shield, ShieldOff, Check } from "lucide-react";
+import { Play, Heart, Star, Send, Radio, Users, MessageCircle, Maximize2, ArrowLeft, Trash2, Edit2, X, Save, Upload, ImageIcon, ListPlus, Pencil, Shield, ShieldOff, Check, AlignLeft, ChevronDown, ChevronUp } from "lucide-react";
 import { RoleTag } from "@/components/role-badges";
 import { ReportModal } from "@/components/report-modal";
 import { VerifyEmailBanner } from "@/components/verify-email-banner";
@@ -173,6 +173,7 @@ export default function VideoDetail() {
   const [editCredits, setEditCredits] = useState("");
   const [editStageName, setEditStageName] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [descExpanded, setDescExpanded] = useState(false);
   const thumbnailUpload = useUpload({
     onSuccess: (res) => setEditThumbnailUrl(`/api/storage${res.objectPath}`),
   });
@@ -712,17 +713,92 @@ export default function VideoDetail() {
         )}
 
         {/* Description */}
-        {video.description && (
-          <p className="text-muted-foreground text-sm leading-relaxed">{video.description}</p>
-        )}
+        {(() => {
+          const desc: string = video.description ?? "";
+          const isOwner = video.artistUserId != null && user?.id === video.artistUserId;
+          const isLong = desc.length > 400;
+          if (!desc && !isOwner) return null;
+          return (
+            <div className="rounded-xl border border-border/60 overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-3 bg-secondary/40 border-b border-border/50">
+                <div className="flex items-center gap-2">
+                  <AlignLeft className="w-3.5 h-3.5 text-primary" />
+                  <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">About this video</span>
+                </div>
+                {isOwner && (
+                  <button
+                    onClick={() => setEditOpen(true)}
+                    className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <Edit2 className="w-3 h-3" />
+                    {desc ? "Edit" : "Add description"}
+                  </button>
+                )}
+              </div>
+              {desc ? (
+                <div className="px-5 py-4 bg-card/50">
+                  <div className={`relative transition-all overflow-hidden ${isLong && !descExpanded ? "max-h-32" : ""}`}>
+                    <p className="text-sm leading-relaxed text-foreground/85 whitespace-pre-wrap">{desc}</p>
+                    {isLong && !descExpanded && (
+                      <div className="absolute bottom-0 inset-x-0 h-10 bg-gradient-to-t from-card/90 to-transparent pointer-events-none" />
+                    )}
+                  </div>
+                  {isLong && (
+                    <button
+                      onClick={() => setDescExpanded(!descExpanded)}
+                      className="mt-3 flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 font-medium transition-colors"
+                    >
+                      {descExpanded
+                        ? <><ChevronUp className="w-3.5 h-3.5" />Show less</>
+                        : <><ChevronDown className="w-3.5 h-3.5" />Read more</>}
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="px-5 py-6 text-center">
+                  <p className="text-xs text-muted-foreground">No description added yet.</p>
+                  <button onClick={() => setEditOpen(true)} className="mt-1.5 text-xs text-primary hover:underline">Add description</button>
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Credits */}
-        {(video as any).credits && (
-          <div className="bg-secondary/30 rounded-xl border border-border/50 p-5 space-y-2 mt-2">
-            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">Credits</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{(video as any).credits}</p>
-          </div>
-        )}
+        {(() => {
+          const credits: string = (video as any).credits ?? "";
+          const isOwner = video.artistUserId != null && user?.id === video.artistUserId;
+          if (!credits && !isOwner) return null;
+          return (
+            <div className="rounded-xl border border-border/60 overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-3 bg-secondary/40 border-b border-border/50">
+                <div className="flex items-center gap-2">
+                  <AlignLeft className="w-3.5 h-3.5 text-primary" />
+                  <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Credits</span>
+                </div>
+                {isOwner && (
+                  <button
+                    onClick={() => setEditOpen(true)}
+                    className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <Edit2 className="w-3 h-3" />
+                    {credits ? "Edit" : "Add credits"}
+                  </button>
+                )}
+              </div>
+              {credits ? (
+                <div className="px-5 py-4 bg-card/50">
+                  <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{credits}</p>
+                </div>
+              ) : (
+                <div className="px-5 py-6 text-center">
+                  <p className="text-xs text-muted-foreground">No credits added yet.</p>
+                  <button onClick={() => setEditOpen(true)} className="mt-1.5 text-xs text-primary hover:underline">Add credits</button>
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Comments */}
         <div className="bg-card border border-border rounded-xl p-5">

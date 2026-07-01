@@ -6,7 +6,7 @@ import {
   useDeleteSong, useUpdateSong, useUpdateArtist, useTrackAnalyticsEvent,
 } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Play, Pause, Heart, Star, Send, Radio, Users, MessageCircle, ArrowLeft, Trash2, Edit2, X, Save, Upload, ImageIcon } from "lucide-react";
+import { Play, Pause, Heart, Star, Send, Radio, Users, MessageCircle, ArrowLeft, Trash2, Edit2, X, Save, Upload, ImageIcon, Mic2, ChevronDown, ChevronUp, AlignLeft } from "lucide-react";
 import { RoleTag } from "@/components/role-badges";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
@@ -98,6 +98,7 @@ export default function SongDetail() {
   const [editCredits, setEditCredits] = useState("");
   const [editStageName, setEditStageName] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [lyricsExpanded, setLyricsExpanded] = useState(false);
   const coverUpload = useUpload({
     onSuccess: (res) => setEditCoverUrl(`/api/storage${res.objectPath}`),
   });
@@ -430,13 +431,96 @@ export default function SongDetail() {
           </div>
         )}
 
+        {/* Lyrics */}
+        {(() => {
+          const lyrics: string = (song as any).lyrics ?? "";
+          const isOwner = song.artistUserId != null && user?.id === song.artistUserId;
+          const lines = lyrics.split("\n");
+          const isLong = lines.length > 12 || lyrics.length > 600;
+          if (!lyrics && !isOwner) return null;
+          return (
+            <div className="rounded-xl border border-border/60 overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-3 bg-secondary/40 border-b border-border/50">
+                <div className="flex items-center gap-2">
+                  <Mic2 className="w-3.5 h-3.5 text-primary" />
+                  <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Lyrics</span>
+                </div>
+                {isOwner && (
+                  <button
+                    onClick={() => setEditOpen(true)}
+                    className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <Edit2 className="w-3 h-3" />
+                    {lyrics ? "Edit" : "Add lyrics"}
+                  </button>
+                )}
+              </div>
+              {lyrics ? (
+                <div className="px-5 py-4 bg-card/50">
+                  <div className={`relative transition-all overflow-hidden ${isLong && !lyricsExpanded ? "max-h-64" : ""}`}>
+                    <p className="text-sm leading-8 whitespace-pre-wrap text-foreground/85 font-light tracking-wide">
+                      {lyrics}
+                    </p>
+                    {isLong && !lyricsExpanded && (
+                      <div className="absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-card/90 to-transparent pointer-events-none" />
+                    )}
+                  </div>
+                  {isLong && (
+                    <button
+                      onClick={() => setLyricsExpanded(!lyricsExpanded)}
+                      className="mt-3 flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 font-medium transition-colors"
+                    >
+                      {lyricsExpanded
+                        ? <><ChevronUp className="w-3.5 h-3.5" />Show less</>
+                        : <><ChevronDown className="w-3.5 h-3.5" />Show all lyrics</>}
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="px-5 py-6 text-center">
+                  <p className="text-xs text-muted-foreground">No lyrics added yet.</p>
+                  <button onClick={() => setEditOpen(true)} className="mt-1.5 text-xs text-primary hover:underline">Add lyrics</button>
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
         {/* Credits */}
-        {(song as any).credits && (
-          <div className="bg-secondary/30 rounded-xl border border-border/50 p-5 space-y-2">
-            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">Credits</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{(song as any).credits}</p>
-          </div>
-        )}
+        {(() => {
+          const credits: string = (song as any).credits ?? "";
+          const isOwner = song.artistUserId != null && user?.id === song.artistUserId;
+          if (!credits && !isOwner) return null;
+          return (
+            <div className="rounded-xl border border-border/60 overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-3 bg-secondary/40 border-b border-border/50">
+                <div className="flex items-center gap-2">
+                  <AlignLeft className="w-3.5 h-3.5 text-primary" />
+                  <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Credits</span>
+                </div>
+                {isOwner && (
+                  <button
+                    onClick={() => setEditOpen(true)}
+                    className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <Edit2 className="w-3 h-3" />
+                    {credits ? "Edit" : "Add credits"}
+                  </button>
+                )}
+              </div>
+              {credits ? (
+                <div className="px-5 py-4 bg-card/50">
+                  <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{credits}</p>
+                </div>
+              ) : (
+                <div className="px-5 py-6 text-center">
+                  <p className="text-xs text-muted-foreground">No credits added yet.</p>
+                  <button onClick={() => setEditOpen(true)} className="mt-1.5 text-xs text-primary hover:underline">Add credits</button>
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Comments */}
         <div className="bg-card border border-border rounded-xl p-5">
