@@ -1,0 +1,204 @@
+Update the Everyday Radio submission/payment packages.
+
+IMPORTANT
+
+The site is live.
+Do NOT activate live PayPal.
+Do NOT remove the current demo payment flow.
+Do NOT charge real customers.
+Only update package options, descriptions, pricing, and backend support so we can fully test everything before enabling live payments.
+
+-----------------------------------
+MUSIC SUBMISSION PACKAGES
+-----------------------------------
+
+1. Single Song Submission
+Price:
+$9.99
+
+Description:
+Submit one song for review and publishing consideration.
+
+Includes:
+• 1 song
+• Standard review
+• Artist profile listing
+• Standard placement
+
+-----------------------------------
+
+2. Batch Song Submission
+Price:
+$19.99
+
+Description:
+Submit up to 20 songs under one batch submission.
+
+Includes:
+• Up to 20 songs
+• Faster processing
+• Standard placement
+• Artist profile listing
+
+-----------------------------------
+
+3. Featured Song Placement
+Price:
+$49.99
+
+Description:
+Premium featured placement consideration.
+
+Includes:
+• Homepage feature eligibility
+• Featured music section
+• Priority review
+• Playlist consideration
+• Social media consideration when applicable
+
+Display disclaimer:
+
+Payment does not guarantee approval.
+All submissions must follow Everyday Radio guidelines.
+
+-----------------------------------
+VIDEO SUBMISSION PACKAGES
+-----------------------------------
+
+1. Single Video Submission
+Price:
+$14.99
+
+Description:
+Submit one music video for review and publishing consideration.
+
+Includes:
+• 1 video
+• Standard review
+• Artist profile listing
+• Standard placement
+
+-----------------------------------
+
+2. Batch Video Submission
+Price:
+$29.99
+
+Description:
+Submit up to 20 videos under one batch submission.
+
+Includes:
+• Up to 20 videos
+• Faster processing
+• Artist profile listing
+• Standard placement
+
+-----------------------------------
+
+3. Featured Video Placement
+Price:
+$79.99
+
+Description:
+Premium featured placement consideration.
+
+Includes:
+• Homepage feature eligibility
+• Featured video section
+• Priority review
+• Social media consideration
+• Playlist/video spotlight consideration
+
+Display disclaimer:
+
+Payment does not guarantee approval.
+All content must comply with Everyday Radio guidelines.
+
+-----------------------------------
+UI CHANGES
+-----------------------------------
+
+Rename the plans:
+
+Single Track
+→ Single Submission
+
+Basic
+→ Batch Submission
+
+Premium
+→ Featured Placement
+
+Update all labels throughout the submission flow.
+
+Keep the existing dark theme and styling.
+
+-----------------------------------
+PAYMENT MODE
+-----------------------------------
+
+Keep payment mode in DEMO.
+
+Do NOT connect to live PayPal.
+
+Every transaction should clearly indicate:
+
+Demo Transaction
+
+Save demo transactions exactly as before.
+
+-----------------------------------
+DATABASE
+-----------------------------------
+
+Store:
+
+• package selected
+• package type
+• price
+• user
+• submission ID
+• transaction ID
+• status
+• payment mode = demo
+• created date
+
+-----------------------------------
+ADMIN DASHBOARD
+-----------------------------------
+
+Update payment records to display:
+
+• package purchased
+• amount
+• creator
+• submission
+• transaction ID
+• status
+• demo/live indicator
+
+-----------------------------------
+TESTING
+-----------------------------------
+
+Verify:
+
+✓ Every package displays the correct price.
+
+✓ Music packages work.
+
+✓ Video packages work.
+
+✓ Demo transactions still generate.
+
+✓ No live PayPal code is enabled.
+
+✓ Submission flow still works.
+
+✓ Upload flow still works.
+
+✓ Admin dashboard still works.
+
+✓ Existing user permissions remain unchanged.
+
+Do not modify anything outside of these payment package updates.

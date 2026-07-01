@@ -6,7 +6,7 @@ import {
   BarChart3, Upload, ListMusic, Shield, Mail, Sparkles,
   MessageSquare, FileText, Eye, BookOpen, MessageCircle,
   AlertOctagon, ScrollText, Scale, ShieldOff, Search, X,
-  Megaphone, ShieldCheck, Flag, Lightbulb, Bug, Star, Award,
+  Megaphone, ShieldCheck, Flag, Lightbulb, Bug, Star, Award, CreditCard,
 } from "lucide-react";
 import { RoleBadges } from "@/components/role-badges";
 import { useAuth } from "@/lib/auth";
@@ -190,6 +190,7 @@ export function Sidebar({ onMobileClose }: SidebarProps = {}) {
     { href: "/admin/upload-song", label: "Upload Song", icon: Upload },
     { href: "/admin/upload-video", label: "Upload Video", icon: Upload },
     { href: "/admin/submissions", label: "Submissions", icon: FileText },
+    { href: "/admin/payments", label: "Payments", icon: CreditCard },
     { href: "/admin/discover", label: "Discover Curation", icon: Sparkles },
     { href: "/admin/songs", label: "Songs", icon: Music },
     { href: "/admin/videos", label: "Videos", icon: Video },

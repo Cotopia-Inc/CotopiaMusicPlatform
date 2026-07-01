@@ -6,7 +6,7 @@ import {
   appSettingsTable, followsTable, chatMessagesTable, favoritesTable,
   playlistsTable, playlistItemsTable, conversationsTable, directMessagesTable,
   dmcaClaimsTable, copyrightStrikesTable, adminAuditLogsTable, notificationsTable,
-  agreementAcceptancesTable, broadcastsTable, copyrightConcernsTable,
+  agreementAcceptancesTable, broadcastsTable, copyrightConcernsTable, paymentsTable,
 } from "@workspace/db";
 import {
   AdminListUsersQueryParams, AdminUpdateUserBody,
@@ -1452,6 +1452,33 @@ router.get("/admin/broadcasts", requireAuth, requireRole(...ADMIN_ROLES), async 
     .leftJoin(usersTable, eq(broadcastsTable.senderId, usersTable.id))
     .orderBy(desc(broadcastsTable.createdAt));
   res.json(rows);
+});
+
+// ── Admin Payments List ───────────────────────────────────────────────────
+router.get("/admin/payments", requireAuth, requireRole("admin", "master_admin"), async (_req, res): Promise<void> => {
+  const rows = await db
+    .select({
+      id: paymentsTable.id,
+      paypalOrderId: paymentsTable.paypalOrderId,
+      amount: paymentsTable.amount,
+      currency: paymentsTable.currency,
+      status: paymentsTable.status,
+      createdAt: paymentsTable.createdAt,
+      userId: paymentsTable.userId,
+      submissionId: paymentsTable.submissionId,
+      creatorUsername: usersTable.username,
+      creatorDisplayName: usersTable.displayName,
+      creatorRole: usersTable.role,
+      submissionPlan: submissionsTable.plan,
+      submissionType: submissionsTable.type,
+    })
+    .from(paymentsTable)
+    .leftJoin(usersTable, eq(paymentsTable.userId, usersTable.id))
+    .leftJoin(submissionsTable, eq(paymentsTable.submissionId, submissionsTable.id))
+    .orderBy(desc(paymentsTable.createdAt))
+    .limit(500);
+
+  res.json(rows.map(r => ({ ...r, paymentMode: "demo" })));
 });
 
 export default router;

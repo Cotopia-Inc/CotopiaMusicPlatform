@@ -32,6 +32,7 @@ import Messages from "@/pages/messages";
 import AdminDashboard from "@/pages/admin-dashboard";
 import AdminUsers from "@/pages/admin-users";
 import AdminSubmissions from "@/pages/admin-submissions";
+import AdminPayments from "@/pages/admin-payments";
 import AdminSettings from "@/pages/admin-settings";
 import AdminSongs from "@/pages/admin-songs";
 import AdminVideos from "@/pages/admin-videos";
@@ -316,6 +317,9 @@ function Router() {
       </Route>
       <Route path="/admin/submissions">
         <RoleRoute roles={ADMIN_ROLES}><AdminSubmissions /></RoleRoute>
+      </Route>
+      <Route path="/admin/payments">
+        <RoleRoute roles={ADMIN_ROLES}><AdminPayments /></RoleRoute>
       </Route>
       <Route path="/admin/songs">
         <RoleRoute roles={ADMIN_ROLES}><AdminSongs /></RoleRoute>

@@ -31,11 +31,35 @@ const PLAN_PRICES = {
   video: { single: 14.99, basic: 29.99, premium: 79.99 },
 };
 
-const PLAN_FEATURES = {
-  single:  ["1 file only", "Review within 14 days", "Standard placement", "Artist profile listing"],
-  basic:   ["Up to 20 files per batch", "Review within 7 days", "Standard placement", "Artist profile listing"],
-  premium: ["Up to 20 files per batch", "Priority review within 48 hours", "Featured placement", "Social media spotlight", "Radio scheduling", "Analytics report"],
+const PLAN_NAMES: Record<string, string> = {
+  single:  "Single Submission",
+  basic:   "Batch Submission",
+  premium: "Featured Placement",
 };
+
+function getPlanFeatures(tab: "song" | "video"): Record<string, string[]> {
+  return {
+    single: [
+      `1 ${tab}`,
+      "Standard review",
+      "Artist profile listing",
+      "Standard placement",
+    ],
+    basic: [
+      `Up to 20 ${tab}s per batch`,
+      "Faster processing",
+      "Standard placement",
+      "Artist profile listing",
+    ],
+    premium: [
+      "Homepage feature eligibility",
+      tab === "song" ? "Featured music section" : "Featured video section",
+      "Priority review",
+      "Playlist consideration",
+      "Social media consideration when applicable",
+    ],
+  };
+}
 
 const STEPS = ["Files & Details", "Plan", "Payment", "Complete"];
 
@@ -783,10 +807,12 @@ export default function Submit() {
                 : p === "basic"
                   ? <Radio className="w-5 h-5 text-primary" />
                   : <Zap className="w-5 h-5 text-amber-400" />;
-              const perLabel = p === "single" ? "/ track" : "/ batch";
+              const perLabel = "/ submission";
               const subtitle = p === "single"
-                ? "1 file only — for a single track release"
-                : `Covers all ${activeFiles.length} ${tab}${activeFiles.length !== 1 ? "s" : ""}`;
+                ? `Submit one ${tab} for review and publishing consideration.`
+                : p === "basic"
+                ? `Submit up to 20 ${tab}s under one batch submission.`
+                : "Premium featured placement consideration.";
               return (
                 <button key={p} type="button"
                   onClick={() => !locked && setPlan(p)}
@@ -816,7 +842,7 @@ export default function Submit() {
                   )}
                   <div className="flex items-center gap-2 mb-3">
                     {icon}
-                    <span className={`font-bold capitalize ${locked ? "text-muted-foreground" : ""}`}>{p === "single" ? "Single Track" : p}</span>
+                    <span className={`font-bold ${locked ? "text-muted-foreground" : ""}`}>{PLAN_NAMES[p]}</span>
                   </div>
                   <p className={`text-2xl font-extrabold mb-1 ${locked ? "text-muted-foreground" : ""}`}>
                     ${PLAN_PRICES[tab][p].toFixed(2)}
@@ -828,18 +854,23 @@ export default function Submit() {
                       <AlertCircle className="w-3 h-3 text-destructive flex-shrink-0" />
                       <span className="text-[10px] text-destructive/80">
                         {p === "single"
-                          ? `You have ${activeFiles.length} files — choose Basic or Premium.`
-                          : "You have 1 file — only Single Track is available."}
+                          ? `You have ${activeFiles.length} files — choose Batch Submission or Featured Placement.`
+                          : "You have 1 file — only Single Submission is available."}
                       </span>
                     </div>
                   )}
                   <ul className="space-y-1.5">
-                    {PLAN_FEATURES[p].map(f => (
+                    {getPlanFeatures(tab)[p].map(f => (
                       <li key={f} className="flex items-start gap-2 text-xs text-muted-foreground">
                         <CheckCircle className={`w-3.5 h-3.5 flex-shrink-0 mt-0.5 ${locked ? "text-muted-foreground/50" : "text-primary"}`} />{f}
                       </li>
                     ))}
                   </ul>
+                  {p === "premium" && !locked && (
+                    <p className="text-[10px] text-muted-foreground/60 mt-3 leading-relaxed border-t border-border/50 pt-2">
+                      Payment does not guarantee approval. All submissions must follow Everyday Radio guidelines.
+                    </p>
+                  )}
                 </button>
               );
             })}
@@ -881,7 +912,7 @@ export default function Submit() {
               </div>
               <div className="flex justify-between py-2 border-b border-border/50">
                 <span className="text-muted-foreground">Plan</span>
-                <span className="font-medium capitalize">{plan}</span>
+                <span className="font-medium">{PLAN_NAMES[plan]}</span>
               </div>
               <div className="flex justify-between items-center py-2 border-b border-border/50">
                 <span className="text-muted-foreground">Release Type</span>
