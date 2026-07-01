@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { eq, and, ne, desc, inArray, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
-import { db, badgesTable, userBadgesTable, usersTable } from "@workspace/db";
+import { db, badgesTable, userBadgesTable, usersTable, notificationsTable } from "@workspace/db";
 import { requireAuth, requireRole, type AuthRequest } from "../lib/auth";
 
 const router = Router();
@@ -343,6 +343,14 @@ router.post("/admin/user-badges", requireAuth, requireRole(...ADMIN_ROLES), asyn
 
   const [adminRow] = await db.select({ username: adminUser.username }).from(adminUser).where(eq(adminUser.id, req.user!.userId)).limit(1);
 
+  await db.insert(notificationsTable).values({
+    userId,
+    type: "badge_awarded",
+    title: `${badge.icon} You've earned a badge!`,
+    message: `You've been awarded the "${badge.name}" badge.${reason?.trim() ? ` Reason: ${reason.trim()}` : ""}`,
+    isRead: false,
+  });
+
   res.status(201).json({
     id: award.id,
     userId: award.userId,
@@ -385,12 +393,24 @@ export async function awardBadgeByName(userId: number, badgeName: string, option
   const [existing] = await db.select({ id: userBadgesTable.id }).from(userBadgesTable).where(and(eq(userBadgesTable.userId, userId), eq(userBadgesTable.badgeId, badge.id))).limit(1);
   if (existing) return;
 
+  const [fullBadge] = await db.select({ name: badgesTable.name, icon: badgesTable.icon }).from(badgesTable).where(eq(badgesTable.id, badge.id)).limit(1);
+
   await db.insert(userBadgesTable).values({
     userId,
     badgeId: badge.id,
     awardedByAdminId: options?.awardedByAdminId ?? null,
     reason: options?.reason ?? null,
   });
+
+  if (fullBadge) {
+    await db.insert(notificationsTable).values({
+      userId,
+      type: "badge_awarded",
+      title: `${fullBadge.icon} You've earned a badge!`,
+      message: `You've been awarded the "${fullBadge.name}" badge.${options?.reason ? ` Reason: ${options.reason}` : ""}`,
+      isRead: false,
+    });
+  }
 }
 
 // ── Helper: get primary badge for multiple users ───────────────────────────
