@@ -106,6 +106,12 @@ export default function Login() {
                 )}
               />
 
+              <div className="flex justify-end -mt-1">
+                <Link href="/forgot-password" className="text-xs text-muted-foreground hover:text-primary transition-colors">
+                  Forgot password?
+                </Link>
+              </div>
+
               <FormField
                 control={form.control}
                 name="tosAccepted"

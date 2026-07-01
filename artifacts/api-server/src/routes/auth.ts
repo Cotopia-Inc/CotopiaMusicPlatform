@@ -1,5 +1,6 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
+import { randomBytes } from "crypto";
 import { eq, ilike, or, and, gt } from "drizzle-orm";
 import { db, usersTable, artistsTable, labelsTable, emailOtpsTable, agreementAcceptancesTable, appSettingsTable } from "@workspace/db";
 import { RegisterBody, LoginBody, UpdateMeBody, SendOtpBody, VerifyOtpBody, ChangePasswordBody, ChangeUsernameBody, SaveDemographicsBody } from "@workspace/api-zod";
@@ -424,6 +425,125 @@ router.get("/users/search", optionalAuth, async (req: AuthRequest, res): Promise
     isVerified: usersTable.isVerified,
   }).from(usersTable).where(or(...conditions)).limit(20);
   res.json(results);
+});
+
+// ── Forgot password ────────────────────────────────────────────────────────
+router.post("/auth/forgot-password", async (req, res): Promise<void> => {
+  const { identifier } = req.body ?? {};
+  if (!identifier || typeof identifier !== "string") {
+    res.json({ ok: true }); // always succeed to prevent enumeration
+    return;
+  }
+
+  // Look up by email first, then username
+  let [user] = await db.select().from(usersTable).where(eq(usersTable.email, identifier.trim())).limit(1);
+  if (!user) {
+    [user] = await db.select().from(usersTable).where(eq(usersTable.username, identifier.trim())).limit(1);
+  }
+
+  // Always return success even if account not found
+  if (!user || !user.email) { res.json({ ok: true }); return; }
+
+  // Invalidate any existing unused reset tokens for this user
+  await db.update(emailOtpsTable)
+    .set({ used: true })
+    .where(and(eq(emailOtpsTable.userId, user.id), eq(emailOtpsTable.purpose, "reset_password"), eq(emailOtpsTable.used, false)));
+
+  // Generate a secure 64-char hex token
+  const token = randomBytes(32).toString("hex");
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+  await db.insert(emailOtpsTable).values({
+    userId: user.id,
+    email: user.email,
+    code: token,
+    purpose: "reset_password",
+    expiresAt,
+  });
+
+  // Build reset URL from the request host
+  const proto = req.headers["x-forwarded-proto"] ?? req.protocol ?? "https";
+  const host = req.headers["x-forwarded-host"] ?? req.get("host") ?? "";
+  const siteUrl = process.env.SITE_URL ?? `${proto}://${host}`;
+  const resetUrl = `${siteUrl}/reset-password?token=${token}`;
+
+  // Send the recovery email
+  const apiKey = process.env.RESEND_API_KEY;
+  if (apiKey && apiKey !== "re_placeholder") {
+    const fromAddress = process.env.FROM_EMAIL ?? "Cotopia <noreply@cotopia.org>";
+    const displayName = user.displayName ?? user.username;
+    try {
+      await resend.emails.send({
+        from: fromAddress,
+        to: user.email,
+        subject: "Recover your Everyday Radio account",
+        html: `
+          <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px;background:#0a0a0a;color:#f5f5f5;border-radius:12px">
+            <div style="margin-bottom:24px">
+              <span style="font-size:22px;font-weight:800;letter-spacing:-0.5px">&#9678; Everyday Radio</span>
+              <span style="font-size:11px;display:block;color:#888;margin-top:2px;letter-spacing:2px;text-transform:uppercase">by Cotopia</span>
+            </div>
+            <h2 style="font-size:20px;font-weight:700;margin:0 0 8px">Account recovery</h2>
+            <p style="color:#aaa;margin:0 0 20px;font-size:14px">Hi <strong style="color:#f5f5f5">${displayName}</strong>, here's your account info:</p>
+            <div style="background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:16px 20px;margin-bottom:20px">
+              <p style="margin:0 0 4px;font-size:12px;color:#888;text-transform:uppercase;letter-spacing:1px">Your username</p>
+              <p style="margin:0;font-size:22px;font-weight:800;color:#a855f7">@${user.username}</p>
+            </div>
+            <p style="color:#aaa;margin:0 0 16px;font-size:14px">To reset your password, click the button below. This link expires in <strong style="color:#f5f5f5">1 hour</strong>.</p>
+            <a href="${resetUrl}" style="display:block;background:#a855f7;color:#fff;text-decoration:none;text-align:center;padding:14px 24px;border-radius:8px;font-weight:700;font-size:15px;margin-bottom:20px">
+              Reset my password →
+            </a>
+            <p style="color:#555;font-size:12px;margin:0;word-break:break-all">Or copy this link: ${resetUrl}</p>
+            <hr style="border:none;border-top:1px solid #222;margin:24px 0" />
+            <p style="color:#555;font-size:12px;margin:0">If you didn't request this, you can safely ignore this email. Your password won't change.</p>
+          </div>
+        `,
+      });
+    } catch (err) {
+      logger.error({ err }, "[RESET EMAIL] Failed to send");
+    }
+  } else {
+    logger.warn({ resetUrl }, "[RESET EMAIL] RESEND_API_KEY not configured — reset URL logged for dev");
+  }
+
+  res.json({ ok: true });
+});
+
+// ── Reset password ─────────────────────────────────────────────────────────
+router.post("/auth/reset-password", async (req, res): Promise<void> => {
+  const { token, newPassword } = req.body ?? {};
+  if (!token || typeof token !== "string" || !newPassword || typeof newPassword !== "string") {
+    res.status(400).json({ error: "Invalid request." });
+    return;
+  }
+  if (newPassword.length < 8) {
+    res.status(400).json({ error: "Password must be at least 8 characters." });
+    return;
+  }
+
+  const [otp] = await db.select().from(emailOtpsTable)
+    .where(and(
+      eq(emailOtpsTable.code, token),
+      eq(emailOtpsTable.purpose, "reset_password"),
+      eq(emailOtpsTable.used, false),
+    ))
+    .limit(1);
+
+  if (!otp) {
+    res.status(400).json({ error: "Invalid or already-used reset link. Please request a new one." });
+    return;
+  }
+  if (new Date() > otp.expiresAt) {
+    await db.update(emailOtpsTable).set({ used: true }).where(eq(emailOtpsTable.id, otp.id));
+    res.status(400).json({ error: "This reset link has expired. Please request a new one." });
+    return;
+  }
+
+  const passwordHash = await bcrypt.hash(newPassword, 10);
+  await db.update(usersTable).set({ passwordHash }).where(eq(usersTable.id, otp.userId));
+  await db.update(emailOtpsTable).set({ used: true }).where(eq(emailOtpsTable.id, otp.id));
+
+  res.json({ ok: true });
 });
 
 // ── Get public user ────────────────────────────────────────────────────────

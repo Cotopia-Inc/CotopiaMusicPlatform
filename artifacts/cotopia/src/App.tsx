@@ -11,6 +11,8 @@ import { useEffect } from "react";
 import Home from "@/pages/home";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
+import ForgotPassword from "@/pages/forgot-password";
+import ResetPassword from "@/pages/reset-password";
 import Discover from "@/pages/discover";
 import Songs from "@/pages/songs";
 import SongDetail from "@/pages/song-detail";
@@ -187,6 +189,12 @@ function AuthRoute({ children }: { children: React.ReactNode }) {
 function Router() {
   return (
     <Switch>
+      <Route path="/forgot-password">
+        <ForgotPassword />
+      </Route>
+      <Route path="/reset-password">
+        <ResetPassword />
+      </Route>
       <Route path="/login">
         <AuthRoute><Login /></AuthRoute>
       </Route>
