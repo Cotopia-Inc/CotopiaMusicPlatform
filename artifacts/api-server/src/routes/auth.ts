@@ -596,7 +596,6 @@ router.post("/users/:id/follow", requireAuth, async (req: AuthRequest, res): Pro
   const id = Number(req.params.id);
   if (isNaN(id) || id <= 0) { res.status(400).json({ error: "Invalid user id" }); return; }
   const me = req.user!.userId;
-  if (me === id) { res.status(400).json({ error: "Cannot follow yourself" }); return; }
 
   // Block check — both directions
   const [blocked] = await db.select({ id: userBlocksTable.id }).from(userBlocksTable)
