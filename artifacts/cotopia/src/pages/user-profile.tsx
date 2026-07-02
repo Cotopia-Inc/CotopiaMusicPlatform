@@ -223,22 +223,26 @@ export default function UserProfile() {
               </>
             )}
 
-            {/* Viewing someone else's profile */}
+            {/* Follow — visible to any logged-in user including yourself */}
+            {me && (
+              <Button
+                size="sm"
+                variant={isFollowed ? "secondary" : "default"}
+                className="gap-1.5"
+                disabled={followMutation.isPending || unfollowMutation.isPending}
+                onClick={() => isFollowed
+                  ? unfollowMutation.mutate({ id: targetId })
+                  : followMutation.mutate({ id: targetId })
+                }
+              >
+                {isFollowed ? <UserCheck className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
+                {isFollowed ? "Following" : "Follow"}
+              </Button>
+            )}
+
+            {/* Actions only relevant when viewing someone else */}
             {me && !isMe && (
               <>
-                <Button
-                  size="sm"
-                  variant={isFollowed ? "secondary" : "default"}
-                  className="gap-1.5"
-                  disabled={followMutation.isPending || unfollowMutation.isPending}
-                  onClick={() => isFollowed
-                    ? unfollowMutation.mutate({ id: targetId })
-                    : followMutation.mutate({ id: targetId })
-                  }
-                >
-                  {isFollowed ? <UserCheck className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
-                  {isFollowed ? "Following" : "Follow"}
-                </Button>
                 <Button size="sm" variant="outline" className="gap-1.5" onClick={() => navigate(`/messages?new=${user.id}`)}>
                   <MessageCircle className="w-4 h-4" />
                   Message
