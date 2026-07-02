@@ -17,7 +17,11 @@ export interface PublicUser {
   bio?: string | null;
   role: string;
   isVerified: boolean;
+  /** @nullable */
+  verificationType?: string | null;
   createdAt: string;
   /** @nullable */
   artistId?: number | null;
+  followerCount: number;
+  isFollowed: boolean;
 }

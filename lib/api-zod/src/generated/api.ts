@@ -243,8 +243,35 @@ export const GetPublicUserResponse = zod.object({
   "bio": zod.string().nullish(),
   "role": zod.string(),
   "isVerified": zod.boolean(),
+  "verificationType": zod.string().nullish(),
   "createdAt": zod.string(),
-  "artistId": zod.number().nullish()
+  "artistId": zod.number().nullish(),
+  "followerCount": zod.number(),
+  "isFollowed": zod.boolean()
+})
+
+
+/**
+ * @summary Follow a user
+ */
+export const FollowUserParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const FollowUserResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+/**
+ * @summary Unfollow a user
+ */
+export const UnfollowUserParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UnfollowUserResponse = zod.object({
+  "ok": zod.boolean()
 })
 
 

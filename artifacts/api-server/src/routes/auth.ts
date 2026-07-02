@@ -2,9 +2,10 @@ import { Router } from "express";
 import bcrypt from "bcryptjs";
 import { randomBytes } from "crypto";
 import { eq, ilike, or, and, gt } from "drizzle-orm";
-import { db, usersTable, artistsTable, labelsTable, emailOtpsTable, agreementAcceptancesTable, appSettingsTable } from "@workspace/db";
+import { db, usersTable, artistsTable, labelsTable, emailOtpsTable, agreementAcceptancesTable, appSettingsTable, followsTable, userBlocksTable } from "@workspace/db";
 import { RegisterBody, LoginBody, UpdateMeBody, SendOtpBody, VerifyOtpBody, ChangePasswordBody, ChangeUsernameBody, SaveDemographicsBody } from "@workspace/api-zod";
 import { signToken, requireAuth, optionalAuth, type AuthRequest } from "../lib/auth";
+import { count } from "drizzle-orm";
 import { logger } from "../lib/logger";
 import { Resend } from "resend";
 import { awardBadgeByName } from "./badges";
@@ -549,7 +550,7 @@ router.post("/auth/reset-password", async (req, res): Promise<void> => {
 });
 
 // ── Get public user ────────────────────────────────────────────────────────
-router.get("/users/:id", async (req, res, next): Promise<void> => {
+router.get("/users/:id", optionalAuth, async (req: AuthRequest, res, next): Promise<void> => {
   const id = Number(req.params.id);
   if (isNaN(id) || id <= 0) { next(); return; }  // non-numeric — let other routers handle
 
@@ -564,6 +565,7 @@ router.get("/users/:id", async (req, res, next): Promise<void> => {
       bio: usersTable.bio,
       role: usersTable.role,
       isVerified: usersTable.isVerified,
+      verificationType: usersTable.verificationType,
       createdAt: usersTable.createdAt,
       artistId: artistsTable.id,
     })
@@ -573,7 +575,48 @@ router.get("/users/:id", async (req, res, next): Promise<void> => {
     .limit(1);
 
   if (!row) { res.status(404).json({ error: "User not found" }); return; }
-  res.json({ ...row, artistId: row.artistId ?? null });
+
+  const [fc] = await db.select({ c: count() }).from(followsTable)
+    .where(and(eq(followsTable.targetType, "user"), eq(followsTable.targetId, id)));
+  const followerCount = fc?.c ?? 0;
+
+  let isFollowed = false;
+  if (req.user) {
+    const [f] = await db.select({ id: followsTable.id }).from(followsTable)
+      .where(and(eq(followsTable.followerId, req.user.userId), eq(followsTable.targetType, "user"), eq(followsTable.targetId, id)))
+      .limit(1);
+    isFollowed = !!f;
+  }
+
+  res.json({ ...row, artistId: row.artistId ?? null, followerCount, isFollowed });
+});
+
+// ── Follow / unfollow a user ───────────────────────────────────────────────
+router.post("/users/:id/follow", requireAuth, async (req: AuthRequest, res): Promise<void> => {
+  const id = Number(req.params.id);
+  if (isNaN(id) || id <= 0) { res.status(400).json({ error: "Invalid user id" }); return; }
+  const me = req.user!.userId;
+  if (me === id) { res.status(400).json({ error: "Cannot follow yourself" }); return; }
+
+  // Block check — both directions
+  const [blocked] = await db.select({ id: userBlocksTable.id }).from(userBlocksTable)
+    .where(or(
+      and(eq(userBlocksTable.blockerId, me), eq(userBlocksTable.blockedId, id)),
+      and(eq(userBlocksTable.blockerId, id), eq(userBlocksTable.blockedId, me)),
+    )).limit(1);
+  if (blocked) { res.status(403).json({ error: "Cannot follow this user" }); return; }
+
+  await db.insert(followsTable).values({ followerId: me, targetType: "user", targetId: id }).onConflictDoNothing();
+  res.json({ ok: true });
+});
+
+router.delete("/users/:id/follow", requireAuth, async (req: AuthRequest, res): Promise<void> => {
+  const id = Number(req.params.id);
+  if (isNaN(id) || id <= 0) { res.status(400).json({ error: "Invalid user id" }); return; }
+  await db.delete(followsTable).where(
+    and(eq(followsTable.followerId, req.user!.userId), eq(followsTable.targetType, "user"), eq(followsTable.targetId, id))
+  );
+  res.json({ ok: true });
 });
 
 export default router;

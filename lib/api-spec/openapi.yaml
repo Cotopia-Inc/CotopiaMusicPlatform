@@ -285,6 +285,54 @@ paths:
         "404":
           description: User not found
 
+  /users/{id}/follow:
+    post:
+      operationId: followUser
+      tags: [follows]
+      summary: Follow a user
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok]
+                properties:
+                  ok:
+                    type: boolean
+    delete:
+      operationId: unfollowUser
+      tags: [follows]
+      summary: Unfollow a user
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok]
+                properties:
+                  ok:
+                    type: boolean
+
   # ── Songs ─────────────────────────────────────────────────────────────────
   /songs:
     get:
@@ -3241,7 +3289,7 @@ components:
 
     PublicUser:
       type: object
-      required: [id, username, role, isVerified, createdAt]
+      required: [id, username, role, isVerified, createdAt, followerCount, isFollowed]
       properties:
         id:
           type: integer
@@ -3257,10 +3305,16 @@ components:
           type: string
         isVerified:
           type: boolean
+        verificationType:
+          type: ["string", "null"]
         createdAt:
           type: string
         artistId:
           type: ["integer", "null"]
+        followerCount:
+          type: integer
+        isFollowed:
+          type: boolean
 
     UserUpdate:
       type: object

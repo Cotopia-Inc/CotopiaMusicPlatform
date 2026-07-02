@@ -1,12 +1,12 @@
 import { useParams, Link, useLocation } from "wouter";
 import { useRef, useState } from "react";
-import { useGetPublicUser } from "@workspace/api-client-react";
+import { useGetPublicUser, useFollowUser, useUnfollowUser } from "@workspace/api-client-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RoleBadges } from "@/components/role-badges";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
-import { ArrowLeft, CalendarDays, Music, MessageCircle, Volume2, VolumeX, Ban } from "lucide-react";
+import { ArrowLeft, CalendarDays, Music, MessageCircle, Volume2, VolumeX, Ban, UserPlus, UserCheck, Settings, LayoutDashboard, Users } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { useAuth } from "@/lib/auth";
 import { ReportModal } from "@/components/report-modal";
@@ -64,6 +64,32 @@ export default function UserProfile() {
     },
     onError: () => toast({ variant: "destructive", title: "Action failed", description: "Please try again." }),
   });
+
+  // Follow / unfollow
+  const [optimisticFollowed, setOptimisticFollowed] = useState<boolean | null>(null);
+  const [optimisticCount, setOptimisticCount] = useState<number | null>(null);
+  const followMutation = useFollowUser({
+    mutation: {
+      onMutate: () => {
+        setOptimisticFollowed(true);
+        setOptimisticCount(c => (c ?? (user?.followerCount ?? 0)) + 1);
+      },
+      onSuccess: () => queryClient.invalidateQueries({ queryKey: ["getPublicUser", targetId] }),
+      onError: () => { setOptimisticFollowed(null); setOptimisticCount(null); toast({ variant: "destructive", title: "Could not follow" }); },
+    },
+  });
+  const unfollowMutation = useUnfollowUser({
+    mutation: {
+      onMutate: () => {
+        setOptimisticFollowed(false);
+        setOptimisticCount(c => Math.max(0, (c ?? (user?.followerCount ?? 0)) - 1));
+      },
+      onSuccess: () => queryClient.invalidateQueries({ queryKey: ["getPublicUser", targetId] }),
+      onError: () => { setOptimisticFollowed(null); setOptimisticCount(null); toast({ variant: "destructive", title: "Could not unfollow" }); },
+    },
+  });
+  const isFollowed = optimisticFollowed ?? user?.isFollowed ?? false;
+  const followerCount = optimisticCount ?? user?.followerCount ?? 0;
 
 
   if (isLoading) {
@@ -160,9 +186,60 @@ export default function UserProfile() {
                 </Button>
               </Link>
             )}
+
+            {/* Own-profile shortcuts */}
+            {isMe && (
+              <>
+                <Link href="/profile">
+                  <Button variant="outline" size="sm" className="gap-1.5">
+                    <Settings className="w-4 h-4" />
+                    Edit Profile
+                  </Button>
+                </Link>
+                {(user.role === "editor") && (
+                  <Link href="/editor">
+                    <Button variant="outline" size="sm" className="gap-1.5">
+                      <LayoutDashboard className="w-4 h-4" />
+                      Editor Dashboard
+                    </Button>
+                  </Link>
+                )}
+                {(user.role === "moderator") && (
+                  <Link href="/moderator">
+                    <Button variant="outline" size="sm" className="gap-1.5">
+                      <LayoutDashboard className="w-4 h-4" />
+                      Mod Dashboard
+                    </Button>
+                  </Link>
+                )}
+                {(user.role === "master_admin") && (
+                  <Link href="/admin">
+                    <Button variant="outline" size="sm" className="gap-1.5">
+                      <LayoutDashboard className="w-4 h-4" />
+                      Admin Dashboard
+                    </Button>
+                  </Link>
+                )}
+              </>
+            )}
+
+            {/* Viewing someone else's profile */}
             {me && !isMe && (
               <>
-                <Button size="sm" className="gap-1.5" onClick={() => navigate(`/messages?new=${user.id}`)}>
+                <Button
+                  size="sm"
+                  variant={isFollowed ? "secondary" : "default"}
+                  className="gap-1.5"
+                  disabled={followMutation.isPending || unfollowMutation.isPending}
+                  onClick={() => isFollowed
+                    ? unfollowMutation.mutate({ id: targetId })
+                    : followMutation.mutate({ id: targetId })
+                  }
+                >
+                  {isFollowed ? <UserCheck className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
+                  {isFollowed ? "Following" : "Follow"}
+                </Button>
+                <Button size="sm" variant="outline" className="gap-1.5" onClick={() => navigate(`/messages?new=${user.id}`)}>
                   <MessageCircle className="w-4 h-4" />
                   Message
                 </Button>
@@ -184,17 +261,24 @@ export default function UserProfile() {
       </div>
 
       {/* Bio + meta */}
-      {(user.bio || user.createdAt) && (
-        <div className="px-6 pt-6 space-y-2 max-w-2xl">
-          {user.bio && (
-            <p className="text-sm text-muted-foreground leading-relaxed">{user.bio}</p>
-          )}
+      <div className="px-6 pt-6 space-y-3 max-w-2xl">
+        {user.bio && (
+          <p className="text-sm text-muted-foreground leading-relaxed">{user.bio}</p>
+        )}
+        <div className="flex items-center gap-4 flex-wrap">
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <CalendarDays className="w-3.5 h-3.5" />
-            Joined {formatDistanceToNow(new Date(user.createdAt), { addSuffix: true })}
+            <Users className="w-3.5 h-3.5" />
+            <span className="font-semibold text-foreground">{followerCount.toLocaleString()}</span>
+            {followerCount === 1 ? "follower" : "followers"}
           </div>
+          {user.createdAt && (
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <CalendarDays className="w-3.5 h-3.5" />
+              Joined {formatDistanceToNow(new Date(user.createdAt), { addSuffix: true })}
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
       {/* Featured Badges */}
       {userBadges && userBadges.filter(ub => ub.isFeatured && ub.badge.isActive && ub.badge.isVisible).length > 0 && (

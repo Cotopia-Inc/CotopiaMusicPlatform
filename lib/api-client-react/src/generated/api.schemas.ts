@@ -203,9 +203,13 @@ export interface PublicUser {
   bio?: string | null;
   role: string;
   isVerified: boolean;
+  /** @nullable */
+  verificationType?: string | null;
   createdAt: string;
   /** @nullable */
   artistId?: number | null;
+  followerCount: number;
+  isFollowed: boolean;
 }
 
 export interface UserUpdate {
@@ -1908,6 +1912,14 @@ export type VerifyOtp200 = {
 
 export type ChangePassword200 = {
   ok?: boolean;
+};
+
+export type FollowUser200 = {
+  ok: boolean;
+};
+
+export type UnfollowUser200 = {
+  ok: boolean;
 };
 
 export type ListSongsParams = {
