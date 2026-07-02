@@ -1,7 +1,7 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
 import { randomBytes } from "crypto";
-import { eq, ilike, or, and, gt } from "drizzle-orm";
+import { eq, ilike, or, and, gt, sql } from "drizzle-orm";
 import { db, usersTable, artistsTable, labelsTable, emailOtpsTable, agreementAcceptancesTable, appSettingsTable, followsTable, userBlocksTable } from "@workspace/db";
 import { RegisterBody, LoginBody, UpdateMeBody, SendOtpBody, VerifyOtpBody, ChangePasswordBody, ChangeUsernameBody, SaveDemographicsBody } from "@workspace/api-zod";
 import { signToken, requireAuth, optionalAuth, type AuthRequest } from "../lib/auth";
@@ -576,15 +576,26 @@ router.get("/users/:id", optionalAuth, async (req: AuthRequest, res, next): Prom
 
   if (!row) { res.status(404).json({ error: "User not found" }); return; }
 
-  const [fc] = await db.select({ c: count() }).from(followsTable)
-    .where(and(eq(followsTable.targetType, "user"), eq(followsTable.targetId, id)));
-  const followerCount = fc?.c ?? 0;
+  // Unified follower count: user-type follows + artist-type follows for the linked artist profile.
+  const linkedArtistId = row.artistId;
+  const [fc] = await db.select({ c: sql<number>`COUNT(DISTINCT ${followsTable.followerId})` })
+    .from(followsTable)
+    .where(or(
+      and(eq(followsTable.targetType, "user"), eq(followsTable.targetId, id)),
+      linkedArtistId ? and(eq(followsTable.targetType, "artist"), eq(followsTable.targetId, linkedArtistId)) : undefined,
+    ));
+  const followerCount = Number(fc?.c ?? 0);
 
   let isFollowed = false;
   if (req.user) {
     const [f] = await db.select({ id: followsTable.id }).from(followsTable)
-      .where(and(eq(followsTable.followerId, req.user.userId), eq(followsTable.targetType, "user"), eq(followsTable.targetId, id)))
-      .limit(1);
+      .where(and(
+        eq(followsTable.followerId, req.user.userId),
+        or(
+          and(eq(followsTable.targetType, "user"), eq(followsTable.targetId, id)),
+          linkedArtistId ? and(eq(followsTable.targetType, "artist"), eq(followsTable.targetId, linkedArtistId)) : undefined,
+        ),
+      )).limit(1);
     isFollowed = !!f;
   }
 

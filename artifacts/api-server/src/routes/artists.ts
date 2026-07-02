@@ -36,16 +36,29 @@ async function getArtistRow(id: number, userId?: number) {
 
   if (!artist) return null;
 
-  const [followerCount] = await db.select({ count: count() }).from(followsTable)
-    .where(and(eq(followsTable.targetType, "artist"), eq(followsTable.targetId, id)));
+  // Unified follower count: count distinct followers across both the artist profile
+  // and the linked user profile so both pages always show the same number.
+  const linkedUserId = artist.userId;
+  const [fc] = await db.select({ count: sql<number>`COUNT(DISTINCT ${followsTable.followerId})` })
+    .from(followsTable)
+    .where(or(
+      and(eq(followsTable.targetType, "artist"), eq(followsTable.targetId, id)),
+      linkedUserId ? and(eq(followsTable.targetType, "user"), eq(followsTable.targetId, linkedUserId)) : undefined,
+    ));
 
   const [songCount] = await db.select({ count: count() }).from(songsTable)
     .where(and(eq(songsTable.artistId, id), eq(songsTable.status, "published")));
 
   let isFollowed = false;
   if (userId) {
-    const [f] = await db.select().from(followsTable)
-      .where(and(eq(followsTable.followerId, userId), eq(followsTable.targetType, "artist"), eq(followsTable.targetId, id)));
+    const [f] = await db.select({ id: followsTable.id }).from(followsTable)
+      .where(and(
+        eq(followsTable.followerId, userId),
+        or(
+          and(eq(followsTable.targetType, "artist"), eq(followsTable.targetId, id)),
+          linkedUserId ? and(eq(followsTable.targetType, "user"), eq(followsTable.targetId, linkedUserId)) : undefined,
+        ),
+      )).limit(1);
     isFollowed = !!f;
   }
 
@@ -55,7 +68,7 @@ async function getArtistRow(id: number, userId?: number) {
     labelName = label?.name ?? null;
   }
 
-  return { ...artist, followerCount: followerCount?.count ?? 0, songCount: songCount?.count ?? 0, isFollowed, labelName };
+  return { ...artist, followerCount: Number(fc?.count ?? 0), songCount: songCount?.count ?? 0, isFollowed, labelName };
 }
 
 router.get("/artists", optionalAuth, async (req: AuthRequest, res): Promise<void> => {
@@ -97,17 +110,27 @@ router.get("/artists", optionalAuth, async (req: AuthRequest, res): Promise<void
   const unique = artists.filter(a => { if (!a.userId) return true; if (seen.has(a.userId)) return false; seen.add(a.userId); return true; });
 
   const withCounts = await Promise.all(unique.map(async (a) => {
-    const [fc] = await db.select({ count: count() }).from(followsTable)
-      .where(and(eq(followsTable.targetType, "artist"), eq(followsTable.targetId, a.id)));
+    const [fc] = await db.select({ count: sql<number>`COUNT(DISTINCT ${followsTable.followerId})` })
+      .from(followsTable)
+      .where(or(
+        and(eq(followsTable.targetType, "artist"), eq(followsTable.targetId, a.id)),
+        a.userId ? and(eq(followsTable.targetType, "user"), eq(followsTable.targetId, a.userId)) : undefined,
+      ));
     const [sc] = await db.select({ count: count() }).from(songsTable)
       .where(and(eq(songsTable.artistId, a.id), eq(songsTable.status, "published")));
     let isFollowed = false;
     if (req.user) {
-      const [f] = await db.select().from(followsTable)
-        .where(and(eq(followsTable.followerId, req.user.userId), eq(followsTable.targetType, "artist"), eq(followsTable.targetId, a.id)));
+      const [f] = await db.select({ id: followsTable.id }).from(followsTable)
+        .where(and(
+          eq(followsTable.followerId, req.user.userId),
+          or(
+            and(eq(followsTable.targetType, "artist"), eq(followsTable.targetId, a.id)),
+            a.userId ? and(eq(followsTable.targetType, "user"), eq(followsTable.targetId, a.userId)) : undefined,
+          ),
+        )).limit(1);
       isFollowed = !!f;
     }
-    return { ...a, followerCount: fc?.count ?? 0, songCount: sc?.count ?? 0, isFollowed };
+    return { ...a, followerCount: Number(fc?.count ?? 0), songCount: sc?.count ?? 0, isFollowed };
   }));
 
   res.json(withCounts);
@@ -123,9 +146,14 @@ router.get("/artists/new", async (_req, res): Promise<void> => {
     .limit(8);
 
   const withCounts = await Promise.all(artists.map(async (a) => {
-    const [fc] = await db.select({ count: count() }).from(followsTable).where(and(eq(followsTable.targetType, "artist"), eq(followsTable.targetId, a.id)));
+    const [fc] = await db.select({ count: sql<number>`COUNT(DISTINCT ${followsTable.followerId})` })
+      .from(followsTable)
+      .where(or(
+        and(eq(followsTable.targetType, "artist"), eq(followsTable.targetId, a.id)),
+        a.userId ? and(eq(followsTable.targetType, "user"), eq(followsTable.targetId, a.userId)) : undefined,
+      ));
     const [sc] = await db.select({ count: count() }).from(songsTable).where(and(eq(songsTable.artistId, a.id), eq(songsTable.status, "published")));
-    return { ...a, followerCount: fc?.count ?? 0, songCount: sc?.count ?? 0, isFollowed: false };
+    return { ...a, followerCount: Number(fc?.count ?? 0), songCount: sc?.count ?? 0, isFollowed: false };
   }));
 
   res.json(withCounts);
@@ -141,9 +169,14 @@ router.get("/artists/featured", async (_req, res): Promise<void> => {
     .limit(6);
 
   const withCounts = await Promise.all(artists.map(async (a) => {
-    const [fc] = await db.select({ count: count() }).from(followsTable).where(and(eq(followsTable.targetType, "artist"), eq(followsTable.targetId, a.id)));
+    const [fc] = await db.select({ count: sql<number>`COUNT(DISTINCT ${followsTable.followerId})` })
+      .from(followsTable)
+      .where(or(
+        and(eq(followsTable.targetType, "artist"), eq(followsTable.targetId, a.id)),
+        a.userId ? and(eq(followsTable.targetType, "user"), eq(followsTable.targetId, a.userId)) : undefined,
+      ));
     const [sc] = await db.select({ count: count() }).from(songsTable).where(and(eq(songsTable.artistId, a.id), eq(songsTable.status, "published")));
-    return { ...a, followerCount: fc?.count ?? 0, songCount: sc?.count ?? 0, isFollowed: false };
+    return { ...a, followerCount: Number(fc?.count ?? 0), songCount: sc?.count ?? 0, isFollowed: false };
   }));
 
   res.json(withCounts);
