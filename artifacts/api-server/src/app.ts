@@ -41,6 +41,14 @@ const staticDir = path.resolve(
 if (fs.existsSync(staticDir)) {
   app.use(express.static(staticDir));
   app.use((_req, res) => {
+    // Never let the browser (or its back/forward cache) serve a stale copy of
+    // the SPA shell — otherwise a logged-out user could hit "back" and see a
+    // cached snapshot of a page rendered while they were signed in.
+    res.setHeader(
+      "Cache-Control",
+      "no-store, no-cache, must-revalidate, private",
+    );
+    res.setHeader("Pragma", "no-cache");
     res.sendFile(path.join(staticDir, "index.html"));
   });
 }

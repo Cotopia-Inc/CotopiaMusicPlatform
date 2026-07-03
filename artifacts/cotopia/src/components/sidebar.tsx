@@ -584,7 +584,7 @@ export function Sidebar({ onMobileClose }: SidebarProps = {}) {
                 </Button>
               </Link>
             </div>
-            <Button variant="outline" size="sm" className="w-full justify-start gap-2 text-xs" onClick={() => { logout(); navigate("/"); }}>
+            <Button variant="outline" size="sm" className="w-full justify-start gap-2 text-xs" onClick={() => { logout(); navigate("/", { replace: true }); }}>
               <LogOut className="w-3.5 h-3.5" />
               Sign out
             </Button>
