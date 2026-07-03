@@ -5,7 +5,7 @@ import {
   useGetChatMessages, getGetChatMessagesQueryKey, usePostChatMessage,
   useRateSong, useFavoriteSong, useUnfavoriteSong,
   useDeleteSong, useUpdateSong, useUpdateArtist, useTrackAnalyticsEvent,
-  useGetPresenceCount, usePostPresenceHeartbeat,
+  useGetPresenceCount, usePostPresenceHeartbeat, useDeletePresence,
 } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Play, Pause, Heart, Star, Send, Radio, Users, MessageCircle, ArrowLeft, Trash2, Edit2, X, Save, Upload, ImageIcon, Mic2, ChevronDown, ChevronUp, AlignLeft } from "lucide-react";
@@ -89,16 +89,7 @@ export default function SongDetail() {
     query: { enabled: !!songId, refetchInterval: 15_000, queryKey: ["getPresenceCount", "song", songId] }
   });
   const heartbeatMutation = usePostPresenceHeartbeat();
-
-  useEffect(() => {
-    if (!songId) return;
-    heartbeatMutation.mutate({ contentType: "song", contentId: songId, data: { clientId: presenceClientId } });
-    const interval = setInterval(() => {
-      heartbeatMutation.mutate({ contentType: "song", contentId: songId, data: { clientId: presenceClientId } });
-    }, 15_000);
-    return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [songId]);
+  const releasePresenceMutation = useDeletePresence();
 
   const [chatInput, setChatInput] = useState("");
   const [deletingChatMsgId, setDeletingChatMsgId] = useState<number | null>(null);
@@ -109,6 +100,21 @@ export default function SongDetail() {
 
   const { play: playerPlay, isPlaying, track: currentTrack } = usePlayer();
   const isThisSongPlaying = isPlaying && currentTrack?.id === songId;
+
+  // Only counted as an active listener while this song is actually playing.
+  // Pausing or stopping immediately releases the presence slot; no fake/random counts.
+  useEffect(() => {
+    if (!songId || !isThisSongPlaying) return;
+    heartbeatMutation.mutate({ contentType: "song", contentId: songId, data: { clientId: presenceClientId } });
+    const interval = setInterval(() => {
+      heartbeatMutation.mutate({ contentType: "song", contentId: songId, data: { clientId: presenceClientId } });
+    }, 15_000);
+    return () => {
+      clearInterval(interval);
+      releasePresenceMutation.mutate({ contentType: "song", contentId: songId, params: { clientId: presenceClientId } });
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [songId, isThisSongPlaying]);
 
   const trackEvent = useTrackAnalyticsEvent();
   useEffect(() => {

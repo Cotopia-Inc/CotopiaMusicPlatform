@@ -74,6 +74,7 @@ import type {
   CompanyPostInput,
   CompanyPostUpdate,
   Conversation,
+  DeletePresenceParams,
   DemographicsInput,
   DirectMessage,
   DiscoverFeed,
@@ -9557,6 +9558,87 @@ export const usePostPresenceHeartbeat = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getPostPresenceHeartbeatMutationOptions(options));
+    }
+
+export const getDeletePresenceUrl = (contentType: 'song' | 'video',
+    contentId: number,
+    params: DeletePresenceParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/presence/${contentType}/${contentId}?${stringifiedParams}` : `/api/presence/${contentType}/${contentId}`
+}
+
+/**
+ * @summary Remove a client from the active listeners/watchers immediately (e.g. on pause/stop)
+ */
+export const deletePresence = async (contentType: 'song' | 'video',
+    contentId: number,
+    params: DeletePresenceParams, options?: RequestInit): Promise<PresenceCount> => {
+
+  return customFetch<PresenceCount>(getDeletePresenceUrl(contentType,contentId,params),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeletePresenceMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deletePresence>>, TError,{contentType: 'song' | 'video';contentId: number;params: DeletePresenceParams}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deletePresence>>, TError,{contentType: 'song' | 'video';contentId: number;params: DeletePresenceParams}, TContext> => {
+
+const mutationKey = ['deletePresence'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deletePresence>>, {contentType: 'song' | 'video';contentId: number;params: DeletePresenceParams}> = (props) => {
+          const {contentType,contentId,params} = props ?? {};
+
+          return  deletePresence(contentType,contentId,params,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeletePresenceMutationResult = NonNullable<Awaited<ReturnType<typeof deletePresence>>>
+
+    export type DeletePresenceMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Remove a client from the active listeners/watchers immediately (e.g. on pause/stop)
+ */
+export const useDeletePresence = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deletePresence>>, TError,{contentType: 'song' | 'video';contentId: number;params: DeletePresenceParams}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deletePresence>>,
+        TError,
+        {contentType: 'song' | 'video';contentId: number;params: DeletePresenceParams},
+        TContext
+      > => {
+      return useMutation(getDeletePresenceMutationOptions(options));
     }
 
 export const getCapturePaymentUrl = () => {

@@ -5,7 +5,7 @@ import {
   useGetChatMessages, getGetChatMessagesQueryKey, usePostChatMessage,
   useRateVideo, useFavoriteVideo, useUnfavoriteVideo, useTrackAnalyticsEvent,
   useDeleteVideo, useUpdateVideo, useUpdateArtist,
-  useGetPresenceCount, usePostPresenceHeartbeat,
+  useGetPresenceCount, usePostPresenceHeartbeat, useDeletePresence,
 } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Play, Heart, Star, Send, Radio, Users, MessageCircle, Maximize2, ArrowLeft, Trash2, Edit2, X, Save, Upload, ImageIcon, ListPlus, Pencil, Shield, ShieldOff, Check, AlignLeft, ChevronDown, ChevronUp } from "lucide-react";
@@ -89,16 +89,25 @@ export default function VideoDetail() {
     query: { enabled: !!videoId, refetchInterval: 15_000, queryKey: ["getPresenceCount", "video", videoId] }
   });
   const heartbeatMutation = usePostPresenceHeartbeat();
+  const releasePresenceMutation = useDeletePresence();
 
+  // Tracks the video element's actual play/pause state (not just whether it's mounted).
+  const [isActuallyPlaying, setIsActuallyPlaying] = useState(false);
+
+  // Only counted as an active watcher while the video is actually playing.
+  // Pausing or stopping immediately releases the presence slot; no fake/random counts.
   useEffect(() => {
-    if (!videoId) return;
+    if (!videoId || !isActuallyPlaying) return;
     heartbeatMutation.mutate({ contentType: "video", contentId: videoId, data: { clientId: presenceClientId } });
     const interval = setInterval(() => {
       heartbeatMutation.mutate({ contentType: "video", contentId: videoId, data: { clientId: presenceClientId } });
     }, 15_000);
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      releasePresenceMutation.mutate({ contentType: "video", contentId: videoId, params: { clientId: presenceClientId } });
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [videoId]);
+  }, [videoId, isActuallyPlaying]);
 
   const [chatInput, setChatInput] = useState("");
   const [deletingChatMsgId, setDeletingChatMsgId] = useState<number | null>(null);
@@ -124,10 +133,14 @@ export default function VideoDetail() {
 
   const handleVideoEnded = useCallback(() => {
     setIsVideoPlaying(false);
+    setIsActuallyPlaying(false);
     if (videoId) {
       trackEvent.mutate({ data: { eventType: "content", eventName: "video_complete", contentType: "video", contentId: videoId } });
     }
   }, [videoId]);
+
+  const handleVideoPlayEvent = useCallback(() => setIsActuallyPlaying(true), []);
+  const handleVideoPauseEvent = useCallback(() => setIsActuallyPlaying(false), []);
 
   const handleFullscreen = useCallback(() => {
     if (videoRef.current) {
@@ -364,6 +377,8 @@ export default function VideoDetail() {
             controls
             autoPlay
             onEnded={handleVideoEnded}
+            onPlay={handleVideoPlayEvent}
+            onPause={handleVideoPauseEvent}
             style={{ zIndex: 10 }}
           />
         ) : (

@@ -2066,6 +2066,10 @@ export type GetChatMessagesParams = {
 limit?: number;
 };
 
+export type DeletePresenceParams = {
+clientId: string;
+};
+
 export type AdminListFeatureSuggestionsParams = {
 status?: string;
 category?: string;

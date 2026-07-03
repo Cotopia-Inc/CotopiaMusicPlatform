@@ -2544,6 +2544,34 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PresenceCount"
+    delete:
+      operationId: deletePresence
+      tags: [presence]
+      summary: Remove a client from the active listeners/watchers immediately (e.g. on pause/stop)
+      parameters:
+        - name: contentType
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [song, video]
+        - name: contentId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: clientId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PresenceCount"
 
   /payments/capture:
     post:

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { GetPresenceCountParams, PostPresenceHeartbeatParams, PostPresenceHeartbeatBody } from "@workspace/api-zod";
+import { GetPresenceCountParams, PostPresenceHeartbeatParams, PostPresenceHeartbeatBody, DeletePresenceParams, DeletePresenceQueryParams } from "@workspace/api-zod";
 
 const router = Router();
 
@@ -55,6 +55,19 @@ router.post("/presence/:contentType/:contentId", async (req, res): Promise<void>
   }
   clients.set(body.data.clientId, Date.now());
 
+  res.json({ count: pruneAndCount(key) });
+});
+
+router.delete("/presence/:contentType/:contentId", async (req, res): Promise<void> => {
+  const params = DeletePresenceParams.safeParse(req.params);
+  const query = DeletePresenceQueryParams.safeParse(req.query);
+  if (!params.success || !query.success) {
+    res.status(400).json({ error: "Invalid parameters" });
+    return;
+  }
+  const key = contentKey(params.data.contentType, params.data.contentId);
+  const clients = sessions.get(key);
+  clients?.delete(query.data.clientId);
   res.json({ count: pruneAndCount(key) });
 });
 

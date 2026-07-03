@@ -3220,6 +3220,23 @@ export const PostPresenceHeartbeatResponse = zod.object({
 
 
 /**
+ * @summary Remove a client from the active listeners/watchers immediately (e.g. on pause/stop)
+ */
+export const DeletePresenceParams = zod.object({
+  "contentType": zod.enum(['song', 'video']),
+  "contentId": zod.coerce.number()
+})
+
+export const DeletePresenceQueryParams = zod.object({
+  "clientId": zod.coerce.string()
+})
+
+export const DeletePresenceResponse = zod.object({
+  "count": zod.number()
+})
+
+
+/**
  * @summary Capture a PayPal demo payment and move submission to pending_review
  */
 export const CapturePaymentBody = zod.object({
