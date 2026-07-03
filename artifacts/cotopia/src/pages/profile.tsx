@@ -681,7 +681,18 @@ export default function Profile() {
         <p className="text-muted-foreground uppercase tracking-widest text-xs font-semibold">{profile.role?.replace("_", " ")}</p>
         {myBadges && myBadges.length > 0 && (
           <div className="flex justify-center">
-            <BadgeList userBadges={myBadges} size="sm" />
+            <BadgeList
+              userBadges={[...myBadges].sort((a, b) => {
+                const aFeatured = a.isFeatured ? 0 : 1;
+                const bFeatured = b.isFeatured ? 0 : 1;
+                if (aFeatured !== bFeatured) return aFeatured - bFeatured;
+                if (a.isFeatured && b.isFeatured) {
+                  return (a.featureOrder ?? 99) - (b.featureOrder ?? 99);
+                }
+                return 0;
+              })}
+              size="sm"
+            />
           </div>
         )}
       </div>
