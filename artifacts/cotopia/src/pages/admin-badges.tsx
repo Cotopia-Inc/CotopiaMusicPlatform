@@ -576,6 +576,8 @@ function AssignTab() {
 function HistoryTab() {
   const { toast } = useToast();
   const qc = useQueryClient();
+  const [search, setSearch] = useState("");
+  const [removingId, setRemovingId] = useState<number | null>(null);
 
   const { data, isLoading } = useQuery<UserBadgeData[]>({
     queryKey: ["admin-user-badges"],
@@ -595,16 +597,32 @@ function HistoryTab() {
       if (!res.ok) throw new Error("Failed to remove");
     },
     onSuccess: () => {
-      toast({ title: "Badge removed" });
+      setRemovingId(null);
+      toast({ title: "Badge revoked" });
       qc.invalidateQueries({ queryKey: ["admin-user-badges"] });
     },
-    onError: () => toast({ variant: "destructive", title: "Could not remove badge" }),
+    onError: () => toast({ variant: "destructive", title: "Could not revoke badge" }),
   });
 
-  const items = data ?? [];
+  const q = search.trim().toLowerCase();
+  const items = (data ?? []).filter(ub =>
+    !q ||
+    ub.username?.toLowerCase().includes(q) ||
+    ub.displayName?.toLowerCase().includes(q) ||
+    ub.badge.name.toLowerCase().includes(q)
+  );
 
   return (
     <div className="space-y-4">
+      <div className="relative">
+        <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by username, display name, or badge..."
+          className="pl-9"
+        />
+      </div>
       {isLoading ? (
         <div className="space-y-3">
           {Array(6).fill(0).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}
@@ -638,15 +656,39 @@ function HistoryTab() {
                 </div>
                 {ub.reason && <p className="text-xs text-muted-foreground mt-0.5 italic">{ub.reason}</p>}
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-8 h-8 p-0 text-destructive hover:text-destructive flex-shrink-0"
-                onClick={() => removeMutation.mutate(ub.id)}
-                disabled={removeMutation.isPending}
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </Button>
+              {removingId === ub.id ? (
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <span className="text-xs text-destructive font-medium whitespace-nowrap">Revoke this badge?</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-8 h-8 p-0"
+                    onClick={() => setRemovingId(null)}
+                    disabled={removeMutation.isPending}
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="h-8 px-3 text-xs gap-1"
+                    disabled={removeMutation.isPending}
+                    onClick={() => removeMutation.mutate(ub.id)}
+                  >
+                    {removeMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+                    Revoke
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-8 h-8 p-0 text-destructive/60 hover:text-destructive flex-shrink-0"
+                  onClick={() => setRemovingId(ub.id)}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </Button>
+              )}
             </div>
           ))}
         </div>

@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Upload, X, Loader2, Lock, User, MailCheck, CheckCircle, Mail, RefreshCw, Film, Camera, Trash2, AlertTriangle } from "lucide-react";
+import { Upload, X, Loader2, Lock, User, MailCheck, CheckCircle, Mail, RefreshCw, Film, Camera, Trash2, AlertTriangle, ChevronUp, ChevronDown } from "lucide-react";
 import { useUpload } from "@workspace/object-storage-web";
 import { RoleBadges, VerifiedBadge } from "@/components/role-badges";
 import { useQueryClient } from "@tanstack/react-query";
@@ -22,9 +22,11 @@ import { MessageSquare } from "lucide-react";
 
 function FeaturedBadgesSection({ userId }: { userId: number }) {
   const { toast } = useToast();
+  const qc = useQueryClient();
+  const badgesQueryKey = ["user-badges", userId];
 
   const { data: userBadges } = useQuery<UserBadgeData[]>({
-    queryKey: ["user-badges", userId],
+    queryKey: badgesQueryKey,
     queryFn: async () => {
       const res = await fetch(`${import.meta.env.BASE_URL}api/users/${userId}/badges`);
       return res.ok ? res.json() : [];
@@ -42,7 +44,10 @@ function FeaturedBadgesSection({ userId }: { userId: number }) {
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? "Failed to update");
       return res.json();
     },
-    onSuccess: () => toast({ title: "Featured badges updated" }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: badgesQueryKey });
+      toast({ title: "Featured badges updated" });
+    },
     onError: (e: unknown) => toast({ variant: "destructive", title: e instanceof Error ? e.message : "Update failed" }),
   });
 
@@ -59,6 +64,15 @@ function FeaturedBadgesSection({ userId }: { userId: number }) {
     featuredMutation.mutate(newIds);
   }
 
+  function moveFeatured(badgeId: number, direction: -1 | 1) {
+    const idx = featuredIds.indexOf(badgeId);
+    const target = idx + direction;
+    if (idx === -1 || target < 0 || target >= featuredIds.length) return;
+    const reordered = [...featuredIds];
+    [reordered[idx], reordered[target]] = [reordered[target], reordered[idx]];
+    featuredMutation.mutate(reordered);
+  }
+
   if (activeBadges.length === 0) return null;
 
   return (
@@ -71,28 +85,51 @@ function FeaturedBadgesSection({ userId }: { userId: number }) {
         {activeBadges.map(ub => {
           const isFeatured = featuredIds.includes(ub.badgeId);
           const canAdd = featuredIds.length < 3;
+          const order = featuredIds.indexOf(ub.badgeId);
           return (
-            <button
+            <div
               key={ub.id}
-              onClick={() => toggleFeatured(ub.badgeId)}
-              disabled={!isFeatured && !canAdd}
-              className={`flex items-center gap-3 rounded-lg border px-3 py-2 text-left transition-colors ${
+              className={`flex items-center gap-3 rounded-lg border px-3 py-2 transition-colors ${
                 isFeatured
                   ? "border-primary bg-primary/10"
                   : !canAdd
-                  ? "border-border opacity-40 cursor-not-allowed"
+                  ? "border-border opacity-40"
                   : "border-border hover:border-border/80 hover:bg-secondary/30"
               }`}
             >
-              <span className="text-lg flex-shrink-0">{ub.badge.icon}</span>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm">{ub.badge.name}</p>
-                <p className="text-xs text-muted-foreground truncate">{ub.badge.description}</p>
-              </div>
+              <button
+                onClick={() => toggleFeatured(ub.badgeId)}
+                disabled={!isFeatured && !canAdd}
+                className="flex items-center gap-3 flex-1 min-w-0 text-left disabled:cursor-not-allowed"
+              >
+                <span className="text-lg flex-shrink-0">{ub.badge.icon}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm">{ub.badge.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">{ub.badge.description}</p>
+                </div>
+              </button>
               {isFeatured && (
-                <span className="text-xs font-semibold text-primary flex-shrink-0">#{featuredIds.indexOf(ub.badgeId) + 1}</span>
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <button
+                    onClick={() => moveFeatured(ub.badgeId, -1)}
+                    disabled={order === 0 || featuredMutation.isPending}
+                    className="w-5 h-5 flex items-center justify-center rounded text-primary disabled:opacity-30 disabled:cursor-not-allowed hover:bg-primary/20"
+                    aria-label="Move up"
+                  >
+                    <ChevronUp className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => moveFeatured(ub.badgeId, 1)}
+                    disabled={order === featuredIds.length - 1 || featuredMutation.isPending}
+                    className="w-5 h-5 flex items-center justify-center rounded text-primary disabled:opacity-30 disabled:cursor-not-allowed hover:bg-primary/20"
+                    aria-label="Move down"
+                  >
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  </button>
+                  <span className="text-xs font-semibold text-primary">#{order + 1}</span>
+                </div>
               )}
-            </button>
+            </div>
           );
         })}
       </div>
