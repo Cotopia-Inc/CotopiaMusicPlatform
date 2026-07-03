@@ -2491,6 +2491,60 @@ paths:
         "401":
           description: Unauthorized
 
+  /presence/{contentType}/{contentId}:
+    get:
+      operationId: getPresenceCount
+      tags: [presence]
+      summary: Get the number of active listeners/watchers for a song or video
+      parameters:
+        - name: contentType
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [song, video]
+        - name: contentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PresenceCount"
+    post:
+      operationId: postPresenceHeartbeat
+      tags: [presence]
+      summary: Send a heartbeat indicating the client is actively listening/watching
+      parameters:
+        - name: contentType
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [song, video]
+        - name: contentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PresenceHeartbeatInput"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PresenceCount"
+
   /payments/capture:
     post:
       operationId: capturePayment
@@ -4889,6 +4943,21 @@ components:
             $ref: "#/components/schemas/AdminListenerItem"
         total:
           type: integer
+
+    # ── Presence ──────────────────────────────────────────────────────────
+    PresenceCount:
+      type: object
+      required: [count]
+      properties:
+        count:
+          type: integer
+
+    PresenceHeartbeatInput:
+      type: object
+      required: [clientId]
+      properties:
+        clientId:
+          type: string
 
     # ── Analytics ─────────────────────────────────────────────────────────────
     AnalyticsEventInput:

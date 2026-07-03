@@ -5,6 +5,7 @@ import {
   useGetChatMessages, getGetChatMessagesQueryKey, usePostChatMessage,
   useRateVideo, useFavoriteVideo, useUnfavoriteVideo, useTrackAnalyticsEvent,
   useDeleteVideo, useUpdateVideo, useUpdateArtist,
+  useGetPresenceCount, usePostPresenceHeartbeat,
 } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Play, Heart, Star, Send, Radio, Users, MessageCircle, Maximize2, ArrowLeft, Trash2, Edit2, X, Save, Upload, ImageIcon, ListPlus, Pencil, Shield, ShieldOff, Check, AlignLeft, ChevronDown, ChevronUp } from "lucide-react";
@@ -14,7 +15,7 @@ import { VerifyEmailBanner } from "@/components/verify-email-banner";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { usePlatformConfig } from "@/lib/platform-config";
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useQueryClient } from "@tanstack/react-query";
@@ -71,6 +72,33 @@ export default function VideoDetail() {
   const { data: chatMessages, isLoading: loadingChat } = useGetChatMessages("video", videoId, {}, {
     query: { enabled: !!videoId, queryKey: getGetChatMessagesQueryKey("video", videoId) }
   });
+
+  const presenceClientId = useRef<string>(
+    (() => {
+      const KEY = "cotopia_presence_client_id";
+      let existing = sessionStorage.getItem(KEY);
+      if (!existing) {
+        existing = crypto.randomUUID();
+        sessionStorage.setItem(KEY, existing);
+      }
+      return existing;
+    })()
+  ).current;
+
+  const { data: presence } = useGetPresenceCount("video", videoId, {
+    query: { enabled: !!videoId, refetchInterval: 15_000, queryKey: ["getPresenceCount", "video", videoId] }
+  });
+  const heartbeatMutation = usePostPresenceHeartbeat();
+
+  useEffect(() => {
+    if (!videoId) return;
+    heartbeatMutation.mutate({ contentType: "video", contentId: videoId, data: { clientId: presenceClientId } });
+    const interval = setInterval(() => {
+      heartbeatMutation.mutate({ contentType: "video", contentId: videoId, data: { clientId: presenceClientId } });
+    }, 15_000);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [videoId]);
 
   const [chatInput, setChatInput] = useState("");
   const [deletingChatMsgId, setDeletingChatMsgId] = useState<number | null>(null);
@@ -200,10 +228,7 @@ export default function VideoDetail() {
 
   const isFavorited = localFavorited ?? video?.isFavorited ?? false;
   const userRating = localRating ?? video?.userRating ?? null;
-  const viewerCount = useMemo(
-    () => new Set((chatMessages ?? []).map((m) => m.userId)).size,
-    [chatMessages]
-  );
+  const viewerCount = presence?.count ?? 0;
 
   useEffect(() => {
     if (video) {

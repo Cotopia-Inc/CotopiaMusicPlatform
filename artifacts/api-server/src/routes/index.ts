@@ -29,6 +29,7 @@ import blocksRouter from "./blocks";
 import safetyRouter from "./safety";
 import betaFeedbackRouter from "./beta-feedback";
 import badgesRouter from "./badges";
+import presenceRouter from "./presence";
 
 const router: IRouter = Router();
 
@@ -62,5 +63,6 @@ router.use(blocksRouter);
 router.use(safetyRouter);
 router.use(betaFeedbackRouter);
 router.use(badgesRouter);
+router.use(presenceRouter);
 
 export default router;

@@ -3190,6 +3190,36 @@ export const PostChatMessageBody = zod.object({
 
 
 /**
+ * @summary Get the number of active listeners/watchers for a song or video
+ */
+export const GetPresenceCountParams = zod.object({
+  "contentType": zod.enum(['song', 'video']),
+  "contentId": zod.coerce.number()
+})
+
+export const GetPresenceCountResponse = zod.object({
+  "count": zod.number()
+})
+
+
+/**
+ * @summary Send a heartbeat indicating the client is actively listening/watching
+ */
+export const PostPresenceHeartbeatParams = zod.object({
+  "contentType": zod.enum(['song', 'video']),
+  "contentId": zod.coerce.number()
+})
+
+export const PostPresenceHeartbeatBody = zod.object({
+  "clientId": zod.string()
+})
+
+export const PostPresenceHeartbeatResponse = zod.object({
+  "count": zod.number()
+})
+
+
+/**
  * @summary Capture a PayPal demo payment and move submission to pending_review
  */
 export const CapturePaymentBody = zod.object({

@@ -123,6 +123,8 @@ import type {
   PlaylistReorderInput,
   PlaylistSongInput,
   PlaylistUpdate,
+  PresenceCount,
+  PresenceHeartbeatInput,
   PublicUser,
   RatingInput,
   RatingResult,
@@ -9399,6 +9401,162 @@ export const usePostChatMessage = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getPostChatMessageMutationOptions(options));
+    }
+
+export const getGetPresenceCountUrl = (contentType: 'song' | 'video',
+    contentId: number,) => {
+
+
+
+
+  return `/api/presence/${contentType}/${contentId}`
+}
+
+/**
+ * @summary Get the number of active listeners/watchers for a song or video
+ */
+export const getPresenceCount = async (contentType: 'song' | 'video',
+    contentId: number, options?: RequestInit): Promise<PresenceCount> => {
+
+  return customFetch<PresenceCount>(getGetPresenceCountUrl(contentType,contentId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPresenceCountQueryKey = (contentType: 'song' | 'video',
+    contentId: number,) => {
+    return [
+    `/api/presence/${contentType}/${contentId}`
+    ] as const;
+    }
+
+
+export const getGetPresenceCountQueryOptions = <TData = Awaited<ReturnType<typeof getPresenceCount>>, TError = ErrorType<unknown>>(contentType: 'song' | 'video',
+    contentId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPresenceCount>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPresenceCountQueryKey(contentType,contentId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPresenceCount>>> = ({ signal }) => getPresenceCount(contentType,contentId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(contentType && contentId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPresenceCount>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPresenceCountQueryResult = NonNullable<Awaited<ReturnType<typeof getPresenceCount>>>
+export type GetPresenceCountQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get the number of active listeners/watchers for a song or video
+ */
+
+export function useGetPresenceCount<TData = Awaited<ReturnType<typeof getPresenceCount>>, TError = ErrorType<unknown>>(
+ contentType: 'song' | 'video',
+    contentId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPresenceCount>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPresenceCountQueryOptions(contentType,contentId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getPostPresenceHeartbeatUrl = (contentType: 'song' | 'video',
+    contentId: number,) => {
+
+
+
+
+  return `/api/presence/${contentType}/${contentId}`
+}
+
+/**
+ * @summary Send a heartbeat indicating the client is actively listening/watching
+ */
+export const postPresenceHeartbeat = async (contentType: 'song' | 'video',
+    contentId: number,
+    presenceHeartbeatInput: PresenceHeartbeatInput, options?: RequestInit): Promise<PresenceCount> => {
+
+  return customFetch<PresenceCount>(getPostPresenceHeartbeatUrl(contentType,contentId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      presenceHeartbeatInput,)
+  }
+);}
+
+
+
+
+export const getPostPresenceHeartbeatMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postPresenceHeartbeat>>, TError,{contentType: 'song' | 'video';contentId: number;data: BodyType<PresenceHeartbeatInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof postPresenceHeartbeat>>, TError,{contentType: 'song' | 'video';contentId: number;data: BodyType<PresenceHeartbeatInput>}, TContext> => {
+
+const mutationKey = ['postPresenceHeartbeat'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postPresenceHeartbeat>>, {contentType: 'song' | 'video';contentId: number;data: BodyType<PresenceHeartbeatInput>}> = (props) => {
+          const {contentType,contentId,data} = props ?? {};
+
+          return  postPresenceHeartbeat(contentType,contentId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostPresenceHeartbeatMutationResult = NonNullable<Awaited<ReturnType<typeof postPresenceHeartbeat>>>
+    export type PostPresenceHeartbeatMutationBody = BodyType<PresenceHeartbeatInput>
+    export type PostPresenceHeartbeatMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Send a heartbeat indicating the client is actively listening/watching
+ */
+export const usePostPresenceHeartbeat = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postPresenceHeartbeat>>, TError,{contentType: 'song' | 'video';contentId: number;data: BodyType<PresenceHeartbeatInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof postPresenceHeartbeat>>,
+        TError,
+        {contentType: 'song' | 'video';contentId: number;data: BodyType<PresenceHeartbeatInput>},
+        TContext
+      > => {
+      return useMutation(getPostPresenceHeartbeatMutationOptions(options));
     }
 
 export const getCapturePaymentUrl = () => {

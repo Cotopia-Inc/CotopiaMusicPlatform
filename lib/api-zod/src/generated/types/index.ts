@@ -152,6 +152,8 @@ export * from './playlistInput';
 export * from './playlistReorderInput';
 export * from './playlistSongInput';
 export * from './playlistUpdate';
+export * from './presenceCount';
+export * from './presenceHeartbeatInput';
 export * from './publicUser';
 export * from './ratingInput';
 export * from './ratingResult';

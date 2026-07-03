@@ -5,6 +5,7 @@ import {
   useGetChatMessages, getGetChatMessagesQueryKey, usePostChatMessage,
   useRateSong, useFavoriteSong, useUnfavoriteSong,
   useDeleteSong, useUpdateSong, useUpdateArtist, useTrackAnalyticsEvent,
+  useGetPresenceCount, usePostPresenceHeartbeat,
 } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Play, Pause, Heart, Star, Send, Radio, Users, MessageCircle, ArrowLeft, Trash2, Edit2, X, Save, Upload, ImageIcon, Mic2, ChevronDown, ChevronUp, AlignLeft } from "lucide-react";
@@ -13,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { usePlatformConfig } from "@/lib/platform-config";
 import { usePlayer } from "@/lib/player";
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useQueryClient } from "@tanstack/react-query";
@@ -72,6 +73,33 @@ export default function SongDetail() {
     query: { enabled: !!songId, queryKey: getGetChatMessagesQueryKey("song", songId) }
   });
 
+  const presenceClientId = useRef<string>(
+    (() => {
+      const KEY = "cotopia_presence_client_id";
+      let existing = sessionStorage.getItem(KEY);
+      if (!existing) {
+        existing = crypto.randomUUID();
+        sessionStorage.setItem(KEY, existing);
+      }
+      return existing;
+    })()
+  ).current;
+
+  const { data: presence } = useGetPresenceCount("song", songId, {
+    query: { enabled: !!songId, refetchInterval: 15_000, queryKey: ["getPresenceCount", "song", songId] }
+  });
+  const heartbeatMutation = usePostPresenceHeartbeat();
+
+  useEffect(() => {
+    if (!songId) return;
+    heartbeatMutation.mutate({ contentType: "song", contentId: songId, data: { clientId: presenceClientId } });
+    const interval = setInterval(() => {
+      heartbeatMutation.mutate({ contentType: "song", contentId: songId, data: { clientId: presenceClientId } });
+    }, 15_000);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [songId]);
+
   const [chatInput, setChatInput] = useState("");
   const [deletingChatMsgId, setDeletingChatMsgId] = useState<number | null>(null);
   const [localFavorited, setLocalFavorited] = useState<boolean | null>(null);
@@ -125,10 +153,7 @@ export default function SongDetail() {
 
   const isFavorited = localFavorited ?? song?.isFavorited ?? false;
   const userRating = localRating ?? song?.userRating ?? null;
-  const listenCount = useMemo(
-    () => new Set((chatMessages ?? []).map((m) => m.userId)).size,
-    [chatMessages]
-  );
+  const listenCount = presence?.count ?? 0;
 
   useEffect(() => {
     if (song) {

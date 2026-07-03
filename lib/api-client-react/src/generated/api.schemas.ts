@@ -1392,6 +1392,14 @@ export interface AdminListenerList {
   total: number;
 }
 
+export interface PresenceCount {
+  count: number;
+}
+
+export interface PresenceHeartbeatInput {
+  clientId: string;
+}
+
 export type AnalyticsEventInputEventType = typeof AnalyticsEventInputEventType[keyof typeof AnalyticsEventInputEventType];
 
 
