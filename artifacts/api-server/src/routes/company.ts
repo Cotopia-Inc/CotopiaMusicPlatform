@@ -10,7 +10,7 @@ import { z } from "zod";
 
 const router = Router();
 
-router.get("/company/posts", async (req, res): Promise<void> => {
+router.get("/company/posts", requireAuth, async (req, res): Promise<void> => {
   const params = ListCompanyPostsQueryParams.safeParse(req.query);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -37,7 +37,7 @@ router.post("/company/posts", requireAuth, requireRole("admin", "master_admin"),
   res.status(201).json(post);
 });
 
-router.get("/company/posts/:id", async (req, res): Promise<void> => {
+router.get("/company/posts/:id", requireAuth, async (req, res): Promise<void> => {
   const params = GetCompanyPostParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -83,7 +83,7 @@ const CeoMessageInput = z.object({
   isVisible: z.boolean(),
 });
 
-router.get("/ceo-message", async (_req, res): Promise<void> => {
+router.get("/ceo-message", requireAuth, async (_req, res): Promise<void> => {
   const rows = await db.select().from(ceoMessageTable).limit(1);
   if (!rows[0]) {
     const [created] = await db.insert(ceoMessageTable).values({ content: "", authorName: "CEO", authorTitle: "Chief Executive Officer", isVisible: false }).returning();

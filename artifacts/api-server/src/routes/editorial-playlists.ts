@@ -3,14 +3,14 @@ import { eq, desc, count, and } from "drizzle-orm";
 import {
   db, playlistsTable, playlistItemsTable, songsTable, artistsTable, albumsTable,
 } from "@workspace/db";
-import { requireAuth, requireRole, optionalAuth, type AuthRequest } from "../lib/auth";
+import { requireAuth, requireRole, type AuthRequest } from "../lib/auth";
 
 const router = Router();
 
 const EDITORIAL_ROLES = ["admin", "master_admin", "editor"] as const;
 
-// ── List editorial playlists (public) ────────────────────────────────────
-router.get("/editorial-playlists", optionalAuth, async (_req, res): Promise<void> => {
+// ── List editorial playlists ──────────────────────────────────────────────
+router.get("/editorial-playlists", requireAuth, async (_req, res): Promise<void> => {
   const rows = await db
     .select({
       id: playlistsTable.id,
@@ -39,7 +39,7 @@ router.get("/editorial-playlists", optionalAuth, async (_req, res): Promise<void
 });
 
 // ── Get editorial playlist detail ─────────────────────────────────────────
-router.get("/editorial-playlists/:id", optionalAuth, async (req, res): Promise<void> => {
+router.get("/editorial-playlists/:id", requireAuth, async (req, res): Promise<void> => {
   const id = parseInt(req.params.id as string, 10);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid ID — please try again." }); return; }
 

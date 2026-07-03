@@ -96,7 +96,7 @@ async function expandPick(pick: typeof editorPicksTable.$inferSelect, editorUser
   return { ...pick, editorUsername: editorUsername ?? null, song, video, artist, playlist };
 }
 
-router.get("/editor-picks", async (_req, res): Promise<void> => {
+router.get("/editor-picks", requireAuth, async (_req, res): Promise<void> => {
   const picks = await db
     .select({
       id: editorPicksTable.id,

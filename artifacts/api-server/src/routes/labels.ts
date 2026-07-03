@@ -8,7 +8,7 @@ import {
   ListLabelsQueryParams, GetLabelParams, UpdateLabelParams, UpdateLabelBody,
   FollowLabelParams, UnfollowLabelParams,
 } from "@workspace/api-zod";
-import { requireAuth, optionalAuth, type AuthRequest } from "../lib/auth";
+import { requireAuth, type AuthRequest } from "../lib/auth";
 
 const router = Router();
 
@@ -35,7 +35,7 @@ async function getLabelRow(id: number, userId?: number) {
   return { ...label, followerCount: fc?.count ?? 0, artistCount: ac?.count ?? 0, isFollowed };
 }
 
-router.get("/labels", optionalAuth, async (req: AuthRequest, res): Promise<void> => {
+router.get("/labels", requireAuth, async (req: AuthRequest, res): Promise<void> => {
   const params = ListLabelsQueryParams.safeParse(req.query);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -76,7 +76,7 @@ router.get("/labels", optionalAuth, async (req: AuthRequest, res): Promise<void>
   res.json(withCounts);
 });
 
-router.get("/labels/featured", async (_req, res): Promise<void> => {
+router.get("/labels/featured", requireAuth, async (_req, res): Promise<void> => {
   const rawLabels = await db
     .select({ id: labelsTable.id, userId: labelsTable.userId, name: labelsTable.name, bio: labelsTable.bio, logoUrl: sql<string | null>`COALESCE(${labelsTable.logoUrl}, ${usersTable.avatarUrl})`, bannerUrl: sql<string | null>`COALESCE(${labelsTable.bannerUrl}, ${usersTable.bannerUrl})`, createdAt: labelsTable.createdAt, isVerified: usersTable.isVerified, userRole: usersTable.role })
     .from(labelsTable)
@@ -102,7 +102,7 @@ router.get("/labels/featured", async (_req, res): Promise<void> => {
   res.json(withCounts);
 });
 
-router.get("/labels/:id", optionalAuth, async (req: AuthRequest, res): Promise<void> => {
+router.get("/labels/:id", requireAuth, async (req: AuthRequest, res): Promise<void> => {
   const params = GetLabelParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });

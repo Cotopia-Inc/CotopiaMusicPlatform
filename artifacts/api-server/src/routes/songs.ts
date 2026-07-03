@@ -80,7 +80,7 @@ async function getSongWithArtist(id: number, userId?: number) {
   };
 }
 
-router.get("/songs", optionalAuth, async (req: AuthRequest, res): Promise<void> => {
+router.get("/songs", requireAuth, async (req: AuthRequest, res): Promise<void> => {
   const params = ListSongsQueryParams.safeParse(req.query);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -155,7 +155,7 @@ router.post("/songs", requireAuth, async (req: AuthRequest, res): Promise<void> 
   res.status(201).json(result);
 });
 
-router.get("/songs/featured", async (_req, res): Promise<void> => {
+router.get("/songs/featured", requireAuth, async (_req, res): Promise<void> => {
   const songs = await db
     .select({
       id: songsTable.id,
@@ -194,7 +194,7 @@ router.get("/songs/featured", async (_req, res): Promise<void> => {
   res.json(withRatings);
 });
 
-router.get("/songs/trending", async (req, res): Promise<void> => {
+router.get("/songs/trending", requireAuth, async (req, res): Promise<void> => {
   const limit = parseInt(String(req.query.limit ?? "10"), 10);
   const songs = await db
     .select({
@@ -231,7 +231,7 @@ router.get("/songs/trending", async (req, res): Promise<void> => {
   res.json(withRatings);
 });
 
-router.get("/songs/:id", optionalAuth, async (req: AuthRequest, res): Promise<void> => {
+router.get("/songs/:id", requireAuth, async (req: AuthRequest, res): Promise<void> => {
   const params = GetSongParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -308,7 +308,7 @@ router.post("/songs/:id/play", optionalAuth, async (req: AuthRequest, res): Prom
   res.json({ ok: true });
 });
 
-router.get("/songs/:id/comments", async (req, res): Promise<void> => {
+router.get("/songs/:id/comments", requireAuth, async (req, res): Promise<void> => {
   const params = GetSongCommentsParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });

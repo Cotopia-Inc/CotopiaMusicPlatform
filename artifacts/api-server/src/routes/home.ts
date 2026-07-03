@@ -3,10 +3,11 @@ import { eq, desc, and, avg, sql, isNotNull } from "drizzle-orm";
 import { db, songsTable, videosTable, artistsTable, labelsTable, albumsTable, companyPostsTable, followsTable, ratingsTable, editorPicksTable, usersTable } from "@workspace/db";
 import { count } from "drizzle-orm";
 import { isFeatureRotationEnabled, rotateFeatured, FEATURED_POOL_SIZE } from "../lib/featured";
+import { requireAuth } from "../lib/auth";
 
 const router = Router();
 
-router.get("/home", async (_req, res): Promise<void> => {
+router.get("/home", requireAuth, async (_req, res): Promise<void> => {
   const songSelect = {
     id: songsTable.id, title: songsTable.title, artistId: songsTable.artistId,
     artistName: artistsTable.stageName, albumId: songsTable.albumId,

@@ -8,7 +8,7 @@ import {
   ListArtistsQueryParams, GetArtistParams, UpdateArtistParams, UpdateArtistBody,
   FollowArtistParams, UnfollowArtistParams,
 } from "@workspace/api-zod";
-import { requireAuth, optionalAuth, type AuthRequest } from "../lib/auth";
+import { requireAuth, type AuthRequest } from "../lib/auth";
 import { avg } from "drizzle-orm";
 
 const router = Router();
@@ -71,7 +71,7 @@ async function getArtistRow(id: number, userId?: number) {
   return { ...artist, followerCount: Number(fc?.count ?? 0), songCount: songCount?.count ?? 0, isFollowed, labelName };
 }
 
-router.get("/artists", optionalAuth, async (req: AuthRequest, res): Promise<void> => {
+router.get("/artists", requireAuth, async (req: AuthRequest, res): Promise<void> => {
   const params = ListArtistsQueryParams.safeParse(req.query);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -136,7 +136,7 @@ router.get("/artists", optionalAuth, async (req: AuthRequest, res): Promise<void
   res.json(withCounts);
 });
 
-router.get("/artists/new", async (_req, res): Promise<void> => {
+router.get("/artists/new", requireAuth, async (_req, res): Promise<void> => {
   const artists = await db
     .select({ id: artistsTable.id, userId: artistsTable.userId, stageName: artistsTable.stageName, bio: artistsTable.bio, avatarUrl: sql<string | null>`COALESCE(${artistsTable.avatarUrl}, ${usersTable.avatarUrl})`, bannerUrl: sql<string | null>`COALESCE(${artistsTable.bannerUrl}, ${usersTable.bannerUrl})`, genre: artistsTable.genre, labelId: artistsTable.labelId, createdAt: artistsTable.createdAt, isVerified: usersTable.isVerified, userRole: usersTable.role })
     .from(artistsTable)
@@ -159,7 +159,7 @@ router.get("/artists/new", async (_req, res): Promise<void> => {
   res.json(withCounts);
 });
 
-router.get("/artists/featured", async (_req, res): Promise<void> => {
+router.get("/artists/featured", requireAuth, async (_req, res): Promise<void> => {
   const artists = await db
     .select({ id: artistsTable.id, userId: artistsTable.userId, stageName: artistsTable.stageName, bio: artistsTable.bio, avatarUrl: sql<string | null>`COALESCE(${artistsTable.avatarUrl}, ${usersTable.avatarUrl})`, bannerUrl: sql<string | null>`COALESCE(${artistsTable.bannerUrl}, ${usersTable.bannerUrl})`, genre: artistsTable.genre, labelId: artistsTable.labelId, createdAt: artistsTable.createdAt, isVerified: usersTable.isVerified, userRole: usersTable.role })
     .from(artistsTable)
@@ -182,7 +182,7 @@ router.get("/artists/featured", async (_req, res): Promise<void> => {
   res.json(withCounts);
 });
 
-router.get("/artists/:id", optionalAuth, async (req: AuthRequest, res): Promise<void> => {
+router.get("/artists/:id", requireAuth, async (req: AuthRequest, res): Promise<void> => {
   const params = GetArtistParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });

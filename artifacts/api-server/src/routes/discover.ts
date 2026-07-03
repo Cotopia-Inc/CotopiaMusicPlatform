@@ -2,10 +2,11 @@ import { Router } from "express";
 import { eq, desc, and, avg, count, sql, or, isNull, lte, inArray, gt, isNotNull } from "drizzle-orm";
 import { db, songsTable, videosTable, artistsTable, labelsTable, albumsTable, ratingsTable, commentsTable, followsTable, usersTable, appSettingsTable } from "@workspace/db";
 import { isFeatureRotationEnabled, rotateFeatured, FEATURED_POOL_SIZE } from "../lib/featured";
+import { requireAuth } from "../lib/auth";
 
 const router = Router();
 
-router.get("/discover", async (_req, res): Promise<void> => {
+router.get("/discover", requireAuth, async (_req, res): Promise<void> => {
   const releasedSong = or(isNull(songsTable.releaseDate), lte(songsTable.releaseDate, sql`CURRENT_DATE`));
   const releasedVideo = or(isNull(videosTable.releaseDate), lte(videosTable.releaseDate, sql`CURRENT_DATE`));
 

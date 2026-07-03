@@ -74,7 +74,7 @@ async function getVideoWithArtist(id: number, userId?: number) {
   };
 }
 
-router.get("/videos", optionalAuth, async (req: AuthRequest, res): Promise<void> => {
+router.get("/videos", requireAuth, async (req: AuthRequest, res): Promise<void> => {
   const params = ListVideosQueryParams.safeParse(req.query);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -123,7 +123,7 @@ router.get("/videos", optionalAuth, async (req: AuthRequest, res): Promise<void>
   res.json({ items: withRatings, total: totalRow?.count ?? 0 });
 });
 
-router.get("/videos/featured", async (_req, res): Promise<void> => {
+router.get("/videos/featured", requireAuth, async (_req, res): Promise<void> => {
   const videos = await db
     .select({
       id: videosTable.id,
@@ -159,7 +159,7 @@ router.get("/videos/featured", async (_req, res): Promise<void> => {
   res.json(withRatings);
 });
 
-router.get("/videos/trending", async (req, res): Promise<void> => {
+router.get("/videos/trending", requireAuth, async (req, res): Promise<void> => {
   const limit = parseInt(String(req.query.limit ?? "10"), 10);
   const videos = await db
     .select({
@@ -193,7 +193,7 @@ router.get("/videos/trending", async (req, res): Promise<void> => {
   res.json(withRatings);
 });
 
-router.get("/videos/:id", optionalAuth, async (req: AuthRequest, res): Promise<void> => {
+router.get("/videos/:id", requireAuth, async (req: AuthRequest, res): Promise<void> => {
   const params = GetVideoParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -269,7 +269,7 @@ router.post("/videos/:id/view", optionalAuth, async (req: AuthRequest, res): Pro
   res.json({ ok: true });
 });
 
-router.get("/videos/:id/comments", async (req, res): Promise<void> => {
+router.get("/videos/:id/comments", requireAuth, async (req, res): Promise<void> => {
   const params = GetVideoCommentsParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });

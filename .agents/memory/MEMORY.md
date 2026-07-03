@@ -12,3 +12,4 @@
 - [Cotopia ApiError shape](cotopia-api-error.md) — customFetch throws ApiError; error body is at err.data (not err.response.data); use err?.data?.error for server error strings in onError handlers
 - [Cotopia badges](cotopia-badges.md) — badge.color nullable (fallback DEFAULT_BADGE_COLOR); dup name → 409 not 500; NO API delete for badge definitions, clean test badges via SQL
 - [Pointer-based drag reorder gotcha](pointer-drag-reorder.md) — per-element setPointerCapture breaks if the dragged DOM node is repositioned mid-drag by React; use window-level pointermove/up listeners + refs instead; use real `<button>` for the handle, not a `<span>`, for a11y/automation targeting
+- [Cotopia catalog API is locked down](cotopia-catalog-auth-lockdown.md) — songs/videos/artists/labels/discover/home/company/editorial-playlists/editor-picks GET endpoints require requireAuth (not optionalAuth/public) as of Jul 2026; frontend login gate alone doesn't stop scraping
