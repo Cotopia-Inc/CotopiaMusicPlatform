@@ -415,8 +415,14 @@ function AssignTab() {
   const qc = useQueryClient();
   const [userQuery, setUserQuery] = useState("");
   const [selectedUser, setSelectedUser] = useState<UserResult | null>(null);
-  const [selectedBadgeId, setSelectedBadgeId] = useState<number | null>(null);
+  const [selectedBadgeIds, setSelectedBadgeIds] = useState<number[]>([]);
   const [reason, setReason] = useState("");
+
+  function toggleBadgeSelection(badgeId: number) {
+    setSelectedBadgeIds(prev =>
+      prev.includes(badgeId) ? prev.filter(id => id !== badgeId) : [...prev, badgeId]
+    );
+  }
 
   const { data: userResults } = useQuery<UserResult[]>({
     queryKey: ["user-search", userQuery],
@@ -438,19 +444,33 @@ function AssignTab() {
 
   const assignMutation = useMutation({
     mutationFn: async () => {
-      if (!selectedUser || !selectedBadgeId) throw new Error("Please select a user and badge");
-      const res = await fetch(`${import.meta.env.BASE_URL}api/admin/user-badges`, {
-        method: "POST",
-        headers: authHeaders(),
-        body: JSON.stringify({ userId: selectedUser.id, badgeId: selectedBadgeId, reason: reason.trim() || undefined }),
-      });
-      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? "Failed to assign");
-      return res.json();
+      if (!selectedUser || selectedBadgeIds.length === 0) throw new Error("Please select a user and at least one badge");
+      const results = await Promise.allSettled(
+        selectedBadgeIds.map(async badgeId => {
+          const res = await fetch(`${import.meta.env.BASE_URL}api/admin/user-badges`, {
+            method: "POST",
+            headers: authHeaders(),
+            body: JSON.stringify({ userId: selectedUser.id, badgeId, reason: reason.trim() || undefined }),
+          });
+          if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? "Failed to assign");
+          return res.json();
+        })
+      );
+      const failures = results.filter((r): r is PromiseRejectedResult => r.status === "rejected");
+      const succeeded = results.length - failures.length;
+      if (failures.length > 0 && succeeded === 0) {
+        throw new Error(failures[0].reason instanceof Error ? failures[0].reason.message : "Failed to assign badges");
+      }
+      return { succeeded, failed: failures.length };
     },
-    onSuccess: () => {
-      toast({ title: "Badge assigned!" });
+    onSuccess: ({ succeeded, failed }) => {
+      if (failed > 0) {
+        toast({ variant: "destructive", title: `Assigned ${succeeded} badge${succeeded === 1 ? "" : "s"}, ${failed} failed (already owned?)` });
+      } else {
+        toast({ title: `Assigned ${succeeded} badge${succeeded === 1 ? "" : "s"}!` });
+      }
       setSelectedUser(null);
-      setSelectedBadgeId(null);
+      setSelectedBadgeIds([]);
       setReason("");
       setUserQuery("");
       qc.invalidateQueries({ queryKey: ["admin-user-badges"] });
@@ -458,7 +478,7 @@ function AssignTab() {
     onError: (e: unknown) => toast({ variant: "destructive", title: e instanceof Error ? e.message : "Assignment failed" }),
   });
 
-  const selectedBadge = badges?.find(b => b.id === selectedBadgeId);
+  const selectedBadges = (badges ?? []).filter(b => selectedBadgeIds.includes(b.id));
 
   return (
     <div className="space-y-6 max-w-lg">
@@ -513,14 +533,28 @@ function AssignTab() {
 
       {/* Badge picker */}
       <div className="space-y-2">
-        <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Select Badge</label>
+        <div className="flex items-center justify-between">
+          <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
+            Select Badges {selectedBadgeIds.length > 0 && `(${selectedBadgeIds.length} selected)`}
+          </label>
+          {selectedBadgeIds.length > 0 && (
+            <button
+              type="button"
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+              onClick={() => setSelectedBadgeIds([])}
+            >
+              Clear all
+            </button>
+          )}
+        </div>
+        <p className="text-xs text-muted-foreground">Click to select one or more badges to issue at once.</p>
         <div className="grid grid-cols-1 gap-2">
           {(badges ?? []).filter(b => b.isActive).map(b => (
             <button
               key={b.id}
-              onClick={() => setSelectedBadgeId(b.id === selectedBadgeId ? null : b.id)}
+              onClick={() => toggleBadgeSelection(b.id)}
               className={`flex items-center gap-3 rounded-xl border p-3 text-left transition-colors ${
-                selectedBadgeId === b.id
+                selectedBadgeIds.includes(b.id)
                   ? "border-primary bg-primary/10"
                   : "border-border hover:border-border/80 hover:bg-secondary/30"
               }`}
@@ -530,7 +564,7 @@ function AssignTab() {
                 <p className="font-semibold text-sm">{b.name}</p>
                 <p className="text-xs text-muted-foreground truncate">{b.description}</p>
               </div>
-              {selectedBadgeId === b.id && <Check className="w-4 h-4 text-primary flex-shrink-0" />}
+              {selectedBadgeIds.includes(b.id) && <Check className="w-4 h-4 text-primary flex-shrink-0" />}
             </button>
           ))}
         </div>
@@ -549,23 +583,33 @@ function AssignTab() {
       </div>
 
       {/* Preview */}
-      {selectedUser && selectedBadge && (
-        <div className="bg-card border border-border rounded-xl p-4 space-y-1">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-2">Preview</p>
+      {selectedUser && selectedBadges.length > 0 && (
+        <div className="bg-card border border-border rounded-xl p-4 space-y-2">
+          <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">Preview</p>
           <p className="text-sm">
-            Awarding <span className="font-semibold" style={{ color: selectedBadge.color ?? DEFAULT_BADGE_COLOR }}>{selectedBadge.icon} {selectedBadge.name}</span>{" "}
-            to <span className="font-semibold">@{selectedUser.username}</span>
+            Awarding to <span className="font-semibold">@{selectedUser.username}</span>:
           </p>
+          <div className="flex flex-wrap gap-2">
+            {selectedBadges.map(b => (
+              <span
+                key={b.id}
+                className="inline-flex items-center gap-1 text-sm font-semibold rounded-full bg-secondary/50 px-2.5 py-1"
+                style={{ color: b.color ?? DEFAULT_BADGE_COLOR }}
+              >
+                {b.icon} {b.name}
+              </span>
+            ))}
+          </div>
         </div>
       )}
 
       <Button
         className="gap-1.5"
-        disabled={!selectedUser || !selectedBadgeId || assignMutation.isPending}
+        disabled={!selectedUser || selectedBadgeIds.length === 0 || assignMutation.isPending}
         onClick={() => assignMutation.mutate()}
       >
         {assignMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Award className="w-4 h-4" />}
-        Assign Badge
+        {selectedBadgeIds.length > 1 ? `Assign ${selectedBadgeIds.length} Badges` : "Assign Badge"}
       </Button>
     </div>
   );
