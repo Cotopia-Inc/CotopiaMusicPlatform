@@ -6,10 +6,10 @@ import { usePlatformConfig } from "@/lib/platform-config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Upload, X, Loader2, Lock, User, MailCheck, CheckCircle, Mail, RefreshCw, Film, Camera, Trash2, AlertTriangle, ChevronUp, ChevronDown } from "lucide-react";
+import { Upload, X, Loader2, Lock, User, MailCheck, CheckCircle, Mail, RefreshCw, Film, Camera, Trash2, AlertTriangle, GripVertical } from "lucide-react";
 import { useUpload } from "@workspace/object-storage-web";
 import { RoleBadges, VerifiedBadge } from "@/components/role-badges";
 import { useQueryClient } from "@tanstack/react-query";
@@ -24,6 +24,8 @@ function FeaturedBadgesSection({ userId }: { userId: number }) {
   const { toast } = useToast();
   const qc = useQueryClient();
   const badgesQueryKey = ["user-badges", userId];
+  const [draggedId, setDraggedId] = useState<number | null>(null);
+  const [dragOverId, setDragOverId] = useState<number | null>(null);
 
   const { data: userBadges } = useQuery<UserBadgeData[]>({
     queryKey: badgesQueryKey,
@@ -64,13 +66,39 @@ function FeaturedBadgesSection({ userId }: { userId: number }) {
     featuredMutation.mutate(newIds);
   }
 
-  function moveFeatured(badgeId: number, direction: -1 | 1) {
-    const idx = featuredIds.indexOf(badgeId);
-    const target = idx + direction;
-    if (idx === -1 || target < 0 || target >= featuredIds.length) return;
+  function reorderFeatured(fromBadgeId: number, toBadgeId: number) {
+    if (fromBadgeId === toBadgeId) return;
+    const fromIdx = featuredIds.indexOf(fromBadgeId);
+    const toIdx = featuredIds.indexOf(toBadgeId);
+    if (fromIdx === -1 || toIdx === -1) return;
     const reordered = [...featuredIds];
-    [reordered[idx], reordered[target]] = [reordered[target], reordered[idx]];
+    reordered.splice(fromIdx, 1);
+    reordered.splice(toIdx, 0, fromBadgeId);
     featuredMutation.mutate(reordered);
+  }
+
+  function handleDragStart(badgeId: number) {
+    setDraggedId(badgeId);
+  }
+
+  function handleDragOver(e: React.DragEvent, badgeId: number) {
+    if (draggedId === null || !featuredIds.includes(badgeId)) return;
+    e.preventDefault();
+    if (dragOverId !== badgeId) setDragOverId(badgeId);
+  }
+
+  function handleDrop(e: React.DragEvent, badgeId: number) {
+    e.preventDefault();
+    if (draggedId !== null && featuredIds.includes(badgeId)) {
+      reorderFeatured(draggedId, badgeId);
+    }
+    setDraggedId(null);
+    setDragOverId(null);
+  }
+
+  function handleDragEnd() {
+    setDraggedId(null);
+    setDragOverId(null);
   }
 
   if (activeBadges.length === 0) return null;
@@ -86,17 +114,32 @@ function FeaturedBadgesSection({ userId }: { userId: number }) {
           const isFeatured = featuredIds.includes(ub.badgeId);
           const canAdd = featuredIds.length < 3;
           const order = featuredIds.indexOf(ub.badgeId);
+          const isDragging = draggedId === ub.badgeId;
+          const isDragOver = isFeatured && dragOverId === ub.badgeId && draggedId !== ub.badgeId;
           return (
             <div
               key={ub.id}
-              className={`flex items-center gap-3 rounded-lg border px-3 py-2 transition-colors ${
+              draggable={isFeatured}
+              onDragStart={() => handleDragStart(ub.badgeId)}
+              onDragOver={(e) => handleDragOver(e, ub.badgeId)}
+              onDrop={(e) => handleDrop(e, ub.badgeId)}
+              onDragEnd={handleDragEnd}
+              className={`flex items-center gap-2 rounded-lg border px-3 py-2 transition-colors ${
                 isFeatured
                   ? "border-primary bg-primary/10"
                   : !canAdd
                   ? "border-border opacity-40"
                   : "border-border hover:border-border/80 hover:bg-secondary/30"
-              }`}
+              } ${isDragging ? "opacity-40" : ""} ${isDragOver ? "ring-2 ring-primary ring-offset-1 ring-offset-background" : ""}`}
             >
+              {isFeatured && (
+                <span
+                  className="flex-shrink-0 text-primary/70 cursor-grab active:cursor-grabbing touch-none"
+                  aria-label="Drag to reorder"
+                >
+                  <GripVertical className="w-4 h-4" />
+                </span>
+              )}
               <button
                 onClick={() => toggleFeatured(ub.badgeId)}
                 disabled={!isFeatured && !canAdd}
@@ -109,25 +152,7 @@ function FeaturedBadgesSection({ userId }: { userId: number }) {
                 </div>
               </button>
               {isFeatured && (
-                <div className="flex items-center gap-1 flex-shrink-0">
-                  <button
-                    onClick={() => moveFeatured(ub.badgeId, -1)}
-                    disabled={order === 0 || featuredMutation.isPending}
-                    className="w-5 h-5 flex items-center justify-center rounded text-primary disabled:opacity-30 disabled:cursor-not-allowed hover:bg-primary/20"
-                    aria-label="Move up"
-                  >
-                    <ChevronUp className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={() => moveFeatured(ub.badgeId, 1)}
-                    disabled={order === featuredIds.length - 1 || featuredMutation.isPending}
-                    className="w-5 h-5 flex items-center justify-center rounded text-primary disabled:opacity-30 disabled:cursor-not-allowed hover:bg-primary/20"
-                    aria-label="Move down"
-                  >
-                    <ChevronDown className="w-3.5 h-3.5" />
-                  </button>
-                  <span className="text-xs font-semibold text-primary">#{order + 1}</span>
-                </div>
+                <span className="text-xs font-semibold text-primary flex-shrink-0">#{order + 1}</span>
               )}
             </div>
           );
