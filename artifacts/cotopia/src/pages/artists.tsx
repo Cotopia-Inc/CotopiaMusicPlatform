@@ -5,10 +5,16 @@ import { RoleBadges } from "@/components/role-badges";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
+import { useSeo } from "@/hooks/use-seo";
 
 export default function Artists() {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  useSeo({
+    title: "Artists",
+    description: "Discover emerging and independent artists on Everyday Radio by Cotopia.",
+  });
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 500);

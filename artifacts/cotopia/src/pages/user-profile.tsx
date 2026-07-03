@@ -12,6 +12,7 @@ import { useAuth } from "@/lib/auth";
 import { ReportModal } from "@/components/report-modal";
 import { useToast } from "@/hooks/use-toast";
 import { BadgeList, type UserBadgeData } from "@/components/badge-chip";
+import { useSeo } from "@/hooks/use-seo";
 
 const authHeaders = () => ({
   Authorization: `Bearer ${localStorage.getItem("cotopia_token")}`,
@@ -22,6 +23,15 @@ export default function UserProfile() {
   const { id } = useParams<{ id: string }>();
   const { data: user, isLoading } = useGetPublicUser(Number(id));
   const { user: me } = useAuth();
+
+  useSeo({
+    title: user ? (user.displayName || user.username) : "Profile",
+    description: user
+      ? (user as any)?.bio?.trim() || `View ${user.displayName || user.username}'s profile on Everyday Radio by Cotopia.`
+      : undefined,
+    type: "profile",
+    noindex: !user,
+  });
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();

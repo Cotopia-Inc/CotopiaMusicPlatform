@@ -7,11 +7,17 @@ import { Link } from "wouter";
 import { UserLink } from "@/components/user-link";
 import { usePlayer } from "@/lib/player";
 import { SongMenu } from "@/components/song-menu";
+import { useSeo } from "@/hooks/use-seo";
 
 export default function Songs() {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const { play } = usePlayer();
+
+  useSeo({
+    title: "Songs",
+    description: "Browse and stream songs from independent artists on Everyday Radio by Cotopia.",
+  });
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 500);

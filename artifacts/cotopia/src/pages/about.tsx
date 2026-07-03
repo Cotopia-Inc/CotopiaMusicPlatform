@@ -1,7 +1,13 @@
 import { Link } from "wouter";
 import { Radio, Heart, Users, Lightbulb, Shield, ArrowRight, Music, Video, Globe, MessageCircle, TrendingUp, Star } from "lucide-react";
+import { useSeo } from "@/hooks/use-seo";
 
 export default function About() {
+  useSeo({
+    title: "About Us",
+    description: "Learn about Cotopia's mission to champion independent artists and build a community that lives for music.",
+  });
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Hero */}

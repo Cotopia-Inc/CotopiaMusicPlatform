@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
 import { usePlayer } from "@/lib/player";
 import { UserLink } from "@/components/user-link";
+import { useSeo } from "@/hooks/use-seo";
 
 interface VideoItem {
   id: number;
@@ -101,6 +102,11 @@ export default function Videos() {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const { play } = usePlayer();
+
+  useSeo({
+    title: "Videos",
+    description: "Watch exclusive music videos from independent artists on Everyday Radio by Cotopia.",
+  });
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 500);

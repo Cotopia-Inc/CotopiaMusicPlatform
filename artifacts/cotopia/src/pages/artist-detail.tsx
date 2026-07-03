@@ -1,5 +1,6 @@
 import { useParams, Link, useLocation } from "wouter";
 import { useEffect, useRef, useState, useCallback } from "react";
+import { useSeo } from "@/hooks/use-seo";
 import { useGetArtist, getGetArtistQueryKey, useFollowArtist, useUnfollowArtist, useTrackAnalyticsEvent, useUpdateArtist } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Play, Users, Music, MessageCircle, ArrowLeft, Volume2, VolumeX, ShieldCheck, Loader2, UserCog, UserMinus, Search, Edit2, Save, X } from "lucide-react";
@@ -37,6 +38,24 @@ export default function ArtistDetail() {
 
   const { data: artist, isLoading } = useGetArtist(artistId, {
     query: { enabled: !!artistId, queryKey: getGetArtistQueryKey(artistId) }
+  });
+
+  useSeo({
+    title: artist ? artist.stageName : "Artist",
+    description: artist
+      ? (artist as any)?.bio?.trim() || `Discover ${artist.stageName}'s music and videos on Everyday Radio by Cotopia.`
+      : undefined,
+    image: (artist as any)?.avatarUrl ?? undefined,
+    type: "profile",
+    noindex: !artist,
+    jsonLd: artist
+      ? {
+          "@context": "https://schema.org",
+          "@type": "MusicGroup",
+          name: artist.stageName,
+          ...((artist as any)?.genre ? { genre: (artist as any).genre } : {}),
+        }
+      : undefined,
   });
 
   const artistUserId = (artist as any)?.userId as number | null | undefined;

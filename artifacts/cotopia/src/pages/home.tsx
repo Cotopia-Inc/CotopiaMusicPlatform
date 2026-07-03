@@ -6,11 +6,25 @@ import { Link } from "wouter";
 import { UserLink } from "@/components/user-link";
 import { Badge } from "@/components/ui/badge";
 import { usePlayer } from "@/lib/player";
+import { useSeo } from "@/hooks/use-seo";
 
 export default function Home() {
   const { play } = usePlayer();
   const { data: feed, isLoading } = useGetHomeFeed({
     query: { queryKey: getGetHomeFeedQueryKey() }
+  });
+
+  useSeo({
+    title: "Everyday Radio by Cotopia",
+    description:
+      "Cotopia — Everyday Radio. Discover emerging artists, stream exclusive music and videos, and connect with a community that lives for music.",
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      name: "Cotopia",
+      alternateName: "Everyday Radio",
+      url: window.location.origin,
+    },
   });
 
   const editorPicks = feed?.editorPicks ?? [];

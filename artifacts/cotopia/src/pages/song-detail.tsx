@@ -1,4 +1,5 @@
 import { useParams, useLocation } from "wouter";
+import { useSeo } from "@/hooks/use-seo";
 import {
   useGetSong, getGetSongQueryKey,
   useGetChatMessages, getGetChatMessagesQueryKey, usePostChatMessage,
@@ -46,6 +47,25 @@ export default function SongDetail() {
 
   const { data: song, isLoading } = useGetSong(songId, {
     query: { enabled: !!songId, queryKey: getGetSongQueryKey(songId) }
+  });
+
+  useSeo({
+    title: song ? `${song.title} by ${song.artistName}` : "Song",
+    description: song
+      ? `Listen to "${song.title}" by ${song.artistName} on Everyday Radio by Cotopia.${song.genre ? ` Genre: ${song.genre}.` : ""}`
+      : undefined,
+    image: (song as any)?.coverArtUrl ?? undefined,
+    type: "music.song",
+    noindex: !song,
+    jsonLd: song
+      ? {
+          "@context": "https://schema.org",
+          "@type": "MusicRecording",
+          name: song.title,
+          byArtist: { "@type": "MusicGroup", name: song.artistName },
+          ...(song.genre ? { genre: song.genre } : {}),
+        }
+      : undefined,
   });
 
   const { data: chatMessages, isLoading: loadingChat } = useGetChatMessages("song", songId, {}, {

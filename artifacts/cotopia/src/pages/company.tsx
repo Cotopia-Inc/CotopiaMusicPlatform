@@ -10,9 +10,15 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
+import { useSeo } from "@/hooks/use-seo";
 
 export default function CompanyHub() {
   const { user } = useAuth();
+
+  useSeo({
+    title: "Company Hub",
+    description: "Announcements, spotlights, and updates from the Cotopia team.",
+  });
   const { toast } = useToast();
   const qc = useQueryClient();
   const isMasterAdmin = user?.role === "master_admin";

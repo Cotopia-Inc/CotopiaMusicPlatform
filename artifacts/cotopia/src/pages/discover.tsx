@@ -5,11 +5,17 @@ import { Link } from "wouter";
 import { usePlayer } from "@/lib/player";
 import { UserLink } from "@/components/user-link";
 import { SongMenu } from "@/components/song-menu";
+import { useSeo } from "@/hooks/use-seo";
 
 export default function Discover() {
   const { play } = usePlayer();
   const { data: discover, isLoading } = useGetDiscover({
     query: { queryKey: getGetDiscoverQueryKey() }
+  });
+
+  useSeo({
+    title: "Discover Music & Videos",
+    description: "Find your next favorite sound on Everyday Radio. Explore trending, top-rated, and featured songs and videos from independent artists.",
   });
 
   const hasFeatured = (discover?.featuredSongs?.length ?? 0) > 0 || (discover?.featuredVideos?.length ?? 0) > 0;

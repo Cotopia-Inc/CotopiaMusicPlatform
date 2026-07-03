@@ -1,4 +1,5 @@
 import { useParams, useLocation } from "wouter";
+import { useSeo } from "@/hooks/use-seo";
 import {
   useGetVideo, getGetVideoQueryKey,
   useGetChatMessages, getGetChatMessagesQueryKey, usePostChatMessage,
@@ -46,6 +47,25 @@ export default function VideoDetail() {
 
   const { data: video, isLoading } = useGetVideo(videoId, {
     query: { enabled: !!videoId, queryKey: getGetVideoQueryKey(videoId) }
+  });
+
+  useSeo({
+    title: video ? `${video.title} by ${video.artistName}` : "Video",
+    description: video
+      ? (video as any)?.description?.trim() || `Watch "${video.title}" by ${video.artistName} on Everyday Radio by Cotopia.`
+      : undefined,
+    image: (video as any)?.thumbnailUrl ?? undefined,
+    type: "video.other",
+    noindex: !video,
+    jsonLd: video
+      ? {
+          "@context": "https://schema.org",
+          "@type": "VideoObject",
+          name: video.title,
+          description: (video as any)?.description || `${video.title} by ${video.artistName}`,
+          thumbnailUrl: (video as any)?.thumbnailUrl ?? undefined,
+        }
+      : undefined,
   });
 
   const { data: chatMessages, isLoading: loadingChat } = useGetChatMessages("video", videoId, {}, {

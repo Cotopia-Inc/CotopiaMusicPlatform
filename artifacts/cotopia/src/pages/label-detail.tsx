@@ -14,6 +14,7 @@ import { useAuth } from "@/lib/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { useSeo } from "@/hooks/use-seo";
 
 export default function LabelDetail() {
   const { id } = useParams();
@@ -32,6 +33,23 @@ export default function LabelDetail() {
 
   const { data: label, isLoading } = useGetLabel(labelId, {
     query: { enabled: !!labelId, queryKey: getGetLabelQueryKey(labelId) }
+  });
+
+  useSeo({
+    title: label ? label.name : "Label",
+    description: label
+      ? (label as any)?.bio?.trim() || `Explore ${label.name}'s roster of artists on Everyday Radio by Cotopia.`
+      : undefined,
+    image: (label as any)?.logoUrl ?? undefined,
+    type: "profile",
+    noindex: !label,
+    jsonLd: label
+      ? {
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          name: label.name,
+        }
+      : undefined,
   });
 
   const labelUserId = (label as any)?.userId as number | null | undefined;
