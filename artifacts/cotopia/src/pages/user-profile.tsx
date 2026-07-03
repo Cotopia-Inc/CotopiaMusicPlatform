@@ -124,6 +124,7 @@ export default function UserProfile() {
   }
 
   const isMe = me?.id === user.id;
+  const isStaff = ["admin", "master_admin", "moderator", "editor"].includes(user.role ?? "");
 
   return (
     <div className="space-y-0 pb-24">
@@ -257,16 +258,18 @@ export default function UserProfile() {
                   <MessageCircle className="w-4 h-4" />
                   Message
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-1.5"
-                  disabled={blockMutation.isPending}
-                  onClick={() => blockMutation.mutate(!isBlocked)}
-                >
-                  <Ban className="w-4 h-4" />
-                  {isBlocked ? "Unblock" : "Block"}
-                </Button>
+                {!isStaff && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5"
+                    disabled={blockMutation.isPending}
+                    onClick={() => blockMutation.mutate(!isBlocked)}
+                  >
+                    <Ban className="w-4 h-4" />
+                    {isBlocked ? "Unblock" : "Block"}
+                  </Button>
+                )}
                 <ReportModal targetType="profile" targetId={user.id} variant="button" />
               </>
             )}

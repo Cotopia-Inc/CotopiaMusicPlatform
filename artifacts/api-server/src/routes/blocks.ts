@@ -5,6 +5,8 @@ import { requireAuth, type AuthRequest } from "../lib/auth";
 
 const router = Router();
 
+const STAFF_ROLES = ["admin", "master_admin", "moderator", "editor"] as const;
+
 router.get("/users/blocks", requireAuth, async (req: AuthRequest, res): Promise<void> => {
   const userId = req.user!.userId;
   const blocks = await db
@@ -23,8 +25,13 @@ router.post("/users/block", requireAuth, async (req: AuthRequest, res): Promise<
     return;
   }
 
-  const [target] = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.id, targetId)).limit(1);
+  const [target] = await db.select({ id: usersTable.id, role: usersTable.role }).from(usersTable).where(eq(usersTable.id, targetId)).limit(1);
   if (!target) { res.status(404).json({ error: "User not found" }); return; }
+
+  if ((STAFF_ROLES as readonly string[]).includes(target.role)) {
+    res.status(403).json({ error: "Staff members cannot be blocked" });
+    return;
+  }
 
   await db.insert(userBlocksTable).values({ blockerId: userId, blockedId: targetId }).onConflictDoNothing();
   res.json({ success: true });
