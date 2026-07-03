@@ -25,7 +25,10 @@ function FeaturedBadgesSection({ userId }: { userId: number }) {
   const qc = useQueryClient();
   const badgesQueryKey = ["user-badges", userId];
   const [draggedId, setDraggedId] = useState<number | null>(null);
-  const [dragOverId, setDragOverId] = useState<number | null>(null);
+  const [liveOrder, setLiveOrder] = useState<number[] | null>(null);
+  const itemRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+  const liveOrderRef = useRef<number[] | null>(null);
+  const draggedIdRef = useRef<number | null>(null);
 
   const { data: userBadges } = useQuery<UserBadgeData[]>({
     queryKey: badgesQueryKey,
@@ -54,51 +57,109 @@ function FeaturedBadgesSection({ userId }: { userId: number }) {
   });
 
   const activeBadges = (userBadges ?? []).filter(ub => ub.badge.isActive && ub.badge.isVisible);
-  const featuredIds = (userBadges ?? [])
+  const serverFeaturedIds = (userBadges ?? [])
     .filter(ub => ub.isFeatured)
     .sort((a, b) => (a.featureOrder ?? 99) - (b.featureOrder ?? 99))
     .map(ub => ub.badgeId);
 
+  // While dragging, show the in-progress order; otherwise reflect the server order.
+  const featuredIds = liveOrder ?? serverFeaturedIds;
+
+  // Featured badges are shown first (in feature order), unfeatured badges follow in their
+  // original (award date) order. This makes reordering visibly move rows, not just labels.
+  const sortedBadges = [...activeBadges].sort((a, b) => {
+    const aIdx = featuredIds.indexOf(a.badgeId);
+    const bIdx = featuredIds.indexOf(b.badgeId);
+    if (aIdx === -1 && bIdx === -1) return 0;
+    if (aIdx === -1) return 1;
+    if (bIdx === -1) return -1;
+    return aIdx - bIdx;
+  });
+
   function toggleFeatured(badgeId: number) {
-    const newIds = featuredIds.includes(badgeId)
-      ? featuredIds.filter(id => id !== badgeId)
-      : featuredIds.length < 3 ? [...featuredIds, badgeId] : featuredIds;
+    const newIds = serverFeaturedIds.includes(badgeId)
+      ? serverFeaturedIds.filter(id => id !== badgeId)
+      : serverFeaturedIds.length < 3 ? [...serverFeaturedIds, badgeId] : serverFeaturedIds;
     featuredMutation.mutate(newIds);
   }
 
-  function reorderFeatured(fromBadgeId: number, toBadgeId: number) {
-    if (fromBadgeId === toBadgeId) return;
-    const fromIdx = featuredIds.indexOf(fromBadgeId);
-    const toIdx = featuredIds.indexOf(toBadgeId);
-    if (fromIdx === -1 || toIdx === -1) return;
-    const reordered = [...featuredIds];
-    reordered.splice(fromIdx, 1);
-    reordered.splice(toIdx, 0, fromBadgeId);
-    featuredMutation.mutate(reordered);
-  }
+  // Drag state is tracked with window-level pointer listeners (rather than per-element
+  // pointer capture) because reordering the list moves the dragged DOM node during the
+  // drag itself, and browsers silently release captured pointers when their target node
+  // is detached/reinserted mid-gesture. Window listeners keep receiving events regardless.
+  useEffect(() => {
+    if (draggedId === null) return;
 
-  function handleDragStart(badgeId: number) {
-    setDraggedId(badgeId);
-  }
-
-  function handleDragOver(e: React.DragEvent, badgeId: number) {
-    if (draggedId === null || !featuredIds.includes(badgeId)) return;
-    e.preventDefault();
-    if (dragOverId !== badgeId) setDragOverId(badgeId);
-  }
-
-  function handleDrop(e: React.DragEvent, badgeId: number) {
-    e.preventDefault();
-    if (draggedId !== null && featuredIds.includes(badgeId)) {
-      reorderFeatured(draggedId, badgeId);
+    function findClosestId(y: number): number | null {
+      let closestId: number | null = null;
+      let closestDist = Infinity;
+      itemRefs.current.forEach((el, id) => {
+        if (!(liveOrderRef.current ?? serverFeaturedIds).includes(id)) return;
+        const rect = el.getBoundingClientRect();
+        const mid = rect.top + rect.height / 2;
+        const dist = Math.abs(mid - y);
+        if (dist < closestDist) {
+          closestDist = dist;
+          closestId = id;
+        }
+      });
+      return closestId;
     }
-    setDraggedId(null);
-    setDragOverId(null);
-  }
 
-  function handleDragEnd() {
-    setDraggedId(null);
-    setDragOverId(null);
+    function onMove(e: PointerEvent) {
+      const currentDraggedId = draggedIdRef.current;
+      if (currentDraggedId === null) return;
+      e.preventDefault();
+      const closestId = findClosestId(e.clientY);
+      if (closestId !== null && closestId !== currentDraggedId) {
+        setLiveOrder(prev => {
+          const cur = prev ?? serverFeaturedIds;
+          const fromIdx = cur.indexOf(currentDraggedId);
+          const toIdx = cur.indexOf(closestId);
+          if (fromIdx === -1 || toIdx === -1 || fromIdx === toIdx) return cur;
+          const next = [...cur];
+          next.splice(fromIdx, 1);
+          next.splice(toIdx, 0, currentDraggedId);
+          return next;
+        });
+      }
+    }
+
+    function onUp() {
+      const finalOrder = liveOrderRef.current;
+      if (finalOrder && JSON.stringify(finalOrder) !== JSON.stringify(serverFeaturedIds)) {
+        featuredMutation.mutate(finalOrder);
+      }
+      setDraggedId(null);
+      setLiveOrder(null);
+    }
+
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draggedId]);
+
+  useEffect(() => {
+    liveOrderRef.current = liveOrder;
+  }, [liveOrder]);
+
+  useEffect(() => {
+    draggedIdRef.current = draggedId;
+  }, [draggedId]);
+
+  function handlePointerDown(e: React.PointerEvent, badgeId: number) {
+    if (!serverFeaturedIds.includes(badgeId)) return;
+    e.preventDefault();
+    setDraggedId(badgeId);
+    setLiveOrder(serverFeaturedIds);
+    liveOrderRef.current = serverFeaturedIds;
+    draggedIdRef.current = badgeId;
   }
 
   if (activeBadges.length === 0) return null;
@@ -107,38 +168,41 @@ function FeaturedBadgesSection({ userId }: { userId: number }) {
     <div className="space-y-2">
       <div>
         <label className="text-sm font-medium">Featured Badges <span className="text-muted-foreground text-xs">(up to 3)</span></label>
-        <p className="text-xs text-muted-foreground mt-0.5">Choose which badges to highlight on your public profile.</p>
+        <p className="text-xs text-muted-foreground mt-0.5">Choose which badges to highlight on your public profile. Drag the handle to reorder.</p>
       </div>
       <div className="grid grid-cols-1 gap-1.5">
-        {activeBadges.map(ub => {
-          const isFeatured = featuredIds.includes(ub.badgeId);
-          const canAdd = featuredIds.length < 3;
+        {sortedBadges.map(ub => {
+          const isFeatured = serverFeaturedIds.includes(ub.badgeId);
+          const canAdd = serverFeaturedIds.length < 3;
           const order = featuredIds.indexOf(ub.badgeId);
           const isDragging = draggedId === ub.badgeId;
-          const isDragOver = isFeatured && dragOverId === ub.badgeId && draggedId !== ub.badgeId;
           return (
             <div
               key={ub.id}
-              draggable={isFeatured}
-              onDragStart={() => handleDragStart(ub.badgeId)}
-              onDragOver={(e) => handleDragOver(e, ub.badgeId)}
-              onDrop={(e) => handleDrop(e, ub.badgeId)}
-              onDragEnd={handleDragEnd}
+              ref={(el) => {
+                if (el) itemRefs.current.set(ub.badgeId, el);
+                else itemRefs.current.delete(ub.badgeId);
+              }}
               className={`flex items-center gap-2 rounded-lg border px-3 py-2 transition-colors ${
                 isFeatured
                   ? "border-primary bg-primary/10"
                   : !canAdd
                   ? "border-border opacity-40"
                   : "border-border hover:border-border/80 hover:bg-secondary/30"
-              } ${isDragging ? "opacity-40" : ""} ${isDragOver ? "ring-2 ring-primary ring-offset-1 ring-offset-background" : ""}`}
+              } ${isDragging ? "opacity-40 shadow-lg" : ""}`}
+              style={{ transition: "opacity 0.15s" }}
             >
               {isFeatured && (
-                <span
-                  className="flex-shrink-0 text-primary/70 cursor-grab active:cursor-grabbing touch-none"
+                <button
+                  type="button"
+                  onPointerDown={(e) => handlePointerDown(e, ub.badgeId)}
+                  onClick={(e) => e.preventDefault()}
+                  className="flex-shrink-0 text-primary/70 cursor-grab active:cursor-grabbing touch-none select-none p-1 -m-1"
+                  style={{ touchAction: "none" }}
                   aria-label="Drag to reorder"
                 >
                   <GripVertical className="w-4 h-4" />
-                </span>
+                </button>
               )}
               <button
                 onClick={() => toggleFeatured(ub.badgeId)}
