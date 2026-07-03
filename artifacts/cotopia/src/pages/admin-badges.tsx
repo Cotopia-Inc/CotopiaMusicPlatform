@@ -653,8 +653,12 @@ function HistoryTab() {
     !q ||
     ub.username?.toLowerCase().includes(q) ||
     ub.displayName?.toLowerCase().includes(q) ||
-    ub.badge.name.toLowerCase().includes(q)
+    ub.badge.name.toLowerCase().includes(q) ||
+    ub.badge.category?.toLowerCase().includes(q) ||
+    ub.reason?.toLowerCase().includes(q) ||
+    ub.awardedByUsername?.toLowerCase().includes(q)
   );
+  const hasData = (data ?? []).length > 0;
 
   return (
     <div className="space-y-4">
@@ -663,10 +667,25 @@ function HistoryTab() {
         <Input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by username, display name, or badge..."
-          className="pl-9"
+          placeholder="Search by username, display name, badge, category, reason, or awarded by..."
+          className="pl-9 pr-9"
         />
+        {search && (
+          <button
+            type="button"
+            onClick={() => setSearch("")}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            aria-label="Clear search"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        )}
       </div>
+      {q && !isLoading && (
+        <p className="text-xs text-muted-foreground">
+          {items.length} result{items.length === 1 ? "" : "s"} for "{search.trim()}"
+        </p>
+      )}
       {isLoading ? (
         <div className="space-y-3">
           {Array(6).fill(0).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}
@@ -674,7 +693,7 @@ function HistoryTab() {
       ) : items.length === 0 ? (
         <div className="bg-card border border-border rounded-xl py-16 text-center text-muted-foreground">
           <History className="w-10 h-10 mx-auto mb-2 text-muted-foreground/20" />
-          <p>No badge awards yet.</p>
+          <p>{hasData ? `No results found for "${search.trim()}".` : "No badge awards yet."}</p>
         </div>
       ) : (
         <div className="space-y-2">
