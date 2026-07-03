@@ -186,6 +186,35 @@ function AuthRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function RootRoute() {
+  const { user, isLoading } = useAuth();
+  const [location, navigate] = useLocation();
+
+  useEffect(() => {
+    if (isLoading || !user) return;
+    const demographicsCompleted = (user as any).demographicsCompleted;
+    if (demographicsCompleted === false && location !== "/onboarding") {
+      navigate("/onboarding");
+    }
+  }, [user, isLoading, navigate, location]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <About showAuthNav />;
+  }
+
+  if ((user as any).demographicsCompleted === false) return null;
+
+  return <Layout><Home /></Layout>;
+}
+
 function Router() {
   return (
     <Switch>
@@ -217,7 +246,7 @@ function Router() {
 
       {/* Main app routes — all protected */}
       <Route path="/">
-        <ProtectedRoute><Layout><Home /></Layout></ProtectedRoute>
+        <RootRoute />
       </Route>
       <Route path="/discover">
         <ProtectedRoute><Layout><Discover /></Layout></ProtectedRoute>
@@ -287,7 +316,9 @@ function Router() {
       </Route>
 
       {/* About / Our Promise — public */}
-      <Route path="/about" component={About} />
+      <Route path="/about">
+        <About />
+      </Route>
 
       {/* Legal Center — public routes */}
       <Route path="/legal" component={LegalCenter} />

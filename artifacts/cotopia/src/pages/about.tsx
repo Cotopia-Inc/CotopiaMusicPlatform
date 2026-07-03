@@ -1,8 +1,12 @@
 import { Link } from "wouter";
-import { Radio, Heart, Users, Lightbulb, Shield, ArrowRight, Music, Video, Globe, MessageCircle, TrendingUp, Star } from "lucide-react";
+import { Radio, Heart, Users, Lightbulb, Shield, ArrowRight, Music, Video, Globe, MessageCircle, TrendingUp, Star, LogIn, UserPlus } from "lucide-react";
 import { useSeo } from "@/hooks/use-seo";
 
-export default function About() {
+interface AboutProps {
+  showAuthNav?: boolean;
+}
+
+export default function About({ showAuthNav = false }: AboutProps) {
   useSeo({
     title: "About Us",
     description: "Learn about Cotopia's mission to champion independent artists and build a community that lives for music.",
@@ -10,6 +14,28 @@ export default function About() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      {showAuthNav && (
+        <div className="sticky top-0 z-30 flex items-center justify-between px-4 sm:px-6 py-3 border-b border-border/50 bg-background/80 backdrop-blur-sm">
+          <div className="flex items-center gap-2">
+            <img src="/logo.jpg" alt="Cotopia" className="w-6 h-6 rounded-sm object-cover flex-shrink-0" />
+            <span className="text-sm font-semibold tracking-tight">Everyday Radio by Cotopia</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link href="/login">
+              <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-foreground hover:bg-secondary transition-colors">
+                <LogIn className="w-3.5 h-3.5" />
+                Sign In
+              </button>
+            </Link>
+            <Link href="/register">
+              <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+                <UserPlus className="w-3.5 h-3.5" />
+                Sign Up
+              </button>
+            </Link>
+          </div>
+        </div>
+      )}
       {/* Hero */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-background" />

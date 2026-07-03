@@ -1,5 +1,6 @@
 User-agent: *
 Allow: /
+Allow: /about
 Disallow: /admin
 Disallow: /login
 Disallow: /register
@@ -11,5 +12,16 @@ Disallow: /messages
 Disallow: /notifications
 Disallow: /submissions
 Disallow: /creator-dashboard
+Disallow: /discover
+Disallow: /songs
+Disallow: /videos
+Disallow: /artists
+Disallow: /labels
+Disallow: /company
+Disallow: /library
+Disallow: /submit
+Disallow: /users
+Disallow: /profile
+Disallow: /playlists
 
 Sitemap: /sitemap.xml
