@@ -14,7 +14,7 @@ import { VerifyEmailBanner } from "@/components/verify-email-banner";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { usePlatformConfig } from "@/lib/platform-config";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useQueryClient } from "@tanstack/react-query";
@@ -200,7 +200,10 @@ export default function VideoDetail() {
 
   const isFavorited = localFavorited ?? video?.isFavorited ?? false;
   const userRating = localRating ?? video?.userRating ?? null;
-  const viewerCount = useRef(Math.floor(Math.random() * 500) + 48).current;
+  const viewerCount = useMemo(
+    () => new Set((chatMessages ?? []).map((m) => m.userId)).size,
+    [chatMessages]
+  );
 
   useEffect(() => {
     if (video) {

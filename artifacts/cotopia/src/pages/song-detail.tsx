@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { usePlatformConfig } from "@/lib/platform-config";
 import { usePlayer } from "@/lib/player";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useQueryClient } from "@tanstack/react-query";
@@ -125,7 +125,10 @@ export default function SongDetail() {
 
   const isFavorited = localFavorited ?? song?.isFavorited ?? false;
   const userRating = localRating ?? song?.userRating ?? null;
-  const listenCount = useRef(Math.floor(Math.random() * 200) + 12).current;
+  const listenCount = useMemo(
+    () => new Set((chatMessages ?? []).map((m) => m.userId)).size,
+    [chatMessages]
+  );
 
   useEffect(() => {
     if (song) {
