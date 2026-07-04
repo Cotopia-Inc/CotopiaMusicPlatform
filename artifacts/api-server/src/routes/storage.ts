@@ -10,7 +10,16 @@ import {
   beginLocalUpload,
   finalizeLocalUpload,
 } from "../lib/localFileStorage";
-import { r2Available, saveFileToR2, getR2PublicUrl, checkR2Connectivity } from "../lib/r2Storage";
+import {
+  r2Available,
+  r2PresignAvailable,
+  saveFileToR2,
+  presignR2Upload,
+  getR2PublicUrl,
+  checkR2Connectivity,
+} from "../lib/r2Storage";
+import { requireAuth, type AuthRequest } from "../lib/auth";
+import { RequestUploadUrlBody } from "@workspace/api-zod";
 
 const router: IRouter = Router();
 const storageService = new ObjectStorageService();
@@ -56,6 +65,15 @@ router.get("/storage/status", async (req: Request, res: Response) => {
     },
     r2ConnectivityError: r2Check,
     r2Healthy: backend === "r2" && r2Check === null,
+    // Separate, optional credential pair for direct-to-browser presigned
+    // uploads (see r2Storage.ts's r2PresignAvailable doc comment). When
+    // false on the R2 backend, uploads still work — they just go through
+    // the slower server-proxy path instead of direct-to-storage.
+    directUploadConfigured: gcsAvailable() || r2PresignAvailable(),
+    r2PresignVars: {
+      R2_S3_ACCESS_KEY_ID: Boolean(process.env.R2_S3_ACCESS_KEY_ID),
+      R2_S3_SECRET_ACCESS_KEY: Boolean(process.env.R2_S3_SECRET_ACCESS_KEY),
+    },
   });
 });
 
@@ -111,7 +129,7 @@ class ByteLimitTransform extends Transform {
  *   Content-Type   — file MIME type
  *   X-File-Name    — URL-encoded original filename
  */
-router.post("/storage/uploads/upload", async (req: Request, res: Response) => {
+router.post("/storage/uploads/upload", requireAuth, async (req: AuthRequest, res: Response) => {
   const rawName = req.headers["x-file-name"];
   const name = rawName
     ? decodeURIComponent(Array.isArray(rawName) ? rawName[0] : rawName)
@@ -195,6 +213,50 @@ router.post("/storage/uploads/upload", async (req: Request, res: Response) => {
     const detail = error instanceof Error ? error.message : String(error);
     req.log.error({ err: error, detail }, "Error saving uploaded file");
     res.status(500).json({ error: "File upload failed. Please try again." });
+  }
+});
+
+/**
+ * POST /storage/uploads/request-url
+ *
+ * Requests a presigned URL the browser can PUT the file directly to,
+ * bypassing the server for the actual file bytes (faster than the
+ * server-proxied /storage/uploads/upload route, which double-hops every
+ * byte through Render before it reaches the storage backend).
+ *
+ * Not available for local-disk fallback (there's no way to presign a URL
+ * for a server route without a server round-trip) or for R2 when the
+ * S3-compatible presign credentials aren't configured — callers should
+ * fall back to /storage/uploads/upload on any failure here.
+ */
+router.post("/storage/uploads/request-url", requireAuth, async (req: AuthRequest, res: Response) => {
+  const parsed = RequestUploadUrlBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid request body", details: parsed.error.flatten() });
+    return;
+  }
+  const { name, size, contentType } = parsed.data;
+
+  if (size > MAX_UPLOAD_BYTES) {
+    res.status(413).json({ error: "File is too large. Maximum upload size is 10GB." });
+    return;
+  }
+
+  try {
+    if (gcsAvailable()) {
+      const { uploadURL, objectPath } = await storageService.getObjectEntityUploadURL();
+      res.json({ uploadURL, objectPath, metadata: { name, size, contentType } });
+      return;
+    }
+    if (r2PresignAvailable()) {
+      const { uploadURL, objectPath } = await presignR2Upload(contentType);
+      res.json({ uploadURL, objectPath, metadata: { name, size, contentType } });
+      return;
+    }
+    res.status(501).json({ error: "Direct upload is not configured for this storage backend." });
+  } catch (error) {
+    req.log.error({ err: error }, "Error generating presigned upload URL");
+    res.status(500).json({ error: "Could not generate an upload URL. Please try again." });
   }
 });
 

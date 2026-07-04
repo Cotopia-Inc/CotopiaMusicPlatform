@@ -1,6 +1,8 @@
 import { randomUUID } from "crypto";
 import https from "https";
 import type { Readable } from "stream";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 /**
  * Returns true when Cloudflare R2 is configured via REST API + public URL.
@@ -17,6 +19,67 @@ export function r2Available(): boolean {
     process.env.R2_API_TOKEN &&
     process.env.R2_PUBLIC_URL,
   );
+}
+
+/**
+ * Returns true when R2 is ALSO configured for direct-to-browser presigned
+ * uploads. This is a separate, optional credential from `r2Available()`'s
+ * Bearer-token REST API creds — presigned URLs are an S3-compatible-API
+ * feature and need HMAC access keys (Cloudflare dashboard: R2 API token
+ * with "Object Read & Write" S3-compatible permissions), not a Bearer
+ * token. The Bearer-token path (saveFileToR2, checkR2Connectivity) keeps
+ * working unconditionally regardless of whether this is set — this is
+ * purely an additive speed optimization, not a replacement.
+ */
+export function r2PresignAvailable(): boolean {
+  return Boolean(
+    r2Available() &&
+    process.env.R2_S3_ACCESS_KEY_ID &&
+    process.env.R2_S3_SECRET_ACCESS_KEY,
+  );
+}
+
+let s3Client: S3Client | null = null;
+
+function getS3Client(): S3Client {
+  if (s3Client) return s3Client;
+  const accountId = process.env.R2_ACCOUNT_ID!.trim();
+  s3Client = new S3Client({
+    region: "auto",
+    endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+    credentials: {
+      accessKeyId: process.env.R2_S3_ACCESS_KEY_ID!.trim(),
+      secretAccessKey: process.env.R2_S3_SECRET_ACCESS_KEY!.trim(),
+    },
+  });
+  return s3Client;
+}
+
+const PRESIGN_TTL_SEC = 900;
+
+/**
+ * Generates a presigned PUT URL the browser can upload directly to, bypassing
+ * the API server entirely for the actual file bytes. Injectable S3 client so
+ * this can be unit-tested offline (SigV4 presigning is pure computation —
+ * no network call is made to generate the URL, only to use it).
+ */
+export async function presignR2Upload(
+  contentType: string,
+  client: S3Client = getS3Client(),
+): Promise<{ uploadURL: string; objectPath: string }> {
+  const bucket = process.env.R2_BUCKET_NAME!.trim();
+  const id = randomUUID();
+  const key = `uploads/${id}`;
+
+  const command = new PutObjectCommand({
+    Bucket: bucket,
+    Key: key,
+    ContentType: contentType,
+  });
+
+  const uploadURL = await getSignedUrl(client, command, { expiresIn: PRESIGN_TTL_SEC });
+
+  return { uploadURL, objectPath: `/objects/uploads/${id}` };
 }
 
 /**

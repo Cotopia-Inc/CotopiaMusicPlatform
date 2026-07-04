@@ -23,7 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { UserLink } from "@/components/user-link";
-import { useUpload } from "@workspace/object-storage-web";
+import { useUpload } from "@/lib/useUpload";
 import { SongMenu } from "@/components/song-menu";
 import { ReportModal } from "@/components/report-modal";
 import { VerifyEmailBanner } from "@/components/verify-email-banner";

@@ -11,11 +11,15 @@ description: How uploads and file serving work — backend priority chain, R2 se
 2. **Cloudflare R2** — active on Render prod when `R2_ACCOUNT_ID` + `R2_BUCKET_NAME` + `R2_API_TOKEN` + `R2_PUBLIC_URL` are set
 3. **Local disk** — fallback for local dev (ephemeral, not for production)
 
-## Upload endpoint
+## Upload endpoints (direct-to-storage with proxy fallback, added 2026-07-04)
 
-`POST /api/storage/uploads/upload`  
-Frontend hook: `artifacts/cotopia/src/lib/useUpload.ts` (NOT `@workspace/object-storage-web`)  
-The hook sends raw bytes with `Content-Type` and `X-File-Name` headers; server writes to the active backend.
+Two endpoints, both `requireAuth`:
+- `POST /api/storage/uploads/request-url` — returns a presigned PUT URL (`{uploadURL, objectPath, metadata}`): GCS signed URL on dev, R2 S3-compatible presign (via `@aws-sdk/client-s3` + `s3-request-presigner`, needs `R2_S3_ACCESS_KEY_ID`/`R2_S3_SECRET_ACCESS_KEY` — separate from the REST-API `R2_API_TOKEN` used for the proxy path) on Render.
+- `POST /api/storage/uploads/upload` — legacy server-proxy route (still used as automatic fallback).
+
+**Canonical hook is `lib/object-storage-web/src/use-upload.ts`** (shared lib, composite — rebuild with `typecheck:libs` after edits), NOT the old app-local duplicate. It tries direct upload first (request-url → XHR PUT straight to storage, browser never sends bytes through the API server) and transparently falls back to the proxy route on any failure (network error, CORS, expired URL, backend not configured for direct upload) — auto-retries network/5xx a couple times with backoff, never retries 4xx. Every call site needs a `getAuthHeaders` option since both routes require auth; `artifacts/cotopia/src/lib/useUpload.ts` is now a thin wrapper that just injects the `cotopia_token` Bearer header — all 6+ page call sites import from that app wrapper, not from `@workspace/object-storage-web` directly.
+
+**Verified in a real browser (not just curl, which bypasses CORS):** direct GCS PUT works with no CORS errors against the dev bucket's default config. R2 presigned PUT direct-upload has NOT been verified in a real browser yet — before relying on it in production, confirm the R2 bucket's CORS policy allows the app's origin for PUT requests (Cloudflare R2 dashboard → bucket → Settings → CORS Policy), since S3-style presigned PUTs are subject to bucket CORS just like GCS.
 
 ## R2 setup — Cloudflare REST API (NOT S3/AWS SDK)
 

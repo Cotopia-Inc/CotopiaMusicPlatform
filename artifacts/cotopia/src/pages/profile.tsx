@@ -10,7 +10,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Upload, X, Loader2, Lock, User, MailCheck, CheckCircle, Mail, RefreshCw, Film, Camera, Trash2, AlertTriangle, GripVertical } from "lucide-react";
-import { useUpload } from "@workspace/object-storage-web";
+import { useUpload } from "@/lib/useUpload";
 import { RoleBadges, VerifiedBadge } from "@/components/role-badges";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";

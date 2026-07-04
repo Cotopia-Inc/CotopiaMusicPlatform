@@ -7,7 +7,7 @@ import { useState, useEffect, useRef } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Upload, Loader2 } from "lucide-react";
-import { useUpload } from "@workspace/object-storage-web";
+import { useUpload } from "@/lib/useUpload";
 
 export default function AdminSettings() {
   const { data: settings, isLoading } = useGetAppSettings({

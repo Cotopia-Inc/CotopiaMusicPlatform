@@ -6,7 +6,7 @@ import {
   useUpdateCompanyPost,
   useDeleteCompanyPost,
 } from "@workspace/api-client-react";
-import { useUpload } from "@workspace/object-storage-web";
+import { useUpload } from "@/lib/useUpload";
 import { ImageCropModal } from "@/components/image-crop-modal";
 import { useAuth } from "@/lib/auth";
 import { useLocation } from "wouter";

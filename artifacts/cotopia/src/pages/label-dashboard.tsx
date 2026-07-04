@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { useAuth } from "@/lib/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { useUpload } from "@workspace/object-storage-web";
+import { useUpload } from "@/lib/useUpload";
 import { ImageCropModal } from "@/components/image-crop-modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
