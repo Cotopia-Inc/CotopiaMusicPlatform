@@ -19,8 +19,10 @@ interface UseUploadOptions {
  * This avoids direct browser→GCS PUT (which has cross-origin issues in some
  * browser environments) and gives accurate upload progress via XHR.
  *
- * The Express route uses express.raw({ limit: "500mb" }) so files up to 500 MB
- * are supported. The Replit reverse proxy passes large bodies through fine.
+ * No product-level size cap right now (creators upload large "one take"
+ * videos). The Express route uses express.raw({ limit: "10gb" }) as a
+ * technical safety ceiling — not a real-world limit. The Replit reverse
+ * proxy passes large bodies through fine.
  *
  * Large uploads (e.g. multi-hundred-MB videos on a flaky connection) can hit
  * transient network errors or a 5xx from the storage backend mid-transfer.

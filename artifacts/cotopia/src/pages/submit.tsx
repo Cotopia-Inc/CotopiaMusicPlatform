@@ -27,10 +27,14 @@ const MOODS = ["Energetic", "Chill", "Romantic", "Dark", "Happy", "Melancholic",
 const MAX_FILES_PER_TYPE = 20;
 const MAX_FILES_TOTAL = 20;
 
-// Must match the Express route's express.raw({ limit }) in artifacts/api-server/src/routes/storage.ts.
-const MAX_FILE_SIZE_BYTES = 500 * 1024 * 1024;
+// No product-level size cap right now — this only guards against the technical
+// safety ceiling in the Express route's express.raw({ limit }) in
+// artifacts/api-server/src/routes/storage.ts.
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024 * 1024;
 
 function formatFileSize(bytes: number): string {
+  const gb = bytes / (1024 * 1024 * 1024);
+  if (gb >= 1) return `${gb.toFixed(1)}GB`;
   return `${(bytes / (1024 * 1024)).toFixed(0)}MB`;
 }
 

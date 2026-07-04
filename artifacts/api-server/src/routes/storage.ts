@@ -62,9 +62,14 @@ router.get("/storage/status", async (req: Request, res: Response) => {
  *   Content-Type   — file MIME type
  *   X-File-Name    — URL-encoded original filename
  */
+// No product-level size cap right now — the video files creators upload can
+// be large "one take" recordings. We still set a very high technical ceiling
+// (rather than truly unbounded) since express.raw buffers the whole body in
+// memory before it reaches the handler; without any ceiling a single garbage
+// or malicious request could OOM the process.
 router.post(
   "/storage/uploads/upload",
-  express.raw({ type: "*/*", limit: "500mb" }),
+  express.raw({ type: "*/*", limit: "10gb" }),
   async (req: Request, res: Response) => {
     const rawName = req.headers["x-file-name"];
     const name = rawName
