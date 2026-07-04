@@ -27,6 +27,13 @@ const MOODS = ["Energetic", "Chill", "Romantic", "Dark", "Happy", "Melancholic",
 const MAX_FILES_PER_TYPE = 20;
 const MAX_FILES_TOTAL = 20;
 
+// Must match the Express route's express.raw({ limit }) in artifacts/api-server/src/routes/storage.ts.
+const MAX_FILE_SIZE_BYTES = 500 * 1024 * 1024;
+
+function formatFileSize(bytes: number): string {
+  return `${(bytes / (1024 * 1024)).toFixed(0)}MB`;
+}
+
 // Package-level file limits per plan and content type.
 // These are separate from MAX_FILES_PER_TYPE / MAX_FILES_TOTAL (the raw upload cap).
 // The upload widget still accepts up to 20 files, but the selected creator service
@@ -463,7 +470,19 @@ export default function Submit() {
   const activeReleaseName = tab === "song" ? songReleaseName : videoReleaseName;
 
   // ── File management helpers ───────────────────────────────────────────────
-  function addFiles(newFiles: File[], type: "song" | "video") {
+  function addFiles(rawFiles: File[], type: "song" | "video") {
+    const oversized = rawFiles.filter(f => f.size > MAX_FILE_SIZE_BYTES);
+    const newFiles = rawFiles.filter(f => f.size <= MAX_FILE_SIZE_BYTES);
+    if (oversized.length > 0) {
+      const names = oversized.map(f => `${f.name} (${formatFileSize(f.size)})`).join(", ");
+      toast({
+        title: `${oversized.length} file${oversized.length !== 1 ? "s" : ""} too large`,
+        description: `${names} — max file size is ${formatFileSize(MAX_FILE_SIZE_BYTES)}. Try compressing or trimming the video.`,
+        variant: "destructive",
+      });
+    }
+    if (newFiles.length === 0) return;
+
     const currentSong = songFiles.length;
     const currentVideo = videoFiles.length;
     const currentTotal = currentSong + currentVideo;

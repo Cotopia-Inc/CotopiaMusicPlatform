@@ -33,6 +33,31 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/api", router);
 
+// Body-parser (express.json/urlencoded/raw) errors — e.g. oversized upload
+// bodies — land here instead of the route handler. Return JSON so API
+// clients get a parseable error instead of Express's default HTML page.
+app.use(
+  (
+    err: unknown,
+    _req: express.Request,
+    res: express.Response,
+    next: express.NextFunction,
+  ) => {
+    if (
+      err &&
+      typeof err === "object" &&
+      "type" in err &&
+      (err as { type?: string }).type === "entity.too.large"
+    ) {
+      res.status(413).json({
+        error: "File is too large. Maximum upload size is 500MB.",
+      });
+      return;
+    }
+    next(err);
+  },
+);
+
 // Serve the built Vite frontend if the static dir exists (production / Render)
 const staticDir = path.resolve(
   process.cwd(),

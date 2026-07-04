@@ -64,7 +64,7 @@ router.get("/storage/status", async (req: Request, res: Response) => {
  */
 router.post(
   "/storage/uploads/upload",
-  express.raw({ type: "*/*", limit: "200mb" }),
+  express.raw({ type: "*/*", limit: "500mb" }),
   async (req: Request, res: Response) => {
     const rawName = req.headers["x-file-name"];
     const name = rawName
