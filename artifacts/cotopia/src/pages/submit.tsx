@@ -890,22 +890,10 @@ export default function Submit() {
                 : `One ${tab} — priority review with featured placement consideration.`;
               return (
                 <button key={p} type="button"
-                  onClick={() => {
-                    if (locked) {
-                      const reason =
-                        p === "basic" && activeFiles.length < 2
-                          ? `Batch Submission needs 2 or more ${tab}s — add another file to unlock it.`
-                          : p === "basic"
-                            ? `Batch Submission covers up to ${pkgLimit} ${tab}s. Remove ${activeFiles.length - pkgLimit} file${activeFiles.length - pkgLimit !== 1 ? "s" : ""} to unlock it.`
-                            : `${PLAN_NAMES[p]} covers 1 ${tab} only. Remove your other files, or submit them separately after this batch.`;
-                      toast({ title: `${PLAN_NAMES[p]} isn't available yet`, description: reason, variant: "destructive" });
-                      return;
-                    }
-                    setPlan(p);
-                  }}
-                  aria-disabled={locked}
+                  onClick={() => !locked && setPlan(p)}
+                  disabled={locked}
                   className={`relative p-5 rounded-xl border-2 transition-all text-left
-                    ${locked ? "opacity-70 cursor-pointer border-border bg-secondary/10" :
+                    ${locked ? "opacity-40 cursor-not-allowed border-border bg-secondary/10" :
                       isSelected ? "border-primary bg-primary/10" :
                       "border-border bg-secondary/20 hover:border-border/80"}`}>
                   {p === "premium" && !locked && (
