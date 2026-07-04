@@ -2565,6 +2565,11 @@ paths:
           required: true
           schema:
             type: string
+        - name: epoch
+          in: query
+          required: true
+          schema:
+            type: string
       responses:
         "200":
           description: OK
@@ -4982,10 +4987,13 @@ components:
 
     PresenceHeartbeatInput:
       type: object
-      required: [clientId]
+      required: [clientId, epoch]
       properties:
         clientId:
           type: string
+        epoch:
+          type: string
+          description: A unique token generated per playback session, used to distinguish a fresh play session from a stale in-flight heartbeat from a session that already ended.
 
     # ── Analytics ─────────────────────────────────────────────────────────────
     AnalyticsEventInput:

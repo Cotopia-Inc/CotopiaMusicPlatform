@@ -1398,6 +1398,8 @@ export interface PresenceCount {
 
 export interface PresenceHeartbeatInput {
   clientId: string;
+  /** A unique token generated per playback session, used to distinguish a fresh play session from a stale in-flight heartbeat from a session that already ended. */
+  epoch: string;
 }
 
 export type AnalyticsEventInputEventType = typeof AnalyticsEventInputEventType[keyof typeof AnalyticsEventInputEventType];
@@ -2068,6 +2070,7 @@ limit?: number;
 
 export type DeletePresenceParams = {
 clientId: string;
+epoch: string;
 };
 
 export type AdminListFeatureSuggestionsParams = {

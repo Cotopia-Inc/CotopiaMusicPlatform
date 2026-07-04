@@ -105,13 +105,17 @@ export default function SongDetail() {
   // Pausing or stopping immediately releases the presence slot; no fake/random counts.
   useEffect(() => {
     if (!songId || !isThisSongPlaying) return;
-    heartbeatMutation.mutate({ contentType: "song", contentId: songId, data: { clientId: presenceClientId } });
+    // A fresh token per play session — lets the server ignore a heartbeat that
+    // was already in flight when this session ended, so it can't resurrect a
+    // stale count after pause/stop.
+    const epoch = crypto.randomUUID();
+    heartbeatMutation.mutate({ contentType: "song", contentId: songId, data: { clientId: presenceClientId, epoch } });
     const interval = setInterval(() => {
-      heartbeatMutation.mutate({ contentType: "song", contentId: songId, data: { clientId: presenceClientId } });
+      heartbeatMutation.mutate({ contentType: "song", contentId: songId, data: { clientId: presenceClientId, epoch } });
     }, 15_000);
     return () => {
       clearInterval(interval);
-      releasePresenceMutation.mutate({ contentType: "song", contentId: songId, params: { clientId: presenceClientId } });
+      releasePresenceMutation.mutate({ contentType: "song", contentId: songId, params: { clientId: presenceClientId, epoch } });
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [songId, isThisSongPlaying]);

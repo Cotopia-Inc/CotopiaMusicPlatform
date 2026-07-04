@@ -8,4 +8,6 @@
 
 export interface PresenceHeartbeatInput {
   clientId: string;
+  /** A unique token generated per playback session, used to distinguish a fresh play session from a stale in-flight heartbeat from a session that already ended. */
+  epoch: string;
 }

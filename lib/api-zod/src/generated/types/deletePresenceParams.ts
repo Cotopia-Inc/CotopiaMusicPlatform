@@ -8,4 +8,5 @@
 
 export type DeletePresenceParams = {
 clientId: string;
+epoch: string;
 };

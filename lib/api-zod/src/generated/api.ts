@@ -3211,7 +3211,8 @@ export const PostPresenceHeartbeatParams = zod.object({
 })
 
 export const PostPresenceHeartbeatBody = zod.object({
-  "clientId": zod.string()
+  "clientId": zod.string(),
+  "epoch": zod.string().describe('A unique token generated per playback session, used to distinguish a fresh play session from a stale in-flight heartbeat from a session that already ended.')
 })
 
 export const PostPresenceHeartbeatResponse = zod.object({
@@ -3228,7 +3229,8 @@ export const DeletePresenceParams = zod.object({
 })
 
 export const DeletePresenceQueryParams = zod.object({
-  "clientId": zod.coerce.string()
+  "clientId": zod.coerce.string(),
+  "epoch": zod.coerce.string()
 })
 
 export const DeletePresenceResponse = zod.object({
