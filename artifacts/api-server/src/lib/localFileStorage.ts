@@ -61,6 +61,46 @@ export async function saveFile(
 }
 
 /**
+ * Streaming variant of saveFile — returns the destination path for a new
+ * upload *before* any bytes are written, so callers can pipe an incoming
+ * request stream straight to disk without buffering it in memory first.
+ * Call `finalizeLocalUpload` once the stream has finished writing.
+ */
+export async function beginLocalUpload(): Promise<{ id: string; filePath: string }> {
+  const storageDir = getStorageDir();
+  const uploadsDir = path.join(storageDir, "uploads");
+  await ensureDir(uploadsDir);
+
+  const id = randomUUID();
+  const filePath = path.join(uploadsDir, id);
+  return { id, filePath };
+}
+
+export async function finalizeLocalUpload(
+  id: string,
+  originalName: string,
+  contentType: string,
+  size: number,
+): Promise<{ objectPath: string; size: number }> {
+  const storageDir = getStorageDir();
+  const filePath = path.join(storageDir, "uploads", id);
+  const metaPath = `${filePath}.meta.json`;
+  const meta: StoredFile = {
+    id,
+    filename: originalName,
+    contentType,
+    size,
+    storedAt: new Date().toISOString(),
+  };
+  await fs.writeFile(metaPath, JSON.stringify(meta));
+  return { objectPath: `/objects/uploads/${id}`, size };
+}
+
+export async function discardLocalUpload(filePath: string): Promise<void> {
+  await fs.unlink(filePath).catch(() => {});
+}
+
+/**
  * Read a stored file from disk given its objectPath (/objects/uploads/<id>).
  * Returns the buffer and its metadata.
  */

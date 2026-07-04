@@ -1,8 +1,16 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import express from "express";
 import { randomUUID } from "crypto";
+import { createWriteStream } from "fs";
+import { Transform } from "stream";
+import { pipeline } from "stream/promises";
 import { objectStorageClient, ObjectStorageService, ObjectNotFoundError } from "../lib/objectStorage";
-import { saveFile, readFile, FileNotFoundError } from "../lib/localFileStorage";
+import {
+  readFile,
+  FileNotFoundError,
+  beginLocalUpload,
+  finalizeLocalUpload,
+  discardLocalUpload,
+} from "../lib/localFileStorage";
 import { r2Available, saveFileToR2, getR2PublicUrl, checkR2Connectivity } from "../lib/r2Storage";
 
 const router: IRouter = Router();
@@ -52,72 +60,130 @@ router.get("/storage/status", async (req: Request, res: Response) => {
   });
 });
 
+// No product-level size cap right now — the video files creators upload can
+// be large "one take" recordings. We still set a very high technical ceiling
+// (rather than truly unbounded) so a single garbage/malicious request can't
+// fill the disk or run forever.
+const MAX_UPLOAD_BYTES = 10 * 1024 * 1024 * 1024; // 10GB
+
+class UploadTooLargeError extends Error {
+  constructor() {
+    super("UPLOAD_TOO_LARGE");
+    this.name = "UploadTooLargeError";
+  }
+}
+
+/**
+ * Counts bytes as they pass through and errors out once the configured
+ * ceiling is exceeded — this lets us reject an oversized upload mid-stream
+ * without ever holding the whole file in memory.
+ */
+class ByteLimitTransform extends Transform {
+  private total = 0;
+
+  constructor(private readonly maxBytes: number) {
+    super();
+  }
+
+  get bytesRead(): number {
+    return this.total;
+  }
+
+  _transform(chunk: Buffer, _encoding: string, callback: (error?: Error | null, data?: Buffer) => void): void {
+    this.total += chunk.length;
+    if (this.total > this.maxBytes) {
+      callback(new UploadTooLargeError());
+      return;
+    }
+    callback(null, chunk);
+  }
+}
+
 /**
  * POST /storage/uploads/upload
  *
  * Server-mediated upload: browser POSTs the raw file bytes; the server
- * writes them to the appropriate persistent storage backend.
+ * streams them straight through to the appropriate persistent storage
+ * backend without ever buffering the whole file in memory. Buffering large
+ * video uploads in memory (the previous `express.raw()` approach) could OOM
+ * and crash memory-constrained instances (e.g. Render's starter plan).
  *
  * Headers:
  *   Content-Type   — file MIME type
  *   X-File-Name    — URL-encoded original filename
  */
-// No product-level size cap right now — the video files creators upload can
-// be large "one take" recordings. We still set a very high technical ceiling
-// (rather than truly unbounded) since express.raw buffers the whole body in
-// memory before it reaches the handler; without any ceiling a single garbage
-// or malicious request could OOM the process.
-router.post(
-  "/storage/uploads/upload",
-  express.raw({ type: "*/*", limit: "10gb" }),
-  async (req: Request, res: Response) => {
-    const rawName = req.headers["x-file-name"];
-    const name = rawName
-      ? decodeURIComponent(Array.isArray(rawName) ? rawName[0] : rawName)
-      : "upload";
-    const contentType =
-      (Array.isArray(req.headers["content-type"])
-        ? req.headers["content-type"][0]
-        : req.headers["content-type"]) ?? "application/octet-stream";
-    const body = req.body as Buffer;
+router.post("/storage/uploads/upload", async (req: Request, res: Response) => {
+  const rawName = req.headers["x-file-name"];
+  const name = rawName
+    ? decodeURIComponent(Array.isArray(rawName) ? rawName[0] : rawName)
+    : "upload";
+  const contentType =
+    (Array.isArray(req.headers["content-type"])
+      ? req.headers["content-type"][0]
+      : req.headers["content-type"]) ?? "application/octet-stream";
 
-    if (!Buffer.isBuffer(body) || body.length === 0) {
-      res.status(400).json({ error: "No file data provided" });
-      return;
-    }
+  const contentLengthHeader = req.headers["content-length"];
+  const contentLength = contentLengthHeader ? Number(contentLengthHeader) : NaN;
+  if (Number.isFinite(contentLength) && contentLength > MAX_UPLOAD_BYTES) {
+    res.status(413).json({ error: "File is too large. Maximum upload size is 10GB." });
+    return;
+  }
+  if (Number.isFinite(contentLength) && contentLength === 0) {
+    res.status(400).json({ error: "No file data provided" });
+    return;
+  }
 
-    try {
-      if (gcsAvailable()) {
-        const id = randomUUID();
-        const privateDir = storageService.getPrivateObjectDir();
-        const fullPath = `${privateDir}/uploads/${id}`;
-        const { bucketName, objectName } = parseBucketPath(fullPath);
-        const bucket = objectStorageClient.bucket(bucketName);
-        const file = bucket.file(objectName);
+  const limiter = new ByteLimitTransform(MAX_UPLOAD_BYTES);
 
-        await file.save(body, { contentType, metadata: { originalName: name } });
-        req.log.info({ objectName, size: body.length, backend: "gcs" }, "File saved to GCS");
+  try {
+    if (gcsAvailable()) {
+      const id = randomUUID();
+      const privateDir = storageService.getPrivateObjectDir();
+      const fullPath = `${privateDir}/uploads/${id}`;
+      const { bucketName, objectName } = parseBucketPath(fullPath);
+      const bucket = objectStorageClient.bucket(bucketName);
+      const file = bucket.file(objectName);
+      const writeStream = file.createWriteStream({ contentType, metadata: { originalName: name } });
 
-        res.json({
-          objectPath: `/objects/uploads/${id}`,
-          metadata: { name, size: body.length, contentType },
-        });
-      } else if (r2Available()) {
-        const { objectPath, size } = await saveFileToR2(body, name, contentType);
+      await pipeline(req, limiter, writeStream);
+      const size = limiter.bytesRead;
+      req.log.info({ objectName, size, backend: "gcs" }, "File saved to GCS");
+
+      res.json({
+        objectPath: `/objects/uploads/${id}`,
+        metadata: { name, size, contentType },
+      });
+    } else if (r2Available()) {
+      // R2's REST PUT needs a re-readable body to support retries, so stream
+      // to a temp file on disk first, then stream that file up to R2.
+      const { filePath } = await beginLocalUpload();
+      try {
+        await pipeline(req, limiter, createWriteStream(filePath));
+        const size = limiter.bytesRead;
+        const { objectPath } = await saveFileToR2(filePath, size, contentType);
         req.log.info({ objectPath, size, backend: "r2" }, "File saved to Cloudflare R2");
         res.json({ objectPath, metadata: { name, size, contentType } });
-      } else {
-        const { objectPath, size } = await saveFile(body, name, contentType);
-        req.log.info({ objectPath, size, backend: "local" }, "File saved to local disk");
-        res.json({ objectPath, metadata: { name, size, contentType } });
+      } finally {
+        await discardLocalUpload(filePath);
       }
-    } catch (error: unknown) {
-      const detail = error instanceof Error ? error.message : String(error);
-      req.log.error({ err: error, detail }, "Error saving uploaded file");
-      res.status(500).json({ error: "File upload failed. Please try again." });
+    } else {
+      const { id, filePath } = await beginLocalUpload();
+      await pipeline(req, limiter, createWriteStream(filePath));
+      const size = limiter.bytesRead;
+      const { objectPath } = await finalizeLocalUpload(id, name, contentType, size);
+      req.log.info({ objectPath, size, backend: "local" }, "File saved to local disk");
+      res.json({ objectPath, metadata: { name, size, contentType } });
     }
-  },
-);
+  } catch (error: unknown) {
+    if (error instanceof UploadTooLargeError) {
+      res.status(413).json({ error: "File is too large. Maximum upload size is 10GB." });
+      return;
+    }
+    const detail = error instanceof Error ? error.message : String(error);
+    req.log.error({ err: error, detail }, "Error saving uploaded file");
+    res.status(500).json({ error: "File upload failed. Please try again." });
+  }
+});
 
 /**
  * GET /storage/objects/*path

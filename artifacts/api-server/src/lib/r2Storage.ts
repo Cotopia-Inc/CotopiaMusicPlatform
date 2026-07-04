@@ -1,4 +1,5 @@
 import { randomUUID } from "crypto";
+import { createReadStream } from "fs";
 
 /**
  * Returns true when Cloudflare R2 is configured via REST API + public URL.
@@ -34,19 +35,24 @@ function sleep(ms: number): Promise<void> {
 }
 
 /**
- * Upload a buffer to R2 using Cloudflare's REST API.
- * Uses a Bearer token (global API token) instead of S3-compatible credentials,
- * which avoids the "Invalid character in header" issue with the S3 SDK.
+ * Upload a file (already written to local disk) to R2 using Cloudflare's
+ * REST API. Uses a Bearer token (global API token) instead of S3-compatible
+ * credentials, which avoids the "Invalid character in header" issue with the
+ * S3 SDK.
  *
- * Large video uploads (up to 200MB) proxy through this single PUT, so a
- * transient network blip or Cloudflare 5xx would otherwise fail the whole
- * submission. Retry a couple of times with backoff on retryable failures;
- * a hard 120s timeout per attempt prevents a hung request from blocking the
- * whole request indefinitely.
+ * Streams the file from disk rather than loading it into a Buffer — large
+ * video uploads must never be held fully in process memory, or a
+ * memory-constrained instance (e.g. Render's starter plan, 512MB) can OOM
+ * and crash on a single big upload. A fresh read stream is opened for every
+ * retry attempt since a stream can only be consumed once.
+ *
+ * Retry a couple of times with backoff on retryable failures; a hard 120s
+ * timeout per attempt prevents a hung request from blocking the whole
+ * request indefinitely.
  */
 export async function saveFileToR2(
-  buffer: Buffer,
-  _originalName: string,
+  filePath: string,
+  size: number,
   contentType: string,
 ): Promise<{ objectPath: string; size: number }> {
   const accountId = process.env.R2_ACCOUNT_ID!.trim();
@@ -66,10 +72,13 @@ export async function saveFileToR2(
         headers: {
           "Authorization": `Bearer ${apiToken}`,
           "Content-Type": contentType,
+          "Content-Length": String(size),
         },
-        body: buffer,
+        body: createReadStream(filePath),
+        // Streaming a Node stream as a fetch body requires half-duplex mode.
+        duplex: "half",
         signal: AbortSignal.timeout(R2_UPLOAD_TIMEOUT_MS),
-      });
+      } as RequestInit);
 
       if (!response.ok) {
         const text = await response.text().catch(() => "");
@@ -81,7 +90,7 @@ export async function saveFileToR2(
         continue;
       }
 
-      return { objectPath: `/objects/uploads/${id}`, size: buffer.length };
+      return { objectPath: `/objects/uploads/${id}`, size };
     } catch (err) {
       const error = err instanceof Error ? err : new Error(String(err));
       if (attempt === R2_UPLOAD_MAX_RETRIES) throw error;
