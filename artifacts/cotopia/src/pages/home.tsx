@@ -32,31 +32,42 @@ export default function Home() {
   return (
     <div className="space-y-14 pb-24">
       {/* Hero */}
-      <section className="relative rounded-2xl overflow-hidden min-h-[220px] md:min-h-[280px] flex items-end p-5 md:p-8 border border-border/50 group cursor-pointer">
+      <section className="relative rounded-2xl overflow-hidden min-h-[280px] md:min-h-[340px] flex items-end p-5 md:p-8 border border-border/50 group">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-background" />
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1571330735066-03aaa9429d89?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-10" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent z-10" />
         <div className="relative z-20 space-y-4 max-w-xl">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <img src="/logo.jpg" alt="Cotopia" className="w-4 h-4 rounded-sm object-cover flex-shrink-0" />
-            <span className="text-xs font-semibold uppercase tracking-widest text-primary">Everyday Radio</span>
+            <span className="text-xs font-semibold uppercase tracking-widest text-primary">Everyday Radio · Powered by Cotopia</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400 bg-amber-400/10 border border-amber-400/20 px-2 py-0.5 rounded-full">Beta</span>
           </div>
-          <h2 className="text-3xl md:text-5xl font-extrabold tracking-tighter leading-none">
-            The sound of<br />
-            <span className="text-primary">tomorrow</span>, today.
-          </h2>
-          <p className="text-muted-foreground text-base">
-            Discover emerging artists, stream exclusive content, and connect with a community that lives for music.
+          <div>
+            <h2 className="text-3xl md:text-5xl font-extrabold tracking-tighter leading-none">
+              More than music.<br />
+              <span className="text-primary">More than radio.</span>
+            </h2>
+          </div>
+          <ul className="text-muted-foreground text-base space-y-1">
+            <li>Discover exclusive artists.</li>
+            <li>Experience new technology.</li>
+            <li>Help build the future.</li>
+          </ul>
+          <div className="flex items-center gap-2 text-sm font-medium text-foreground/90">
+            <span aria-hidden="true">🎤</span> Featuring Asia Qu
+          </div>
+          <p className="text-xs text-muted-foreground/70">
+            Only available on Everyday Radio during Beta.
           </p>
-          <div className="flex gap-3 pt-2">
+          <div className="flex gap-3 pt-2 flex-wrap">
             <Link href="/discover">
               <button className="bg-primary text-primary-foreground font-semibold px-6 py-2.5 rounded-full flex items-center gap-2 hover:scale-105 transition-transform text-sm shadow-lg shadow-primary/25">
-                <Play className="w-4 h-4 fill-current" /> Start Listening
+                <Play className="w-4 h-4 fill-current" /> Listen Now
               </button>
             </Link>
-            <Link href="/artists">
-              <button className="bg-secondary text-secondary-foreground font-semibold px-6 py-2.5 rounded-full text-sm hover:bg-secondary/80 transition-colors border border-border">
-                Explore Artists
+            <Link href="/about">
+              <button className="bg-secondary text-secondary-foreground font-semibold px-6 py-2.5 rounded-full text-sm hover:bg-secondary/80 transition-colors border border-border flex items-center gap-2">
+                <span aria-hidden="true">🎵</span> Watch It Work
               </button>
             </Link>
           </div>
