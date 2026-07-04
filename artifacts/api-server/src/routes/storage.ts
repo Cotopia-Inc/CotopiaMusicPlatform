@@ -9,7 +9,6 @@ import {
   FileNotFoundError,
   beginLocalUpload,
   finalizeLocalUpload,
-  discardLocalUpload,
 } from "../lib/localFileStorage";
 import { r2Available, saveFileToR2, getR2PublicUrl, checkR2Connectivity } from "../lib/r2Storage";
 
@@ -154,18 +153,26 @@ router.post("/storage/uploads/upload", async (req: Request, res: Response) => {
         metadata: { name, size, contentType },
       });
     } else if (r2Available()) {
-      // R2's REST PUT needs a re-readable body to support retries, so stream
-      // to a temp file on disk first, then stream that file up to R2.
-      const { filePath } = await beginLocalUpload();
-      try {
-        await pipeline(req, limiter, createWriteStream(filePath));
-        const size = limiter.bytesRead;
-        const { objectPath } = await saveFileToR2(filePath, size, contentType);
-        req.log.info({ objectPath, size, backend: "r2" }, "File saved to Cloudflare R2");
-        res.json({ objectPath, metadata: { name, size, contentType } });
-      } finally {
-        await discardLocalUpload(filePath);
+      // Render web services have no persistent disk by default — os.tmpdir()
+      // is backed by container RAM there, so staging the upload to a temp
+      // file would just recreate the in-memory-buffering OOM under a
+      // different name. Instead, pipe the request straight into the
+      // outgoing PUT to R2 without ever landing it on disk. This requires
+      // knowing the exact size upfront (R2's single-PUT REST API needs a
+      // real Content-Length), which the browser's XHR upload always sends.
+      if (!Number.isFinite(contentLength)) {
+        res.status(400).json({ error: "A Content-Length header is required for this upload." });
+        return;
       }
+      req.on("error", (err) => limiter.destroy(err));
+      req.pipe(limiter);
+      const { objectPath } = await saveFileToR2(limiter, contentLength, contentType);
+      const size = limiter.bytesRead;
+      if (size !== contentLength) {
+        req.log.warn({ objectPath, declared: contentLength, actual: size }, "R2 upload size mismatch");
+      }
+      req.log.info({ objectPath, size, backend: "r2" }, "File saved to Cloudflare R2");
+      res.json({ objectPath, metadata: { name, size, contentType } });
     } else {
       const { id, filePath } = await beginLocalUpload();
       await pipeline(req, limiter, createWriteStream(filePath));
@@ -175,6 +182,12 @@ router.post("/storage/uploads/upload", async (req: Request, res: Response) => {
       res.json({ objectPath, metadata: { name, size, contentType } });
     }
   } catch (error: unknown) {
+    // If the outgoing upload (to R2, or the local write stream) fails or is
+    // rejected mid-transfer, make sure we stop reading from the client too —
+    // otherwise the browser keeps sending into a dead pipe until it finishes
+    // or a timeout fires, holding the connection open for no reason.
+    if (!req.destroyed) req.destroy();
+
     if (error instanceof UploadTooLargeError) {
       res.status(413).json({ error: "File is too large. Maximum upload size is 10GB." });
       return;

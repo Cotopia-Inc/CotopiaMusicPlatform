@@ -1,5 +1,6 @@
 import { randomUUID } from "crypto";
-import { createReadStream } from "fs";
+import https from "https";
+import type { Readable } from "stream";
 
 /**
  * Returns true when Cloudflare R2 is configured via REST API + public URL.
@@ -27,31 +28,93 @@ function objectPathToKey(objectPath: string): string {
 }
 
 const R2_UPLOAD_TIMEOUT_MS = 120_000;
-const R2_UPLOAD_MAX_RETRIES = 2; // 3 total attempts
-const R2_RETRY_DELAY_MS = [1000, 3000];
 
-function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+type RequestFn = typeof https.request;
+
+/**
+ * Pipes `body` into an HTTP(S) request created via `requestFn` and resolves
+ * once a 2xx response is fully received, or rejects on any error/non-2xx.
+ *
+ * `requestFn` is injected (defaults to `https.request` in production) so
+ * this can be exercised in tests against a plain local `http` server without
+ * needing a TLS endpoint — `http.request` and `https.request` share the same
+ * streaming/backpressure semantics, only the transport differs.
+ *
+ * Two memory traps had to be avoided here, both confirmed by direct
+ * measurement against a local test server before landing this:
+ *
+ * 1. Staging the upload to a temp file first. Render web services (and many
+ *    other PaaS containers) have no persistent disk by default —
+ *    `os.tmpdir()` / `/tmp` is backed by the container's RAM, so writing a
+ *    large video there consumes memory exactly like buffering it in the JS
+ *    heap would, and can still OOM a 512MB instance even though the Node
+ *    process's own heap/RSS looks flat.
+ * 2. Using the global `fetch()` (undici) with a Node stream as the body.
+ *    Despite `duplex: "half"`, undici buffers the entire stream into memory
+ *    before/while sending it — RSS grows linearly with file size exactly
+ *    like the original `express.raw()` bug. `duplex: "half"` only satisfies
+ *    fetch's API contract, it does not make undici stream the body with
+ *    real backpressure. Raw `https.request()` + `.pipe()`, by contrast,
+ *    streams with real backpressure and keeps RSS flat regardless of file
+ *    size — verified locally against a mock endpoint.
+ *
+ * Trade-off: because the source is a live, single-use request stream (not a
+ * re-readable file), a failed upload cannot be retried by re-sending the
+ * same bytes — retrying would require buffering, which is the exact thing
+ * we're avoiding. A hard timeout still guards against a hung request.
+ */
+export function streamingHttpPut(
+  requestFn: RequestFn,
+  options: https.RequestOptions,
+  body: Readable,
+): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    let settled = false;
+    const settle = (fn: () => void) => {
+      if (settled) return;
+      settled = true;
+      fn();
+    };
+
+    const MAX_ERROR_BODY_BYTES = 4096;
+    const req = requestFn(options, (res) => {
+      let responseBody = "";
+      res.on("data", (chunk: Buffer) => {
+        if (responseBody.length < MAX_ERROR_BODY_BYTES) {
+          responseBody += chunk.toString("utf8");
+        }
+      });
+      res.on("end", () => {
+        const status = res.statusCode ?? 0;
+        if (status >= 200 && status < 300) {
+          settle(resolve);
+        } else {
+          settle(() =>
+            reject(new Error(`Upload failed (HTTP ${status}): ${responseBody}`)),
+          );
+        }
+      });
+    });
+
+    req.on("timeout", () => req.destroy(new Error("Upload timed out")));
+    req.on("error", (err) => settle(() => reject(err)));
+    body.on("error", (err) => {
+      settle(() => reject(err));
+      req.destroy(err);
+    });
+
+    body.pipe(req);
+  });
 }
 
 /**
- * Upload a file (already written to local disk) to R2 using Cloudflare's
- * REST API. Uses a Bearer token (global API token) instead of S3-compatible
- * credentials, which avoids the "Invalid character in header" issue with the
- * S3 SDK.
- *
- * Streams the file from disk rather than loading it into a Buffer — large
- * video uploads must never be held fully in process memory, or a
- * memory-constrained instance (e.g. Render's starter plan, 512MB) can OOM
- * and crash on a single big upload. A fresh read stream is opened for every
- * retry attempt since a stream can only be consumed once.
- *
- * Retry a couple of times with backoff on retryable failures; a hard 120s
- * timeout per attempt prevents a hung request from blocking the whole
- * request indefinitely.
+ * Upload a file to R2 using Cloudflare's REST API, streaming the incoming
+ * request body straight through to R2 — never touching local disk or
+ * buffering it in a Node Buffer. See `streamingHttpPut` for why this uses
+ * raw `https.request()` instead of `fetch()`.
  */
 export async function saveFileToR2(
-  filePath: string,
+  body: Readable,
   size: number,
   contentType: string,
 ): Promise<{ objectPath: string; size: number }> {
@@ -60,46 +123,25 @@ export async function saveFileToR2(
   const apiToken = process.env.R2_API_TOKEN!.trim();
   const id = randomUUID();
   const key = `uploads/${id}`;
+  const path = `/client/v4/accounts/${accountId}/r2/buckets/${bucket}/objects/${key}`;
 
-  const url = `https://api.cloudflare.com/client/v4/accounts/${accountId}/r2/buckets/${bucket}/objects/${key}`;
+  await streamingHttpPut(
+    https.request,
+    {
+      hostname: "api.cloudflare.com",
+      path,
+      method: "PUT",
+      headers: {
+        "Authorization": `Bearer ${apiToken}`,
+        "Content-Type": contentType,
+        "Content-Length": size,
+      },
+      timeout: R2_UPLOAD_TIMEOUT_MS,
+    },
+    body,
+  );
 
-  let lastError: Error = new Error("R2 upload failed");
-
-  for (let attempt = 0; attempt <= R2_UPLOAD_MAX_RETRIES; attempt++) {
-    try {
-      const response = await fetch(url, {
-        method: "PUT",
-        headers: {
-          "Authorization": `Bearer ${apiToken}`,
-          "Content-Type": contentType,
-          "Content-Length": String(size),
-        },
-        body: createReadStream(filePath),
-        // Streaming a Node stream as a fetch body requires half-duplex mode.
-        duplex: "half",
-        signal: AbortSignal.timeout(R2_UPLOAD_TIMEOUT_MS),
-      } as RequestInit);
-
-      if (!response.ok) {
-        const text = await response.text().catch(() => "");
-        const retryable = response.status >= 500;
-        const error = new Error(`R2 upload failed (HTTP ${response.status}): ${text}`);
-        if (!retryable || attempt === R2_UPLOAD_MAX_RETRIES) throw error;
-        lastError = error;
-        await sleep(R2_RETRY_DELAY_MS[attempt] ?? 3000);
-        continue;
-      }
-
-      return { objectPath: `/objects/uploads/${id}`, size };
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error(String(err));
-      if (attempt === R2_UPLOAD_MAX_RETRIES) throw error;
-      lastError = error;
-      await sleep(R2_RETRY_DELAY_MS[attempt] ?? 3000);
-    }
-  }
-
-  throw lastError;
+  return { objectPath: `/objects/uploads/${id}`, size };
 }
 
 /**
