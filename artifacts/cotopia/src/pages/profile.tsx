@@ -79,7 +79,7 @@ function FeaturedBadgesSection({ userId }: { userId: number }) {
   function toggleFeatured(badgeId: number) {
     const newIds = serverFeaturedIds.includes(badgeId)
       ? serverFeaturedIds.filter(id => id !== badgeId)
-      : serverFeaturedIds.length < 3 ? [...serverFeaturedIds, badgeId] : serverFeaturedIds;
+      : [...serverFeaturedIds, badgeId];
     featuredMutation.mutate(newIds);
   }
 
@@ -167,13 +167,12 @@ function FeaturedBadgesSection({ userId }: { userId: number }) {
   return (
     <div className="space-y-2">
       <div>
-        <label className="text-sm font-medium">Featured Badges <span className="text-muted-foreground text-xs">(up to 3)</span></label>
+        <label className="text-sm font-medium">Featured Badges</label>
         <p className="text-xs text-muted-foreground mt-0.5">Choose which badges to highlight on your public profile. Drag the handle to reorder.</p>
       </div>
       <div className="grid grid-cols-1 gap-1.5">
         {sortedBadges.map(ub => {
           const isFeatured = serverFeaturedIds.includes(ub.badgeId);
-          const canAdd = serverFeaturedIds.length < 3;
           const order = featuredIds.indexOf(ub.badgeId);
           const isDragging = draggedId === ub.badgeId;
           return (
@@ -186,8 +185,6 @@ function FeaturedBadgesSection({ userId }: { userId: number }) {
               className={`flex items-center gap-2 rounded-lg border px-3 py-2 transition-colors ${
                 isFeatured
                   ? "border-primary bg-primary/10"
-                  : !canAdd
-                  ? "border-border opacity-40"
                   : "border-border hover:border-border/80 hover:bg-secondary/30"
               } ${isDragging ? "opacity-40 shadow-lg" : ""}`}
               style={{ transition: "opacity 0.15s" }}
@@ -206,7 +203,6 @@ function FeaturedBadgesSection({ userId }: { userId: number }) {
               )}
               <button
                 onClick={() => toggleFeatured(ub.badgeId)}
-                disabled={!isFeatured && !canAdd}
                 className="flex items-center gap-3 flex-1 min-w-0 text-left disabled:cursor-not-allowed"
               >
                 <span className="text-lg flex-shrink-0">{ub.badge.icon}</span>

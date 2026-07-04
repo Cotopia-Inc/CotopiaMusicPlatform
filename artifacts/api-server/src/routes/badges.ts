@@ -96,7 +96,7 @@ router.get("/users/:id/badges", async (req, res, next): Promise<void> => {
   })));
 });
 
-// ── Authenticated: update featured badges (max 3) ──────────────────────────
+// ── Authenticated: update featured badges ───────────────────────────────────
 router.put("/users/:id/featured-badges", requireAuth, async (req: AuthRequest, res): Promise<void> => {
   const id = Number(req.params.id);
   if (isNaN(id) || id <= 0) { res.status(400).json({ error: "Invalid user id" }); return; }
@@ -107,8 +107,8 @@ router.put("/users/:id/featured-badges", requireAuth, async (req: AuthRequest, r
   }
 
   const { badgeIds } = req.body as { badgeIds?: number[] };
-  if (!Array.isArray(badgeIds) || badgeIds.length > 3) {
-    res.status(400).json({ error: "badgeIds must be an array of up to 3 badge ids" }); return;
+  if (!Array.isArray(badgeIds)) {
+    res.status(400).json({ error: "badgeIds must be an array of badge ids" }); return;
   }
 
   // Verify user owns all those badges
