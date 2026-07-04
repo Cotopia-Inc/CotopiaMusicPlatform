@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { ExperienceFeedbackModal } from "@/components/experience-feedback-modal";
 import { useAdminUploadSong, useAdminBulkUploadSongs, useAdminGetUploadAccounts } from "@workspace/api-client-react";
 import { useUpload } from "../lib/useUpload";
+import { ImageCropModal } from "@/components/image-crop-modal";
 import { useAuth } from "@/lib/auth";
 import { useLocation, Link } from "wouter";
 import { Upload, Music, ArrowLeft, CheckCircle, Disc, Disc3, ListMusic, BadgeCheck, X, Loader2, AlertCircle } from "lucide-react";
@@ -142,6 +143,17 @@ export default function AdminUploadSong() {
   const coverUpload = useUpload({
     onSuccess: (res) => setForm(f => ({ ...f, coverUrl: `/api/storage${res.objectPath}` })),
   });
+  const [coverCropUrl, setCoverCropUrl] = useState<string | null>(null);
+  const handleCoverFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (f) setCoverCropUrl(URL.createObjectURL(f));
+    e.target.value = "";
+  };
+  const handleCoverCropConfirm = async (blob: Blob) => {
+    if (coverCropUrl) URL.revokeObjectURL(coverCropUrl);
+    setCoverCropUrl(null);
+    await coverUpload.uploadFile(new File([blob], "cover.jpg", { type: "image/jpeg" }));
+  };
 
   const uploadSong = useAdminUploadSong();
 
@@ -201,6 +213,17 @@ export default function AdminUploadSong() {
       setBulkCoverDone(true);
     },
   });
+  const [bulkCoverCropUrl, setBulkCoverCropUrl] = useState<string | null>(null);
+  const handleBulkCoverFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (f) setBulkCoverCropUrl(URL.createObjectURL(f));
+    e.target.value = "";
+  };
+  const handleBulkCoverCropConfirm = async (blob: Blob) => {
+    if (bulkCoverCropUrl) URL.revokeObjectURL(bulkCoverCropUrl);
+    setBulkCoverCropUrl(null);
+    await bulkCoverUpload.uploadFile(new File([blob], "cover.jpg", { type: "image/jpeg" }));
+  };
 
   const bulkUpload = useAdminBulkUploadSongs();
 
@@ -409,7 +432,7 @@ export default function AdminUploadSong() {
                     <p className="text-xs text-muted-foreground">JPG, PNG, WebP (square recommended)</p>
                   </div>
                   {coverUpload.isUploading && <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden"><div className="h-full bg-primary transition-all rounded-full" style={{ width: `${coverUpload.progress}%` }} /></div>}
-                  <input type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) coverUpload.uploadFile(f); }} />
+                  <input type="file" accept="image/*" className="hidden" onChange={handleCoverFile} />
                 </label>
               )}
             </div>
@@ -553,7 +576,7 @@ export default function AdminUploadSong() {
                         <p className="text-xs text-muted-foreground">JPG, PNG, WebP (square recommended)</p>
                       </div>
                       {bulkCoverUpload.isUploading && <div className="ml-auto w-16 h-1.5 bg-muted rounded-full overflow-hidden"><div className="h-full bg-primary transition-all rounded-full" style={{ width: `${bulkCoverUpload.progress}%` }} /></div>}
-                      <input type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) bulkCoverUpload.uploadFile(f); }} />
+                      <input type="file" accept="image/*" className="hidden" onChange={handleBulkCoverFile} />
                     </label>
                   )}
                 </div>
@@ -654,6 +677,26 @@ export default function AdminUploadSong() {
         </TabsContent>
       </Tabs>
       <ExperienceFeedbackModal open={feedbackOpen} onClose={() => setFeedbackOpen(false)} trigger="after_upload" />
+      {coverCropUrl && (
+        <ImageCropModal
+          imageUrl={coverCropUrl}
+          aspectRatio={1}
+          title="Crop Cover Art"
+          outputSize={800}
+          onConfirm={handleCoverCropConfirm}
+          onCancel={() => { URL.revokeObjectURL(coverCropUrl); setCoverCropUrl(null); }}
+        />
+      )}
+      {bulkCoverCropUrl && (
+        <ImageCropModal
+          imageUrl={bulkCoverCropUrl}
+          aspectRatio={1}
+          title="Crop Cover Art"
+          outputSize={800}
+          onConfirm={handleBulkCoverCropConfirm}
+          onCancel={() => { URL.revokeObjectURL(bulkCoverCropUrl); setBulkCoverCropUrl(null); }}
+        />
+      )}
     </div>
   );
 }

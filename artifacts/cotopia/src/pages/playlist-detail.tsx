@@ -17,6 +17,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useUpload } from "@/lib/useUpload";
+import { ImageCropModal } from "@/components/image-crop-modal";
 import {
   DndContext, closestCenter, PointerSensor, useSensor, useSensors,
   DragEndEvent,
@@ -157,6 +158,17 @@ export default function PlaylistDetail() {
     onSuccess: (res) => setEditCoverUrl(`/api/storage${res.objectPath}`),
     onError: (err) => toast({ variant: "destructive", title: "Cover upload failed", description: err.message }),
   });
+  const [coverCropUrl, setCoverCropUrl] = useState<string | null>(null);
+  const handleCoverFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (f) setCoverCropUrl(URL.createObjectURL(f));
+    e.target.value = "";
+  };
+  const handleCoverCropConfirm = async (blob: Blob) => {
+    if (coverCropUrl) URL.revokeObjectURL(coverCropUrl);
+    setCoverCropUrl(null);
+    await coverUpload.uploadFile(new File([blob], "cover.jpg", { type: "image/jpeg" }));
+  };
 
   const { data: playlist, isLoading } = useGetPlaylist(playlistId, {
     query: { enabled: !!playlistId, queryKey: getGetPlaylistQueryKey(playlistId) },
@@ -331,7 +343,7 @@ export default function PlaylistDetail() {
                 type="file"
                 accept="image/*"
                 className="hidden"
-                onChange={(e) => { const f = e.target.files?.[0]; if (f) coverUpload.uploadFile(f); e.target.value = ""; }}
+                onChange={handleCoverFile}
               />
               {currentCover && (
                 <button
@@ -523,6 +535,16 @@ export default function PlaylistDetail() {
           <p className="text-muted-foreground py-8">This playlist is empty.</p>
         )}
       </div>
+      {coverCropUrl && (
+        <ImageCropModal
+          imageUrl={coverCropUrl}
+          aspectRatio={1}
+          title="Crop Playlist Cover"
+          outputSize={800}
+          onConfirm={handleCoverCropConfirm}
+          onCancel={() => { URL.revokeObjectURL(coverCropUrl); setCoverCropUrl(null); }}
+        />
+      )}
     </div>
   );
 }

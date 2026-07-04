@@ -10,6 +10,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Play, Pause, Heart, Star, Send, Radio, Users, MessageCircle, ArrowLeft, Trash2, Edit2, X, Save, Upload, ImageIcon, Mic2, ChevronDown, ChevronUp, AlignLeft } from "lucide-react";
 import { RoleTag } from "@/components/role-badges";
+import { ImageCropModal } from "@/components/image-crop-modal";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { usePlatformConfig } from "@/lib/platform-config";
@@ -160,6 +161,17 @@ export default function SongDetail() {
   const coverUpload = useUpload({
     onSuccess: (res) => setEditCoverUrl(`/api/storage${res.objectPath}`),
   });
+  const [coverCropUrl, setCoverCropUrl] = useState<string | null>(null);
+  const handleCoverFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (f) setCoverCropUrl(URL.createObjectURL(f));
+    e.target.value = "";
+  };
+  const handleCoverCropConfirm = async (blob: Blob) => {
+    if (coverCropUrl) URL.revokeObjectURL(coverCropUrl);
+    setCoverCropUrl(null);
+    await coverUpload.uploadFile(new File([blob], "cover.jpg", { type: "image/jpeg" }));
+  };
 
   const isFavorited = localFavorited ?? song?.isFavorited ?? false;
   const userRating = localRating ?? song?.userRating ?? null;
@@ -448,7 +460,7 @@ export default function SongDetail() {
                       ) : (
                         <><ImageIcon className="w-3.5 h-3.5" /> {editCoverUrl ? "Change image" : "Upload image"}</>
                       )}
-                      <input type="file" accept="image/*" className="sr-only" onChange={(e) => { const f = e.target.files?.[0]; if (f) coverUpload.uploadFile(f); }} />
+                      <input type="file" accept="image/*" className="sr-only" onChange={handleCoverFile} />
                     </label>
                   </div>
                 </div>
@@ -722,6 +734,16 @@ export default function SongDetail() {
           )}
         </div>
       </div>
+      {coverCropUrl && (
+        <ImageCropModal
+          imageUrl={coverCropUrl}
+          aspectRatio={1}
+          title="Crop Cover Art"
+          outputSize={800}
+          onConfirm={handleCoverCropConfirm}
+          onCancel={() => { URL.revokeObjectURL(coverCropUrl); setCoverCropUrl(null); }}
+        />
+      )}
     </div>
   );
 }

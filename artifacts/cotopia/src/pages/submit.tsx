@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useCreateBulkSubmission, useInitiatePayment, useCapturePayment } from "@workspace/api-client-react";
 import { useUpload } from "../lib/useUpload";
+import { ImageCropModal } from "@/components/image-crop-modal";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -178,6 +179,17 @@ interface SharedMeta {
 function MetadataSection({ meta, onChange, type }: { meta: SharedMeta; onChange: (m: SharedMeta) => void; type: "song" | "video" }) {
   const set = (patch: Partial<SharedMeta>) => onChange({ ...meta, ...patch });
   const coverUpload = useUpload({ onSuccess: (res) => set({ coverUrl: `/api/storage${res.objectPath}` }) });
+  const [coverCropUrl, setCoverCropUrl] = useState<string | null>(null);
+  const handleCoverFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (f) setCoverCropUrl(URL.createObjectURL(f));
+    e.target.value = "";
+  };
+  const handleCoverCropConfirm = async (blob: Blob) => {
+    if (coverCropUrl) URL.revokeObjectURL(coverCropUrl);
+    setCoverCropUrl(null);
+    await coverUpload.uploadFile(new File([blob], "cover.jpg", { type: "image/jpeg" }));
+  };
 
   return (
     <div className="space-y-4">
@@ -266,10 +278,20 @@ function MetadataSection({ meta, onChange, type }: { meta: SharedMeta; onChange:
                 <div className="h-full bg-primary transition-all rounded-full" style={{ width: `${coverUpload.progress}%` }} />
               </div>
             )}
-            <input type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) coverUpload.uploadFile(f); }} />
+            <input type="file" accept="image/*" className="hidden" onChange={handleCoverFile} />
           </label>
         )}
       </div>
+      {coverCropUrl && (
+        <ImageCropModal
+          imageUrl={coverCropUrl}
+          aspectRatio={type === "song" ? 1 : 16 / 9}
+          title={type === "song" ? "Crop Cover Art" : "Crop Thumbnail"}
+          outputSize={type === "song" ? 800 : 1280}
+          onConfirm={handleCoverCropConfirm}
+          onCancel={() => { URL.revokeObjectURL(coverCropUrl); setCoverCropUrl(null); }}
+        />
+      )}
     </div>
   );
 }

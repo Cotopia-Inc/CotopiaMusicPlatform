@@ -7,6 +7,7 @@ import {
   useDeleteCompanyPost,
 } from "@workspace/api-client-react";
 import { useUpload } from "@workspace/object-storage-web";
+import { ImageCropModal } from "@/components/image-crop-modal";
 import { useAuth } from "@/lib/auth";
 import { useLocation } from "wouter";
 import { useEffect } from "react";
@@ -59,6 +60,17 @@ const emptyForm: PostForm = {
 
 function ImageUploader({ value, onChange }: { value: string; onChange: (url: string) => void }) {
   const upload = useUpload({ onSuccess: (res) => onChange(`/api/storage${res.objectPath}`) });
+  const [cropUrl, setCropUrl] = useState<string | null>(null);
+  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (f) setCropUrl(URL.createObjectURL(f));
+    e.target.value = "";
+  };
+  const handleCropConfirm = async (blob: Blob) => {
+    if (cropUrl) URL.revokeObjectURL(cropUrl);
+    setCropUrl(null);
+    await upload.uploadFile(new File([blob], "article.jpg", { type: "image/jpeg" }));
+  };
 
   if (value) {
     return (
@@ -92,7 +104,17 @@ function ImageUploader({ value, onChange }: { value: string; onChange: (url: str
           <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${upload.progress}%` }} />
         </div>
       )}
-      <input type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) upload.uploadFile(f); }} disabled={upload.isUploading} />
+      <input type="file" accept="image/*" className="hidden" onChange={handleFile} disabled={upload.isUploading} />
+      {cropUrl && (
+        <ImageCropModal
+          imageUrl={cropUrl}
+          aspectRatio={16 / 9}
+          title="Crop Article Image"
+          outputSize={1280}
+          onConfirm={handleCropConfirm}
+          onCancel={() => { URL.revokeObjectURL(cropUrl); setCropUrl(null); }}
+        />
+      )}
     </label>
   );
 }

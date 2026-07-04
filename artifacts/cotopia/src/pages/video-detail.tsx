@@ -10,6 +10,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Play, Heart, Star, Send, Radio, Users, MessageCircle, Maximize2, ArrowLeft, Trash2, Edit2, X, Save, Upload, ImageIcon, ListPlus, Pencil, Shield, ShieldOff, Check, AlignLeft, ChevronDown, ChevronUp } from "lucide-react";
 import { RoleTag } from "@/components/role-badges";
+import { ImageCropModal } from "@/components/image-crop-modal";
 import { ReportModal } from "@/components/report-modal";
 import { VerifyEmailBanner } from "@/components/verify-email-banner";
 import { Button } from "@/components/ui/button";
@@ -242,6 +243,17 @@ export default function VideoDetail() {
   const thumbnailUpload = useUpload({
     onSuccess: (res) => setEditThumbnailUrl(`/api/storage${res.objectPath}`),
   });
+  const [thumbCropUrl, setThumbCropUrl] = useState<string | null>(null);
+  const handleThumbFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (f) setThumbCropUrl(URL.createObjectURL(f));
+    e.target.value = "";
+  };
+  const handleThumbCropConfirm = async (blob: Blob) => {
+    if (thumbCropUrl) URL.revokeObjectURL(thumbCropUrl);
+    setThumbCropUrl(null);
+    await thumbnailUpload.uploadFile(new File([blob], "thumbnail.jpg", { type: "image/jpeg" }));
+  };
 
   const isFavorited = localFavorited ?? video?.isFavorited ?? false;
   const userRating = localRating ?? video?.userRating ?? null;
@@ -744,7 +756,7 @@ export default function VideoDetail() {
                       ) : (
                         <><ImageIcon className="w-3.5 h-3.5" /> {editThumbnailUrl ? "Change thumbnail" : "Upload thumbnail"}</>
                       )}
-                      <input type="file" accept="image/*" className="sr-only" onChange={(e) => { const f = e.target.files?.[0]; if (f) thumbnailUpload.uploadFile(f); }} />
+                      <input type="file" accept="image/*" className="sr-only" onChange={handleThumbFile} />
                     </label>
                   </div>
                 </div>
@@ -872,6 +884,16 @@ export default function VideoDetail() {
           <CommentSection contentType="video" contentId={video.id} />
         </div>
       </div>
+      {thumbCropUrl && (
+        <ImageCropModal
+          imageUrl={thumbCropUrl}
+          aspectRatio={16 / 9}
+          title="Crop Thumbnail"
+          outputSize={1280}
+          onConfirm={handleThumbCropConfirm}
+          onCancel={() => { URL.revokeObjectURL(thumbCropUrl); setThumbCropUrl(null); }}
+        />
+      )}
     </div>
   );
 }

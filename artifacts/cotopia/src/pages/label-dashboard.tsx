@@ -4,6 +4,7 @@ import { useAuth } from "@/lib/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useUpload } from "@workspace/object-storage-web";
+import { ImageCropModal } from "@/components/image-crop-modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -74,6 +75,24 @@ export default function LabelDashboard() {
   const { uploadFile: uploadBanner, isUploading: isUploadingBanner, progress: bannerProgress } = useUpload({
     onSuccess: (res) => setBannerUrl(`/api/storage${res.objectPath}`),
   });
+
+  const [logoCropUrl, setLogoCropUrl] = useState<string | null>(null);
+  const [logoCropFilename, setLogoCropFilename] = useState("");
+  const handleLogoCropConfirm = async (blob: Blob) => {
+    if (logoCropUrl) URL.revokeObjectURL(logoCropUrl);
+    setLogoCropUrl(null);
+    setLogoFilename(logoCropFilename);
+    await uploadLogo(new File([blob], "logo.jpg", { type: "image/jpeg" }));
+  };
+
+  const [bannerCropUrl, setBannerCropUrl] = useState<string | null>(null);
+  const [bannerCropFilename, setBannerCropFilename] = useState("");
+  const handleBannerCropConfirm = async (blob: Blob) => {
+    if (bannerCropUrl) URL.revokeObjectURL(bannerCropUrl);
+    setBannerCropUrl(null);
+    setBannerFilename(bannerCropFilename);
+    await uploadBanner(new File([blob], "banner.jpg", { type: "image/jpeg" }));
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -243,11 +262,12 @@ export default function LabelDashboard() {
                 type="file"
                 accept="image/*"
                 className="hidden"
-                onChange={async (e) => {
+                onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (!file) return;
-                  setLogoFilename(file.name);
-                  await uploadLogo(file);
+                  setLogoCropFilename(file.name);
+                  setLogoCropUrl(URL.createObjectURL(file));
+                  e.target.value = "";
                 }}
               />
               <div
@@ -278,11 +298,12 @@ export default function LabelDashboard() {
                 type="file"
                 accept="image/*"
                 className="hidden"
-                onChange={async (e) => {
+                onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (!file) return;
-                  setBannerFilename(file.name);
-                  await uploadBanner(file);
+                  setBannerCropFilename(file.name);
+                  setBannerCropUrl(URL.createObjectURL(file));
+                  e.target.value = "";
                 }}
               />
               <div
@@ -426,6 +447,26 @@ export default function LabelDashboard() {
           )}
         </TabsContent>
       </Tabs>
+      {logoCropUrl && (
+        <ImageCropModal
+          imageUrl={logoCropUrl}
+          aspectRatio={1}
+          title="Crop Logo"
+          outputSize={800}
+          onConfirm={handleLogoCropConfirm}
+          onCancel={() => { URL.revokeObjectURL(logoCropUrl); setLogoCropUrl(null); }}
+        />
+      )}
+      {bannerCropUrl && (
+        <ImageCropModal
+          imageUrl={bannerCropUrl}
+          aspectRatio={3}
+          title="Crop Banner"
+          outputSize={1500}
+          onConfirm={handleBannerCropConfirm}
+          onCancel={() => { URL.revokeObjectURL(bannerCropUrl); setBannerCropUrl(null); }}
+        />
+      )}
     </div>
   );
 }

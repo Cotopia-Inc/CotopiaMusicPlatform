@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { ExperienceFeedbackModal } from "@/components/experience-feedback-modal";
 import { useAdminUploadVideo, useAdminBulkUploadVideos, useAdminGetUploadAccounts } from "@workspace/api-client-react";
 import { useUpload } from "../lib/useUpload";
+import { ImageCropModal } from "@/components/image-crop-modal";
 import { useAuth } from "@/lib/auth";
 import { useLocation, Link } from "wouter";
 import { Upload, Video, ArrowLeft, CheckCircle, ListVideo, X, Loader2, AlertCircle } from "lucide-react";
@@ -110,6 +111,17 @@ export default function AdminUploadVideo() {
 
   const videoUpload = useUpload({ onSuccess: (res) => setForm(f => ({ ...f, videoUrl: `/api/storage${res.objectPath}` })) });
   const thumbUpload = useUpload({ onSuccess: (res) => setForm(f => ({ ...f, thumbnailUrl: `/api/storage${res.objectPath}` })) });
+  const [thumbCropUrl, setThumbCropUrl] = useState<string | null>(null);
+  const handleThumbFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (f) setThumbCropUrl(URL.createObjectURL(f));
+    e.target.value = "";
+  };
+  const handleThumbCropConfirm = async (blob: Blob) => {
+    if (thumbCropUrl) URL.revokeObjectURL(thumbCropUrl);
+    setThumbCropUrl(null);
+    await thumbUpload.uploadFile(new File([blob], "thumbnail.jpg", { type: "image/jpeg" }));
+  };
   const uploadVideo = useAdminUploadVideo();
 
   async function handleSingleSubmit(e: React.FormEvent) {
@@ -139,6 +151,17 @@ export default function AdminUploadVideo() {
   const [bulkDone, setBulkDone] = useState<{ id: number; title: string }[] | null>(null);
 
   const bulkThumbUpload = useUpload({ onSuccess: (res) => { setBulkShared(f => ({ ...f, thumbnailUrl: `/api/storage${res.objectPath}` })); setBulkThumbDone(true); } });
+  const [bulkThumbCropUrl, setBulkThumbCropUrl] = useState<string | null>(null);
+  const handleBulkThumbFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (f) setBulkThumbCropUrl(URL.createObjectURL(f));
+    e.target.value = "";
+  };
+  const handleBulkThumbCropConfirm = async (blob: Blob) => {
+    if (bulkThumbCropUrl) URL.revokeObjectURL(bulkThumbCropUrl);
+    setBulkThumbCropUrl(null);
+    await bulkThumbUpload.uploadFile(new File([blob], "thumbnail.jpg", { type: "image/jpeg" }));
+  };
   const bulkUpload = useAdminBulkUploadVideos();
 
   const allUploaded = bulkUrls.length > 0 && bulkUrls.every(u => u !== null);
@@ -332,7 +355,7 @@ export default function AdminUploadVideo() {
                   <Upload className="w-6 h-6 text-muted-foreground" />
                   <div className="text-center"><p className="text-sm font-medium">Click to upload thumbnail</p><p className="text-xs text-muted-foreground">JPG, PNG, WebP (16:9 recommended)</p></div>
                   {thumbUpload.isUploading && <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden"><div className="h-full bg-primary transition-all rounded-full" style={{ width: `${thumbUpload.progress}%` }} /></div>}
-                  <input type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) thumbUpload.uploadFile(f); }} />
+                  <input type="file" accept="image/*" className="hidden" onChange={handleThumbFile} />
                 </label>
               )}
             </div>
@@ -438,7 +461,7 @@ export default function AdminUploadVideo() {
                       <Upload className="w-5 h-5 text-muted-foreground flex-shrink-0" />
                       <div><p className="text-sm font-medium">Click to upload shared thumbnail</p><p className="text-xs text-muted-foreground">JPG, PNG, WebP (16:9 recommended)</p></div>
                       {bulkThumbUpload.isUploading && <div className="ml-auto w-16 h-1.5 bg-muted rounded-full overflow-hidden"><div className="h-full bg-primary transition-all rounded-full" style={{ width: `${bulkThumbUpload.progress}%` }} /></div>}
-                      <input type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) bulkThumbUpload.uploadFile(f); }} />
+                      <input type="file" accept="image/*" className="hidden" onChange={handleBulkThumbFile} />
                     </label>
                   )}
                 </div>
@@ -507,6 +530,26 @@ export default function AdminUploadVideo() {
         </TabsContent>
       </Tabs>
       <ExperienceFeedbackModal open={feedbackOpen} onClose={() => setFeedbackOpen(false)} trigger="after_upload" />
+      {thumbCropUrl && (
+        <ImageCropModal
+          imageUrl={thumbCropUrl}
+          aspectRatio={16 / 9}
+          title="Crop Thumbnail"
+          outputSize={1280}
+          onConfirm={handleThumbCropConfirm}
+          onCancel={() => { URL.revokeObjectURL(thumbCropUrl); setThumbCropUrl(null); }}
+        />
+      )}
+      {bulkThumbCropUrl && (
+        <ImageCropModal
+          imageUrl={bulkThumbCropUrl}
+          aspectRatio={16 / 9}
+          title="Crop Thumbnail"
+          outputSize={1280}
+          onConfirm={handleBulkThumbCropConfirm}
+          onCancel={() => { URL.revokeObjectURL(bulkThumbCropUrl); setBulkThumbCropUrl(null); }}
+        />
+      )}
     </div>
   );
 }
