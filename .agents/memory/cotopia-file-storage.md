@@ -48,3 +48,11 @@ R2 key = `uploads/<uuid>` (strip `/objects/` prefix).
 Stored media URLs = `/api/storage/objects/uploads/<uuid>` (the frontend prepends `/api/storage`).
 
 **Why:**  Durable design — same objectPath format in the DB regardless of which storage backend is active. Swapping backends doesn't require a DB migration.
+
+## Upload reliability (large/slow files, e.g. videos up to 200MB)
+
+The upload endpoint buffers the whole request body in server memory via `express.raw({limit:"200mb"})` before writing to the backend. This is a known tradeoff (not yet fixed) — full streaming was scoped out because R2's REST PUT can't be safely converted to a streamed body without real R2 credentials to test against (Render prod uses R2; this dev environment only has GCS configured, so R2 changes are unverifiable here). If revisiting, only stream the GCS/local paths (both testable in this dev env) and leave R2 buffered, or test R2 streaming against real credentials first.
+
+What *is* fixed: Node's default `server.requestTimeout` (5 min) and default `headersTimeout`/`keepAliveTimeout` were killing large/slow uploads before they could finish — this was the primary cause of "upload sometimes fails". `artifacts/api-server/src/index.ts` now sets explicit longer timeouts on the `http.Server` returned by `app.listen()`. Additionally `useUpload.ts` (client) auto-retries network/5xx failures with backoff (never on 4xx), and `r2Storage.ts`'s `saveFileToR2` retries+times-out (`AbortSignal.timeout`) the Cloudflare PUT itself.
+
+**Why:** large uploads are inherently slow; the actual bug was premature server-side termination + no resilience to transient failures, not just raw speed.

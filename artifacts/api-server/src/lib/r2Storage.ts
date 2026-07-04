@@ -25,10 +25,24 @@ function objectPathToKey(objectPath: string): string {
   return objectPath.replace(/^\/objects\//, "");
 }
 
+const R2_UPLOAD_TIMEOUT_MS = 120_000;
+const R2_UPLOAD_MAX_RETRIES = 2; // 3 total attempts
+const R2_RETRY_DELAY_MS = [1000, 3000];
+
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 /**
  * Upload a buffer to R2 using Cloudflare's REST API.
  * Uses a Bearer token (global API token) instead of S3-compatible credentials,
  * which avoids the "Invalid character in header" issue with the S3 SDK.
+ *
+ * Large video uploads (up to 200MB) proxy through this single PUT, so a
+ * transient network blip or Cloudflare 5xx would otherwise fail the whole
+ * submission. Retry a couple of times with backoff on retryable failures;
+ * a hard 120s timeout per attempt prevents a hung request from blocking the
+ * whole request indefinitely.
  */
 export async function saveFileToR2(
   buffer: Buffer,
@@ -43,21 +57,40 @@ export async function saveFileToR2(
 
   const url = `https://api.cloudflare.com/client/v4/accounts/${accountId}/r2/buckets/${bucket}/objects/${key}`;
 
-  const response = await fetch(url, {
-    method: "PUT",
-    headers: {
-      "Authorization": `Bearer ${apiToken}`,
-      "Content-Type": contentType,
-    },
-    body: buffer,
-  });
+  let lastError: Error = new Error("R2 upload failed");
 
-  if (!response.ok) {
-    const text = await response.text().catch(() => "");
-    throw new Error(`R2 upload failed (HTTP ${response.status}): ${text}`);
+  for (let attempt = 0; attempt <= R2_UPLOAD_MAX_RETRIES; attempt++) {
+    try {
+      const response = await fetch(url, {
+        method: "PUT",
+        headers: {
+          "Authorization": `Bearer ${apiToken}`,
+          "Content-Type": contentType,
+        },
+        body: buffer,
+        signal: AbortSignal.timeout(R2_UPLOAD_TIMEOUT_MS),
+      });
+
+      if (!response.ok) {
+        const text = await response.text().catch(() => "");
+        const retryable = response.status >= 500;
+        const error = new Error(`R2 upload failed (HTTP ${response.status}): ${text}`);
+        if (!retryable || attempt === R2_UPLOAD_MAX_RETRIES) throw error;
+        lastError = error;
+        await sleep(R2_RETRY_DELAY_MS[attempt] ?? 3000);
+        continue;
+      }
+
+      return { objectPath: `/objects/uploads/${id}`, size: buffer.length };
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      if (attempt === R2_UPLOAD_MAX_RETRIES) throw error;
+      lastError = error;
+      await sleep(R2_RETRY_DELAY_MS[attempt] ?? 3000);
+    }
   }
 
-  return { objectPath: `/objects/uploads/${id}`, size: buffer.length };
+  throw lastError;
 }
 
 /**
