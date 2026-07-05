@@ -13,6 +13,7 @@ import { ReportModal } from "@/components/report-modal";
 import { useToast } from "@/hooks/use-toast";
 import { BadgeList, type UserBadgeData } from "@/components/badge-chip";
 import { useSeo } from "@/hooks/use-seo";
+import { EventsTab } from "@/components/events-tab";
 
 const authHeaders = () => ({
   Authorization: `Bearer ${localStorage.getItem("cotopia_token")}`,
@@ -317,6 +318,12 @@ export default function UserProfile() {
           <BadgeList userBadges={userBadges.filter(ub => !ub.isFeatured && ub.badge.isActive && ub.badge.isVisible)} size="sm" />
         </div>
       )}
+
+      {/* Events */}
+      <div className="px-6 pt-8 max-w-2xl space-y-3">
+        <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">Events</p>
+        <EventsTab userId={user.id} isOwner={isMe} />
+      </div>
     </div>
   );
 }

@@ -15,6 +15,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useSeo } from "@/hooks/use-seo";
+import { EventsTab } from "@/components/events-tab";
 
 export default function LabelDetail() {
   const { id } = useParams();
@@ -243,6 +244,13 @@ export default function LabelDetail() {
           </div>
         </div>
       </div>
+
+      {labelUserId && (
+        <div className="px-8 pt-2 space-y-3">
+          <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">Events</p>
+          <EventsTab userId={labelUserId} isOwner={isOwner} />
+        </div>
+      )}
 
       <div className="px-8">
         <Tabs defaultValue="releases">

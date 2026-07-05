@@ -19,6 +19,8 @@ import { ImageCropModal } from "@/components/image-crop-modal";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { MessageSquare } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { EventsTab } from "@/components/events-tab";
 
 function FeaturedBadgesSection({ userId }: { userId: number }) {
   const { toast } = useToast();
@@ -709,6 +711,16 @@ export default function Profile() {
         </div>
       )}
 
+      {/* Settings / Events */}
+      <Tabs defaultValue="settings">
+        <TabsList>
+          <TabsTrigger value="settings">Profile Settings</TabsTrigger>
+          <TabsTrigger value="events">Events</TabsTrigger>
+        </TabsList>
+        <TabsContent value="events" className="pt-6">
+          <EventsTab userId={(profile as any).id} isOwner />
+        </TabsContent>
+        <TabsContent value="settings" className="pt-6 space-y-8">
       {/* Profile Settings */}
       <div className="space-y-6 bg-card p-4 md:p-8 rounded-xl border border-border">
         <h2 className="text-xl font-bold">Profile Settings</h2>
@@ -1056,6 +1068,8 @@ export default function Profile() {
 
       {/* Danger Zone — Account Deletion */}
       <DangerZone profile={profile} />
+        </TabsContent>
+      </Tabs>
 
       {cropModal && (
         <ImageCropModal

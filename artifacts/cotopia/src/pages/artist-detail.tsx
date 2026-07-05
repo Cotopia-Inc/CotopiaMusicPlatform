@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { EventsTab } from "@/components/events-tab";
 
 function getAuthHeader(): Record<string, string> {
   const token = localStorage.getItem("cotopia_token");
@@ -363,6 +364,13 @@ export default function ArtistDetail() {
           </div>
         </div>
       </div>
+
+      {artistUserId && (
+        <div className="px-4 md:px-8 pt-2 space-y-3">
+          <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">Events</p>
+          <EventsTab userId={artistUserId} isOwner={user?.id === artistUserId} />
+        </div>
+      )}
 
       {editProfileOpen && (
         <div className="bg-secondary/40 rounded-xl border border-border p-4 space-y-3 mx-4 md:mx-8">

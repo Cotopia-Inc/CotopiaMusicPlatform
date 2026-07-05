@@ -37,3 +37,5 @@ export * from "./feature_suggestions";
 export * from "./experience_feedback";
 export * from "./bug_reports";
 export * from "./badges";
+export * from "./events";
+export * from "./creator_message";
