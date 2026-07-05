@@ -150,13 +150,6 @@ export default function AdminSettings() {
                 )}
               </div>
               <input ref={logoInputRef} type="file" accept="image/*" onChange={handleLogoFile} className="hidden" disabled={isUploadingLogo} />
-              <p className="text-xs text-muted-foreground">Or paste a URL directly:</p>
-              <Input
-                value={formData.logoUrl.startsWith("/api/storage") ? "" : formData.logoUrl}
-                onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
-                placeholder="https://... (direct image URL)"
-                className="bg-secondary/50 border-secondary"
-              />
             </div>
 
             {/* ── Color picker ── */}

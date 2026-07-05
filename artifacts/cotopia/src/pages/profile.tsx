@@ -403,7 +403,6 @@ export default function Profile() {
   const [displayName, setDisplayName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [avatarFilename, setAvatarFilename] = useState("");
-  const [avatarUrlMode, setAvatarUrlMode] = useState(false);
   const [bio, setBio] = useState("");
   const [bannerUrl, setBannerUrl] = useState("");
   const [profileVideoUrl, setProfileVideoUrl] = useState("");
@@ -733,37 +732,29 @@ export default function Profile() {
         {/* Avatar upload */}
         <div className="space-y-2">
           <label className="text-sm font-medium">Profile Picture</label>
-          {!avatarUrlMode ? (
-            <div className="space-y-2">
-              <div onClick={() => !isUploadingAvatar && fileInputRef.current?.click()}
-                className={`flex items-center gap-3 p-4 rounded-lg border-2 border-dashed border-border/60 bg-secondary/20 hover:bg-secondary/40 hover:border-primary/40 transition-all group ${isUploadingAvatar ? "cursor-wait opacity-70" : "cursor-pointer"}`}>
-                <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
-                  {isUploadingAvatar ? <Loader2 className="w-4 h-4 text-primary animate-spin" /> : <Upload className="w-4 h-4 text-primary" />}
-                </div>
-                <div className="flex-1 min-w-0">
-                  {isUploadingAvatar ? (
-                    <div><p className="text-sm font-medium text-foreground truncate">{avatarFilename}</p><p className="text-xs text-primary mt-0.5">Uploading… {uploadProgress}%</p></div>
-                  ) : avatarFilename && avatarUrl ? (
-                    <div><p className="text-sm font-medium text-foreground truncate">{avatarFilename}</p><p className="text-xs text-green-400 mt-0.5">Uploaded ✓</p></div>
-                  ) : (
-                    <div><p className="text-sm font-medium">Click to upload from device</p><p className="text-xs text-muted-foreground mt-0.5">JPG, PNG, or WebP</p></div>
-                  )}
-                </div>
-                {avatarFilename && avatarUrl && !isUploadingAvatar && (
-                  <button type="button" onClick={e => { e.stopPropagation(); clearAvatar(); }} className="text-muted-foreground hover:text-foreground text-xs px-2 py-1 rounded hover:bg-secondary transition-colors flex-shrink-0">
-                    <X className="w-3.5 h-3.5" />
-                  </button>
+          <div className="space-y-2">
+            <div onClick={() => !isUploadingAvatar && fileInputRef.current?.click()}
+              className={`flex items-center gap-3 p-4 rounded-lg border-2 border-dashed border-border/60 bg-secondary/20 hover:bg-secondary/40 hover:border-primary/40 transition-all group ${isUploadingAvatar ? "cursor-wait opacity-70" : "cursor-pointer"}`}>
+              <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
+                {isUploadingAvatar ? <Loader2 className="w-4 h-4 text-primary animate-spin" /> : <Upload className="w-4 h-4 text-primary" />}
+              </div>
+              <div className="flex-1 min-w-0">
+                {isUploadingAvatar ? (
+                  <div><p className="text-sm font-medium text-foreground truncate">{avatarFilename}</p><p className="text-xs text-primary mt-0.5">Uploading… {uploadProgress}%</p></div>
+                ) : avatarFilename && avatarUrl ? (
+                  <div><p className="text-sm font-medium text-foreground truncate">{avatarFilename}</p><p className="text-xs text-green-400 mt-0.5">Uploaded ✓</p></div>
+                ) : (
+                  <div><p className="text-sm font-medium">Click to upload from device</p><p className="text-xs text-muted-foreground mt-0.5">JPG, PNG, or WebP</p></div>
                 )}
               </div>
-              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarFile} className="hidden" disabled={isUploadingAvatar} />
-              <button type="button" onClick={() => setAvatarUrlMode(true)} className="text-xs text-primary hover:underline">Or paste a URL instead</button>
+              {avatarFilename && avatarUrl && !isUploadingAvatar && (
+                <button type="button" onClick={e => { e.stopPropagation(); clearAvatar(); }} className="text-muted-foreground hover:text-foreground text-xs px-2 py-1 rounded hover:bg-secondary transition-colors flex-shrink-0">
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
-          ) : (
-            <div className="space-y-1.5">
-              <Input value={avatarUrl.startsWith("/api/storage") ? "" : avatarUrl} onChange={e => setAvatarUrl(e.target.value)} placeholder="https://... (direct image URL)" className="bg-secondary/50 border-secondary" />
-              <button type="button" onClick={() => setAvatarUrlMode(false)} className="text-xs text-primary hover:underline">← Upload from device instead</button>
-            </div>
-          )}
+            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarFile} className="hidden" disabled={isUploadingAvatar} />
+          </div>
         </div>
 
         {/* Bio */}
@@ -801,10 +792,6 @@ export default function Profile() {
                 </div>
               </div>
               <input ref={bannerInputRef} type="file" accept="image/*" onChange={handleBannerFile} className="hidden" disabled={isUploadingBanner} />
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">or paste URL:</span>
-                <Input value={bannerUrl} onChange={e => setBannerUrl(e.target.value)} placeholder="https://..." className="bg-secondary/50 border-secondary h-8 text-xs flex-1" />
-              </div>
             </div>
           )}
         </div>

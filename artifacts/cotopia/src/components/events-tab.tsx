@@ -15,7 +15,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogT
 import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { CalendarDays, List, Pencil, Plus, Trash2, MapPin, Link as LinkIcon, Sparkles, Loader2 } from "lucide-react";
+import { useUpload } from "@/lib/useUpload";
+import { ImageCropModal } from "@/components/image-crop-modal";
+import { CalendarDays, List, Pencil, Plus, Trash2, MapPin, Link as LinkIcon, Sparkles, Loader2, Upload, ImageIcon, X } from "lucide-react";
 import { format, isSameDay, parseISO } from "date-fns";
 
 const EVENT_TYPE_LABELS: Record<string, string> = {
@@ -52,11 +54,12 @@ type EventFormState = {
   location: string;
   link: string;
   description: string;
+  imageUrl: string;
 };
 
 const EMPTY_FORM: EventFormState = {
   title: "", type: "personal", eventDate: new Date().toISOString().slice(0, 10),
-  endDate: "", location: "", link: "", description: "",
+  endDate: "", location: "", link: "", description: "", imageUrl: "",
 };
 
 function EventFormDialog({
@@ -69,6 +72,21 @@ function EventFormDialog({
   saving: boolean;
 }) {
   const [form, setForm] = useState<EventFormState>(initial);
+  const [cropUrl, setCropUrl] = useState<string | null>(null);
+  const imageUpload = useUpload({
+    onSuccess: (res) => setForm(f => ({ ...f, imageUrl: `/api/storage${res.objectPath}` })),
+  });
+
+  const handleImageFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (f) setCropUrl(URL.createObjectURL(f));
+    e.target.value = "";
+  };
+  const handleCropConfirm = async (blob: Blob) => {
+    if (cropUrl) URL.revokeObjectURL(cropUrl);
+    setCropUrl(null);
+    await imageUpload.uploadFile(new File([blob], "event.jpg", { type: "image/jpeg" }));
+  };
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (v) setForm(initial); onOpenChange(v); }}>
@@ -80,6 +98,32 @@ function EventFormDialog({
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground">Title</label>
             <Input value={form.title} onChange={(e) => setForm(f => ({ ...f, title: e.target.value }))} placeholder="e.g. Album listening party" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5"><ImageIcon className="w-3.5 h-3.5" />Image (optional)</label>
+            {form.imageUrl ? (
+              <div className="flex items-center gap-3 p-2.5 rounded-lg border border-green-500/30 bg-green-500/5">
+                <img src={form.imageUrl} alt="Event" className="w-10 h-10 rounded object-cover flex-shrink-0" />
+                <span className="text-xs text-green-400 font-medium">Uploaded</span>
+                <Button type="button" variant="ghost" size="sm" className="ml-auto h-6 text-xs" onClick={() => setForm(f => ({ ...f, imageUrl: "" }))}>
+                  <X className="w-3 h-3 mr-1" />Remove
+                </Button>
+              </div>
+            ) : (
+              <label className="flex items-center gap-3 p-3 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary/50 transition-colors">
+                <Upload className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium">Click to upload from your device</p>
+                  <p className="text-[10px] text-muted-foreground">JPG, PNG, WebP</p>
+                </div>
+                {imageUpload.isUploading && (
+                  <div className="w-14 h-1.5 bg-muted rounded-full overflow-hidden flex-shrink-0">
+                    <div className="h-full bg-primary transition-all rounded-full" style={{ width: `${imageUpload.progress}%` }} />
+                  </div>
+                )}
+                <input type="file" accept="image/*" className="hidden" onChange={handleImageFile} />
+              </label>
+            )}
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
@@ -125,6 +169,16 @@ function EventFormDialog({
           </Button>
         </DialogFooter>
       </DialogContent>
+      {cropUrl && (
+        <ImageCropModal
+          imageUrl={cropUrl}
+          aspectRatio={16 / 9}
+          title="Crop Event Image"
+          outputSize={1280}
+          onConfirm={handleCropConfirm}
+          onCancel={() => { URL.revokeObjectURL(cropUrl); setCropUrl(null); }}
+        />
+      )}
     </Dialog>
   );
 }
@@ -225,6 +279,9 @@ function EventCard({ event, isOwner, onEdit, onDelete }: { event: Event; isOwner
   const date = parseISO(event.eventDate);
   return (
     <div className="flex gap-4 rounded-lg border border-border p-4 hover:border-border/80 transition-colors">
+      {event.imageUrl && (
+        <img src={event.imageUrl} alt={event.title} className="hidden sm:block flex-shrink-0 w-20 h-20 rounded-lg object-cover" />
+      )}
       <div className="flex-shrink-0 w-14 text-center">
         <div className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">{format(date, "MMM")}</div>
         <div className="text-2xl font-bold leading-none">{format(date, "d")}</div>
@@ -298,6 +355,7 @@ export function EventsTab({ userId, isOwner }: { userId: number; isOwner: boolea
       location: form.location || undefined,
       link: form.link || undefined,
       description: form.description || undefined,
+      imageUrl: form.imageUrl || undefined,
     };
     if (editingEvent) {
       updateMutation.mutate({ id: editingEvent.id, data }, { onSuccess: () => setFormOpen(false) });
@@ -311,6 +369,7 @@ export function EventsTab({ userId, isOwner }: { userId: number; isOwner: boolea
         title: editingEvent.title, type: editingEvent.type, eventDate: editingEvent.eventDate,
         endDate: editingEvent.endDate ?? "", location: editingEvent.location ?? "",
         link: editingEvent.link ?? "", description: editingEvent.description ?? "",
+        imageUrl: editingEvent.imageUrl ?? "",
       }
     : EMPTY_FORM;
 

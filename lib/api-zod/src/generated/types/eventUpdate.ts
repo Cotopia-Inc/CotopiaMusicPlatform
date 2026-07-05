@@ -15,4 +15,5 @@ export interface EventUpdate {
   location?: string;
   link?: string;
   description?: string;
+  imageUrl?: string;
 }
