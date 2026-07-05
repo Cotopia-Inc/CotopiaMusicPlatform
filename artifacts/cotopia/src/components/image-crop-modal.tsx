@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { ZoomIn, ZoomOut, RefreshCw, Check, X, Crop } from "lucide-react";
@@ -277,12 +278,14 @@ export function ImageCropModal({
     );
   };
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[100] bg-black/75 flex items-center justify-center p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) onCancel();
       }}
+      onPointerDownCapture={(e) => e.stopPropagation()}
+      onMouseDownCapture={(e) => e.stopPropagation()}
     >
       <div className="bg-card rounded-2xl border border-border shadow-2xl overflow-hidden w-full max-w-[540px]">
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-border">
@@ -361,6 +364,7 @@ export function ImageCropModal({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
