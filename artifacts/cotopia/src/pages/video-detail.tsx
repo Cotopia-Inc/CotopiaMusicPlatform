@@ -8,7 +8,7 @@ import {
   useGetPresenceCount, usePostPresenceHeartbeat, useDeletePresence,
 } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Play, Heart, Star, Send, Radio, Users, MessageCircle, Maximize2, ArrowLeft, Trash2, Edit2, X, Save, Upload, ImageIcon, ListPlus, Pencil, Shield, ShieldOff, Check, AlignLeft, ChevronDown, ChevronUp } from "lucide-react";
+import { Play, Heart, Star, Send, Users, MessageCircle, Maximize2, ArrowLeft, Trash2, Edit2, X, Save, Upload, ImageIcon, ListPlus, Pencil, Shield, ShieldOff, Check, AlignLeft, ChevronDown, ChevronUp } from "lucide-react";
 import { RoleTag } from "@/components/role-badges";
 import { ImageCropModal } from "@/components/image-crop-modal";
 import { ReportModal } from "@/components/report-modal";
@@ -431,8 +431,8 @@ export default function VideoDetail() {
 
         {/* Branding badge (hidden when video is playing with controls) */}
         {!isVideoPlaying && (
-          <div className="absolute bottom-3 left-3 flex items-center gap-1 bg-black/60 backdrop-blur px-2 py-1 rounded-full">
-            <Radio className="w-3 h-3 text-primary" />
+          <div className="absolute bottom-3 left-3 flex items-center gap-1.5 bg-black/60 backdrop-blur px-2 py-1 rounded-full">
+            <img src="/logo.jpg" alt="Cotopia" className="w-4 h-4 rounded-full object-cover flex-shrink-0" />
             <span className="text-[10px] text-white font-semibold">Everyday Radio</span>
           </div>
         )}
