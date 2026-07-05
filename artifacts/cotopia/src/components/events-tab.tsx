@@ -103,7 +103,9 @@ function EventFormDialog({
             <label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5"><ImageIcon className="w-3.5 h-3.5" />Image (optional)</label>
             {form.imageUrl ? (
               <div className="flex items-center gap-3 p-2.5 rounded-lg border border-green-500/30 bg-green-500/5">
-                <img src={form.imageUrl} alt="Event" className="w-10 h-10 rounded object-cover flex-shrink-0" />
+                <div className="w-16 aspect-video relative overflow-hidden rounded flex-shrink-0 bg-secondary">
+                  <img src={form.imageUrl} alt="Event" className="absolute inset-0 w-full h-full object-cover" />
+                </div>
                 <span className="text-xs text-green-400 font-medium">Uploaded</span>
                 <Button type="button" variant="ghost" size="sm" className="ml-auto h-6 text-xs" onClick={() => setForm(f => ({ ...f, imageUrl: "" }))}>
                   <X className="w-3 h-3 mr-1" />Remove
@@ -280,7 +282,9 @@ function EventCard({ event, isOwner, onEdit, onDelete }: { event: Event; isOwner
   return (
     <div className="flex gap-4 rounded-lg border border-border p-4 hover:border-border/80 transition-colors">
       {event.imageUrl && (
-        <img src={event.imageUrl} alt={event.title} className="hidden sm:block flex-shrink-0 w-20 h-20 rounded-lg object-cover" />
+        <div className="hidden sm:block flex-shrink-0 w-32 aspect-video relative overflow-hidden rounded-lg bg-secondary border border-border">
+          <img src={event.imageUrl} alt={event.title} className="absolute inset-0 w-full h-full object-cover" />
+        </div>
       )}
       <div className="flex-shrink-0 w-14 text-center">
         <div className="text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">{format(date, "MMM")}</div>
