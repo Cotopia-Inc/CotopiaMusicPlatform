@@ -60,7 +60,7 @@ export default function Home() {
             Only available on Everyday Radio during Beta.
           </p>
           <div className="flex gap-3 pt-2 flex-wrap">
-            <Link href="/artists/9">
+            <Link href="/songs/37">
               <button className="bg-primary text-primary-foreground font-semibold px-6 py-2.5 rounded-full flex items-center gap-2 hover:scale-105 transition-transform text-sm shadow-lg shadow-primary/25">
                 <Play className="w-4 h-4 fill-current" /> Listen Now
               </button>
