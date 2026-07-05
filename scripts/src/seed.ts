@@ -227,15 +227,15 @@ async function seed() {
   // Songs — royalty-free audio from SoundHelix (reliable, no hotlink protection)
   const SH = (n: number) => `https://www.soundhelix.com/examples/mp3/SoundHelix-Song-${n}.mp3`;
   const songData = [
-    { artistId: a1, albumId: al1, title: "Pulse of the Cosmos", genre: "Electronic", duration: 214, playCount: 18420, isFeatured: true, streamUrl: SH(1), coverUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&q=80" },
-    { artistId: a1, albumId: al1, title: "Neon Drift", genre: "Electronic", duration: 187, playCount: 12300, isFeatured: false, streamUrl: SH(2), coverUrl: "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=400&q=80" },
-    { artistId: a1, albumId: al1, title: "Starfield Resonance", genre: "Electronic", duration: 263, playCount: 9870, isFeatured: true, streamUrl: SH(3), coverUrl: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400&q=80" },
-    { artistId: a2, albumId: al2, title: "Nocturne Protocol", genre: "Synthwave", duration: 198, playCount: 24100, isFeatured: true, streamUrl: SH(4), coverUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&q=80" },
-    { artistId: a2, albumId: al2, title: "Digital Ghost", genre: "Synthwave", duration: 221, playCount: 16700, isFeatured: false, streamUrl: SH(5), coverUrl: "https://images.unsplash.com/photo-1560094824-13b9bc472f86?w=400&q=80" },
-    { artistId: a2, albumId: al2, title: "After Midnight", genre: "Synthwave", duration: 244, playCount: 31200, isFeatured: true, streamUrl: SH(6), coverUrl: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=80" },
-    { artistId: a3, albumId: al3, title: "Soft Rain", genre: "Indie Pop", duration: 176, playCount: 8920, isFeatured: true, streamUrl: SH(7), coverUrl: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=400&q=80" },
-    { artistId: a3, albumId: al3, title: "Glass Heart", genre: "Indie Pop", duration: 203, playCount: 14500, isFeatured: false, streamUrl: SH(8), coverUrl: "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=400&q=80" },
-    { artistId: a3, albumId: al3, title: "Echoes of You", genre: "Indie Pop", duration: 192, playCount: 11300, isFeatured: true, streamUrl: SH(9), coverUrl: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=400&q=80" },
+    { artistId: a1, albumId: al1, title: "Pulse of the Cosmos", genre: "Electronic", duration: 214, playCount: 0, isFeatured: true, streamUrl: SH(1), coverUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&q=80" },
+    { artistId: a1, albumId: al1, title: "Neon Drift", genre: "Electronic", duration: 187, playCount: 0, isFeatured: false, streamUrl: SH(2), coverUrl: "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=400&q=80" },
+    { artistId: a1, albumId: al1, title: "Starfield Resonance", genre: "Electronic", duration: 263, playCount: 0, isFeatured: true, streamUrl: SH(3), coverUrl: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400&q=80" },
+    { artistId: a2, albumId: al2, title: "Nocturne Protocol", genre: "Synthwave", duration: 198, playCount: 0, isFeatured: true, streamUrl: SH(4), coverUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&q=80" },
+    { artistId: a2, albumId: al2, title: "Digital Ghost", genre: "Synthwave", duration: 221, playCount: 0, isFeatured: false, streamUrl: SH(5), coverUrl: "https://images.unsplash.com/photo-1560094824-13b9bc472f86?w=400&q=80" },
+    { artistId: a2, albumId: al2, title: "After Midnight", genre: "Synthwave", duration: 244, playCount: 0, isFeatured: true, streamUrl: SH(6), coverUrl: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=80" },
+    { artistId: a3, albumId: al3, title: "Soft Rain", genre: "Indie Pop", duration: 176, playCount: 0, isFeatured: true, streamUrl: SH(7), coverUrl: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=400&q=80" },
+    { artistId: a3, albumId: al3, title: "Glass Heart", genre: "Indie Pop", duration: 203, playCount: 0, isFeatured: false, streamUrl: SH(8), coverUrl: "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=400&q=80" },
+    { artistId: a3, albumId: al3, title: "Echoes of You", genre: "Indie Pop", duration: 192, playCount: 0, isFeatured: true, streamUrl: SH(9), coverUrl: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=400&q=80" },
   ];
 
   const insertedSongs = await Promise.all(songData.map(s =>
@@ -246,11 +246,11 @@ async function seed() {
 
   // Videos
   const videoData = [
-    { artistId: a1, title: "Pulse of the Cosmos — Live Visual", genre: "Electronic", duration: 234, viewCount: 45200, isFeatured: true, videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4", thumbnailUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&q=80", description: "Official music video for Pulse of the Cosmos. Visuals by Studio Void." },
-    { artistId: a2, title: "Nocturne Protocol — Official Video", genre: "Synthwave", duration: 212, viewCount: 82100, isFeatured: true, videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4", thumbnailUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&q=80", description: "Directed by Neon Pictures. A journey through neon cities and digital dreams." },
-    { artistId: a2, title: "After Midnight — Live at the Electric", genre: "Synthwave", duration: 318, viewCount: 38600, isFeatured: false, videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4", thumbnailUrl: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=600&q=80", description: "Live performance recorded at The Electric venue. Uncut." },
-    { artistId: a3, title: "Soft Rain — Acoustic Session", genre: "Indie Pop", duration: 187, viewCount: 21400, isFeatured: true, videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4", thumbnailUrl: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=600&q=80", description: "Stripped-back acoustic session filmed at sunrise. Just the song, unfiltered." },
-    { artistId: a3, title: "Echoes of You — Lyric Video", genre: "Indie Pop", duration: 198, viewCount: 17800, isFeatured: false, videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4", thumbnailUrl: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&q=80", description: "Official lyric video with animated typography." },
+    { artistId: a1, title: "Pulse of the Cosmos — Live Visual", genre: "Electronic", duration: 234, viewCount: 0, isFeatured: true, videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4", thumbnailUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&q=80", description: "Official music video for Pulse of the Cosmos. Visuals by Studio Void." },
+    { artistId: a2, title: "Nocturne Protocol — Official Video", genre: "Synthwave", duration: 212, viewCount: 0, isFeatured: true, videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4", thumbnailUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&q=80", description: "Directed by Neon Pictures. A journey through neon cities and digital dreams." },
+    { artistId: a2, title: "After Midnight — Live at the Electric", genre: "Synthwave", duration: 318, viewCount: 0, isFeatured: false, videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4", thumbnailUrl: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=600&q=80", description: "Live performance recorded at The Electric venue. Uncut." },
+    { artistId: a3, title: "Soft Rain — Acoustic Session", genre: "Indie Pop", duration: 187, viewCount: 0, isFeatured: true, videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4", thumbnailUrl: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=600&q=80", description: "Stripped-back acoustic session filmed at sunrise. Just the song, unfiltered." },
+    { artistId: a3, title: "Echoes of You — Lyric Video", genre: "Indie Pop", duration: 198, viewCount: 0, isFeatured: false, videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4", thumbnailUrl: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&q=80", description: "Official lyric video with animated typography." },
   ];
 
   const insertedVideos = await Promise.all(videoData.map(v =>
