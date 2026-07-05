@@ -33,6 +33,7 @@ async function getVideoWithArtist(id: number, userId?: number) {
       viewCount: videosTable.viewCount,
       isFeatured: videosTable.isFeatured,
       status: videosTable.status,
+      releaseDate: videosTable.releaseDate,
       description: videosTable.description,
       credits: videosTable.credits,
       createdAt: videosTable.createdAt,
@@ -204,6 +205,20 @@ router.get("/videos/:id", requireAuth, async (req: AuthRequest, res): Promise<vo
     res.status(404).json({ error: "Video not found" });
     return;
   }
+
+  // Enforce releaseDate/status even on direct-by-id access: only the owning
+  // artist or staff may view unpublished or not-yet-released content.
+  const today = new Date().toISOString().slice(0, 10);
+  const isReleased = video.status === "published" && (!video.releaseDate || video.releaseDate <= today);
+  if (!isReleased) {
+    const isStaff = ["admin", "master_admin", "editor", "moderator"].includes(req.user!.role);
+    const isOwner = video.artistUserId === req.user!.userId;
+    if (!isStaff && !isOwner) {
+      res.status(404).json({ error: "Video not found" });
+      return;
+    }
+  }
+
   res.json(video);
 });
 

@@ -36,6 +36,7 @@ async function getSongWithArtist(id: number, userId?: number) {
       playCount: songsTable.playCount,
       isFeatured: songsTable.isFeatured,
       status: songsTable.status,
+      releaseDate: songsTable.releaseDate,
       createdAt: songsTable.createdAt,
       lyrics: songsTable.lyrics,
       credits: songsTable.credits,
@@ -242,6 +243,20 @@ router.get("/songs/:id", requireAuth, async (req: AuthRequest, res): Promise<voi
     res.status(404).json({ error: "Song not found" });
     return;
   }
+
+  // Enforce releaseDate/status even on direct-by-id access: only the owning
+  // artist or staff may view unpublished or not-yet-released content.
+  const today = new Date().toISOString().slice(0, 10);
+  const isReleased = song.status === "published" && (!song.releaseDate || song.releaseDate <= today);
+  if (!isReleased) {
+    const isStaff = ["admin", "master_admin", "editor", "moderator"].includes(req.user!.role);
+    const isOwner = song.artistUserId === req.user!.userId;
+    if (!isStaff && !isOwner) {
+      res.status(404).json({ error: "Song not found" });
+      return;
+    }
+  }
+
   res.json(song);
 });
 

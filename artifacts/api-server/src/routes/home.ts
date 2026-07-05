@@ -1,11 +1,15 @@
 import { Router } from "express";
-import { eq, desc, and, avg, sql, isNotNull } from "drizzle-orm";
+import { eq, desc, and, avg, sql, isNotNull, or, isNull, lte } from "drizzle-orm";
 import { db, songsTable, videosTable, artistsTable, labelsTable, albumsTable, companyPostsTable, followsTable, ratingsTable, editorPicksTable, usersTable } from "@workspace/db";
 import { count } from "drizzle-orm";
 import { isFeatureRotationEnabled, rotateFeatured, FEATURED_POOL_SIZE } from "../lib/featured";
 import { requireAuth } from "../lib/auth";
 
 const router = Router();
+
+// Content is only publicly visible once published AND its releaseDate (if any) has arrived.
+const releasedSong = or(isNull(songsTable.releaseDate), lte(songsTable.releaseDate, sql`CURRENT_DATE`));
+const releasedVideo = or(isNull(videosTable.releaseDate), lte(videosTable.releaseDate, sql`CURRENT_DATE`));
 
 router.get("/home", requireAuth, async (_req, res): Promise<void> => {
   const songSelect = {
@@ -28,10 +32,10 @@ router.get("/home", requireAuth, async (_req, res): Promise<void> => {
   };
 
   const [featuredSongs, featuredVideos, trendingSongs, newReleases] = await Promise.all([
-    db.select(songSelect).from(songsTable).leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id)).leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id)).leftJoin(usersTable, eq(artistsTable.userId, usersTable.id)).where(and(eq(songsTable.isFeatured, true), eq(songsTable.status, "published"), isNotNull(songsTable.coverUrl))).orderBy(desc(songsTable.createdAt)).limit(FEATURED_POOL_SIZE),
-    db.select(videoSelect).from(videosTable).leftJoin(artistsTable, eq(videosTable.artistId, artistsTable.id)).leftJoin(usersTable, eq(artistsTable.userId, usersTable.id)).where(and(eq(videosTable.isFeatured, true), eq(videosTable.status, "published"), isNotNull(videosTable.thumbnailUrl))).orderBy(desc(videosTable.createdAt)).limit(FEATURED_POOL_SIZE),
-    db.select(songSelect).from(songsTable).leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id)).leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id)).leftJoin(usersTable, eq(artistsTable.userId, usersTable.id)).where(and(eq(songsTable.status, "published"), isNotNull(songsTable.coverUrl))).orderBy(desc(songsTable.playCount)).limit(10),
-    db.select(songSelect).from(songsTable).leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id)).leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id)).leftJoin(usersTable, eq(artistsTable.userId, usersTable.id)).where(and(eq(songsTable.status, "published"), isNotNull(songsTable.coverUrl))).orderBy(desc(songsTable.createdAt)).limit(8),
+    db.select(songSelect).from(songsTable).leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id)).leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id)).leftJoin(usersTable, eq(artistsTable.userId, usersTable.id)).where(and(eq(songsTable.isFeatured, true), eq(songsTable.status, "published"), isNotNull(songsTable.coverUrl), releasedSong)).orderBy(desc(songsTable.createdAt)).limit(FEATURED_POOL_SIZE),
+    db.select(videoSelect).from(videosTable).leftJoin(artistsTable, eq(videosTable.artistId, artistsTable.id)).leftJoin(usersTable, eq(artistsTable.userId, usersTable.id)).where(and(eq(videosTable.isFeatured, true), eq(videosTable.status, "published"), isNotNull(videosTable.thumbnailUrl), releasedVideo)).orderBy(desc(videosTable.createdAt)).limit(FEATURED_POOL_SIZE),
+    db.select(songSelect).from(songsTable).leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id)).leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id)).leftJoin(usersTable, eq(artistsTable.userId, usersTable.id)).where(and(eq(songsTable.status, "published"), isNotNull(songsTable.coverUrl), releasedSong)).orderBy(desc(songsTable.playCount)).limit(10),
+    db.select(songSelect).from(songsTable).leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id)).leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id)).leftJoin(usersTable, eq(artistsTable.userId, usersTable.id)).where(and(eq(songsTable.status, "published"), isNotNull(songsTable.coverUrl), releasedSong)).orderBy(desc(songsTable.createdAt)).limit(8),
   ]);
 
   const rotation = await isFeatureRotationEnabled();
@@ -65,7 +69,7 @@ router.get("/home", requireAuth, async (_req, res): Promise<void> => {
 
   const featuredArtists = await Promise.all(rawArtists.map(async (a) => {
     const [fc] = await db.select({ count: count() }).from(followsTable).where(and(eq(followsTable.targetType, "artist"), eq(followsTable.targetId, a.id)));
-    const [sc] = await db.select({ count: count() }).from(songsTable).where(and(eq(songsTable.artistId, a.id), eq(songsTable.status, "published")));
+    const [sc] = await db.select({ count: count() }).from(songsTable).where(and(eq(songsTable.artistId, a.id), eq(songsTable.status, "published"), releasedSong));
     return { ...a, followerCount: fc?.count ?? 0, songCount: sc?.count ?? 0, isFollowed: false };
   }));
 
@@ -107,7 +111,7 @@ router.get("/home", requireAuth, async (_req, res): Promise<void> => {
         .leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id))
         .leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id))
         .leftJoin(usersTable, eq(artistsTable.userId, usersTable.id))
-        .where(and(eq(songsTable.id, p.contentId), eq(songsTable.status, "published"))).limit(1);
+        .where(and(eq(songsTable.id, p.contentId), eq(songsTable.status, "published"), releasedSong)).limit(1);
       song = (rows[0] && rows[0].coverUrl) ? rows[0] : null;
     } else if (p.contentType === "video") {
       const rows = await db.select({
@@ -121,7 +125,7 @@ router.get("/home", requireAuth, async (_req, res): Promise<void> => {
       }).from(videosTable)
         .leftJoin(artistsTable, eq(videosTable.artistId, artistsTable.id))
         .leftJoin(usersTable, eq(artistsTable.userId, usersTable.id))
-        .where(and(eq(videosTable.id, p.contentId), eq(videosTable.status, "published"))).limit(1);
+        .where(and(eq(videosTable.id, p.contentId), eq(videosTable.status, "published"), releasedVideo)).limit(1);
       video = (rows[0] && rows[0].thumbnailUrl) ? rows[0] : null;
     } else if (p.contentType === "artist") {
       const rows = await db.select({

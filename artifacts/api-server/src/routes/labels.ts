@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { eq, desc, ilike, and, count, avg, sql, or } from "drizzle-orm";
+import { eq, desc, ilike, and, count, avg, sql, or, isNull, lte } from "drizzle-orm";
 import {
   db, labelsTable, artistsTable, songsTable, videosTable,
   followsTable, ratingsTable, albumsTable, usersTable, userBlocksTable,
@@ -11,6 +11,9 @@ import {
 import { requireAuth, type AuthRequest } from "../lib/auth";
 
 const router = Router();
+
+// Content is only publicly visible once published AND its releaseDate (if any) has arrived.
+const releasedSong = or(isNull(songsTable.releaseDate), lte(songsTable.releaseDate, sql`CURRENT_DATE`));
 
 async function getLabelRow(id: number, userId?: number) {
   const [label] = await db
@@ -124,7 +127,7 @@ router.get("/labels/:id", requireAuth, async (req: AuthRequest, res): Promise<vo
 
   const artistsWithCounts = await Promise.all(artists.map(async (a) => {
     const [fc] = await db.select({ count: count() }).from(followsTable).where(and(eq(followsTable.targetType, "artist"), eq(followsTable.targetId, a.id)));
-    const [sc] = await db.select({ count: count() }).from(songsTable).where(and(eq(songsTable.artistId, a.id), eq(songsTable.status, "published")));
+    const [sc] = await db.select({ count: count() }).from(songsTable).where(and(eq(songsTable.artistId, a.id), eq(songsTable.status, "published"), releasedSong));
     return { ...a, followerCount: fc?.count ?? 0, songCount: sc?.count ?? 0, isFollowed: false };
   }));
 
@@ -136,7 +139,7 @@ router.get("/labels/:id", requireAuth, async (req: AuthRequest, res): Promise<vo
         .from(songsTable)
         .leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id))
         .leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id))
-        .where(and(eq(songsTable.status, "published")))
+        .where(and(eq(songsTable.status, "published"), releasedSong))
         .orderBy(desc(songsTable.createdAt))
         .limit(6)
     : [];
