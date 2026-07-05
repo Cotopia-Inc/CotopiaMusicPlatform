@@ -4,7 +4,7 @@ import {
   useGetVideo, getGetVideoQueryKey,
   useGetChatMessages, getGetChatMessagesQueryKey, usePostChatMessage,
   useRateVideo, useFavoriteVideo, useUnfavoriteVideo, useTrackAnalyticsEvent,
-  useDeleteVideo, useUpdateVideo, useUpdateArtist,
+  useDeleteVideo, useUpdateVideo, useUpdateArtist, useRecordVideoView,
   useGetPresenceCount, usePostPresenceHeartbeat, useDeletePresence,
 } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -133,6 +133,9 @@ export default function VideoDetail() {
     setTimeout(() => videoRef.current?.play(), 50);
     if (videoId) {
       trackEvent.mutate({ data: { eventType: "content", eventName: "video_play", contentType: "video", contentId: videoId } });
+      recordVideoView.mutate({ id: videoId }, {
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetVideoQueryKey(videoId) }),
+      });
     }
   }, [videoId]);
 
@@ -211,6 +214,7 @@ export default function VideoDetail() {
   const favoriteMutation = useFavoriteVideo();
   const unfavoriteMutation = useUnfavoriteVideo();
   const trackEvent = useTrackAnalyticsEvent();
+  const recordVideoView = useRecordVideoView();
 
   useEffect(() => {
     if (video?.id) {
