@@ -127,12 +127,14 @@ router.post("/submissions", requireAuth, requireVerifiedEmail, async (req: AuthR
   res.status(201).json(enriched);
 });
 
-// TODO: Before live payments, enforce the same package file limits on the backend/server
-// so users cannot bypass frontend rules. Add a check here that rejects batches where
-// files.length exceeds the plan's limit:
-//   single  → 1 file  (song or video)
-//   basic   → 10 songs / 5 videos
-//   premium → 1 file  (song or video)
+// Mirrors the plan limits shown/enforced on the frontend (submit.tsx) so a user
+// cannot bypass the package file caps by calling the API directly.
+const PLAN_FILE_LIMITS: Record<string, Record<"song" | "video", number>> = {
+  single: { song: 1, video: 1 },
+  basic: { song: 10, video: 5 },
+  premium: { song: 1, video: 1 },
+};
+
 router.post("/submissions/bulk", requireAuth, requireVerifiedEmail, async (req: AuthRequest, res): Promise<void> => {
   const parsed = CreateBulkSubmissionBody.safeParse(req.body);
   if (!parsed.success) {
@@ -141,6 +143,15 @@ router.post("/submissions/bulk", requireAuth, requireVerifiedEmail, async (req: 
   }
 
   const d = parsed.data;
+
+  const plan = d.plan ?? "basic";
+  const maxFiles = PLAN_FILE_LIMITS[plan]?.[d.type as "song" | "video"];
+  if (maxFiles !== undefined && d.files.length > maxFiles) {
+    res.status(400).json({
+      error: `The "${plan}" plan allows up to ${maxFiles} ${d.type}${maxFiles === 1 ? "" : "s"} per submission. You submitted ${d.files.length}.`,
+    });
+    return;
+  }
 
   // Find or auto-create an artist profile for any authenticated user.
   let [artist] = await db.select().from(artistsTable).where(eq(artistsTable.userId, req.user!.userId)).limit(1);
