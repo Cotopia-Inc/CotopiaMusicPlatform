@@ -1,0 +1,19 @@
+---
+name: Cotopia production schema drift (missing tables)
+description: New Drizzle tables can exist in dev but not on Render production; ensureTables() does NOT cover them — causes generic "Could not X" toasts with no visible error.
+---
+
+## The issue
+
+`artifacts/api-server/src/lib/ensure-tables.ts` is a hand-maintained list of `CREATE TABLE IF NOT EXISTS` statements for a handful of legacy tables (badges, user_badges, bug_reports, experience_feedback, feature_suggestions) plus one `ALTER TABLE ... ADD COLUMN IF NOT EXISTS`. It runs on every server boot, including on Render.
+
+**It is NOT kept in sync with `lib/db/src/schema/`.** Any *new* Drizzle table added there (not just new columns) will exist in the dev Neon DB (created via `pnpm --filter @workspace/db run push`) but will silently NOT exist on Render production unless someone explicitly pushes the schema there too.
+
+**Why:** the app has two independent schema-sync paths — the manual `ensure-tables.ts` allowlist (runs automatically everywhere) and Drizzle's `db push` (must be run manually against the target DB). New tables only get the latter; if that step is skipped for production, every DB write against the missing table throws a "relation does not exist" error that generic frontend `onError` handlers surface only as a vague toast (e.g. "Could not add event"), with no indication it's a schema problem.
+
+## How to apply
+
+- When investigating "works in dev, fails in prod" reports for a *recently added* feature (check `git log` on the relevant schema file), suspect a missing production table/column first, especially if the schema file is only days old.
+- `RENDER_DATABASE_URL` secret is available in this workspace and points at the Render production Postgres — use `psql "$RENDER_DATABASE_URL" -c "\dt"` to check what tables actually exist there. Note: this DB is NOT reachable via the `executeSql` tool's `environment: "production"` option (that only works for Replit-provisioned Neon DBs); use `psql`/raw SQL directly instead.
+- `drizzle-kit push --config lib/db/drizzle.config.ts` reads `DATABASE_URL` directly (not a Render-specific var) and hung/timed out here when tried against `RENDER_DATABASE_URL` (interactive prompt or connectivity issue) — the reliable fallback is issuing the equivalent `CREATE TABLE IF NOT EXISTS ...` SQL by hand via `psql "$RENDER_DATABASE_URL"`, matching the Drizzle schema file's column defs/types/constraints exactly.
+- After adding any new table to `lib/db/src/schema/`, treat pushing it to Render production as a required deploy step, same as the existing "new columns" gotcha already noted in replit.md — it applies to whole new tables too, not just columns.

@@ -18,3 +18,4 @@
 - [Cotopia inline media playback bypasses view/play tracking](cotopia-inline-media-tracking.md) — any page-local `<video>`/`<audio>` playback outside the global Player must call the record-view/play mutation itself
 - [Cotopia play/view tracking event timing](cotopia-play-tracking-event-timing.md) — gate count/analytics increments on native "playing" event, never on click or "play" alone (fires even if source later errors)
 - [Cotopia playlist releaseDate leak](cotopia-playlist-releasedate-leak.md) — song-only playlists/editorial-playlists lacked the standard release-date gate other endpoints have; song-only bug, no video equivalent existed
+- [Cotopia production schema drift](cotopia-production-schema-drift.md) — ensureTables() allowlist ≠ Drizzle schema; new tables need manual db push to Render (RENDER_DATABASE_URL) or they silently 500 in prod only
