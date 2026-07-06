@@ -320,9 +320,8 @@ export default function UserProfile() {
       )}
 
       {/* Events */}
-      <div className="px-6 pt-8 max-w-2xl space-y-3">
-        <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">Events</p>
-        <EventsTab userId={user.id} isOwner={isMe} />
+      <div className="px-6 pt-8 max-w-2xl">
+        <EventsTab userId={user.id} isOwner={isMe} heading="Events" />
       </div>
     </div>
   );

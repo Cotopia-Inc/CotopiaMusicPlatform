@@ -246,9 +246,8 @@ export default function LabelDetail() {
       </div>
 
       {labelUserId && (
-        <div className="px-8 pt-2 space-y-3">
-          <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">Events</p>
-          <EventsTab userId={labelUserId} isOwner={isOwner} />
+        <div className="px-8 pt-2">
+          <EventsTab userId={labelUserId} isOwner={isOwner} heading="Events" />
         </div>
       )}
 

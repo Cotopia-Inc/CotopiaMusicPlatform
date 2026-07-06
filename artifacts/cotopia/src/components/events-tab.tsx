@@ -321,7 +321,7 @@ function EventCard({ event, isOwner, onEdit, onDelete }: { event: Event; isOwner
   );
 }
 
-export function EventsTab({ userId, isOwner }: { userId: number; isOwner: boolean }) {
+export function EventsTab({ userId, isOwner, heading }: { userId: number; isOwner: boolean; heading?: string }) {
   const { toast } = useToast();
   const qc = useQueryClient();
   const queryKey = getGetUserEventsQueryKey(userId);
@@ -381,8 +381,15 @@ export function EventsTab({ userId, isOwner }: { userId: number; isOwner: boolea
       }
     : EMPTY_FORM;
 
+  if (!isOwner && !isLoading && sortedEvents.length === 0) {
+    return null;
+  }
+
   return (
     <div className="space-y-5">
+      {heading && (
+        <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">{heading}</p>
+      )}
       <CreatorMessageCard userId={userId} isOwner={isOwner} />
 
       <div className="flex items-center justify-between gap-3 flex-wrap">
