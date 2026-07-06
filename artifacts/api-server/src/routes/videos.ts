@@ -12,10 +12,18 @@ import {
 } from "@workspace/api-zod";
 import { isFeatureRotationEnabled, rotateFeatured, FEATURED_POOL_SIZE } from "../lib/featured";
 import { isFutureRelease } from "../lib/publisher";
+import { getTodayInReleaseTimezone } from "../lib/timezone";
 import { requireAuth, optionalAuth, type AuthRequest } from "../lib/auth";
 import { getPrimaryBadgesForUsers } from "./badges";
 
 const router = Router();
+
+// A video is publicly visible once published AND its releaseDate (if any) has
+// arrived, in US Eastern Time (see lib/timezone.ts) — not server/DB UTC.
+function releasedVideoCondition() {
+  const today = getTodayInReleaseTimezone();
+  return or(isNull(videosTable.releaseDate), lte(videosTable.releaseDate, today));
+}
 
 async function getVideoWithArtist(id: number, userId?: number) {
   const [row] = await db
@@ -84,7 +92,7 @@ router.get("/videos", requireAuth, async (req: AuthRequest, res): Promise<void> 
   }
   const { q, artistId, limit = 20, offset = 0 } = params.data;
 
-  const releasedVideo = or(isNull(videosTable.releaseDate), lte(videosTable.releaseDate, sql`CURRENT_DATE`));
+  const releasedVideo = releasedVideoCondition();
   const conditions = [eq(videosTable.status, "published"), releasedVideo!];
   if (q) conditions.push(ilike(videosTable.title, `%${q}%`));
   if (artistId) conditions.push(eq(videosTable.artistId, artistId));
@@ -145,7 +153,7 @@ router.get("/videos/featured", requireAuth, async (_req, res): Promise<void> => 
     .from(videosTable)
     .leftJoin(artistsTable, eq(videosTable.artistId, artistsTable.id))
     .leftJoin(usersTable, eq(artistsTable.userId, usersTable.id))
-    .where(and(eq(videosTable.isFeatured, true), eq(videosTable.status, "published"), or(isNull(videosTable.releaseDate), lte(videosTable.releaseDate, sql`CURRENT_DATE`))))
+    .where(and(eq(videosTable.isFeatured, true), eq(videosTable.status, "published"), releasedVideoCondition()))
     .orderBy(desc(videosTable.createdAt))
     .limit(FEATURED_POOL_SIZE);
 
@@ -182,7 +190,7 @@ router.get("/videos/trending", requireAuth, async (req, res): Promise<void> => {
     .from(videosTable)
     .leftJoin(artistsTable, eq(videosTable.artistId, artistsTable.id))
     .leftJoin(usersTable, eq(artistsTable.userId, usersTable.id))
-    .where(and(eq(videosTable.status, "published"), or(isNull(videosTable.releaseDate), lte(videosTable.releaseDate, sql`CURRENT_DATE`))))
+    .where(and(eq(videosTable.status, "published"), releasedVideoCondition()))
     .orderBy(desc(videosTable.viewCount))
     .limit(limit);
 
@@ -209,7 +217,7 @@ router.get("/videos/:id", requireAuth, async (req: AuthRequest, res): Promise<vo
 
   // Enforce releaseDate/status even on direct-by-id access: only the owning
   // artist or staff may view unpublished or not-yet-released content.
-  const today = new Date().toISOString().slice(0, 10);
+  const today = getTodayInReleaseTimezone();
   const isReleased = video.status === "published" && (!video.releaseDate || video.releaseDate <= today);
   if (!isReleased) {
     const isStaff = ["admin", "master_admin", "editor", "moderator"].includes(req.user!.role);

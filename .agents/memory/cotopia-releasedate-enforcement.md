@@ -42,3 +42,17 @@ schemas for these endpoints don't even include "approved" as a valid enum value,
 isn't type-safe) when status is "published" and the existing row's releaseDate is future.
 Any *new* write path that can set a song/video to "published" must call `isFutureRelease` (or
 route through `publishContent`) or it will reopen this leak.
+
+**Timezone (added Jul 2026): all releaseDate comparisons use US Eastern Time, not UTC.**
+`lib/timezone.ts` exports `RELEASE_TIMEZONE = "America/New_York"` and `getTodayInReleaseTimezone()`
+(computed via `Date.toLocaleDateString("en-CA", {timeZone: ...})` for a `YYYY-MM-DD` string).
+**Why:** `sql\`CURRENT_DATE\`` runs Postgres-side and follows the DB session timezone (UTC in this
+env), so simply "switching to ET" isn't a one-line config change — every comparison that used the
+SQL literal had to move to a JS-computed ET date bound as a query parameter instead. Module-level
+consts computed once at import time (e.g. old `home.ts`/`artists.ts`/`labels.ts` pattern) are also
+wrong for this because "today" must be recomputed per-request, not frozen at server boot.
+**How to apply:** any new/changed releaseDate comparison (reads or writes) must call
+`getTodayInReleaseTimezone()` fresh at request time — never `sql\`CURRENT_DATE\`` and never a
+module-level `new Date()`/`toISOString().slice(0,10)` const. A user-facing note ("goes live at
+12:00 AM ET on this date") was added next to every releaseDate picker (submit.tsx,
+admin-upload-song.tsx, admin-upload-video.tsx, including bulk variants).

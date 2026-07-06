@@ -445,6 +445,7 @@ export default function AdminUploadSong() {
               <div className="space-y-2">
                 <Label htmlFor="releaseDate">Release Date</Label>
                 <Input id="releaseDate" type="date" value={form.releaseDate} onChange={e => setForm(f => ({ ...f, releaseDate: e.target.value }))} />
+                <p className="text-xs text-muted-foreground">Goes live at 12:00 AM Eastern Time (ET) on this date.</p>
               </div>
             </div>
 
@@ -542,6 +543,7 @@ export default function AdminUploadSong() {
                   <div className="space-y-2">
                     <Label>Release Date</Label>
                     <Input type="date" value={bulkShared.releaseDate} onChange={e => setBulkShared(f => ({ ...f, releaseDate: e.target.value }))} />
+                    <p className="text-xs text-muted-foreground">Goes live at 12:00 AM Eastern Time (ET) on this date.</p>
                   </div>
                   <div className="space-y-1 pt-6">
                     <div className="flex items-center justify-between p-3 rounded-lg border border-border">

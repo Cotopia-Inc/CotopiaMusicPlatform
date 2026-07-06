@@ -3,12 +3,16 @@ import { eq, desc, and, avg, count, sql, or, isNull, lte, inArray, gt, isNotNull
 import { db, songsTable, videosTable, artistsTable, labelsTable, albumsTable, ratingsTable, commentsTable, followsTable, usersTable, appSettingsTable } from "@workspace/db";
 import { isFeatureRotationEnabled, rotateFeatured, FEATURED_POOL_SIZE } from "../lib/featured";
 import { requireAuth } from "../lib/auth";
+import { getTodayInReleaseTimezone } from "../lib/timezone";
 
 const router = Router();
 
 router.get("/discover", requireAuth, async (_req, res): Promise<void> => {
-  const releasedSong = or(isNull(songsTable.releaseDate), lte(songsTable.releaseDate, sql`CURRENT_DATE`));
-  const releasedVideo = or(isNull(videosTable.releaseDate), lte(videosTable.releaseDate, sql`CURRENT_DATE`));
+  // Content is only publicly visible once published AND its releaseDate (if
+  // any) has arrived, in US Eastern Time (see lib/timezone.ts) — not server/DB UTC.
+  const today = getTodayInReleaseTimezone();
+  const releasedSong = or(isNull(songsTable.releaseDate), lte(songsTable.releaseDate, today));
+  const releasedVideo = or(isNull(videosTable.releaseDate), lte(videosTable.releaseDate, today));
 
   const songSelect = {
     id: songsTable.id, title: songsTable.title, artistId: songsTable.artistId,

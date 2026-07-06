@@ -4,6 +4,7 @@ import {
   db, playlistsTable, playlistItemsTable, songsTable, artistsTable, albumsTable,
 } from "@workspace/db";
 import { requireAuth, requireRole, type AuthRequest } from "../lib/auth";
+import { getTodayInReleaseTimezone } from "../lib/timezone";
 
 const router = Router();
 
@@ -11,13 +12,13 @@ const EDITORIAL_ROLES = ["admin", "master_admin", "editor"] as const;
 const STAFF_ROLES = ["admin", "master_admin", "editor", "moderator"];
 
 // A song is publicly playable once it's published AND its releaseDate (if
-// any) has arrived. This endpoint exposes the raw streamUrl directly to all
-// logged-in users, so without this check an unreleased song added to an
-// editorial playlist would be publicly playable ahead of its scheduled
-// release date, bypassing the gating already enforced on /songs and
-// /songs/:id.
+// any) has arrived, in US Eastern Time (see lib/timezone.ts) — not server/DB
+// UTC. This endpoint exposes the raw streamUrl directly to all logged-in
+// users, so without this check an unreleased song added to an editorial
+// playlist would be publicly playable ahead of its scheduled release date,
+// bypassing the gating already enforced on /songs and /songs/:id.
 function isSongReleased(status: string, releaseDate: string | null): boolean {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = getTodayInReleaseTimezone();
   return status === "published" && (!releaseDate || releaseDate <= today);
 }
 

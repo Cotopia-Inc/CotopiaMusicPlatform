@@ -253,6 +253,9 @@ function MetadataSection({ meta, onChange, type }: { meta: SharedMeta; onChange:
         <div className="space-y-2">
           <Label className="flex items-center gap-2"><Calendar className="w-3.5 h-3.5" />Release Date <span className="text-muted-foreground text-xs">(optional)</span></Label>
           <Input type="date" value={meta.releaseDate} onChange={e => set({ releaseDate: e.target.value })} className="bg-secondary/50 border-secondary" />
+          <p className="text-xs text-muted-foreground">
+            If set, your content will stay hidden after approval and go live automatically at 12:00 AM Eastern Time (ET) on this date — even if it's already been approved. Leave blank to publish immediately upon approval.
+          </p>
         </div>
         <div className="flex items-end pb-0.5">
           <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-secondary/20 w-full">

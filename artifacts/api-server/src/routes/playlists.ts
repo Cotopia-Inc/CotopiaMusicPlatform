@@ -8,18 +8,20 @@ import {
 } from "@workspace/api-zod";
 import { requireAuth, type AuthRequest } from "../lib/auth";
 import { avg } from "drizzle-orm";
+import { getTodayInReleaseTimezone } from "../lib/timezone";
 
 const router = Router();
 
 const STAFF_ROLES = ["admin", "master_admin", "editor", "moderator"];
 
 // A song is publicly playable once it's published AND its releaseDate (if
-// any) has arrived. Playlist responses expose the raw streamUrl directly, so
-// without this check an unreleased song added to a playlist would be
-// playable ahead of its scheduled release date, bypassing the gating already
-// enforced on /songs and /songs/:id.
+// any) has arrived, in US Eastern Time (see lib/timezone.ts) — not server/DB
+// UTC. Playlist responses expose the raw streamUrl directly, so without this
+// check an unreleased song added to a playlist would be playable ahead of
+// its scheduled release date, bypassing the gating already enforced on
+// /songs and /songs/:id.
 function isSongReleased(status: string, releaseDate: string | null): boolean {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = getTodayInReleaseTimezone();
   return status === "published" && (!releaseDate || releaseDate <= today);
 }
 

@@ -10,12 +10,20 @@ import {
 } from "@workspace/api-zod";
 import { requireAuth, type AuthRequest } from "../lib/auth";
 import { avg } from "drizzle-orm";
+import { getTodayInReleaseTimezone } from "../lib/timezone";
 
 const router = Router();
 
-// Content is only publicly visible once published AND its releaseDate (if any) has arrived.
-const releasedSong = or(isNull(songsTable.releaseDate), lte(songsTable.releaseDate, sql`CURRENT_DATE`));
-const releasedVideo = or(isNull(videosTable.releaseDate), lte(videosTable.releaseDate, sql`CURRENT_DATE`));
+// Content is only publicly visible once published AND its releaseDate (if
+// any) has arrived, in US Eastern Time (see lib/timezone.ts) — not server/DB UTC.
+function releasedSongCondition() {
+  const today = getTodayInReleaseTimezone();
+  return or(isNull(songsTable.releaseDate), lte(songsTable.releaseDate, today));
+}
+function releasedVideoCondition() {
+  const today = getTodayInReleaseTimezone();
+  return or(isNull(videosTable.releaseDate), lte(videosTable.releaseDate, today));
+}
 
 async function getArtistRow(id: number, userId?: number) {
   const [artist] = await db
@@ -51,7 +59,7 @@ async function getArtistRow(id: number, userId?: number) {
     ));
 
   const [songCount] = await db.select({ count: count() }).from(songsTable)
-    .where(and(eq(songsTable.artistId, id), eq(songsTable.status, "published"), releasedSong));
+    .where(and(eq(songsTable.artistId, id), eq(songsTable.status, "published"), releasedSongCondition()));
 
   let isFollowed = false;
   if (userId) {
@@ -121,7 +129,7 @@ router.get("/artists", requireAuth, async (req: AuthRequest, res): Promise<void>
         a.userId ? and(eq(followsTable.targetType, "user"), eq(followsTable.targetId, a.userId)) : undefined,
       ));
     const [sc] = await db.select({ count: count() }).from(songsTable)
-      .where(and(eq(songsTable.artistId, a.id), eq(songsTable.status, "published"), releasedSong));
+      .where(and(eq(songsTable.artistId, a.id), eq(songsTable.status, "published"), releasedSongCondition()));
     let isFollowed = false;
     if (req.user) {
       const [f] = await db.select({ id: followsTable.id }).from(followsTable)
@@ -156,7 +164,7 @@ router.get("/artists/new", requireAuth, async (_req, res): Promise<void> => {
         and(eq(followsTable.targetType, "artist"), eq(followsTable.targetId, a.id)),
         a.userId ? and(eq(followsTable.targetType, "user"), eq(followsTable.targetId, a.userId)) : undefined,
       ));
-    const [sc] = await db.select({ count: count() }).from(songsTable).where(and(eq(songsTable.artistId, a.id), eq(songsTable.status, "published"), releasedSong));
+    const [sc] = await db.select({ count: count() }).from(songsTable).where(and(eq(songsTable.artistId, a.id), eq(songsTable.status, "published"), releasedSongCondition()));
     return { ...a, followerCount: Number(fc?.count ?? 0), songCount: sc?.count ?? 0, isFollowed: false };
   }));
 
@@ -179,7 +187,7 @@ router.get("/artists/featured", requireAuth, async (_req, res): Promise<void> =>
         and(eq(followsTable.targetType, "artist"), eq(followsTable.targetId, a.id)),
         a.userId ? and(eq(followsTable.targetType, "user"), eq(followsTable.targetId, a.userId)) : undefined,
       ));
-    const [sc] = await db.select({ count: count() }).from(songsTable).where(and(eq(songsTable.artistId, a.id), eq(songsTable.status, "published"), releasedSong));
+    const [sc] = await db.select({ count: count() }).from(songsTable).where(and(eq(songsTable.artistId, a.id), eq(songsTable.status, "published"), releasedSongCondition()));
     return { ...a, followerCount: Number(fc?.count ?? 0), songCount: sc?.count ?? 0, isFollowed: false };
   }));
 
@@ -205,7 +213,7 @@ router.get("/artists/:id", requireAuth, async (req: AuthRequest, res): Promise<v
     .leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id))
     .leftJoin(usersTable, eq(artistsTable.userId, usersTable.id))
     .leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id))
-    .where(and(eq(songsTable.artistId, params.data.id), eq(songsTable.status, "published"), releasedSong))
+    .where(and(eq(songsTable.artistId, params.data.id), eq(songsTable.status, "published"), releasedSongCondition()))
     .orderBy(desc(songsTable.createdAt))
     .limit(10);
 
@@ -214,7 +222,7 @@ router.get("/artists/:id", requireAuth, async (req: AuthRequest, res): Promise<v
     .from(videosTable)
     .leftJoin(artistsTable, eq(videosTable.artistId, artistsTable.id))
     .leftJoin(usersTable, eq(artistsTable.userId, usersTable.id))
-    .where(and(eq(videosTable.artistId, params.data.id), eq(videosTable.status, "published"), releasedVideo))
+    .where(and(eq(videosTable.artistId, params.data.id), eq(videosTable.status, "published"), releasedVideoCondition()))
     .orderBy(desc(videosTable.createdAt))
     .limit(10);
 

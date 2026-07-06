@@ -12,10 +12,18 @@ import {
 } from "@workspace/api-zod";
 import { isFeatureRotationEnabled, rotateFeatured, FEATURED_POOL_SIZE } from "../lib/featured";
 import { isFutureRelease } from "../lib/publisher";
+import { getTodayInReleaseTimezone } from "../lib/timezone";
 import { requireAuth, optionalAuth, type AuthRequest } from "../lib/auth";
 import { getPrimaryBadgesForUsers } from "./badges";
 
 const router = Router();
+
+// A song is publicly visible once published AND its releaseDate (if any) has
+// arrived, in US Eastern Time (see lib/timezone.ts) — not server/DB UTC.
+function releasedSongCondition() {
+  const today = getTodayInReleaseTimezone();
+  return or(isNull(songsTable.releaseDate), lte(songsTable.releaseDate, today));
+}
 
 // Helpers
 async function getSongWithArtist(id: number, userId?: number) {
@@ -90,7 +98,7 @@ router.get("/songs", requireAuth, async (req: AuthRequest, res): Promise<void> =
   }
   const { q, artistId, genre, limit = 20, offset = 0 } = params.data;
 
-  const releasedSong = or(isNull(songsTable.releaseDate), lte(songsTable.releaseDate, sql`CURRENT_DATE`));
+  const releasedSong = releasedSongCondition();
   const conditions = [eq(songsTable.status, "published"), releasedSong!];
   if (q) conditions.push(ilike(songsTable.title, `%${q}%`));
   if (artistId) conditions.push(eq(songsTable.artistId, artistId));
@@ -180,7 +188,7 @@ router.get("/songs/featured", requireAuth, async (_req, res): Promise<void> => {
     .leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id))
     .leftJoin(usersTable, eq(artistsTable.userId, usersTable.id))
     .leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id))
-    .where(and(eq(songsTable.isFeatured, true), eq(songsTable.status, "published"), or(isNull(songsTable.releaseDate), lte(songsTable.releaseDate, sql`CURRENT_DATE`))))
+    .where(and(eq(songsTable.isFeatured, true), eq(songsTable.status, "published"), releasedSongCondition()))
     .orderBy(desc(songsTable.createdAt))
     .limit(FEATURED_POOL_SIZE);
 
@@ -220,7 +228,7 @@ router.get("/songs/trending", requireAuth, async (req, res): Promise<void> => {
     .leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id))
     .leftJoin(usersTable, eq(artistsTable.userId, usersTable.id))
     .leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id))
-    .where(and(eq(songsTable.status, "published"), or(isNull(songsTable.releaseDate), lte(songsTable.releaseDate, sql`CURRENT_DATE`))))
+    .where(and(eq(songsTable.status, "published"), releasedSongCondition()))
     .orderBy(desc(songsTable.playCount))
     .limit(limit);
 
@@ -247,7 +255,7 @@ router.get("/songs/:id", requireAuth, async (req: AuthRequest, res): Promise<voi
 
   // Enforce releaseDate/status even on direct-by-id access: only the owning
   // artist or staff may view unpublished or not-yet-released content.
-  const today = new Date().toISOString().slice(0, 10);
+  const today = getTodayInReleaseTimezone();
   const isReleased = song.status === "published" && (!song.releaseDate || song.releaseDate <= today);
   if (!isReleased) {
     const isStaff = ["admin", "master_admin", "editor", "moderator"].includes(req.user!.role);
