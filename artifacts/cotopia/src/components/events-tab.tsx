@@ -90,7 +90,11 @@ function EventFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (v) setForm(initial); onOpenChange(v); }}>
-      <DialogContent className="max-w-md">
+      <DialogContent
+        className="max-w-md"
+        onPointerDownOutside={(e) => { if (cropUrl) e.preventDefault(); }}
+        onInteractOutside={(e) => { if (cropUrl) e.preventDefault(); }}
+      >
         <DialogHeader>
           <DialogTitle>{initial.title ? "Edit Event" : "New Event"}</DialogTitle>
         </DialogHeader>

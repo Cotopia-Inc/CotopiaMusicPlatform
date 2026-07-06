@@ -58,17 +58,18 @@ const emptyForm: PostForm = {
   isPinned: false,
 };
 
-function ImageUploader({ value, onChange }: { value: string; onChange: (url: string) => void }) {
+function ImageUploader({ value, onChange, onCropOpenChange }: { value: string; onChange: (url: string) => void; onCropOpenChange?: (open: boolean) => void }) {
   const upload = useUpload({ onSuccess: (res) => onChange(`/api/storage${res.objectPath}`) });
   const [cropUrl, setCropUrl] = useState<string | null>(null);
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
-    if (f) setCropUrl(URL.createObjectURL(f));
+    if (f) { setCropUrl(URL.createObjectURL(f)); onCropOpenChange?.(true); }
     e.target.value = "";
   };
   const handleCropConfirm = async (blob: Blob) => {
     if (cropUrl) URL.revokeObjectURL(cropUrl);
     setCropUrl(null);
+    onCropOpenChange?.(false);
     await upload.uploadFile(new File([blob], "article.jpg", { type: "image/jpeg" }));
   };
 
@@ -112,7 +113,7 @@ function ImageUploader({ value, onChange }: { value: string; onChange: (url: str
           title="Crop Article Image"
           outputSize={1280}
           onConfirm={handleCropConfirm}
-          onCancel={() => { URL.revokeObjectURL(cropUrl); setCropUrl(null); }}
+          onCancel={() => { URL.revokeObjectURL(cropUrl); setCropUrl(null); onCropOpenChange?.(false); }}
         />
       )}
     </label>
@@ -135,13 +136,18 @@ function PostFormDialog({
   mode: "create" | "edit";
 }) {
   const [form, setForm] = useState<PostForm>(initial);
+  const [cropping, setCropping] = useState(false);
   const set = (patch: Partial<PostForm>) => setForm(f => ({ ...f, ...patch }));
 
   useEffect(() => { if (open) setForm(initial); }, [open, initial]);
 
   return (
     <Dialog open={open} onOpenChange={v => !v && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent
+        className="max-w-2xl max-h-[90vh] overflow-y-auto"
+        onPointerDownOutside={(e) => { if (cropping) e.preventDefault(); }}
+        onInteractOutside={(e) => { if (cropping) e.preventDefault(); }}
+      >
         <DialogHeader>
           <DialogTitle>{mode === "create" ? "New Article" : "Edit Article"}</DialogTitle>
         </DialogHeader>
@@ -165,7 +171,7 @@ function PostFormDialog({
 
           <div className="space-y-2">
             <Label>Article Image <span className="text-muted-foreground text-xs">(optional)</span></Label>
-            <ImageUploader value={form.imageUrl} onChange={url => set({ imageUrl: url })} />
+            <ImageUploader value={form.imageUrl} onChange={url => set({ imageUrl: url })} onCropOpenChange={setCropping} />
           </div>
 
           <div className="space-y-2">

@@ -284,8 +284,6 @@ export function ImageCropModal({
       onClick={(e) => {
         if (e.target === e.currentTarget) onCancel();
       }}
-      onPointerDownCapture={(e) => e.stopPropagation()}
-      onMouseDownCapture={(e) => e.stopPropagation()}
     >
       <div className="bg-card rounded-2xl border border-border shadow-2xl overflow-hidden w-full max-w-[540px]">
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-border">
