@@ -87,7 +87,14 @@ export function Player() {
       if (detail.isVideo) {
         recordVideoView.mutate({ id: detail.trackId });
       } else {
-        recordSongPlay.mutate({ id: detail.trackId });
+        // Unlike video-detail.tsx's dedicated inline player, songs have no
+        // per-page play tracker — this global handler is the only place a
+        // song's play count is recorded, so it must also invalidate the
+        // song's cached query itself or the displayed play count never
+        // visually updates after playback starts.
+        recordSongPlay.mutate({ id: detail.trackId }, {
+          onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetSongQueryKey(detail.trackId) }),
+        });
       }
     };
     window.addEventListener("cotopia:playback_started", handler);

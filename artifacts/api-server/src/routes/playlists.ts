@@ -11,6 +11,18 @@ import { avg } from "drizzle-orm";
 
 const router = Router();
 
+const STAFF_ROLES = ["admin", "master_admin", "editor", "moderator"];
+
+// A song is publicly playable once it's published AND its releaseDate (if
+// any) has arrived. Playlist responses expose the raw streamUrl directly, so
+// without this check an unreleased song added to a playlist would be
+// playable ahead of its scheduled release date, bypassing the gating already
+// enforced on /songs and /songs/:id.
+function isSongReleased(status: string, releaseDate: string | null): boolean {
+  const today = new Date().toISOString().slice(0, 10);
+  return status === "published" && (!releaseDate || releaseDate <= today);
+}
+
 router.get("/playlists", requireAuth, async (req: AuthRequest, res): Promise<void> => {
   const playlists = await db.select().from(playlistsTable)
     .where(eq(playlistsTable.userId, req.user!.userId))
@@ -67,6 +79,7 @@ router.get("/playlists/:id", requireAuth, async (req: AuthRequest, res): Promise
       streamUrl: songsTable.streamUrl,
       playCount: songsTable.playCount,
       status: songsTable.status,
+      releaseDate: songsTable.releaseDate,
       createdAt: songsTable.createdAt,
     })
     .from(playlistItemsTable)
@@ -77,7 +90,13 @@ router.get("/playlists/:id", requireAuth, async (req: AuthRequest, res): Promise
     .where(eq(playlistItemsTable.playlistId, params.data.id))
     .orderBy(playlistItemsTable.position);
 
-  const songsWithRatings = await Promise.all(items.map(async (s) => {
+  const isOwner = playlist.userId === req.user!.userId;
+  const isStaff = STAFF_ROLES.includes(req.user!.role);
+  const visibleItems = (isOwner || isStaff)
+    ? items
+    : items.filter((s) => s.status != null && isSongReleased(s.status, s.releaseDate));
+
+  const songsWithRatings = await Promise.all(visibleItems.map(async (s) => {
     const [r] = await db.select({ avg: avg(ratingsTable.rating) }).from(ratingsTable)
       .where(and(eq(ratingsTable.contentType, "song"), eq(ratingsTable.contentId, s.id!)));
     return { ...s, avgRating: r?.avg ? parseFloat(r.avg) : null };

@@ -8,6 +8,18 @@ import { requireAuth, requireRole, type AuthRequest } from "../lib/auth";
 const router = Router();
 
 const EDITORIAL_ROLES = ["admin", "master_admin", "editor"] as const;
+const STAFF_ROLES = ["admin", "master_admin", "editor", "moderator"];
+
+// A song is publicly playable once it's published AND its releaseDate (if
+// any) has arrived. This endpoint exposes the raw streamUrl directly to all
+// logged-in users, so without this check an unreleased song added to an
+// editorial playlist would be publicly playable ahead of its scheduled
+// release date, bypassing the gating already enforced on /songs and
+// /songs/:id.
+function isSongReleased(status: string, releaseDate: string | null): boolean {
+  const today = new Date().toISOString().slice(0, 10);
+  return status === "published" && (!releaseDate || releaseDate <= today);
+}
 
 // ── List editorial playlists ──────────────────────────────────────────────
 router.get("/editorial-playlists", requireAuth, async (_req, res): Promise<void> => {
@@ -39,7 +51,7 @@ router.get("/editorial-playlists", requireAuth, async (_req, res): Promise<void>
 });
 
 // ── Get editorial playlist detail ─────────────────────────────────────────
-router.get("/editorial-playlists/:id", requireAuth, async (req, res): Promise<void> => {
+router.get("/editorial-playlists/:id", requireAuth, async (req: AuthRequest, res): Promise<void> => {
   const id = parseInt(req.params.id as string, 10);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid ID — please try again." }); return; }
 
@@ -53,7 +65,8 @@ router.get("/editorial-playlists/:id", requireAuth, async (req, res): Promise<vo
       artistName: artistsTable.stageName, albumId: songsTable.albumId,
       albumName: albumsTable.title, genre: songsTable.genre, duration: songsTable.duration,
       coverUrl: songsTable.coverUrl, streamUrl: songsTable.streamUrl,
-      playCount: songsTable.playCount, status: songsTable.status, createdAt: songsTable.createdAt,
+      playCount: songsTable.playCount, status: songsTable.status,
+      releaseDate: songsTable.releaseDate, createdAt: songsTable.createdAt,
       position: playlistItemsTable.position,
     })
     .from(playlistItemsTable)
@@ -63,10 +76,13 @@ router.get("/editorial-playlists/:id", requireAuth, async (req, res): Promise<vo
     .where(eq(playlistItemsTable.playlistId, id))
     .orderBy(playlistItemsTable.position);
 
+  const isStaff = STAFF_ROLES.includes(req.user!.role);
+  const visibleItems = isStaff ? items : items.filter((s) => isSongReleased(s.status, s.releaseDate));
+
   res.json({
     ...playlist,
-    songCount: items.length,
-    songs: items.map(({ position: _p, ...s }) => s),
+    songCount: visibleItems.length,
+    songs: visibleItems.map(({ position: _p, ...s }) => s),
   });
 });
 
