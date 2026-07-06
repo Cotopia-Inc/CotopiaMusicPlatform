@@ -1,15 +1,21 @@
-import { useListVideos, getListVideosQueryKey, useUpdateVideo } from "@workspace/api-client-react";
+import { useListVideos, getListVideosQueryKey, useUpdateVideo, useDeleteVideo } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Search, Star, Sparkles, EyeOff, Eye, Loader2, AlertTriangle } from "lucide-react";
+import { Search, Star, Sparkles, EyeOff, Eye, Loader2, AlertTriangle, Trash2 } from "lucide-react";
 import { UserLink } from "@/components/user-link";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { CopyrightStrikeModal, type StrikeTarget } from "@/components/copyright-strike-modal";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel,
+  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
+  AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function AdminVideos() {
   const [search, setSearch] = useState("");
@@ -17,6 +23,7 @@ export default function AdminVideos() {
   const queryClient = useQueryClient();
   const [pendingId, setPendingId] = useState<number | null>(null);
   const [strikeTarget, setStrikeTarget] = useState<StrikeTarget | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: number; title: string } | null>(null);
 
   const { data, isLoading } = useListVideos(
     { q: search, limit: 100 },
@@ -24,6 +31,7 @@ export default function AdminVideos() {
   );
 
   const updateVideo = useUpdateVideo();
+  const deleteVideo = useDeleteVideo();
 
   const patchCache = (id: number, patch: Record<string, unknown>) =>
     queryClient.setQueryData(
@@ -59,6 +67,25 @@ export default function AdminVideos() {
         },
         onError: () => toast({ variant: "destructive", title: "Failed to update video" }),
         onSettled: () => setPendingId(null),
+      }
+    );
+  };
+
+  const handleDelete = () => {
+    if (!deleteTarget) return;
+    const { id } = deleteTarget;
+    deleteVideo.mutate(
+      { id },
+      {
+        onSuccess: () => {
+          toast({ title: "Video deleted" });
+          queryClient.setQueryData(
+            getListVideosQueryKey({ q: search, limit: 100 }),
+            (old: any) => old ? { ...old, items: old.items?.filter((v: any) => v.id !== id) } : old
+          );
+          setDeleteTarget(null);
+        },
+        onError: () => toast({ variant: "destructive", title: "Failed to delete video" }),
       }
     );
   };
@@ -158,54 +185,89 @@ export default function AdminVideos() {
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className={`text-xs gap-1.5 ${
-                            isPublished
-                              ? "text-muted-foreground hover:text-red-400 hover:border-red-400/40"
-                              : "text-green-400 border-green-500/40 hover:bg-green-500/10"
-                          }`}
-                          onClick={() => handleTogglePublish(video.id, video.status)}
-                          disabled={isBusy}
-                        >
-                          {isBusy ? (
-                            <Loader2 className="w-3 h-3 animate-spin" />
-                          ) : isPublished ? (
-                            <EyeOff className="w-3 h-3" />
-                          ) : (
-                            <Eye className="w-3 h-3" />
-                          )}
-                          {isPublished ? "Unpublish" : "Publish"}
-                        </Button>
+                      <div className="flex items-center justify-end gap-1.5">
+                        {/* Publish / Unpublish */}
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              aria-label={isPublished ? "Unpublish" : "Publish"}
+                              className={`h-8 w-8 ${
+                                isPublished
+                                  ? "text-muted-foreground hover:text-red-400 hover:border-red-400/40"
+                                  : "text-green-400 border-green-500/40 hover:bg-green-500/10"
+                              }`}
+                              onClick={() => handleTogglePublish(video.id, video.status)}
+                              disabled={isBusy}
+                            >
+                              {isBusy ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : isPublished ? (
+                                <EyeOff className="w-3.5 h-3.5" />
+                              ) : (
+                                <Eye className="w-3.5 h-3.5" />
+                              )}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>{isPublished ? "Unpublish" : "Publish"}</TooltipContent>
+                        </Tooltip>
 
-                        <Button
-                          variant={video.isFeatured ? "default" : "outline"}
-                          size="sm"
-                          className={`text-xs gap-1.5 ${video.isFeatured ? "bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border-amber-500/30 border" : ""}`}
-                          onClick={() => handleToggleFeature(video.id, video.isFeatured)}
-                          disabled={isBusy}
-                        >
-                          <Sparkles className="w-3 h-3" />
-                          {video.isFeatured ? "Unfeature" : "Feature"}
-                        </Button>
+                        {/* Feature / Unfeature */}
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant={video.isFeatured ? "default" : "outline"}
+                              size="icon"
+                              aria-label={video.isFeatured ? "Unfeature" : "Feature"}
+                              className={`h-8 w-8 ${video.isFeatured ? "bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border-amber-500/30 border" : ""}`}
+                              onClick={() => handleToggleFeature(video.id, video.isFeatured)}
+                              disabled={isBusy}
+                            >
+                              <Sparkles className="w-3.5 h-3.5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>{video.isFeatured ? "Unfeature" : "Feature"}</TooltipContent>
+                        </Tooltip>
 
                         {/* Issue Strike */}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-xs gap-1.5 text-red-400 border-red-500/30 hover:bg-red-500/10"
-                          onClick={() => setStrikeTarget({
-                            userId: (video as any).uploaderId ?? (video as any).userId ?? 0,
-                            uploaderName: video.artistName ?? "Unknown",
-                            contentType: "video",
-                            contentId: video.id,
-                            contentTitle: video.title,
-                          })}
-                        >
-                          <AlertTriangle className="w-3 h-3" />Strike
-                        </Button>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              aria-label="Strike"
+                              className="h-8 w-8 text-red-400 border-red-500/30 hover:bg-red-500/10"
+                              onClick={() => setStrikeTarget({
+                                userId: (video as any).uploaderId ?? (video as any).userId ?? 0,
+                                uploaderName: video.artistName ?? "Unknown",
+                                contentType: "video",
+                                contentId: video.id,
+                                contentTitle: video.title,
+                              })}
+                            >
+                              <AlertTriangle className="w-3.5 h-3.5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Issue strike</TooltipContent>
+                        </Tooltip>
+
+                        {/* Delete */}
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              aria-label="Delete video"
+                              data-testid={`delete-video-${video.id}`}
+                              className="h-8 w-8 text-red-500 border-red-500/40 hover:bg-red-500/15 hover:text-red-400"
+                              onClick={() => setDeleteTarget({ id: video.id, title: video.title })}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Delete video</TooltipContent>
+                        </Tooltip>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -228,6 +290,23 @@ export default function AdminVideos() {
       target={strikeTarget}
       onClose={() => setStrikeTarget(null)}
     />
+
+    <AlertDialog open={deleteTarget !== null} onOpenChange={open => !open && setDeleteTarget(null)}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete this video?</AlertDialogTitle>
+          <AlertDialogDescription>
+            {deleteTarget && <>"{deleteTarget.title}" will be permanently removed. This action cannot be undone.</>}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={deleteVideo.isPending}>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={handleDelete} disabled={deleteVideo.isPending} className="bg-destructive hover:bg-destructive/90">
+            {deleteVideo.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Delete"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
     </>
   );
 }

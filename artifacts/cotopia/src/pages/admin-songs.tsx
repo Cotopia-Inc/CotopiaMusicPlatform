@@ -1,15 +1,21 @@
-import { useListSongs, getListSongsQueryKey, useUpdateSong } from "@workspace/api-client-react";
+import { useListSongs, getListSongsQueryKey, useUpdateSong, useDeleteSong } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Search, Star, Sparkles, EyeOff, Eye, Loader2, AlertTriangle } from "lucide-react";
+import { Search, Star, Sparkles, EyeOff, Eye, Loader2, AlertTriangle, Trash2 } from "lucide-react";
 import { UserLink } from "@/components/user-link";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { CopyrightStrikeModal, type StrikeTarget } from "@/components/copyright-strike-modal";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel,
+  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
+  AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function AdminSongs() {
   const [search, setSearch] = useState("");
@@ -17,6 +23,7 @@ export default function AdminSongs() {
   const queryClient = useQueryClient();
   const [pendingId, setPendingId] = useState<number | null>(null);
   const [strikeTarget, setStrikeTarget] = useState<StrikeTarget | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: number; title: string } | null>(null);
 
   const { data, isLoading } = useListSongs(
     { q: search, limit: 100 },
@@ -24,6 +31,7 @@ export default function AdminSongs() {
   );
 
   const updateSong = useUpdateSong();
+  const deleteSong = useDeleteSong();
 
   const patchCache = (id: number, patch: Record<string, unknown>) =>
     queryClient.setQueryData(
@@ -59,6 +67,25 @@ export default function AdminSongs() {
         },
         onError: () => toast({ variant: "destructive", title: "Failed to update song" }),
         onSettled: () => setPendingId(null),
+      }
+    );
+  };
+
+  const handleDelete = () => {
+    if (!deleteTarget) return;
+    const { id } = deleteTarget;
+    deleteSong.mutate(
+      { id },
+      {
+        onSuccess: () => {
+          toast({ title: "Song deleted" });
+          queryClient.setQueryData(
+            getListSongsQueryKey({ q: search, limit: 100 }),
+            (old: any) => old ? { ...old, items: old.items?.filter((s: any) => s.id !== id) } : old
+          );
+          setDeleteTarget(null);
+        },
+        onError: () => toast({ variant: "destructive", title: "Failed to delete song" }),
       }
     );
   };
@@ -163,56 +190,89 @@ export default function AdminSongs() {
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex items-center justify-end gap-1.5">
                         {/* Publish / Unpublish */}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className={`text-xs gap-1.5 ${
-                            isPublished
-                              ? "text-muted-foreground hover:text-red-400 hover:border-red-400/40"
-                              : "text-green-400 border-green-500/40 hover:bg-green-500/10"
-                          }`}
-                          onClick={() => handleTogglePublish(song.id, song.status)}
-                          disabled={isBusy}
-                        >
-                          {isBusy ? (
-                            <Loader2 className="w-3 h-3 animate-spin" />
-                          ) : isPublished ? (
-                            <EyeOff className="w-3 h-3" />
-                          ) : (
-                            <Eye className="w-3 h-3" />
-                          )}
-                          {isPublished ? "Unpublish" : "Publish"}
-                        </Button>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              aria-label={isPublished ? "Unpublish" : "Publish"}
+                              className={`h-8 w-8 ${
+                                isPublished
+                                  ? "text-muted-foreground hover:text-red-400 hover:border-red-400/40"
+                                  : "text-green-400 border-green-500/40 hover:bg-green-500/10"
+                              }`}
+                              onClick={() => handleTogglePublish(song.id, song.status)}
+                              disabled={isBusy}
+                            >
+                              {isBusy ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : isPublished ? (
+                                <EyeOff className="w-3.5 h-3.5" />
+                              ) : (
+                                <Eye className="w-3.5 h-3.5" />
+                              )}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>{isPublished ? "Unpublish" : "Publish"}</TooltipContent>
+                        </Tooltip>
 
                         {/* Feature / Unfeature */}
-                        <Button
-                          variant={song.isFeatured ? "default" : "outline"}
-                          size="sm"
-                          className={`text-xs gap-1.5 ${song.isFeatured ? "bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border-amber-500/30 border" : ""}`}
-                          onClick={() => handleToggleFeature(song.id, song.isFeatured)}
-                          disabled={isBusy}
-                        >
-                          <Sparkles className="w-3 h-3" />
-                          {song.isFeatured ? "Unfeature" : "Feature"}
-                        </Button>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant={song.isFeatured ? "default" : "outline"}
+                              size="icon"
+                              aria-label={song.isFeatured ? "Unfeature" : "Feature"}
+                              className={`h-8 w-8 ${song.isFeatured ? "bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border-amber-500/30 border" : ""}`}
+                              onClick={() => handleToggleFeature(song.id, song.isFeatured)}
+                              disabled={isBusy}
+                            >
+                              <Sparkles className="w-3.5 h-3.5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>{song.isFeatured ? "Unfeature" : "Feature"}</TooltipContent>
+                        </Tooltip>
 
                         {/* Issue Strike */}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-xs gap-1.5 text-red-400 border-red-500/30 hover:bg-red-500/10"
-                          onClick={() => setStrikeTarget({
-                            userId: (song as any).uploaderId ?? (song as any).userId ?? 0,
-                            uploaderName: song.artistName ?? "Unknown",
-                            contentType: "song",
-                            contentId: song.id,
-                            contentTitle: song.title,
-                          })}
-                        >
-                          <AlertTriangle className="w-3 h-3" />Strike
-                        </Button>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              aria-label="Strike"
+                              className="h-8 w-8 text-red-400 border-red-500/30 hover:bg-red-500/10"
+                              onClick={() => setStrikeTarget({
+                                userId: (song as any).uploaderId ?? (song as any).userId ?? 0,
+                                uploaderName: song.artistName ?? "Unknown",
+                                contentType: "song",
+                                contentId: song.id,
+                                contentTitle: song.title,
+                              })}
+                            >
+                              <AlertTriangle className="w-3.5 h-3.5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Issue strike</TooltipContent>
+                        </Tooltip>
+
+                        {/* Delete */}
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              aria-label="Delete song"
+                              data-testid={`delete-song-${song.id}`}
+                              className="h-8 w-8 text-red-500 border-red-500/40 hover:bg-red-500/15 hover:text-red-400"
+                              onClick={() => setDeleteTarget({ id: song.id, title: song.title })}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Delete song</TooltipContent>
+                        </Tooltip>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -235,6 +295,23 @@ export default function AdminSongs() {
       target={strikeTarget}
       onClose={() => setStrikeTarget(null)}
     />
+
+    <AlertDialog open={deleteTarget !== null} onOpenChange={open => !open && setDeleteTarget(null)}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete this song?</AlertDialogTitle>
+          <AlertDialogDescription>
+            {deleteTarget && <>"{deleteTarget.title}" will be permanently removed. This action cannot be undone.</>}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={deleteSong.isPending}>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={handleDelete} disabled={deleteSong.isPending} className="bg-destructive hover:bg-destructive/90">
+            {deleteSong.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Delete"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
     </>
   );
 }
