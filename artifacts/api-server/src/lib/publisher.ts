@@ -11,11 +11,43 @@ import {
 } from "@workspace/db";
 import { logger } from "./logger";
 
+/**
+ * True when a releaseDate ("YYYY-MM-DD" or null) has not arrived yet.
+ * A null/empty releaseDate means "no schedule" — never treated as future.
+ */
+export function isFutureRelease(releaseDate: string | null | undefined): boolean {
+  if (!releaseDate) return false;
+  const today = new Date().toISOString().slice(0, 10);
+  return releaseDate > today;
+}
+
+/**
+ * Publishes a song or video, but refuses to do so early: if the content's own
+ * releaseDate hasn't arrived yet, this is a no-op (the scheduled-release job
+ * will publish it once the date arrives). This is the single choke point for
+ * publishing, so no call site — direct admin action, legacy submission PATCH,
+ * or the scheduler itself — can push content live ahead of its release date.
+ */
 export async function publishContent(
   type: "song" | "video",
   contentId: number,
   opts: { submissionId?: number } = {}
-) {
+): Promise<{ published: boolean; releaseDate: string | null }> {
+  const table = type === "song" ? songsTable : videosTable;
+  const [row] = await db
+    .select({ releaseDate: table.releaseDate })
+    .from(table)
+    .where(eq(table.id, contentId))
+    .limit(1);
+  const releaseDate = row?.releaseDate ?? null;
+
+  if (isFutureRelease(releaseDate)) {
+    // Make sure it's at least marked "approved" so the scheduler will pick it up.
+    await db.update(table).set({ status: "approved" }).where(eq(table.id, contentId));
+    logger.warn({ type, contentId, releaseDate }, "publishContent blocked: release date has not arrived yet");
+    return { published: false, releaseDate };
+  }
+
   if (type === "song") {
     await db.update(songsTable).set({ status: "published" }).where(eq(songsTable.id, contentId));
     await sendFollowerNotifications("song", contentId, opts.submissionId);
@@ -30,6 +62,7 @@ export async function publishContent(
     }
   }
   await createReleaseEvent(type, contentId);
+  return { published: true, releaseDate };
 }
 
 async function createReleaseEvent(type: "song" | "video", contentId: number) {

@@ -11,6 +11,7 @@ import {
   CreateSongCommentBody, RateSongParams, RateSongBody,
 } from "@workspace/api-zod";
 import { isFeatureRotationEnabled, rotateFeatured, FEATURED_POOL_SIZE } from "../lib/featured";
+import { isFutureRelease } from "../lib/publisher";
 import { requireAuth, optionalAuth, type AuthRequest } from "../lib/auth";
 import { getPrimaryBadgesForUsers } from "./badges";
 
@@ -285,6 +286,14 @@ router.patch("/songs/:id", requireAuth, async (req: AuthRequest, res): Promise<v
       res.status(403).json({ error: "You don't have permission to modify this content." });
       return;
     }
+  }
+
+  // Guard: never allow a direct status change to "published" to bypass a
+  // scheduled release date — the scheduled release job will publish it
+  // automatically once the date arrives.
+  if (parsed.data.status === "published" && isFutureRelease(existing.releaseDate)) {
+    res.status(409).json({ error: `This song is scheduled to release on ${existing.releaseDate} and cannot be published early.` });
+    return;
   }
 
   await db.update(songsTable).set(parsed.data).where(eq(songsTable.id, params.data.id));

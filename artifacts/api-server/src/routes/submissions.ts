@@ -8,7 +8,7 @@ import {
   ReviewSubmissionParams, ReviewSubmissionBody,
 } from "@workspace/api-zod";
 import { requireAuth, requireVerifiedEmail, type AuthRequest } from "../lib/auth";
-import { publishContent } from "../lib/publisher";
+import { publishContent, isFutureRelease } from "../lib/publisher";
 import { awardBadgeByName } from "./badges";
 
 const BETA_END_DATE = new Date("2026-12-31T23:59:59Z");
@@ -271,13 +271,32 @@ router.patch("/submissions/:id", requireAuth, async (req: AuthRequest, res): Pro
     return;
   }
 
+  // Guard: a direct "published" status must never bypass a scheduled release
+  // date. Re-route it through the same "approved" branch below, which already
+  // knows how to defer to the release date instead of publishing immediately.
+  const requestedBody = { ...parsed.data };
+  if (requestedBody.status === "published" && existingBeforeUpdate.contentId) {
+    let releaseDate: string | null = null;
+    try {
+      const meta = JSON.parse(existingBeforeUpdate.submitterNotes ?? "{}");
+      if (meta.releaseDate) releaseDate = meta.releaseDate as string;
+    } catch { /* ignore */ }
+    const contentTable = existingBeforeUpdate.type === "song" ? songsTable : videosTable;
+    const [contentRow] = await db.select({ releaseDate: contentTable.releaseDate })
+      .from(contentTable).where(eq(contentTable.id, existingBeforeUpdate.contentId)).limit(1);
+    const effectiveReleaseDate = contentRow?.releaseDate ?? releaseDate;
+    if (isFutureRelease(effectiveReleaseDate)) {
+      requestedBody.status = "approved";
+    }
+  }
+
   const [submission] = await db.update(submissionsTable)
-    .set({ ...parsed.data })
+    .set(requestedBody)
     .where(eq(submissionsTable.id, params.data.id))
     .returning();
 
   // ── Approval flow ────────────────────────────────────────────────────────
-  if (parsed.data.status === "approved" && submission.contentId) {
+  if (requestedBody.status === "approved" && submission.contentId) {
     const enriched = await enrichSubmission(submission);
 
     // Parse releaseDate from submitterNotes JSON
@@ -287,8 +306,7 @@ router.patch("/submissions/:id", requireAuth, async (req: AuthRequest, res): Pro
       if (meta.releaseDate) releaseDate = meta.releaseDate as string;
     } catch { /* ignore */ }
 
-    const today = new Date().toISOString().slice(0, 10);
-    const hasFutureDate = releaseDate && releaseDate > today;
+    const hasFutureDate = isFutureRelease(releaseDate);
 
     if (hasFutureDate) {
       // Store releaseDate on the content row and leave it as "approved" (not published yet)
@@ -328,7 +346,7 @@ router.patch("/submissions/:id", requireAuth, async (req: AuthRequest, res): Pro
   }
 
   // ── Rejection flow ───────────────────────────────────────────────────────
-  if (parsed.data.status === "rejected") {
+  if (requestedBody.status === "rejected") {
     const enriched = await enrichSubmission(submission);
     await db.insert(notificationsTable).values({
       userId: submission.userId,
@@ -343,7 +361,10 @@ router.patch("/submissions/:id", requireAuth, async (req: AuthRequest, res): Pro
   }
 
   // ── Manual publish (legacy path) ─────────────────────────────────────────
-  if (parsed.data.status === "published" && submission.contentId) {
+  // Reaches here only if requestedBody.status stayed "published" — i.e. the
+  // release date has already arrived (or there is none). publishContent()
+  // itself double-checks the release date as a final safety net.
+  if (requestedBody.status === "published" && submission.contentId) {
     await publishContent(submission.type as "song" | "video", submission.contentId, { submissionId: submission.id });
   }
 
@@ -432,8 +453,7 @@ router.post("/submissions/:id/review", requireAuth, async (req: AuthRequest, res
     const meta = JSON.parse(submission.submitterNotes ?? "{}");
     if (meta.releaseDate) releaseDate = meta.releaseDate as string;
   } catch { /* ignore */ }
-  const today = new Date().toISOString().slice(0, 10);
-  const hasFutureDate = !!releaseDate && releaseDate > today;
+  const hasFutureDate = isFutureRelease(releaseDate);
 
   const update: Partial<typeof submissionsTable.$inferInsert> = {};
   let auditAction = "";

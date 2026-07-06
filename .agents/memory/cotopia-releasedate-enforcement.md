@@ -24,3 +24,21 @@ owner/staff-only surface (own library/history, own analytics, submissions review
 editor-picks admin selection). User-owned collections (favorites, playlists, library/history)
 don't independently re-filter by status/releaseDate — this is accepted as-is since users can
 only add items to those from surfaces that were already gated when added.
+
+**Write-side gate (publish pipeline), added Jul 2026 for songs AND videos symmetrically:**
+reading gates aren't enough — any code path that can *write* `status: "published"` must also
+check the releaseDate before doing so, or approved-but-future content leaks the moment anyone
+flips its status. `publishContent()` in publisher.ts is the single choke point (used by the
+scheduler and by admin-approval flows) and now re-fetches the row's own releaseDate and refuses
+to publish (keeps status "approved") if it's in the future — exported `isFutureRelease(releaseDate)`
+helper is the shared source of truth for the date comparison. Found and closed 3 separate bypass
+vectors that skipped this choke point entirely: (1) legacy `PATCH /submissions/:id` with
+`{status:"published"}` called publishContent directly with no date check — fixed by redirecting
+the requested status to "approved" when the resolved release date (from submitterNotes JSON or
+the live content row) is future; (2) `PATCH /songs/:id` and (3) `PATCH /videos/:id` let any
+owner/admin set `status:"published"` directly via a raw `db.update(...).set(parsed.data)` with
+zero gating — fixed by rejecting the request with 409 (not silently downgrading — the update
+schemas for these endpoints don't even include "approved" as a valid enum value, so downgrade
+isn't type-safe) when status is "published" and the existing row's releaseDate is future.
+Any *new* write path that can set a song/video to "published" must call `isFutureRelease` (or
+route through `publishContent`) or it will reopen this leak.
