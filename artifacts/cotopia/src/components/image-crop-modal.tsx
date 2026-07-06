@@ -281,6 +281,7 @@ export function ImageCropModal({
   return createPortal(
     <div
       className="fixed inset-0 z-[100] bg-black/75 flex items-center justify-center p-4"
+      style={{ pointerEvents: "auto" }}
       onClick={(e) => {
         if (e.target === e.currentTarget) onCancel();
       }}
