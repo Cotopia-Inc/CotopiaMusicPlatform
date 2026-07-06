@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { Radio, Heart, Users, Lightbulb, Shield, ArrowRight, Music, Video, Globe, MessageCircle, TrendingUp, Star, LogIn, UserPlus } from "lucide-react";
+import { Heart, Users, Lightbulb, Shield, ArrowRight, Music, Video, Globe, MessageCircle, TrendingUp, Star, LogIn, UserPlus } from "lucide-react";
 import { useSeo } from "@/hooks/use-seo";
 
 interface AboutProps {
@@ -42,7 +42,7 @@ export default function About({ showAuthNav = false }: AboutProps) {
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-5" />
         <div className="relative max-w-4xl mx-auto px-6 py-24 text-center space-y-6">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium mb-2">
-            <Radio className="w-4 h-4" />
+            <img src="/logo.jpg" alt="Cotopia" className="w-4 h-4 rounded-sm object-cover flex-shrink-0" />
             Everyday Radio by Cotopia
           </div>
           <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight leading-none">
@@ -239,7 +239,7 @@ export default function About({ showAuthNav = false }: AboutProps) {
         <section className="text-center space-y-4 py-8 border-t border-border/30">
           <p className="text-lg font-medium text-muted-foreground">Thank you for being part of the journey.</p>
           <div className="flex items-center justify-center gap-2">
-            <Radio className="w-4 h-4 text-primary" />
+            <img src="/logo.jpg" alt="Cotopia" className="w-4 h-4 rounded-sm object-cover flex-shrink-0" />
             <span className="text-sm font-semibold">Everyday Radio by Cotopia</span>
           </div>
           <p className="text-xs text-muted-foreground/50">Powered by Cotopia.</p>
