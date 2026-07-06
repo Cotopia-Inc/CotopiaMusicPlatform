@@ -606,7 +606,7 @@ export default function SongDetail() {
         {/* Header */}
         <div className="px-4 py-3 border-b border-border bg-card/80 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+            <div className={`w-2 h-2 rounded-full ${listenCount > 0 ? "bg-green-500 animate-pulse" : "bg-muted-foreground/40"}`} />
             <span className="text-sm font-semibold">Fan Chat</span>
           </div>
           <div className="flex items-center gap-1 text-xs text-muted-foreground">

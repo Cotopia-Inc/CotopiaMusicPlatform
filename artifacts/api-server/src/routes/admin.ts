@@ -280,23 +280,31 @@ router.get("/admin/analytics", requireAuth, requireRole(...ADMIN_ROLES), async (
     .groupBy(analyticsEventsTable.contentId);
   const videoCompletionMap = new Map(videoCompletionCounts.map(r => [r.contentId, r.count]));
 
+  // A completion can never legitimately exceed the plays/views it's derived
+  // from — a session that never registered as a play can't produce a
+  // completion. Historical duplicate "*_complete" events (e.g. from
+  // repeat-one looping before that was deduped client-side) can still make
+  // the raw count look higher than the play count, so clamp both the
+  // displayed completion count and rate to stay internally consistent.
   const topSongsWithRatings = await Promise.all(topSongs.map(async (s) => {
     const [r] = await db.select({ avg: avg(ratingsTable.rating) }).from(ratingsTable).where(and(eq(ratingsTable.contentType, "song"), eq(ratingsTable.contentId, s.id)));
-    const completions = songCompletionMap.get(s.id) ?? 0;
-    const completionRate = s.playCount > 0 ? Math.round((completions / s.playCount) * 100) : null;
+    const rawCompletions = songCompletionMap.get(s.id) ?? 0;
+    const completions = Math.min(rawCompletions, s.playCount);
+    const completionRate = s.playCount > 0 ? Math.min(100, Math.round((completions / s.playCount) * 100)) : null;
     return { ...s, avgRating: r?.avg ? parseFloat(r.avg) : null, completions, completionRate };
   }));
 
   const topVideosWithCompletion = topVideos.map(v => {
-    const completions = videoCompletionMap.get(v.id) ?? 0;
-    const completionRate = v.viewCount > 0 ? Math.round((completions / v.viewCount) * 100) : null;
+    const rawCompletions = videoCompletionMap.get(v.id) ?? 0;
+    const completions = Math.min(rawCompletions, v.viewCount);
+    const completionRate = v.viewCount > 0 ? Math.min(100, Math.round((completions / v.viewCount) * 100)) : null;
     return { ...v, completions, completionRate };
   });
 
-  const totalSongCompletions = Number(songCompletionsRow?.count ?? 0);
-  const totalVideoCompletions = Number(videoCompletionsRow?.count ?? 0);
   const totalPlays = Number(totalPlaysRow?.total ?? 0);
   const totalViews = Number(totalViewsRow?.total ?? 0);
+  const totalSongCompletions = Math.min(Number(songCompletionsRow?.count ?? 0), totalPlays);
+  const totalVideoCompletions = Math.min(Number(videoCompletionsRow?.count ?? 0), totalViews);
 
   res.json({
     totalUsers: totalUsersRow?.count ?? 0,
@@ -315,8 +323,8 @@ router.get("/admin/analytics", requireAuth, requireRole(...ADMIN_ROLES), async (
     topVideos: topVideosWithCompletion,
     totalSongCompletions,
     totalVideoCompletions,
-    songCompletionRate: totalPlays > 0 ? Math.round((totalSongCompletions / totalPlays) * 100) : null,
-    videoCompletionRate: totalViews > 0 ? Math.round((totalVideoCompletions / totalViews) * 100) : null,
+    songCompletionRate: totalPlays > 0 ? Math.min(100, Math.round((totalSongCompletions / totalPlays) * 100)) : null,
+    videoCompletionRate: totalViews > 0 ? Math.min(100, Math.round((totalVideoCompletions / totalViews) * 100)) : null,
   });
 });
 

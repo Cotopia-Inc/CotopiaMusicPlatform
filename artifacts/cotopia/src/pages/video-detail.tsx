@@ -100,6 +100,12 @@ export default function VideoDetail() {
   // fail to actually play (autoplay restrictions, bad URL, network error),
   // which would otherwise inflate the view count and leave the timer stuck.
   const viewRecordedForRef = useRef<number | null>(null);
+  // Guards against double-counting completions: at most one "video_complete"
+  // per loaded video. Without this, replaying the same video after it ends
+  // (without navigating away) would log a fresh completion every time even
+  // though the view count only ever counts once per load, inflating the
+  // completion rate above 100%.
+  const completionRecordedForRef = useRef<number | null>(null);
 
   // Only counted as an active watcher while the video is actually playing.
   // Pausing or stopping immediately releases the presence slot; no fake/random counts.
@@ -142,7 +148,8 @@ export default function VideoDetail() {
   const handleVideoEnded = useCallback(() => {
     setIsVideoPlaying(false);
     setIsActuallyPlaying(false);
-    if (videoId) {
+    if (videoId && completionRecordedForRef.current !== videoId) {
+      completionRecordedForRef.current = videoId;
       trackEvent.mutate({ data: { eventType: "content", eventName: "video_complete", contentType: "video", contentId: videoId } });
     }
   }, [videoId]);
@@ -469,7 +476,7 @@ export default function VideoDetail() {
           {/* Chat header */}
           <div className="px-3 py-2.5 border-b border-white/10 flex items-center justify-between flex-shrink-0">
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+              <div className={`w-2 h-2 rounded-full ${viewerCount > 0 ? "bg-green-400 animate-pulse" : "bg-white/30"}`} />
               <span className="text-xs font-semibold text-white">Live Chat</span>
             </div>
             <div className="flex items-center gap-1 text-[10px] text-white/50">

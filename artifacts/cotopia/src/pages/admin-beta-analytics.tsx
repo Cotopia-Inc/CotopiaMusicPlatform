@@ -40,7 +40,7 @@ function fmt(n: number | undefined) {
 }
 
 function pct(rate: number | undefined) {
-  return Math.round(((rate ?? 0) * (rate && rate <= 1 ? 100 : 1)));
+  return Math.min(100, Math.round(((rate ?? 0) * (rate && rate <= 1 ? 100 : 1))));
 }
 
 function rateColor(rate: number) {

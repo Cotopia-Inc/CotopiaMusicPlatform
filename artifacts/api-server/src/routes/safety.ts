@@ -641,14 +641,21 @@ router.get("/admin/beta-analytics", requireAuth, requireRole(...ADMIN_ROLES), as
     `).then(r => r.rows as Array<{ song_id: number; title: string; artist_name: string; plays: number; completions: number }>),
   ]);
 
-  const songCompletionRates = songCompletionRows.map(row => ({
-    songId: row.song_id,
-    title: row.title,
-    artistName: row.artist_name,
-    plays: Number(row.plays),
-    completions: Number(row.completions),
-    rate: Math.round((Number(row.completions) / Number(row.plays)) * 100),
-  }));
+  // Completions can't legitimately exceed plays for the same content — clamp
+  // both so historical duplicate completion events (e.g. from repeat-one
+  // looping, now deduped client-side) don't display a >100% rate.
+  const songCompletionRates = songCompletionRows.map(row => {
+    const plays = Number(row.plays);
+    const completions = Math.min(Number(row.completions), plays);
+    return {
+      songId: row.song_id,
+      title: row.title,
+      artistName: row.artist_name,
+      plays,
+      completions,
+      rate: plays > 0 ? Math.min(100, Math.round((completions / plays) * 100)) : 0,
+    };
+  });
 
   res.json({
     feedbackTotal,

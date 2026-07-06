@@ -56,12 +56,22 @@ export function Player() {
   const recordSongPlay = useRecordSongPlay();
   const recordVideoView = useRecordVideoView();
   const lastTrackedId = useRef<number | null>(null);
+  // Dedupe guard for completions, mirroring lastTrackedId for plays. Without
+  // this, repeat-one mode (which loops the same track via media.currentTime =
+  // 0; media.play() without ever changing track.id) fires a fresh "ended"
+  // event — and therefore a fresh completion — on every loop, while the play
+  // count stays pinned at 1 for the whole session. That let completions grow
+  // unboundedly past the play/view count and produced >100% completion rates.
+  const lastCompletedId = useRef<number | null>(null);
 
-  // Reset the dedupe guard whenever the loaded track changes, so a genuine
-  // playback of the new track can be recorded once it actually starts.
+  // Reset the dedupe guards whenever the loaded track changes, so a genuine
+  // playback of the new track can be recorded once it actually starts/ends.
   useEffect(() => {
     if (!track || track.id !== lastTrackedId.current) {
       lastTrackedId.current = null;
+    }
+    if (!track || track.id !== lastCompletedId.current) {
+      lastCompletedId.current = null;
     }
   }, [track?.id]);
 
@@ -106,6 +116,12 @@ export function Player() {
     const handler = (e: Event) => {
       const completed = (e as CustomEvent<{ track: typeof track }>).detail?.track;
       if (!completed) return;
+      // At most one completion per loaded track — see lastCompletedId above.
+      // Without this, looping (repeat-one) or manually replaying the same
+      // track after it ends would log a new completion every time even
+      // though only one play was ever counted for the session.
+      if (completed.id === lastCompletedId.current) return;
+      lastCompletedId.current = completed.id;
       const eventName = completed.videoUrl ? "video_complete" : "song_complete";
       trackEvent.mutate({
         data: {
