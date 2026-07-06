@@ -163,6 +163,16 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     audio.addEventListener("durationchange", () => setDuration(audio.duration || 0));
     audio.addEventListener("ended", () => { setPlaying(false); if (trackRef.current) window.dispatchEvent(new CustomEvent("cotopia:track_complete", { detail: { track: trackRef.current } })); autoAdvanceRef.current(); });
     audio.addEventListener("play", () => setPlaying(true));
+    // "play" fires as soon as playback is *requested* (immediately after
+    // calling play()/autoplay), even if the source is broken and never
+    // actually renders audio. "playing" only fires once playback has
+    // genuinely resumed/started after buffering — that's the correct signal
+    // to record a play count, so tracking is gated on it, not "play".
+    audio.addEventListener("playing", () => {
+      if (trackRef.current) {
+        window.dispatchEvent(new CustomEvent("cotopia:playback_started", { detail: { trackId: trackRef.current.id, isVideo: false } }));
+      }
+    });
     audio.addEventListener("pause", () => setPlaying(false));
     audio.addEventListener("error", () => setPlaying(false));
 
@@ -230,6 +240,14 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       durationchange: () => setDuration(el.duration || 0),
       ended: () => { setIsPlaying(false); if (trackRef.current) window.dispatchEvent(new CustomEvent("cotopia:track_complete", { detail: { track: trackRef.current } })); autoAdvanceRef.current(); },
       play: () => setIsPlaying(true),
+      // See the audio "playing" listener above for why tracking is gated on
+      // "playing" rather than "play" — "play" can fire even when the source
+      // is broken and playback never actually renders any frames.
+      playing: () => {
+        if (trackRef.current) {
+          window.dispatchEvent(new CustomEvent("cotopia:playback_started", { detail: { trackId: trackRef.current.id, isVideo: true } }));
+        }
+      },
       pause: () => setIsPlaying(false),
       error: () => setIsPlaying(false),
     };

@@ -16,3 +16,4 @@
 - [Cotopia image crop-before-upload pattern](cotopia-image-crop-uploads.md) — every image upload field routes through ImageCropModal before uploadFile, not just profile avatar/banner; match aspectRatio to display context
 - [Cotopia releaseDate enforcement scope](cotopia-releasedate-enforcement.md) — every public song/video query needs status+releaseDate gate, not just status; detail-by-id routes need it too, staff/owner bypass with 404 (not 403) for non-eligible
 - [Cotopia inline media playback bypasses view/play tracking](cotopia-inline-media-tracking.md) — any page-local `<video>`/`<audio>` playback outside the global Player must call the record-view/play mutation itself
+- [Cotopia play/view tracking event timing](cotopia-play-tracking-event-timing.md) — gate count/analytics increments on native "playing" event, never on click or "play" alone (fires even if source later errors)

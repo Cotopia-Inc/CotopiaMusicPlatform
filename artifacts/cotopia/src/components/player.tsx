@@ -57,22 +57,42 @@ export function Player() {
   const recordVideoView = useRecordVideoView();
   const lastTrackedId = useRef<number | null>(null);
 
+  // Reset the dedupe guard whenever the loaded track changes, so a genuine
+  // playback of the new track can be recorded once it actually starts.
   useEffect(() => {
-    if (track && track.id !== lastTrackedId.current) {
-      lastTrackedId.current = track.id;
-      trackEvent.mutate({
-        data: {
-          eventType: "content", eventName: "song_play",
-          contentType: "song", contentId: track.id,
-        },
-      });
-      if (isVideoTrack) {
-        recordVideoView.mutate({ id: track.id });
-      } else {
-        recordSongPlay.mutate({ id: track.id });
-      }
+    if (!track || track.id !== lastTrackedId.current) {
+      lastTrackedId.current = null;
     }
   }, [track?.id]);
+
+  // Only record a play/view (and bump the play/view count) once the media
+  // element itself confirms playback actually began — never just because a
+  // track was loaded/selected. This avoids inflating counts (and leaving the
+  // timer stuck at 0:00) when playback is blocked or fails to start (e.g.
+  // autoplay restrictions, a bad stream URL, or a network error).
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<{ trackId: number; isVideo: boolean }>).detail;
+      if (!detail || detail.trackId == null) return;
+      if (detail.trackId === lastTrackedId.current) return;
+      lastTrackedId.current = detail.trackId;
+      trackEvent.mutate({
+        data: {
+          eventType: "content",
+          eventName: detail.isVideo ? "video_play" : "song_play",
+          contentType: detail.isVideo ? "video" : "song",
+          contentId: detail.trackId,
+        },
+      });
+      if (detail.isVideo) {
+        recordVideoView.mutate({ id: detail.trackId });
+      } else {
+        recordSongPlay.mutate({ id: detail.trackId });
+      }
+    };
+    window.addEventListener("cotopia:playback_started", handler);
+    return () => window.removeEventListener("cotopia:playback_started", handler);
+  }, []);
 
   // Track natural song/video completion events
   useEffect(() => {

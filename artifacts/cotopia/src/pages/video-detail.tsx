@@ -94,6 +94,12 @@ export default function VideoDetail() {
 
   // Tracks the video element's actual play/pause state (not just whether it's mounted).
   const [isActuallyPlaying, setIsActuallyPlaying] = useState(false);
+  // Guards against double-counting: only record a view once per loaded video,
+  // and only once the <video> element genuinely confirms playback started
+  // (never just because the Play button was clicked) — clicking Play can
+  // fail to actually play (autoplay restrictions, bad URL, network error),
+  // which would otherwise inflate the view count and leave the timer stuck.
+  const viewRecordedForRef = useRef<number | null>(null);
 
   // Only counted as an active watcher while the video is actually playing.
   // Pausing or stopping immediately releases the presence slot; no fake/random counts.
@@ -131,13 +137,7 @@ export default function VideoDetail() {
   const handlePlayVideo = useCallback(() => {
     setIsVideoPlaying(true);
     setTimeout(() => videoRef.current?.play(), 50);
-    if (videoId) {
-      trackEvent.mutate({ data: { eventType: "content", eventName: "video_play", contentType: "video", contentId: videoId } });
-      recordVideoView.mutate({ id: videoId }, {
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetVideoQueryKey(videoId) }),
-      });
-    }
-  }, [videoId]);
+  }, []);
 
   const handleVideoEnded = useCallback(() => {
     setIsVideoPlaying(false);
@@ -147,8 +147,28 @@ export default function VideoDetail() {
     }
   }, [videoId]);
 
+  // The native "play" event fires as soon as playback is *requested* (e.g.
+  // right after calling play() or from the autoPlay attribute) — it does NOT
+  // mean the browser actually has data and is rendering frames. A bad/broken
+  // source can still fire "play" and then immediately error out. Only
+  // "isActuallyPlaying" (used for presence heartbeats) is driven off it here.
   const handleVideoPlayEvent = useCallback(() => setIsActuallyPlaying(true), []);
   const handleVideoPauseEvent = useCallback(() => setIsActuallyPlaying(false), []);
+
+  // "playing" only fires once the element has genuinely resumed/started
+  // rendering media after buffering — this is the correct signal that
+  // playback truly began. Record the view/analytics event exactly once per
+  // loaded video here, instead of eagerly when the Play button is clicked or
+  // on the unreliable "play" event (which may never result in real playback).
+  const handleVideoPlayingEvent = useCallback(() => {
+    if (videoId && viewRecordedForRef.current !== videoId) {
+      viewRecordedForRef.current = videoId;
+      trackEvent.mutate({ data: { eventType: "content", eventName: "video_play", contentType: "video", contentId: videoId } });
+      recordVideoView.mutate({ id: videoId }, {
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetVideoQueryKey(videoId) }),
+      });
+    }
+  }, [videoId]);
 
   const handleFullscreen = useCallback(() => {
     if (videoRef.current) {
@@ -398,6 +418,7 @@ export default function VideoDetail() {
             autoPlay
             onEnded={handleVideoEnded}
             onPlay={handleVideoPlayEvent}
+            onPlaying={handleVideoPlayingEvent}
             onPause={handleVideoPauseEvent}
             style={{ zIndex: 10 }}
           />
@@ -414,6 +435,8 @@ export default function VideoDetail() {
             <div className="absolute inset-0 md:pr-72 flex items-center justify-center">
               <button
                 onClick={handlePlayVideo}
+                aria-label={`Play ${video.title}`}
+                title={`Play ${video.title}`}
                 className="bg-primary text-primary-foreground rounded-full p-5 hover:scale-110 transition-transform duration-300 shadow-2xl shadow-primary/40"
               >
                 <Play className="w-10 h-10 fill-current ml-1" />
