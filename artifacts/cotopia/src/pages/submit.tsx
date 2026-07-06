@@ -17,7 +17,7 @@ import { useLocation, Link } from "wouter";
 import { useAuth } from "@/lib/auth";
 import {
   Music, Film, CheckCircle, CreditCard, FileText,
-  ChevronRight, ChevronLeft, Radio, Star, Zap, Upload,
+  ChevronRight, ChevronLeft, Star, Zap, Upload,
   Calendar, AlertCircle, Loader2, ImageIcon, ListMusic, ListVideo, X,
 } from "lucide-react";
 
@@ -718,7 +718,7 @@ export default function Submit() {
       {/* Header */}
       <div className="space-y-2">
         <div className="flex items-center gap-2 text-primary text-sm font-medium">
-          <Radio className="w-4 h-4" /><span>EVERYDAY RADIO</span>
+          <img src="/logo.jpg" alt="Cotopia" className="w-4 h-4 rounded-sm object-cover flex-shrink-0" /><span>EVERYDAY RADIO</span>
         </div>
         <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">Choose Your Creator Service</h1>
         <p className="text-muted-foreground">Select the publishing and review option that best fits your release.</p>
@@ -906,7 +906,7 @@ export default function Submit() {
               const icon = p === "single"
                 ? <Music className={`w-5 h-5 ${locked ? "text-muted-foreground" : "text-primary"}`} />
                 : p === "basic"
-                  ? <Radio className="w-5 h-5 text-primary" />
+                  ? <img src="/logo.jpg" alt="Cotopia" className="w-5 h-5 rounded-sm object-cover" />
                   : <Zap className="w-5 h-5 text-amber-400" />;
               const perLabel = "/ submission";
               const subtitle = p === "single"
@@ -1195,7 +1195,7 @@ export default function Submit() {
             </div>
           )}
           <div className="flex items-center justify-center gap-2 p-4 rounded-lg bg-primary/10 border border-primary/20 max-w-xs mx-auto">
-            <Radio className="w-4 h-4 text-primary" />
+            <img src="/logo.jpg" alt="Cotopia" className="w-4 h-4 rounded-sm object-cover flex-shrink-0" />
             <p className="text-sm font-medium">Status: <span className="text-primary">Received</span></p>
           </div>
           {(() => {
@@ -1287,7 +1287,7 @@ export default function Submit() {
 
       {/* ── Beta notice ── */}
       <div className="flex items-start gap-3 p-4 rounded-xl border border-border bg-secondary/30 text-sm text-muted-foreground">
-        <Radio className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+        <img src="/logo.jpg" alt="Cotopia" className="w-4 h-4 rounded-sm object-cover flex-shrink-0 mt-0.5" />
         <p className="leading-relaxed">
           <span className="text-foreground font-medium">Everyday Radio is currently in Beta.</span> Thank you for helping us improve the platform. Your feedback helps shape future updates.
         </p>

@@ -1,6 +1,6 @@
 import { useParams } from "wouter";
 import { useGetSong, getGetSongQueryKey } from "@workspace/api-client-react";
-import { Play, Radio } from "lucide-react";
+import { Play } from "lucide-react";
 import { RoleTag } from "@/components/role-badges";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -40,7 +40,7 @@ export default function EmbedSong() {
               <img src={song.coverUrl} alt={song.title} className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full bg-gradient-to-br from-primary/30 to-secondary flex items-center justify-center">
-                <Radio className="w-5 h-5 text-primary/60" />
+                <img src="/logo.jpg" alt="Cotopia" className="w-6 h-6 rounded-sm object-cover opacity-60" />
               </div>
             )}
           </div>
@@ -69,7 +69,7 @@ export default function EmbedSong() {
         {/* Branding */}
         <div className="px-4 pb-3 flex items-center justify-between">
           <div className="flex items-center gap-1.5">
-            <Radio className="w-3 h-3 text-primary" />
+            <img src="/logo.jpg" alt="Cotopia" className="w-3 h-3 rounded-sm object-cover flex-shrink-0" />
             <span className="text-[10px] text-muted-foreground font-medium">Everyday Radio</span>
             <span className="text-[9px] text-muted-foreground/60">· Powered by Cotopia</span>
           </div>

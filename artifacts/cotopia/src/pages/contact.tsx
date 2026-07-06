@@ -1,4 +1,4 @@
-import { Mail, Globe, Github, Instagram, Radio, ArrowLeft, Home } from "lucide-react";
+import { Mail, Globe, Github, Instagram, ArrowLeft, Home } from "lucide-react";
 import { Link } from "wouter";
 
 const XIcon = () => (
@@ -47,7 +47,7 @@ export default function Contact() {
       {/* Header */}
       <div className="space-y-2">
         <div className="flex items-center gap-2 text-primary">
-          <Radio className="w-5 h-5" />
+          <img src="/logo.jpg" alt="Cotopia" className="w-5 h-5 rounded-sm object-cover flex-shrink-0" />
           <span className="text-xs font-bold tracking-widest uppercase">Everyday Radio</span>
         </div>
         <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">Contact Us</h1>

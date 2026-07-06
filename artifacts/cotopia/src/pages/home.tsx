@@ -1,5 +1,5 @@
 import { useGetHomeFeed, getGetHomeFeedQueryKey } from "@workspace/api-client-react";
-import { Play, Radio, TrendingUp, Video, Sparkles, Compass, Music2 } from "lucide-react";
+import { Play, TrendingUp, Video, Sparkles, Compass, Music2 } from "lucide-react";
 import { RoleBadges } from "@/components/role-badges";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "wouter";
@@ -113,7 +113,7 @@ export default function Home() {
                         {art
                           ? <img src={art} alt={title ?? ""} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                           : <div className="w-full h-full flex items-center justify-center text-muted-foreground/30">
-                              {isSong ? <Music2 className="w-5 h-5" /> : isVideo ? <Video className="w-5 h-5" /> : <Radio className="w-5 h-5" />}
+                              {isSong ? <Music2 className="w-5 h-5" /> : isVideo ? <Video className="w-5 h-5" /> : <img src="/logo.jpg" alt="Cotopia" className="w-5 h-5 rounded-sm object-cover" />}
                             </div>
                         }
                       </div>
@@ -211,7 +211,7 @@ export default function Home() {
                       <img src={song.coverUrl} alt={song.title} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-secondary">
-                        <Radio className="w-8 h-8 text-primary/30" />
+                        <img src="/logo.jpg" alt="Cotopia" className="w-8 h-8 rounded-lg object-cover opacity-30" />
                       </div>
                     )}
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -279,7 +279,7 @@ export default function Home() {
                       <img src={song.coverUrl} alt={song.title} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary">
-                        <Radio className="w-6 h-6 text-primary/20" />
+                        <img src="/logo.jpg" alt="Cotopia" className="w-6 h-6 rounded-md object-cover opacity-20" />
                       </div>
                     )}
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -427,7 +427,7 @@ export default function Home() {
       {/* Footer */}
       <div className="py-8 border-t border-border/30 mt-4 space-y-3">
         <div className="flex items-center justify-center gap-2 opacity-60">
-          <Radio className="w-3 h-3 text-muted-foreground" />
+          <img src="/logo.jpg" alt="Cotopia" className="w-3 h-3 rounded-sm object-cover flex-shrink-0" />
           <span className="text-xs text-muted-foreground font-medium">Everyday Radio · Powered by Cotopia</span>
         </div>
         <p className="text-[10px] text-muted-foreground/50 text-center max-w-2xl mx-auto leading-relaxed px-4">

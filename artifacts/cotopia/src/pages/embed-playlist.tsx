@@ -1,6 +1,6 @@
 import { useParams } from "wouter";
 import { useGetPlaylist, getGetPlaylistQueryKey } from "@workspace/api-client-react";
-import { Play, Radio, Music, ListMusic } from "lucide-react";
+import { Play, Music, ListMusic } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -94,7 +94,7 @@ export default function EmbedPlaylist() {
         {/* Branding */}
         <div className="px-4 pb-3 flex items-center justify-between">
           <div className="flex items-center gap-1.5">
-            <Radio className="w-3 h-3 text-primary" />
+            <img src="/logo.jpg" alt="Cotopia" className="w-3 h-3 rounded-sm object-cover flex-shrink-0" />
             <span className="text-[10px] text-muted-foreground font-medium">Everyday Radio</span>
             <span className="text-[9px] text-muted-foreground/60">· Powered by Cotopia</span>
           </div>

@@ -8,7 +8,7 @@ import {
   useGetPresenceCount, usePostPresenceHeartbeat, useDeletePresence,
 } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Play, Pause, Heart, Star, Send, Radio, Users, MessageCircle, ArrowLeft, Trash2, Edit2, X, Save, Upload, ImageIcon, Mic2, ChevronDown, ChevronUp, AlignLeft } from "lucide-react";
+import { Play, Pause, Heart, Star, Send, Users, MessageCircle, ArrowLeft, Trash2, Edit2, X, Save, Upload, ImageIcon, Mic2, ChevronDown, ChevronUp, AlignLeft } from "lucide-react";
 import { RoleTag } from "@/components/role-badges";
 import { ImageCropModal } from "@/components/image-crop-modal";
 import { Button } from "@/components/ui/button";
@@ -314,7 +314,7 @@ export default function SongDetail() {
               <img src={song.coverUrl} alt={song.title} className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-secondary">
-                <Radio className="w-12 h-12 text-primary/40" />
+                <img src="/logo.jpg" alt="Cotopia" className="w-16 h-16 rounded-lg object-cover opacity-40" />
               </div>
             )}
           </div>

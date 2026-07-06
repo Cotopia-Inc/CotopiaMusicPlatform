@@ -2,7 +2,7 @@ import { Link, useLocation } from "wouter";
 import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Home, Compass, Music, Video, Users, Mic2, Library, Building2,
-  LayoutDashboard, LogIn, LogOut, Settings, Send, Radio, Bell,
+  LayoutDashboard, LogIn, LogOut, Settings, Send, Bell,
   BarChart3, Upload, ListMusic, Shield, Mail, Sparkles,
   MessageSquare, FileText, Eye, BookOpen, MessageCircle,
   AlertOctagon, ScrollText, Scale, ShieldOff, Search, X,
@@ -177,7 +177,7 @@ export function Sidebar({ onMobileClose }: SidebarProps = {}) {
     { href: "/library", label: "My Library", icon: Library },
     { href: "/creator-dashboard", label: "Creator Dashboard", icon: LayoutDashboard },
     { href: "/submit", label: "Music Review", icon: Send },
-    { href: "/submissions", label: "My Reviews", icon: Radio },
+    { href: "/submissions", label: "My Reviews", icon: "logo" as const },
     { href: "/feedback", label: "Beta Feedback", icon: MessageSquare },
     { href: "/profile", label: "Profile", icon: Settings },
   ];
@@ -292,7 +292,7 @@ export function Sidebar({ onMobileClose }: SidebarProps = {}) {
               <p className="px-3 text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Your Space</p>
             </div>
             {userLinks.map((link) => {
-              const Icon = link.icon;
+              const Icon = link.icon === "logo" ? null : link.icon;
               const active = isActive(link.href);
               return (
                 <Link key={link.href} href={link.href}>
@@ -303,7 +303,7 @@ export function Sidebar({ onMobileClose }: SidebarProps = {}) {
                       active ? "font-semibold text-primary bg-primary/10 hover:bg-primary/15" : "text-muted-foreground hover:text-foreground"
                     )}
                   >
-                    <Icon className="w-4 h-4 flex-shrink-0" />
+                    {Icon ? <Icon className="w-4 h-4 flex-shrink-0" /> : <img src="/logo.jpg" alt="Cotopia" className="w-4 h-4 rounded-sm object-cover flex-shrink-0" />}
                     {link.label}
                   </Button>
                 </Link>

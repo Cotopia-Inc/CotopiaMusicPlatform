@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import { Sidebar } from "./sidebar";
 import { Player } from "./player";
-import { ChevronLeft, ChevronRight, ChevronUp, ArrowLeft, Home, Menu, Bell, Radio } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronUp, ArrowLeft, Home, Menu, Bell } from "lucide-react";
 import { useLocation, Link } from "wouter";
 import { useAuth } from "@/lib/auth";
 import { useGetUnreadNotificationCount, getGetUnreadNotificationCountQueryKey } from "@workspace/api-client-react";

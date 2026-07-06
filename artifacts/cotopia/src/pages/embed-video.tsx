@@ -1,6 +1,6 @@
 import { useParams } from "wouter";
 import { useGetVideo, getGetVideoQueryKey } from "@workspace/api-client-react";
-import { Play, Radio } from "lucide-react";
+import { Play } from "lucide-react";
 import { RoleTag } from "@/components/role-badges";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -55,7 +55,7 @@ export default function EmbedVideo() {
         </div>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1.5 bg-black/60 backdrop-blur px-2.5 py-1.5 rounded-full">
-            <Radio className="w-3 h-3 text-primary" />
+            <img src="/logo.jpg" alt="Cotopia" className="w-3 h-3 rounded-sm object-cover flex-shrink-0" />
             <span className="text-[11px] text-white font-medium">Everyday Radio</span>
           </div>
           <a

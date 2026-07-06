@@ -1,7 +1,7 @@
 import { useGetAdminAnalytics, getGetAdminAnalyticsQueryKey } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, Music, Video, PlayCircle, Eye, MessageSquare, AlertCircle, Mic2, Building2, DollarSign, Radio, ChevronRight, Megaphone, ArrowLeft, Home } from "lucide-react";
+import { Users, Music, Video, PlayCircle, Eye, MessageSquare, AlertCircle, Mic2, Building2, DollarSign, ChevronRight, Megaphone, ArrowLeft, Home } from "lucide-react";
 import { RoleTag } from "@/components/role-badges";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -31,7 +31,7 @@ export default function AdminDashboard() {
     { href: "/admin/videos", label: "Videos", desc: "Feature, approve, and manage videos", icon: Video },
     { href: "/admin/company", label: "Company Hub", desc: "Create and manage announcements and articles", icon: Megaphone },
     { href: "/admin/comments", label: "Comments", desc: "Moderate and delete comments", icon: MessageSquare },
-    { href: "/admin/settings", label: "App Settings", desc: "Platform name, branding, and settings", icon: Radio },
+    { href: "/admin/settings", label: "App Settings", desc: "Platform name, branding, and settings", icon: "logo" as const },
   ];
 
   return (
@@ -83,13 +83,13 @@ export default function AdminDashboard() {
         <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-widest mb-4">Admin Tools</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {adminPages.map((page) => {
-            const Icon = page.icon;
+            const Icon = page.icon === "logo" ? null : page.icon;
             return (
               <Link key={page.href} href={page.href}>
                 <Card className="bg-card border-border hover:border-primary/40 transition-colors cursor-pointer group">
                   <CardContent className="flex items-center gap-4 p-5">
                     <div className="p-2.5 rounded-lg bg-primary/10 flex-shrink-0">
-                      <Icon className="w-5 h-5 text-primary" />
+                      {Icon ? <Icon className="w-5 h-5 text-primary" /> : <img src="/logo.jpg" alt="Cotopia" className="w-5 h-5 rounded-sm object-cover" />}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-sm">{page.label}</p>

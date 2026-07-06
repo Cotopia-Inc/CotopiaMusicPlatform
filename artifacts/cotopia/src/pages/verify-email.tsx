@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useQueryClient } from "@tanstack/react-query";
-import { MailCheck, RefreshCw, Radio } from "lucide-react";
+import { MailCheck, RefreshCw } from "lucide-react";
 
 export default function VerifyEmail() {
   const { user, login } = useAuth();
@@ -81,7 +81,7 @@ export default function VerifyEmail() {
             <MailCheck className="w-8 h-8 text-primary" />
           </div>
           <div className="flex items-center gap-2">
-            <Radio className="w-4 h-4 text-primary" />
+            <img src="/logo.jpg" alt="Cotopia" className="w-4 h-4 rounded-sm object-cover flex-shrink-0" />
             <span className="text-sm font-bold tracking-tight">Everyday Radio</span>
           </div>
           <h1 className="text-2xl font-extrabold">Verify your email</h1>

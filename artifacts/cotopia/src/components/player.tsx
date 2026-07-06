@@ -1,6 +1,6 @@
 import {
   Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Volume1,
-  Radio, Heart, ChevronUp, ChevronDown, Shuffle, Repeat, Repeat1, Square,
+  Heart, ChevronUp, ChevronDown, Shuffle, Repeat, Repeat1, Square,
   Music2, ListMusic, X, Music, GripHorizontal, Maximize2, Minimize2, PictureInPicture2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -272,7 +272,7 @@ export function Player() {
           >
             <div className="flex items-center gap-2.5">
               <GripHorizontal className="w-3.5 h-3.5 text-muted-foreground/40" />
-              <Radio className="w-4 h-4 text-primary" />
+              <img src="/logo.jpg" alt="Cotopia" className="w-4 h-4 rounded-sm object-cover flex-shrink-0" />
               <div className="flex flex-col leading-none">
                 <span className="text-[11px] font-extrabold tracking-tight text-foreground">Everyday Radio</span>
                 <span className="text-[9px] text-muted-foreground tracking-widest uppercase">{isVideoTrack ? "Video" : "Now Playing"}</span>
@@ -502,7 +502,7 @@ export function Player() {
               ? <img src={track.coverUrl} alt={track.title} className="w-full h-full object-cover" />
               : (
                 <div className="w-full h-full bg-gradient-to-br from-primary/30 to-secondary flex items-center justify-center">
-                  <Radio className="w-4 h-4 text-primary/60" />
+                  <img src="/logo.jpg" alt="Cotopia" className="w-5 h-5 rounded-sm object-cover opacity-60" />
                 </div>
               )}
             {track && (

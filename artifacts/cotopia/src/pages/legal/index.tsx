@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { Scale, Shield, Copyright, Users, Brain, RotateCcw, FileCheck, AlertTriangle, ChevronRight, Radio, Home, ScrollText } from "lucide-react";
+import { Scale, Shield, Copyright, Users, Brain, RotateCcw, FileCheck, AlertTriangle, ChevronRight, Home, ScrollText } from "lucide-react";
 
 const policies = [
   {
@@ -66,7 +66,7 @@ export default function LegalCenter() {
           <Home className="w-3 h-3" />Back to Home
         </Link>
         <div className="flex items-center gap-2 text-muted-foreground text-sm">
-          <Radio className="w-3.5 h-3.5" />
+          <img src="/logo.jpg" alt="Cotopia" className="w-3.5 h-3.5 rounded-sm object-cover flex-shrink-0" />
           <span>Everyday Radio by Cotopia</span>
         </div>
         <h1 className="text-3xl font-extrabold tracking-tight">Legal Center</h1>
