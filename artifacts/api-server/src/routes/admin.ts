@@ -916,8 +916,14 @@ router.patch("/admin/legal-settings", requireAuth, requireRole("master_admin"), 
   });
 
   // ── Global legal update notification ──────────────────────────────────────
-  if (Object.keys(data).length > 0) {
-    const updatedDocs = [...new Set(Object.keys(data).map(k => LEGAL_FIELD_LABELS[k]).filter(Boolean))];
+  // Only include fields whose value actually changed (the form always sends all fields)
+  const trulyChanged = Object.keys(data).filter(k => {
+    const submitted = data[k];
+    const before = (existing as Record<string, unknown>)[k];
+    return String(submitted ?? "") !== String(before ?? "");
+  });
+  if (trulyChanged.length > 0) {
+    const updatedDocs = [...new Set(trulyChanged.map(k => LEGAL_FIELD_LABELS[k]).filter(Boolean))];
     if (updatedDocs.length > 0) {
       const notifTitle = "Legal Documents Updated";
       const notifMessage = updatedDocs.length === 1
