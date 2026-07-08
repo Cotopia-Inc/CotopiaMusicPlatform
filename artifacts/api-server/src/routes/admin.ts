@@ -880,6 +880,21 @@ router.get("/admin/legal-settings", requireAuth, requireRole("master_admin"), as
   });
 });
 
+const LEGAL_FIELD_LABELS: Record<string, string> = {
+  termsVersion: "Terms of Service",
+  privacyVersion: "Privacy Policy",
+  submissionAgreementVersion: "Submission Agreement",
+  contentLicenseVersion: "Content License",
+  aiPolicyVersion: "AI Policy",
+  communityGuidelinesVersion: "Community Guidelines",
+  refundPolicyVersion: "Refund Policy",
+  dmcaContactEmail: "DMCA Contact Information",
+  copyrightAgentInfo: "Copyright Agent Information",
+  refundPolicyText: "Refund Policy",
+  aiPolicyText: "AI Policy",
+  communityRulesText: "Community Guidelines",
+};
+
 router.patch("/admin/legal-settings", requireAuth, requireRole("master_admin"), async (req: AuthRequest, res): Promise<void> => {
   const allowed = ["termsVersion", "privacyVersion", "submissionAgreementVersion", "contentLicenseVersion", "aiPolicyVersion", "communityGuidelinesVersion", "refundPolicyVersion", "dmcaContactEmail", "copyrightAgentInfo", "refundPolicyText", "aiPolicyText", "communityRulesText"];
   const data: Record<string, unknown> = {};
@@ -899,6 +914,32 @@ router.patch("/admin/legal-settings", requireAuth, requireRole("master_admin"), 
     description: `Legal settings updated (fields: ${Object.keys(data).join(", ")})`,
     metadata: { updatedFields: Object.keys(data) } as unknown,
   });
+
+  // ── Global legal update notification ──────────────────────────────────────
+  if (Object.keys(data).length > 0) {
+    const updatedDocs = [...new Set(Object.keys(data).map(k => LEGAL_FIELD_LABELS[k]).filter(Boolean))];
+    if (updatedDocs.length > 0) {
+      const notifTitle = "Legal Documents Updated";
+      const notifMessage = updatedDocs.length === 1
+        ? `Our ${updatedDocs[0]} has been updated. Please visit the Legal Center to review the latest version.`
+        : `The following legal documents have been updated: ${updatedDocs.join(", ")}. Please visit the Legal Center to review the latest versions.`;
+
+      const allUsers = await db.select({ id: usersTable.id }).from(usersTable);
+      if (allUsers.length > 0) {
+        const CHUNK = 500;
+        for (let i = 0; i < allUsers.length; i += CHUNK) {
+          await db.insert(notificationsTable).values(
+            allUsers.slice(i, i + CHUNK).map(u => ({
+              userId: u.id,
+              type: "general",
+              title: notifTitle,
+              message: notifMessage,
+            }))
+          );
+        }
+      }
+    }
+  }
 
   res.json({
     termsVersion: updated.termsVersion,
