@@ -163,9 +163,9 @@ export function SupportModal({ open, onOpenChange, creatorUserId, creatorName, c
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md" onClick={(e) => e.stopPropagation()}>
+      <DialogContent className="sm:max-w-md flex flex-col max-h-[90svh]" onClick={(e) => e.stopPropagation()}>
         {result ? (
-          <div className="space-y-5 py-2 text-center">
+          <div className="space-y-5 py-2 text-center overflow-y-auto">
             <div className="w-16 h-16 rounded-full bg-green-500/15 flex items-center justify-center mx-auto">
               <CheckCircle className="w-8 h-8 text-green-400" />
             </div>
@@ -202,7 +202,7 @@ export function SupportModal({ open, onOpenChange, creatorUserId, creatorName, c
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-4 py-2">
+            <div className="space-y-4 py-2 overflow-y-auto flex-1 min-h-0">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Supporting</span>
                 <Button
