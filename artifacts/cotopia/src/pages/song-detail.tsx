@@ -351,7 +351,7 @@ export default function SongDetail() {
               {songSupportStatus?.supportEnabled && (
                 <>
                   <span>•</span>
-                  <span className="flex items-center gap-1"><Heart className="w-3.5 h-3.5" /> {(songSupportStatus.supporterCount ?? 0).toLocaleString()} supporters</span>
+                  <span className="flex items-center gap-1"><Heart className="w-3.5 h-3.5" /> {(songSupportStatus.contentSupporterCount ?? 0).toLocaleString()} supporters</span>
                 </>
               )}
             </div>

@@ -672,7 +672,7 @@ export default function VideoDetail() {
             {videoSupportStatus?.supportEnabled && (
               <>
                 <span>•</span>
-                <span className="flex items-center gap-1"><Heart className="w-3.5 h-3.5" /> {(videoSupportStatus.supporterCount ?? 0).toLocaleString()} supporters</span>
+                <span className="flex items-center gap-1"><Heart className="w-3.5 h-3.5" /> {(videoSupportStatus.contentSupporterCount ?? 0).toLocaleString()} supporters</span>
               </>
             )}
           </div>
