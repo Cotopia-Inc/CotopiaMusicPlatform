@@ -1,6 +1,7 @@
 import { useParams, Link, useLocation } from "wouter";
 import { useRef, useState } from "react";
 import { useGetLabel, getGetLabelQueryKey, useFollowLabel, useUnfollowLabel } from "@workspace/api-client-react";
+import { SupportButton } from "@/components/support-modal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Users, Music, Play, Volume2, VolumeX, UserPlus, X, Search, Loader2, ShieldCheck } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
@@ -226,6 +227,14 @@ export default function LabelDetail() {
                 {label.isFollowed ? "Following Label" : "Follow Label"}
               </Button>
             )}
+            <SupportButton
+              creatorUserId={labelUserId}
+              creatorName={label.name}
+              contentType="label"
+              contentId={label.id}
+              size="default"
+              className="px-6"
+            />
             {user &&
               !isOwner &&
               (user as any).username?.trim().toLowerCase() === label.name.trim().toLowerCase() && (

@@ -1233,6 +1233,162 @@ export interface PaymentResponse {
   amount: number;
 }
 
+export type CreatorSupportSettingsProvider = typeof CreatorSupportSettingsProvider[keyof typeof CreatorSupportSettingsProvider];
+
+
+export const CreatorSupportSettingsProvider = {
+  paypal: 'paypal',
+} as const;
+
+export interface CreatorSupportSettings {
+  supportEnabled: boolean;
+  provider: CreatorSupportSettingsProvider;
+  /** @nullable */
+  paypalEmail: string | null;
+  /** @nullable */
+  paypalMeLink: string | null;
+}
+
+export interface CreatorSupportSettingsUpdate {
+  supportEnabled: boolean;
+  /** @nullable */
+  paypalEmail?: string | null;
+  /** @nullable */
+  paypalMeLink?: string | null;
+}
+
+export interface CreatorSupportStatus {
+  userId: number;
+  supportEnabled: boolean;
+}
+
+export type SupportTipInputContentType = typeof SupportTipInputContentType[keyof typeof SupportTipInputContentType];
+
+
+export const SupportTipInputContentType = {
+  song: 'song',
+  video: 'video',
+  artist: 'artist',
+  label: 'label',
+} as const;
+
+export interface SupportTipInput {
+  contentType: SupportTipInputContentType;
+  contentId?: number;
+  /** @exclusiveMinimum 0 */
+  amount: number;
+  /** @maxLength 500 */
+  message?: string;
+}
+
+export type SupportTransactionMode = typeof SupportTransactionMode[keyof typeof SupportTransactionMode];
+
+
+export const SupportTransactionMode = {
+  demo: 'demo',
+  live: 'live',
+} as const;
+
+export interface SupportTransaction {
+  id: number;
+  transactionRef: string;
+  amount: number;
+  currency: string;
+  /** @nullable */
+  message: string | null;
+  mode: SupportTransactionMode;
+  status: string;
+  createdAt: string;
+}
+
+export interface SupportActivityItem {
+  id: number;
+  supporterDisplayName: string;
+  amount: number;
+  currency: string;
+  /** @nullable */
+  message: string | null;
+  contentType: string;
+  /** @nullable */
+  contentId: number | null;
+  /** @nullable */
+  contentTitle?: string | null;
+  transactionRef: string;
+  createdAt: string;
+}
+
+export interface SupportedContentItem {
+  contentType: string;
+  /** @nullable */
+  contentId: number | null;
+  title: string;
+  totalAmount: number;
+  tipCount: number;
+}
+
+export type CreatorSupportDashboardMode = typeof CreatorSupportDashboardMode[keyof typeof CreatorSupportDashboardMode];
+
+
+export const CreatorSupportDashboardMode = {
+  demo: 'demo',
+} as const;
+
+export interface CreatorSupportDashboard {
+  mode: CreatorSupportDashboardMode;
+  supportButtonClicks: number;
+  supportAttempts: number;
+  totalDemoTips: number;
+  totalDemoAmount: number;
+  mostSupportedContent: SupportedContentItem[];
+  recentActivity: SupportActivityItem[];
+  supportMessages: SupportActivityItem[];
+  followerCount: number;
+  newFollowers30d: number;
+}
+
+export interface TopSupporterItem {
+  userId: number;
+  displayName: string;
+  totalAmount: number;
+  tipCount: number;
+}
+
+export interface TopSupportedCreatorItem {
+  userId: number;
+  displayName: string;
+  totalAmount: number;
+  tipCount: number;
+}
+
+export type AdminCreatorSupportOverviewPaymentMode = typeof AdminCreatorSupportOverviewPaymentMode[keyof typeof AdminCreatorSupportOverviewPaymentMode];
+
+
+export const AdminCreatorSupportOverviewPaymentMode = {
+  demo: 'demo',
+} as const;
+
+export type AdminCreatorSupportOverviewSystemHealth = typeof AdminCreatorSupportOverviewSystemHealth[keyof typeof AdminCreatorSupportOverviewSystemHealth];
+
+
+export const AdminCreatorSupportOverviewSystemHealth = {
+  operational: 'operational',
+} as const;
+
+export interface AdminCreatorSupportOverview {
+  paymentMode: AdminCreatorSupportOverviewPaymentMode;
+  systemHealth: AdminCreatorSupportOverviewSystemHealth;
+  totalSupportAttempts: number;
+  totalDemoTransactions: number;
+  totalDemoAmount: number;
+  mostSupportedCreators: TopSupportedCreatorItem[];
+  mostSupportedSongs: SupportedContentItem[];
+  mostSupportedVideos: SupportedContentItem[];
+  topSupporters: TopSupporterItem[];
+  newFollowers30d: number;
+  recentTransactions: SupportActivityItem[];
+  recentMessages: SupportActivityItem[];
+}
+
 export interface UploadUrlRequest {
   /** @minLength 1 */
   name: string;
@@ -1421,6 +1577,8 @@ export const AnalyticsEventInputContentType = {
   video: 'video',
   playlist: 'playlist',
   user: 'user',
+  artist: 'artist',
+  label: 'label',
 } as const;
 
 export type AnalyticsEventInputMetadata = { [key: string]: unknown };

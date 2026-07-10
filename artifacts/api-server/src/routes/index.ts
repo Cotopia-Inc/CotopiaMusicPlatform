@@ -31,6 +31,7 @@ import betaFeedbackRouter from "./beta-feedback";
 import badgesRouter from "./badges";
 import presenceRouter from "./presence";
 import eventsRouter from "./events";
+import creatorSupportRouter from "./creator-support";
 
 const router: IRouter = Router();
 
@@ -66,5 +67,6 @@ router.use(betaFeedbackRouter);
 router.use(badgesRouter);
 router.use(presenceRouter);
 router.use(eventsRouter);
+router.use(creatorSupportRouter);
 
 export default router;

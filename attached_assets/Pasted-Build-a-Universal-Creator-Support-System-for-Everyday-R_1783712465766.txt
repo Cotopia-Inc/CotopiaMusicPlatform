@@ -1,0 +1,390 @@
+Build a Universal Creator Support System for Everyday Radio.
+
+IMPORTANT
+
+The site is live in Beta.
+
+Do NOT activate live PayPal.
+
+Do NOT connect to real PayPal.
+
+Do NOT process real money.
+
+This entire feature must operate in DEMO MODE only, exactly like the current submission payment system.
+
+The goal is to fully build, test, and stabilize the feature before enabling live payments.
+
+====================================================
+UNIVERSAL CREATOR SUPPORT
+====================================================
+
+Replace the current idea of "Tip The Creator" with a broader creator support system.
+
+Primary button text:
+
+❤️ Support This Creator
+
+This button should appear anywhere creator content is displayed.
+
+Initially support:
+
+• Songs
+• Videos
+• Podcasts
+• Creator Profile Pages
+
+The database should be designed so future content types can easily support this system without redesigning it.
+
+Future examples:
+
+• Radio Shows
+• Interviews
+• Live Streams
+• Playlists
+• Events
+• Blogs
+• Other creator content
+
+====================================================
+SUPPORT BUTTON
+====================================================
+
+When clicked, open a modern popup.
+
+Title:
+
+Support [Creator Name]
+
+Message:
+
+Love this content?
+
+Help support this creator and encourage them to keep creating amazing content.
+
+Buttons:
+
+💵 Leave a Tip
+
+⭐ Follow Creator
+
+If already following:
+
+Display
+
+Following ✓
+
+instead.
+
+====================================================
+TIP AMOUNTS
+====================================================
+
+Display quick buttons:
+
+$1
+
+$5
+
+$10
+
+$20
+
+$50
+
+Custom Amount
+
+Allow any positive custom amount.
+
+Do not allow zero or negative amounts.
+
+====================================================
+SUPPORT MESSAGE
+====================================================
+
+Allow supporter to leave an optional message.
+
+Example:
+
+"Love this song!"
+
+"Keep creating!"
+
+"Can't wait for the next release!"
+
+====================================================
+DEMO PAYMENT FLOW
+====================================================
+
+During beta:
+
+Generate a fake/demo transaction only.
+
+Example:
+
+SUP-DEMO-458291
+
+Save transaction.
+
+Display:
+
+Demo Support Sent
+
+Thank you for supporting this creator.
+
+This is a beta demonstration.
+
+No real payment has been processed.
+
+====================================================
+CREATOR SETTINGS
+====================================================
+
+Add Creator Support settings.
+
+Enable Creator Support
+
+ON / OFF
+
+Payment Method
+
+Initially support:
+
+PayPal Email
+
+OR
+
+PayPal.me Link
+
+Save these securely.
+
+Never display PayPal email publicly.
+
+Future payment providers should be easy to add later.
+
+====================================================
+SUPPORTED ACCOUNT TYPES
+====================================================
+
+Any account capable of publishing content may receive support.
+
+Initially:
+
+Artists
+
+Video Creators
+
+Podcasters
+
+Radio Hosts
+
+DJs
+
+Labels
+
+Creator Accounts
+
+Community Creators (future)
+
+Any logged-in account may support creators.
+
+Listeners
+
+Artists
+
+Creators
+
+Labels
+
+Admins
+
+Moderators
+
+Editors
+
+====================================================
+FOLLOW CREATOR
+====================================================
+
+If supporter is not already following:
+
+Show
+
+⭐ Follow Creator
+
+If supporter already follows:
+
+Display
+
+Following ✓
+
+Clicking Follow should immediately follow the creator.
+
+====================================================
+CREATOR DASHBOARD
+====================================================
+
+Add Creator Support Dashboard.
+
+Display:
+
+Support Button Clicks
+
+Support Attempts
+
+Demo Support Activity
+
+Most Supported Content
+
+Support Messages
+
+Follower Growth
+
+Recent Support Activity
+
+Clearly label all values:
+
+Demo Mode
+
+Do not display fake income as real earnings.
+
+====================================================
+ADMIN DASHBOARD
+====================================================
+
+Create Creator Support Management.
+
+Admin can view:
+
+Support activity
+
+Demo transactions
+
+Support messages
+
+Most supported creators
+
+Most supported songs
+
+Most supported videos
+
+Follower growth
+
+Top supporters
+
+System health
+
+Payment mode
+
+====================================================
+DATABASE
+====================================================
+
+Create tables for:
+
+Creator Payment Settings
+
+Creator Support Activity
+
+Support Messages
+
+Demo Transactions
+
+Future Payment Providers
+
+Design the database so additional payment providers can easily be added later without redesigning tables.
+
+====================================================
+BADGE INTEGRATION
+====================================================
+
+Prepare badge support.
+
+Future badges include:
+
+Fan Supported Creator
+
+Community Favorite
+
+Top Supporter
+
+Support Champion
+
+Creator Champion
+
+Do not automatically award badges yet.
+
+====================================================
+LEGAL
+====================================================
+
+Display:
+
+Creator Support is voluntary.
+
+During Beta this feature operates entirely in Demo Mode.
+
+When live:
+
+Creator support payments go directly to creators.
+
+Everyday Radio does not hold or manage creator tip funds.
+
+Creators are responsible for their own payment accounts and tax reporting.
+
+====================================================
+SECURITY
+====================================================
+
+Validate all support amounts.
+
+Prevent spam.
+
+Protect creator payment information.
+
+Prevent unauthorized access.
+
+====================================================
+TESTING
+====================================================
+
+Verify:
+
+✓ Songs display Support This Creator
+
+✓ Videos display Support This Creator
+
+✓ Podcasts display Support This Creator
+
+✓ Creator Profiles display Support This Creator
+
+✓ Follow Creator works
+
+✓ Demo support works
+
+✓ Demo transactions save correctly
+
+✓ Creator dashboard updates
+
+✓ Admin dashboard updates
+
+✓ Existing uploads still work
+
+✓ Existing submission payment system still works
+
+✓ Existing chat/comments still work
+
+✓ Existing roles and permissions still work
+
+====================================================
+DO NOT
+====================================================
+
+Do not activate live PayPal.
+
+Do not process real money.
+
+Do not remove the current submission payment system.
+
+Do not break any existing beta functionality.
+
+Keep everything stable and fully testable.

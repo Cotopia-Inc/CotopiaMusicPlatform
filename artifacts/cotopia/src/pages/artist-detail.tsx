@@ -19,6 +19,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { EventsTab } from "@/components/events-tab";
+import { SupportButton } from "@/components/support-modal";
 
 function getAuthHeader(): Record<string, string> {
   const token = localStorage.getItem("cotopia_token");
@@ -306,6 +307,14 @@ export default function ArtistDetail() {
                 Message
               </Button>
             )}
+            <SupportButton
+              creatorUserId={(artist as any).userId}
+              creatorName={artist.stageName}
+              contentType="artist"
+              contentId={artist.id}
+              size="default"
+              className="md:px-6 md:text-base md:h-11"
+            />
             {user?.id === (artist as any).userId && (
               <Button
                 variant="outline"

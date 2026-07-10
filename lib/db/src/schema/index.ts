@@ -39,3 +39,5 @@ export * from "./bug_reports";
 export * from "./badges";
 export * from "./events";
 export * from "./creator_message";
+export * from "./creator_payment_settings";
+export * from "./support_transactions";

@@ -26,6 +26,7 @@ import { UserLink } from "@/components/user-link";
 import { useUpload } from "@/lib/useUpload";
 import { SongMenu } from "@/components/song-menu";
 import { ReportModal } from "@/components/report-modal";
+import { SupportButton } from "@/components/support-modal";
 import { VerifyEmailBanner } from "@/components/verify-email-banner";
 import { CommentSection } from "@/components/comment-section";
 
@@ -376,6 +377,16 @@ export default function SongDetail() {
             <SongMenu
               song={song}
               className="border border-border text-muted-foreground hover:text-foreground hover:border-border/80 w-9 h-9 rounded-full"
+            />
+          )}
+
+          {/* Support creator */}
+          {song && (
+            <SupportButton
+              creatorUserId={song.artistUserId}
+              creatorName={song.artistName}
+              contentType="song"
+              contentId={song.id}
             />
           )}
 

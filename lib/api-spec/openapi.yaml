@@ -57,6 +57,8 @@ tags:
     description: User-facing safety, reporting, feedback, and messaging settings
   - name: badges
     description: Achievement badges
+  - name: creator-support
+    description: Universal Creator Support (tip/support) system — demo mode only
 
 paths:
   /healthz:
@@ -2741,6 +2743,121 @@ paths:
               schema:
                 $ref: "#/components/schemas/PaymentResponse"
 
+  # ── Creator Support ───────────────────────────────────────────────────────
+  /creator-support/settings:
+    get:
+      operationId: getCreatorSupportSettings
+      tags: [creator-support]
+      summary: Get the current user's own Creator Support payment settings
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreatorSupportSettings"
+    put:
+      operationId: updateCreatorSupportSettings
+      tags: [creator-support]
+      summary: Update the current user's Creator Support payment settings
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatorSupportSettingsUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreatorSupportSettings"
+        "400":
+          description: Invalid input
+
+  /creator-support/status/{userId}:
+    get:
+      operationId: getCreatorSupportStatus
+      tags: [creator-support]
+      summary: Check whether a given user has Creator Support enabled (public-safe, no payment details)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreatorSupportStatus"
+
+  /creator-support/tips:
+    post:
+      operationId: createSupportTip
+      tags: [creator-support]
+      summary: Send a demo support tip to a creator
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SupportTipInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupportTransaction"
+        "400":
+          description: Invalid input
+        "404":
+          description: Content or creator not found
+        "429":
+          description: Too many support attempts
+
+  /creator-support/dashboard:
+    get:
+      operationId: getCreatorSupportDashboard
+      tags: [creator-support]
+      summary: Get the current creator's own support analytics dashboard
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreatorSupportDashboard"
+
+  /admin/creator-support:
+    get:
+      operationId: getAdminCreatorSupportOverview
+      tags: [creator-support]
+      summary: Admin view of platform-wide Creator Support activity
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminCreatorSupportOverview"
+
   /storage/uploads/request-url:
     post:
       tags: [Storage]
@@ -4860,6 +4977,243 @@ components:
         amount:
           type: number
 
+    # ── Creator Support ──────────────────────────────────────────────────────
+    CreatorSupportSettings:
+      type: object
+      required: [supportEnabled, provider, paypalEmail, paypalMeLink]
+      properties:
+        supportEnabled:
+          type: boolean
+        provider:
+          type: string
+          enum: [paypal]
+        paypalEmail:
+          type: ["string", "null"]
+        paypalMeLink:
+          type: ["string", "null"]
+
+    CreatorSupportSettingsUpdate:
+      type: object
+      required: [supportEnabled]
+      properties:
+        supportEnabled:
+          type: boolean
+        paypalEmail:
+          type: ["string", "null"]
+          format: email
+        paypalMeLink:
+          type: ["string", "null"]
+
+    CreatorSupportStatus:
+      type: object
+      required: [userId, supportEnabled]
+      properties:
+        userId:
+          type: integer
+        supportEnabled:
+          type: boolean
+
+    SupportTipInput:
+      type: object
+      required: [contentType, amount]
+      properties:
+        contentType:
+          type: string
+          enum: [song, video, artist, label]
+        contentId:
+          type: integer
+        amount:
+          type: number
+          exclusiveMinimum: 0
+        message:
+          type: string
+          maxLength: 500
+
+    SupportTransaction:
+      type: object
+      required: [id, transactionRef, amount, currency, message, mode, status, createdAt]
+      properties:
+        id:
+          type: integer
+        transactionRef:
+          type: string
+        amount:
+          type: number
+        currency:
+          type: string
+        message:
+          type: ["string", "null"]
+        mode:
+          type: string
+          enum: [demo, live]
+        status:
+          type: string
+        createdAt:
+          type: string
+
+    SupportActivityItem:
+      type: object
+      required: [id, supporterDisplayName, amount, currency, message, contentType, contentId, transactionRef, createdAt]
+      properties:
+        id:
+          type: integer
+        supporterDisplayName:
+          type: string
+        amount:
+          type: number
+        currency:
+          type: string
+        message:
+          type: ["string", "null"]
+        contentType:
+          type: string
+        contentId:
+          type: ["integer", "null"]
+        contentTitle:
+          type: ["string", "null"]
+        transactionRef:
+          type: string
+        createdAt:
+          type: string
+
+    SupportedContentItem:
+      type: object
+      required: [contentType, contentId, title, totalAmount, tipCount]
+      properties:
+        contentType:
+          type: string
+        contentId:
+          type: ["integer", "null"]
+        title:
+          type: string
+        totalAmount:
+          type: number
+        tipCount:
+          type: integer
+
+    CreatorSupportDashboard:
+      type: object
+      required:
+        - mode
+        - supportButtonClicks
+        - supportAttempts
+        - totalDemoTips
+        - totalDemoAmount
+        - mostSupportedContent
+        - recentActivity
+        - supportMessages
+        - followerCount
+        - newFollowers30d
+      properties:
+        mode:
+          type: string
+          enum: [demo]
+        supportButtonClicks:
+          type: integer
+        supportAttempts:
+          type: integer
+        totalDemoTips:
+          type: integer
+        totalDemoAmount:
+          type: number
+        mostSupportedContent:
+          type: array
+          items:
+            $ref: "#/components/schemas/SupportedContentItem"
+        recentActivity:
+          type: array
+          items:
+            $ref: "#/components/schemas/SupportActivityItem"
+        supportMessages:
+          type: array
+          items:
+            $ref: "#/components/schemas/SupportActivityItem"
+        followerCount:
+          type: integer
+        newFollowers30d:
+          type: integer
+
+    TopSupporterItem:
+      type: object
+      required: [userId, displayName, totalAmount, tipCount]
+      properties:
+        userId:
+          type: integer
+        displayName:
+          type: string
+        totalAmount:
+          type: number
+        tipCount:
+          type: integer
+
+    TopSupportedCreatorItem:
+      type: object
+      required: [userId, displayName, totalAmount, tipCount]
+      properties:
+        userId:
+          type: integer
+        displayName:
+          type: string
+        totalAmount:
+          type: number
+        tipCount:
+          type: integer
+
+    AdminCreatorSupportOverview:
+      type: object
+      required:
+        - paymentMode
+        - systemHealth
+        - totalSupportAttempts
+        - totalDemoTransactions
+        - totalDemoAmount
+        - mostSupportedCreators
+        - mostSupportedSongs
+        - mostSupportedVideos
+        - topSupporters
+        - newFollowers30d
+        - recentTransactions
+        - recentMessages
+      properties:
+        paymentMode:
+          type: string
+          enum: [demo]
+        systemHealth:
+          type: string
+          enum: [operational]
+        totalSupportAttempts:
+          type: integer
+        totalDemoTransactions:
+          type: integer
+        totalDemoAmount:
+          type: number
+        mostSupportedCreators:
+          type: array
+          items:
+            $ref: "#/components/schemas/TopSupportedCreatorItem"
+        mostSupportedSongs:
+          type: array
+          items:
+            $ref: "#/components/schemas/SupportedContentItem"
+        mostSupportedVideos:
+          type: array
+          items:
+            $ref: "#/components/schemas/SupportedContentItem"
+        topSupporters:
+          type: array
+          items:
+            $ref: "#/components/schemas/TopSupporterItem"
+        newFollowers30d:
+          type: integer
+        recentTransactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/SupportActivityItem"
+        recentMessages:
+          type: array
+          items:
+            $ref: "#/components/schemas/SupportActivityItem"
+
     # ── Object Storage ─────────────────────────────────────────────────────────
     UploadUrlRequest:
       type: object
@@ -5128,7 +5482,7 @@ components:
           type: string
         contentType:
           type: string
-          enum: [song, video, playlist, user]
+          enum: [song, video, playlist, user, artist, label]
         contentId:
           type: integer
         metadata:

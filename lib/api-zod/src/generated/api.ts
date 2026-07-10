@@ -2914,7 +2914,7 @@ export const AdminListBroadcastsResponse = zod.array(AdminListBroadcastsResponse
 export const TrackAnalyticsEventBody = zod.object({
   "eventType": zod.enum(['user', 'content', 'engagement', 'admin', 'page_view']),
   "eventName": zod.string(),
-  "contentType": zod.enum(['song', 'video', 'playlist', 'user']).optional(),
+  "contentType": zod.enum(['song', 'video', 'playlist', 'user', 'artist', 'label']).optional(),
   "contentId": zod.number().optional(),
   "metadata": zod.object({
 
@@ -3394,6 +3394,172 @@ export const InitiatePaymentResponse = zod.object({
   "paypalOrderId": zod.string(),
   "approvalUrl": zod.string(),
   "amount": zod.number()
+})
+
+
+/**
+ * @summary Get the current user's own Creator Support payment settings
+ */
+export const GetCreatorSupportSettingsResponse = zod.object({
+  "supportEnabled": zod.boolean(),
+  "provider": zod.enum(['paypal']),
+  "paypalEmail": zod.string().nullable(),
+  "paypalMeLink": zod.string().nullable()
+})
+
+
+/**
+ * @summary Update the current user's Creator Support payment settings
+ */
+export const UpdateCreatorSupportSettingsBody = zod.object({
+  "supportEnabled": zod.boolean(),
+  "paypalEmail": zod.string().email().nullish(),
+  "paypalMeLink": zod.string().nullish()
+})
+
+export const UpdateCreatorSupportSettingsResponse = zod.object({
+  "supportEnabled": zod.boolean(),
+  "provider": zod.enum(['paypal']),
+  "paypalEmail": zod.string().nullable(),
+  "paypalMeLink": zod.string().nullable()
+})
+
+
+/**
+ * @summary Check whether a given user has Creator Support enabled (public-safe, no payment details)
+ */
+export const GetCreatorSupportStatusParams = zod.object({
+  "userId": zod.coerce.number()
+})
+
+export const GetCreatorSupportStatusResponse = zod.object({
+  "userId": zod.number(),
+  "supportEnabled": zod.boolean()
+})
+
+
+/**
+ * @summary Send a demo support tip to a creator
+ */
+export const createSupportTipBodyAmountExclusiveMin = 0;
+
+export const createSupportTipBodyMessageMax = 500;
+
+
+
+export const CreateSupportTipBody = zod.object({
+  "contentType": zod.enum(['song', 'video', 'artist', 'label']),
+  "contentId": zod.number().optional(),
+  "amount": zod.number().gt(createSupportTipBodyAmountExclusiveMin),
+  "message": zod.string().max(createSupportTipBodyMessageMax).optional()
+})
+
+
+/**
+ * @summary Get the current creator's own support analytics dashboard
+ */
+export const GetCreatorSupportDashboardResponse = zod.object({
+  "mode": zod.enum(['demo']),
+  "supportButtonClicks": zod.number(),
+  "supportAttempts": zod.number(),
+  "totalDemoTips": zod.number(),
+  "totalDemoAmount": zod.number(),
+  "mostSupportedContent": zod.array(zod.object({
+  "contentType": zod.string(),
+  "contentId": zod.number().nullable(),
+  "title": zod.string(),
+  "totalAmount": zod.number(),
+  "tipCount": zod.number()
+})),
+  "recentActivity": zod.array(zod.object({
+  "id": zod.number(),
+  "supporterDisplayName": zod.string(),
+  "amount": zod.number(),
+  "currency": zod.string(),
+  "message": zod.string().nullable(),
+  "contentType": zod.string(),
+  "contentId": zod.number().nullable(),
+  "contentTitle": zod.string().nullish(),
+  "transactionRef": zod.string(),
+  "createdAt": zod.string()
+})),
+  "supportMessages": zod.array(zod.object({
+  "id": zod.number(),
+  "supporterDisplayName": zod.string(),
+  "amount": zod.number(),
+  "currency": zod.string(),
+  "message": zod.string().nullable(),
+  "contentType": zod.string(),
+  "contentId": zod.number().nullable(),
+  "contentTitle": zod.string().nullish(),
+  "transactionRef": zod.string(),
+  "createdAt": zod.string()
+})),
+  "followerCount": zod.number(),
+  "newFollowers30d": zod.number()
+})
+
+
+/**
+ * @summary Admin view of platform-wide Creator Support activity
+ */
+export const GetAdminCreatorSupportOverviewResponse = zod.object({
+  "paymentMode": zod.enum(['demo']),
+  "systemHealth": zod.enum(['operational']),
+  "totalSupportAttempts": zod.number(),
+  "totalDemoTransactions": zod.number(),
+  "totalDemoAmount": zod.number(),
+  "mostSupportedCreators": zod.array(zod.object({
+  "userId": zod.number(),
+  "displayName": zod.string(),
+  "totalAmount": zod.number(),
+  "tipCount": zod.number()
+})),
+  "mostSupportedSongs": zod.array(zod.object({
+  "contentType": zod.string(),
+  "contentId": zod.number().nullable(),
+  "title": zod.string(),
+  "totalAmount": zod.number(),
+  "tipCount": zod.number()
+})),
+  "mostSupportedVideos": zod.array(zod.object({
+  "contentType": zod.string(),
+  "contentId": zod.number().nullable(),
+  "title": zod.string(),
+  "totalAmount": zod.number(),
+  "tipCount": zod.number()
+})),
+  "topSupporters": zod.array(zod.object({
+  "userId": zod.number(),
+  "displayName": zod.string(),
+  "totalAmount": zod.number(),
+  "tipCount": zod.number()
+})),
+  "newFollowers30d": zod.number(),
+  "recentTransactions": zod.array(zod.object({
+  "id": zod.number(),
+  "supporterDisplayName": zod.string(),
+  "amount": zod.number(),
+  "currency": zod.string(),
+  "message": zod.string().nullable(),
+  "contentType": zod.string(),
+  "contentId": zod.number().nullable(),
+  "contentTitle": zod.string().nullish(),
+  "transactionRef": zod.string(),
+  "createdAt": zod.string()
+})),
+  "recentMessages": zod.array(zod.object({
+  "id": zod.number(),
+  "supporterDisplayName": zod.string(),
+  "amount": zod.number(),
+  "currency": zod.string(),
+  "message": zod.string().nullable(),
+  "contentType": zod.string(),
+  "contentId": zod.number().nullable(),
+  "contentTitle": zod.string().nullish(),
+  "transactionRef": zod.string(),
+  "createdAt": zod.string()
+}))
 })
 
 

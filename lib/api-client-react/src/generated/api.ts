@@ -23,6 +23,7 @@ import type {
   AdminBulkUploadSongsInput,
   AdminBulkUploadVideosInput,
   AdminChatMessage,
+  AdminCreatorSupportOverview,
   AdminListBugReports200,
   AdminListBugReportsParams,
   AdminListChatMessagesParams,
@@ -76,6 +77,10 @@ import type {
   Conversation,
   CreatorMessage,
   CreatorMessageInput,
+  CreatorSupportDashboard,
+  CreatorSupportSettings,
+  CreatorSupportSettingsUpdate,
+  CreatorSupportStatus,
   DeletePresenceParams,
   DemographicsInput,
   DirectMessage,
@@ -149,6 +154,8 @@ import type {
   SubmissionInput,
   SubmissionReviewInput,
   SubmissionUpdate,
+  SupportTipInput,
+  SupportTransaction,
   UnfollowUser200,
   UploadAccount,
   UploadUrlRequest,
@@ -10225,6 +10232,456 @@ export const useInitiatePayment = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getInitiatePaymentMutationOptions(options));
     }
+
+export const getGetCreatorSupportSettingsUrl = () => {
+
+
+
+
+  return `/api/creator-support/settings`
+}
+
+/**
+ * @summary Get the current user's own Creator Support payment settings
+ */
+export const getCreatorSupportSettings = async ( options?: RequestInit): Promise<CreatorSupportSettings> => {
+
+  return customFetch<CreatorSupportSettings>(getGetCreatorSupportSettingsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCreatorSupportSettingsQueryKey = () => {
+    return [
+    `/api/creator-support/settings`
+    ] as const;
+    }
+
+
+export const getGetCreatorSupportSettingsQueryOptions = <TData = Awaited<ReturnType<typeof getCreatorSupportSettings>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCreatorSupportSettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCreatorSupportSettingsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCreatorSupportSettings>>> = ({ signal }) => getCreatorSupportSettings({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCreatorSupportSettings>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCreatorSupportSettingsQueryResult = NonNullable<Awaited<ReturnType<typeof getCreatorSupportSettings>>>
+export type GetCreatorSupportSettingsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get the current user's own Creator Support payment settings
+ */
+
+export function useGetCreatorSupportSettings<TData = Awaited<ReturnType<typeof getCreatorSupportSettings>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCreatorSupportSettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCreatorSupportSettingsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getUpdateCreatorSupportSettingsUrl = () => {
+
+
+
+
+  return `/api/creator-support/settings`
+}
+
+/**
+ * @summary Update the current user's Creator Support payment settings
+ */
+export const updateCreatorSupportSettings = async (creatorSupportSettingsUpdate: CreatorSupportSettingsUpdate, options?: RequestInit): Promise<CreatorSupportSettings> => {
+
+  return customFetch<CreatorSupportSettings>(getUpdateCreatorSupportSettingsUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      creatorSupportSettingsUpdate,)
+  }
+);}
+
+
+
+
+export const getUpdateCreatorSupportSettingsMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateCreatorSupportSettings>>, TError,{data: BodyType<CreatorSupportSettingsUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateCreatorSupportSettings>>, TError,{data: BodyType<CreatorSupportSettingsUpdate>}, TContext> => {
+
+const mutationKey = ['updateCreatorSupportSettings'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateCreatorSupportSettings>>, {data: BodyType<CreatorSupportSettingsUpdate>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateCreatorSupportSettings(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateCreatorSupportSettingsMutationResult = NonNullable<Awaited<ReturnType<typeof updateCreatorSupportSettings>>>
+    export type UpdateCreatorSupportSettingsMutationBody = BodyType<CreatorSupportSettingsUpdate>
+    export type UpdateCreatorSupportSettingsMutationError = ErrorType<void>
+
+    /**
+ * @summary Update the current user's Creator Support payment settings
+ */
+export const useUpdateCreatorSupportSettings = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateCreatorSupportSettings>>, TError,{data: BodyType<CreatorSupportSettingsUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateCreatorSupportSettings>>,
+        TError,
+        {data: BodyType<CreatorSupportSettingsUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateCreatorSupportSettingsMutationOptions(options));
+    }
+
+export const getGetCreatorSupportStatusUrl = (userId: number,) => {
+
+
+
+
+  return `/api/creator-support/status/${userId}`
+}
+
+/**
+ * @summary Check whether a given user has Creator Support enabled (public-safe, no payment details)
+ */
+export const getCreatorSupportStatus = async (userId: number, options?: RequestInit): Promise<CreatorSupportStatus> => {
+
+  return customFetch<CreatorSupportStatus>(getGetCreatorSupportStatusUrl(userId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCreatorSupportStatusQueryKey = (userId: number,) => {
+    return [
+    `/api/creator-support/status/${userId}`
+    ] as const;
+    }
+
+
+export const getGetCreatorSupportStatusQueryOptions = <TData = Awaited<ReturnType<typeof getCreatorSupportStatus>>, TError = ErrorType<unknown>>(userId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCreatorSupportStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCreatorSupportStatusQueryKey(userId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCreatorSupportStatus>>> = ({ signal }) => getCreatorSupportStatus(userId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(userId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCreatorSupportStatus>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCreatorSupportStatusQueryResult = NonNullable<Awaited<ReturnType<typeof getCreatorSupportStatus>>>
+export type GetCreatorSupportStatusQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Check whether a given user has Creator Support enabled (public-safe, no payment details)
+ */
+
+export function useGetCreatorSupportStatus<TData = Awaited<ReturnType<typeof getCreatorSupportStatus>>, TError = ErrorType<unknown>>(
+ userId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCreatorSupportStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCreatorSupportStatusQueryOptions(userId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateSupportTipUrl = () => {
+
+
+
+
+  return `/api/creator-support/tips`
+}
+
+/**
+ * @summary Send a demo support tip to a creator
+ */
+export const createSupportTip = async (supportTipInput: SupportTipInput, options?: RequestInit): Promise<SupportTransaction> => {
+
+  return customFetch<SupportTransaction>(getCreateSupportTipUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      supportTipInput,)
+  }
+);}
+
+
+
+
+export const getCreateSupportTipMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSupportTip>>, TError,{data: BodyType<SupportTipInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createSupportTip>>, TError,{data: BodyType<SupportTipInput>}, TContext> => {
+
+const mutationKey = ['createSupportTip'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createSupportTip>>, {data: BodyType<SupportTipInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createSupportTip(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateSupportTipMutationResult = NonNullable<Awaited<ReturnType<typeof createSupportTip>>>
+    export type CreateSupportTipMutationBody = BodyType<SupportTipInput>
+    export type CreateSupportTipMutationError = ErrorType<void>
+
+    /**
+ * @summary Send a demo support tip to a creator
+ */
+export const useCreateSupportTip = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createSupportTip>>, TError,{data: BodyType<SupportTipInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createSupportTip>>,
+        TError,
+        {data: BodyType<SupportTipInput>},
+        TContext
+      > => {
+      return useMutation(getCreateSupportTipMutationOptions(options));
+    }
+
+export const getGetCreatorSupportDashboardUrl = () => {
+
+
+
+
+  return `/api/creator-support/dashboard`
+}
+
+/**
+ * @summary Get the current creator's own support analytics dashboard
+ */
+export const getCreatorSupportDashboard = async ( options?: RequestInit): Promise<CreatorSupportDashboard> => {
+
+  return customFetch<CreatorSupportDashboard>(getGetCreatorSupportDashboardUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCreatorSupportDashboardQueryKey = () => {
+    return [
+    `/api/creator-support/dashboard`
+    ] as const;
+    }
+
+
+export const getGetCreatorSupportDashboardQueryOptions = <TData = Awaited<ReturnType<typeof getCreatorSupportDashboard>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCreatorSupportDashboard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCreatorSupportDashboardQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCreatorSupportDashboard>>> = ({ signal }) => getCreatorSupportDashboard({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCreatorSupportDashboard>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCreatorSupportDashboardQueryResult = NonNullable<Awaited<ReturnType<typeof getCreatorSupportDashboard>>>
+export type GetCreatorSupportDashboardQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get the current creator's own support analytics dashboard
+ */
+
+export function useGetCreatorSupportDashboard<TData = Awaited<ReturnType<typeof getCreatorSupportDashboard>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCreatorSupportDashboard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCreatorSupportDashboardQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetAdminCreatorSupportOverviewUrl = () => {
+
+
+
+
+  return `/api/admin/creator-support`
+}
+
+/**
+ * @summary Admin view of platform-wide Creator Support activity
+ */
+export const getAdminCreatorSupportOverview = async ( options?: RequestInit): Promise<AdminCreatorSupportOverview> => {
+
+  return customFetch<AdminCreatorSupportOverview>(getGetAdminCreatorSupportOverviewUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAdminCreatorSupportOverviewQueryKey = () => {
+    return [
+    `/api/admin/creator-support`
+    ] as const;
+    }
+
+
+export const getGetAdminCreatorSupportOverviewQueryOptions = <TData = Awaited<ReturnType<typeof getAdminCreatorSupportOverview>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAdminCreatorSupportOverview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAdminCreatorSupportOverviewQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAdminCreatorSupportOverview>>> = ({ signal }) => getAdminCreatorSupportOverview({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAdminCreatorSupportOverview>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAdminCreatorSupportOverviewQueryResult = NonNullable<Awaited<ReturnType<typeof getAdminCreatorSupportOverview>>>
+export type GetAdminCreatorSupportOverviewQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Admin view of platform-wide Creator Support activity
+ */
+
+export function useGetAdminCreatorSupportOverview<TData = Awaited<ReturnType<typeof getAdminCreatorSupportOverview>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAdminCreatorSupportOverview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAdminCreatorSupportOverviewQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 
 export const getRequestUploadUrlUrl = () => {
 

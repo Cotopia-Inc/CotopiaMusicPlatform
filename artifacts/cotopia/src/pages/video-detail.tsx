@@ -12,6 +12,7 @@ import { Play, Heart, Star, Send, Users, MessageCircle, Maximize2, ArrowLeft, Tr
 import { RoleTag } from "@/components/role-badges";
 import { ImageCropModal } from "@/components/image-crop-modal";
 import { ReportModal } from "@/components/report-modal";
+import { SupportButton } from "@/components/support-modal";
 import { VerifyEmailBanner } from "@/components/verify-email-banner";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
@@ -703,6 +704,14 @@ export default function VideoDetail() {
               Add to queue
             </button>
           )}
+
+          {/* Support creator */}
+          <SupportButton
+            creatorUserId={video.artistUserId}
+            creatorName={video.artistName}
+            contentType="video"
+            contentId={video.id}
+          />
 
           {/* Report video */}
           {user && (

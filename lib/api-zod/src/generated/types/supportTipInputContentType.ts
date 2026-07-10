@@ -6,14 +6,12 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type AnalyticsEventInputContentType = typeof AnalyticsEventInputContentType[keyof typeof AnalyticsEventInputContentType];
+export type SupportTipInputContentType = typeof SupportTipInputContentType[keyof typeof SupportTipInputContentType];
 
 
-export const AnalyticsEventInputContentType = {
+export const SupportTipInputContentType = {
   song: 'song',
   video: 'video',
-  playlist: 'playlist',
-  user: 'user',
   artist: 'artist',
   label: 'label',
 } as const;

@@ -430,6 +430,12 @@ async function seed() {
     { name: "First Upload", description: "Successfully submitted and got first track approved on the platform.", category: "achievement", icon: "🚀", color: "#7c3aed" },
     { name: "Early Supporter", description: "Among the earliest supporters and champions of Everyday Radio.", category: "beta", icon: "💜", color: "#a855f7" },
     { name: "Profile Complete", description: "Filled out a full profile with display name, avatar, and bio.", category: "achievement", icon: "🪪", color: "#14b8a6" },
+    // Creator Support badges — prepared for future auto-award logic, not yet granted automatically.
+    { name: "Fan Supported Creator", description: "Received a demo support tip from a fan.", category: "creator", icon: "❤️", color: "#f43f5e" },
+    { name: "Community Favorite", description: "Received support tips from many different fans.", category: "community", icon: "🤝", color: "#22c55e" },
+    { name: "Top Supporter", description: "Among the most generous supporters on the platform.", category: "community", icon: "💎", color: "#0ea5e9" },
+    { name: "Support Champion", description: "Consistently supports creators across the platform.", category: "community", icon: "🏅", color: "#eab308" },
+    { name: "Creator Champion", description: "Recognized for outstanding creator support activity.", category: "creator", icon: "👑", color: "#a855f7" },
   ];
 
   for (const badge of starterBadges) {
