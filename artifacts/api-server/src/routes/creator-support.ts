@@ -182,7 +182,14 @@ router.get("/creator-support/settings", requireAuth, async (req: AuthRequest, re
 router.put("/creator-support/settings", requireAuth, async (req: AuthRequest, res): Promise<void> => {
   const parsed = UpdateCreatorSupportSettingsBody.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
+    const firstIssue = parsed.error.issues[0];
+    const friendly =
+      firstIssue?.path?.[0] === "paypalEmail"
+        ? "Enter a valid PayPal email address."
+        : firstIssue?.path?.[0] === "thankYouMessage"
+          ? "Thank-you message is too long."
+          : "Please check your Creator Support settings and try again.";
+    res.status(400).json({ error: friendly });
     return;
   }
   const { supportEnabled, paypalEmail, paypalMeLink, thankYouMessage, supportWallEnabled, supportWallRequiresApproval } = parsed.data;
