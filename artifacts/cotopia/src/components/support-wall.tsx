@@ -54,9 +54,9 @@ export function SupportWall({ userId, className }: SupportWallProps) {
       <div className="flex items-center gap-2">
         <MessageCircleHeart className="w-5 h-5 text-primary" />
         <h3 className="font-semibold">Community Support</h3>
-        {typeof status.supporterCount === "number" && (
+        {typeof data?.total === "number" && (
           <span className="text-xs text-muted-foreground">
-            · {status.supporterCount.toLocaleString()} {status.supporterCount === 1 ? "supporter" : "supporters"}
+            · {data.total.toLocaleString()} {data.total === 1 ? "message" : "messages"}
           </span>
         )}
       </div>
