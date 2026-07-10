@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
-import { Heart, EyeOff, Loader2, MessageCircleHeart } from "lucide-react";
+import { Heart, Trash2, Loader2, MessageCircleHeart } from "lucide-react";
 import {
   useGetSupportWall, useHideSupportWallMessage, useGetCreatorSupportStatus,
   getGetSupportWallQueryKey,
@@ -93,9 +93,9 @@ export function SupportWall({ userId, className }: SupportWallProps) {
                   className="flex-shrink-0 text-muted-foreground hover:text-destructive"
                   disabled={hideMutation.isPending}
                   onClick={() => hideMutation.mutate({ transactionId: item.id })}
-                  title="Hide this message from your wall"
+                  title="Delete this message"
                 >
-                  <EyeOff className="w-4 h-4" />
+                  <Trash2 className="w-4 h-4" />
                 </Button>
               )}
             </div>

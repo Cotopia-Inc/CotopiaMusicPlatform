@@ -103,6 +103,7 @@ import type {
   FeedbackInput,
   FollowUser200,
   GetChatMessagesParams,
+  GetCreatorPendingWallMessagesParams,
   GetCreatorSupportStatusParams,
   GetHistoryParams,
   GetSupportWallParams,
@@ -10574,7 +10575,7 @@ export const getHideSupportWallMessageUrl = (transactionId: number,) => {
 }
 
 /**
- * @summary Recipient hides a public/anonymous message they received (does not affect the tip itself)
+ * @summary Delete (soft-hide) a support wall message — allowed for the recipient creator, admins, and moderators
  */
 export const hideSupportWallMessage = async (transactionId: number, options?: RequestInit): Promise<SupportActivityItem> => {
 
@@ -10622,7 +10623,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type HideSupportWallMessageMutationError = ErrorType<void>
 
     /**
- * @summary Recipient hides a public/anonymous message they received (does not affect the tip itself)
+ * @summary Delete (soft-hide) a support wall message — allowed for the recipient creator, admins, and moderators
  */
 export const useHideSupportWallMessage = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof hideSupportWallMessage>>, TError,{transactionId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
@@ -10634,6 +10635,160 @@ export const useHideSupportWallMessage = <TError = ErrorType<void>,
       > => {
       return useMutation(getHideSupportWallMessageMutationOptions(options));
     }
+
+export const getApproveSupportWallMessageUrl = (transactionId: number,) => {
+
+
+
+
+  return `/api/creator-support/wall/${transactionId}/approve`
+}
+
+/**
+ * @summary Recipient (creator) approves a pending support wall message, making it publicly visible
+ */
+export const approveSupportWallMessage = async (transactionId: number, options?: RequestInit): Promise<SupportActivityItem> => {
+
+  return customFetch<SupportActivityItem>(getApproveSupportWallMessageUrl(transactionId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getApproveSupportWallMessageMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approveSupportWallMessage>>, TError,{transactionId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof approveSupportWallMessage>>, TError,{transactionId: number}, TContext> => {
+
+const mutationKey = ['approveSupportWallMessage'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof approveSupportWallMessage>>, {transactionId: number}> = (props) => {
+          const {transactionId} = props ?? {};
+
+          return  approveSupportWallMessage(transactionId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ApproveSupportWallMessageMutationResult = NonNullable<Awaited<ReturnType<typeof approveSupportWallMessage>>>
+
+    export type ApproveSupportWallMessageMutationError = ErrorType<void>
+
+    /**
+ * @summary Recipient (creator) approves a pending support wall message, making it publicly visible
+ */
+export const useApproveSupportWallMessage = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof approveSupportWallMessage>>, TError,{transactionId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof approveSupportWallMessage>>,
+        TError,
+        {transactionId: number},
+        TContext
+      > => {
+      return useMutation(getApproveSupportWallMessageMutationOptions(options));
+    }
+
+export const getGetCreatorPendingWallMessagesUrl = (params?: GetCreatorPendingWallMessagesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/creator-support/pending-wall-messages?${stringifiedParams}` : `/api/creator-support/pending-wall-messages`
+}
+
+/**
+ * @summary Creator's paginated list of pending wall messages awaiting their approval
+ */
+export const getCreatorPendingWallMessages = async (params?: GetCreatorPendingWallMessagesParams, options?: RequestInit): Promise<SupportWallPage> => {
+
+  return customFetch<SupportWallPage>(getGetCreatorPendingWallMessagesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCreatorPendingWallMessagesQueryKey = (params?: GetCreatorPendingWallMessagesParams,) => {
+    return [
+    `/api/creator-support/pending-wall-messages`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetCreatorPendingWallMessagesQueryOptions = <TData = Awaited<ReturnType<typeof getCreatorPendingWallMessages>>, TError = ErrorType<unknown>>(params?: GetCreatorPendingWallMessagesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCreatorPendingWallMessages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCreatorPendingWallMessagesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCreatorPendingWallMessages>>> = ({ signal }) => getCreatorPendingWallMessages(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCreatorPendingWallMessages>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCreatorPendingWallMessagesQueryResult = NonNullable<Awaited<ReturnType<typeof getCreatorPendingWallMessages>>>
+export type GetCreatorPendingWallMessagesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Creator's paginated list of pending wall messages awaiting their approval
+ */
+
+export function useGetCreatorPendingWallMessages<TData = Awaited<ReturnType<typeof getCreatorPendingWallMessages>>, TError = ErrorType<unknown>>(
+ params?: GetCreatorPendingWallMessagesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCreatorPendingWallMessages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCreatorPendingWallMessagesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 
 export const getCreateSupportTipUrl = () => {
 

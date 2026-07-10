@@ -134,6 +134,7 @@ export * from './feedback';
 export * from './feedbackInput';
 export * from './feedbackInputType';
 export * from './followUser200';
+export * from './getCreatorPendingWallMessagesParams';
 export * from './getHistoryParams';
 export * from './getTrendingSongsParams';
 export * from './getTrendingVideosParams';

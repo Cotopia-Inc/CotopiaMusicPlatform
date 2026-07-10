@@ -1,11 +1,17 @@
-import { useListSubmissions, getListSubmissionsQueryKey, useGetCreatorSupportDashboard } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  useListSubmissions, getListSubmissionsQueryKey, useGetCreatorSupportDashboard,
+  useGetCreatorPendingWallMessages, useApproveSupportWallMessage, useHideSupportWallMessage,
+} from "@workspace/api-client-react";
 import { Link } from "wouter";
-import { CheckCircle2, Circle, Clock, Music, Video, XCircle, Send, Lightbulb, Bug, Star, Heart, MessageCircleHeart, UserPlus, Settings } from "lucide-react";
-import { format } from "date-fns";
+import { CheckCircle2, Circle, Clock, Music, Video, XCircle, Send, Lightbulb, Bug, Star, Heart, MessageCircleHeart, UserPlus, Settings, Trash2, ThumbsUp } from "lucide-react";
+import { format, formatDistanceToNow } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import React, { useState } from "react";
 import { ExperienceFeedbackModal } from "@/components/experience-feedback-modal";
+import { useToast } from "@/hooks/use-toast";
 
 const STEPS = ["Received", "In Review", "Approved", "Scheduled", "Published"] as const;
 
@@ -59,13 +65,44 @@ function Pipeline({ step }: { step: number }) {
 }
 
 export default function CreatorDashboard() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
   const { data, isLoading } = useListSubmissions({
     query: { queryKey: getListSubmissionsQueryKey() },
   });
   const { data: supportDashboard } = useGetCreatorSupportDashboard({
     query: { queryKey: ["getCreatorSupportDashboard"] },
   });
+  const { data: pendingWall } = useGetCreatorPendingWallMessages(
+    { page: 1, pageSize: 20 },
+    { query: { queryKey: ["getCreatorPendingWallMessages"], enabled: (supportDashboard?.pendingWallApprovalCount ?? 0) > 0 } },
+  );
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+
+  const invalidatePending = () => {
+    queryClient.invalidateQueries({ queryKey: ["getCreatorPendingWallMessages"] });
+    queryClient.invalidateQueries({ queryKey: ["getCreatorSupportDashboard"] });
+  };
+
+  const approveMutation = useApproveSupportWallMessage({
+    mutation: {
+      onSuccess: () => {
+        toast({ title: "Message approved and now visible on your wall" });
+        invalidatePending();
+      },
+      onError: () => toast({ variant: "destructive", title: "Could not approve message" }),
+    },
+  });
+
+  const deleteMutation = useHideSupportWallMessage({
+    mutation: {
+      onSuccess: () => {
+        toast({ title: "Message removed" });
+        invalidatePending();
+      },
+      onError: () => toast({ variant: "destructive", title: "Could not remove message" }),
+    },
+  });
 
   const submissions = data ?? [];
   const REJECTED_STATUSES = ["rejected", "moderator_rejected"];
@@ -154,9 +191,58 @@ export default function CreatorDashboard() {
         </div>
 
         {supportDashboard && supportDashboard.pendingWallApprovalCount > 0 && (
-          <div className="text-xs bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 rounded-lg px-3 py-2.5 flex items-center gap-2">
-            <MessageCircleHeart className="w-4 h-4 flex-shrink-0" />
-            {supportDashboard.pendingWallApprovalCount} support wall {supportDashboard.pendingWallApprovalCount === 1 ? "message is" : "messages are"} awaiting moderator approval before appearing publicly.
+          <div className="bg-card rounded-xl border border-amber-500/30 p-5 space-y-3">
+            <div className="flex items-center gap-2">
+              <MessageCircleHeart className="w-4 h-4 text-amber-500 flex-shrink-0" />
+              <p className="text-sm font-semibold text-amber-600 dark:text-amber-400">
+                {supportDashboard.pendingWallApprovalCount} support wall {supportDashboard.pendingWallApprovalCount === 1 ? "message needs" : "messages need"} your approval
+              </p>
+            </div>
+
+            {pendingWall && pendingWall.items.length > 0 && (
+              <div className="space-y-2">
+                {pendingWall.items.map((item) => (
+                  <div key={item.id} className="flex items-start gap-3 p-3 rounded-lg bg-secondary/30 border border-border/50">
+                    <div className="flex-1 min-w-0 space-y-0.5">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-medium">{item.supporterDisplayName ?? "Anonymous Supporter"}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })}
+                        </span>
+                        {item.contentTitle && (
+                          <span className="text-xs text-muted-foreground/70">· on {item.contentTitle}</span>
+                        )}
+                      </div>
+                      {item.message && (
+                        <p className="text-sm text-muted-foreground break-words">"{item.message}"</p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-green-500 hover:text-green-600 hover:bg-green-500/10"
+                        disabled={approveMutation.isPending || deleteMutation.isPending}
+                        onClick={() => approveMutation.mutate({ transactionId: item.id })}
+                        title="Approve — show on your wall"
+                      >
+                        <ThumbsUp className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-muted-foreground hover:text-destructive"
+                        disabled={approveMutation.isPending || deleteMutation.isPending}
+                        onClick={() => deleteMutation.mutate({ transactionId: item.id })}
+                        title="Delete this message"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

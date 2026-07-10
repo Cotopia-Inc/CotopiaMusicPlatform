@@ -330,7 +330,7 @@ router.get("/creator-support/wall/:userId", async (req, res): Promise<void> => {
   res.json({ items, total, page, pageSize, hasMore: offset + items.length < total });
 });
 
-// ── Recipient: hide a public/anonymous message they received ──────────────
+// ── Delete (soft-hide) a wall message — creator, admin, or moderator ───────
 router.post("/creator-support/wall/:transactionId/hide", requireAuth, async (req: AuthRequest, res): Promise<void> => {
   const transactionId = Number(req.params.transactionId);
   if (isNaN(transactionId) || transactionId <= 0) {
@@ -342,8 +342,9 @@ router.post("/creator-support/wall/:transactionId/hide", requireAuth, async (req
     res.status(404).json({ error: "Transaction not found." });
     return;
   }
-  if (tx.recipientUserId !== req.user!.userId) {
-    res.status(403).json({ error: "You can only hide messages you received." });
+  const isStaff = ["admin", "master_admin", "moderator"].includes(req.user!.role ?? "");
+  if (tx.recipientUserId !== req.user!.userId && !isStaff) {
+    res.status(403).json({ error: "You can only delete messages from your own wall." });
     return;
   }
 
@@ -352,6 +353,86 @@ router.post("/creator-support/wall/:transactionId/hide", requireAuth, async (req
   const contentTitle = await resolveContentTitle(updated.contentType, updated.contentId);
 
   res.json(toActivityItem({ ...updated, supporterDisplayName: supporter?.displayName ?? null, supporterUsername: supporter?.username ?? "A fan" }, contentTitle));
+});
+
+// ── Recipient (creator): approve a pending wall message ────────────────────
+router.post("/creator-support/wall/:transactionId/approve", requireAuth, async (req: AuthRequest, res): Promise<void> => {
+  const transactionId = Number(req.params.transactionId);
+  if (isNaN(transactionId) || transactionId <= 0) {
+    res.status(400).json({ error: "Invalid transaction id" });
+    return;
+  }
+  const [tx] = await db.select().from(supportTransactionsTable).where(eq(supportTransactionsTable.id, transactionId)).limit(1);
+  if (!tx) {
+    res.status(404).json({ error: "Transaction not found." });
+    return;
+  }
+  if (tx.recipientUserId !== req.user!.userId) {
+    res.status(403).json({ error: "You can only approve messages you received." });
+    return;
+  }
+  if (tx.moderationStatus !== "pending") {
+    res.status(400).json({ error: "Message is not pending approval." });
+    return;
+  }
+
+  const [updated] = await db.update(supportTransactionsTable).set({ moderationStatus: "approved" }).where(eq(supportTransactionsTable.id, transactionId)).returning();
+  const [supporter] = await db.select({ displayName: usersTable.displayName, username: usersTable.username }).from(usersTable).where(eq(usersTable.id, updated.supporterUserId)).limit(1);
+  const contentTitle = await resolveContentTitle(updated.contentType, updated.contentId);
+
+  res.json(toActivityItem({ ...updated, supporterDisplayName: supporter?.displayName ?? null, supporterUsername: supporter?.username ?? "A fan" }, contentTitle));
+});
+
+// ── Creator: list their own pending wall messages ──────────────────────────
+router.get("/creator-support/pending-wall-messages", requireAuth, async (req: AuthRequest, res): Promise<void> => {
+  const creatorUserId = req.user!.userId;
+  const queryParsed = GetSupportWallQueryParams.safeParse(req.query);
+  if (!queryParsed.success) {
+    res.status(400).json({ error: queryParsed.error.message });
+    return;
+  }
+  const { page, pageSize } = queryParsed.data;
+  const offset = (page - 1) * pageSize;
+
+  const whereClause = and(
+    eq(supportTransactionsTable.recipientUserId, creatorUserId),
+    eq(supportTransactionsTable.status, "completed"),
+    eq(supportTransactionsTable.moderationStatus, "pending"),
+    or(eq(supportTransactionsTable.messageVisibility, "public"), eq(supportTransactionsTable.messageVisibility, "anonymous")),
+  );
+
+  const [[totalRow], rows] = await Promise.all([
+    db.select({ count: count() }).from(supportTransactionsTable).where(whereClause),
+    db.select({
+      id: supportTransactionsTable.id,
+      messageVisibility: supportTransactionsTable.messageVisibility,
+      message: supportTransactionsTable.message,
+      contentType: supportTransactionsTable.contentType,
+      contentId: supportTransactionsTable.contentId,
+      createdAt: supportTransactionsTable.createdAt,
+      supporterDisplayName: usersTable.displayName,
+      supporterUsername: usersTable.username,
+    }).from(supportTransactionsTable)
+      .innerJoin(usersTable, eq(supportTransactionsTable.supporterUserId, usersTable.id))
+      .where(whereClause)
+      .orderBy(desc(supportTransactionsTable.createdAt))
+      .limit(pageSize)
+      .offset(offset),
+  ]);
+
+  const items = await Promise.all(rows.map(async (r) => ({
+    id: r.id,
+    isAnonymous: false,
+    supporterDisplayName: r.supporterDisplayName || r.supporterUsername,
+    message: r.message,
+    contentType: r.contentType,
+    contentId: r.contentId,
+    contentTitle: await resolveContentTitle(r.contentType, r.contentId),
+    createdAt: r.createdAt,
+  })));
+
+  const total = totalRow?.count ?? 0;
+  res.json({ items, total, page, pageSize, hasMore: offset + items.length < total });
 });
 
 // ── Send a demo support tip ─────────────────────────────────────────────────

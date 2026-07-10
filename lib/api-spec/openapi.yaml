@@ -2844,7 +2844,7 @@ paths:
     post:
       operationId: hideSupportWallMessage
       tags: [creator-support]
-      summary: Recipient hides a public/anonymous message they received (does not affect the tip itself)
+      summary: Delete (soft-hide) a support wall message — allowed for the recipient creator, admins, and moderators
       security:
         - bearerAuth: []
       parameters:
@@ -2861,9 +2861,64 @@ paths:
               schema:
                 $ref: "#/components/schemas/SupportActivityItem"
         "403":
+          description: Not the recipient or a staff member
+        "404":
+          description: Transaction not found
+
+  /creator-support/wall/{transactionId}/approve:
+    post:
+      operationId: approveSupportWallMessage
+      tags: [creator-support]
+      summary: Recipient (creator) approves a pending support wall message, making it publicly visible
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: transactionId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupportActivityItem"
+        "400":
+          description: Message is not in pending status
+        "403":
           description: Not the recipient of this tip
         "404":
           description: Transaction not found
+
+  /creator-support/pending-wall-messages:
+    get:
+      operationId: getCreatorPendingWallMessages
+      tags: [creator-support]
+      summary: Creator's paginated list of pending wall messages awaiting their approval
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupportWallPage"
 
   /creator-support/tips:
     post:

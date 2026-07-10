@@ -3494,7 +3494,7 @@ export const GetSupportWallResponse = zod.object({
 
 
 /**
- * @summary Recipient hides a public/anonymous message they received (does not affect the tip itself)
+ * @summary Delete (soft-hide) a support wall message — allowed for the recipient creator, admins, and moderators
  */
 export const HideSupportWallMessageParams = zod.object({
   "transactionId": zod.coerce.number()
@@ -3514,6 +3514,59 @@ export const HideSupportWallMessageResponse = zod.object({
   "contentTitle": zod.string().nullish(),
   "transactionRef": zod.string(),
   "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Recipient (creator) approves a pending support wall message, making it publicly visible
+ */
+export const ApproveSupportWallMessageParams = zod.object({
+  "transactionId": zod.coerce.number()
+})
+
+export const ApproveSupportWallMessageResponse = zod.object({
+  "id": zod.number(),
+  "supporterDisplayName": zod.string(),
+  "amount": zod.number(),
+  "currency": zod.string(),
+  "message": zod.string().nullable(),
+  "messageVisibility": zod.enum(['private', 'public', 'anonymous']),
+  "moderationStatus": zod.enum(['pending', 'approved', 'hidden']),
+  "status": zod.enum(['completed', 'failed', 'cancelled']),
+  "contentType": zod.string(),
+  "contentId": zod.number().nullable(),
+  "contentTitle": zod.string().nullish(),
+  "transactionRef": zod.string(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Creator's paginated list of pending wall messages awaiting their approval
+ */
+export const getCreatorPendingWallMessagesQueryPageDefault = 1;
+export const getCreatorPendingWallMessagesQueryPageSizeDefault = 10;
+
+export const GetCreatorPendingWallMessagesQueryParams = zod.object({
+  "page": zod.coerce.number().default(getCreatorPendingWallMessagesQueryPageDefault),
+  "pageSize": zod.coerce.number().default(getCreatorPendingWallMessagesQueryPageSizeDefault)
+})
+
+export const GetCreatorPendingWallMessagesResponse = zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "isAnonymous": zod.boolean(),
+  "supporterDisplayName": zod.string().nullable().describe('Null when isAnonymous is true.'),
+  "message": zod.string().nullable(),
+  "contentType": zod.string(),
+  "contentId": zod.number().nullable(),
+  "contentTitle": zod.string().nullable(),
+  "createdAt": zod.string()
+})),
+  "total": zod.number(),
+  "page": zod.number(),
+  "pageSize": zod.number(),
+  "hasMore": zod.boolean()
 })
 
 

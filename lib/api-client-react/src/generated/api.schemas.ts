@@ -2463,6 +2463,11 @@ page?: number;
 pageSize?: number;
 };
 
+export type GetCreatorPendingWallMessagesParams = {
+page?: number;
+pageSize?: number;
+};
+
 export type AdminListFeatureSuggestionsParams = {
 status?: string;
 category?: string;
