@@ -2784,11 +2784,71 @@ paths:
     get:
       operationId: getCreatorSupportStatus
       tags: [creator-support]
-      summary: Check whether a given user has Creator Support enabled (public-safe, no payment details)
+      summary: Check whether a given user has Creator Support enabled (public-safe, no payment details); optionally include a real per-content supporter count
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: contentType
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: contentId
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreatorSupportStatus"
+
+  /creator-support/wall/{userId}:
+    get:
+      operationId: getSupportWall
+      tags: [creator-support]
+      summary: Public paginated Support Wall for a creator (approved public/anonymous messages only, never amounts)
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupportWallPage"
+
+  /creator-support/wall/{transactionId}/hide:
+    post:
+      operationId: hideSupportWallMessage
+      tags: [creator-support]
+      summary: Recipient hides a public/anonymous message they received (does not affect the tip itself)
       security:
         - bearerAuth: []
       parameters:
-        - name: userId
+        - name: transactionId
           in: path
           required: true
           schema:
@@ -2799,7 +2859,11 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/CreatorSupportStatus"
+                $ref: "#/components/schemas/SupportActivityItem"
+        "403":
+          description: Not the recipient of this tip
+        "404":
+          description: Transaction not found
 
   /creator-support/tips:
     post:
@@ -2857,6 +2921,68 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AdminCreatorSupportOverview"
+
+  /admin/creator-support/transactions/{id}/status:
+    put:
+      operationId: updateSupportTransactionStatus
+      tags: [creator-support]
+      summary: Admin override of a demo transaction's status (completed/failed/cancelled), for demo testing only
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SupportTransactionStatusUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupportActivityItem"
+        "400":
+          description: Invalid status
+        "404":
+          description: Transaction not found
+
+  /admin/creator-support/wall/{id}/moderation:
+    put:
+      operationId: updateSupportWallModeration
+      tags: [creator-support]
+      summary: Admin approve/hide/restore a Support Wall message
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SupportWallModerationUpdate"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupportActivityItem"
+        "400":
+          description: Invalid action
+        "404":
+          description: Transaction not found
 
   /storage/uploads/request-url:
     post:
@@ -4980,7 +5106,7 @@ components:
     # ── Creator Support ──────────────────────────────────────────────────────
     CreatorSupportSettings:
       type: object
-      required: [supportEnabled, provider, paypalEmail, paypalMeLink]
+      required: [supportEnabled, provider, paypalEmail, paypalMeLink, thankYouMessage, supportWallEnabled, supportWallRequiresApproval]
       properties:
         supportEnabled:
           type: boolean
@@ -4991,6 +5117,12 @@ components:
           type: ["string", "null"]
         paypalMeLink:
           type: ["string", "null"]
+        thankYouMessage:
+          type: ["string", "null"]
+        supportWallEnabled:
+          type: boolean
+        supportWallRequiresApproval:
+          type: boolean
 
     CreatorSupportSettingsUpdate:
       type: object
@@ -5003,14 +5135,31 @@ components:
           format: email
         paypalMeLink:
           type: ["string", "null"]
+        thankYouMessage:
+          type: ["string", "null"]
+          maxLength: 300
+        supportWallEnabled:
+          type: boolean
+        supportWallRequiresApproval:
+          type: boolean
 
     CreatorSupportStatus:
       type: object
-      required: [userId, supportEnabled]
+      required: [userId, supportEnabled, supporterCount]
       properties:
         userId:
           type: integer
         supportEnabled:
+          type: boolean
+        supporterCount:
+          type: integer
+          description: Real count of DISTINCT completed supporters for this user (never inflated).
+        contentSupporterCount:
+          type: ["integer", "null"]
+          description: Present only when contentType/contentId query params are given — DISTINCT supporters of that specific content item.
+        thankYouMessage:
+          type: ["string", "null"]
+        supportWallEnabled:
           type: boolean
 
     SupportTipInput:
@@ -5019,7 +5168,7 @@ components:
       properties:
         contentType:
           type: string
-          enum: [song, video, artist, label]
+          enum: [song, video, artist, label, creator]
         contentId:
           type: integer
         amount:
@@ -5028,10 +5177,14 @@ components:
         message:
           type: string
           maxLength: 500
+        messageVisibility:
+          type: string
+          enum: [private, public, anonymous]
+          default: private
 
     SupportTransaction:
       type: object
-      required: [id, transactionRef, amount, currency, message, mode, status, createdAt]
+      required: [id, transactionRef, amount, currency, message, messageVisibility, mode, status, createdAt]
       properties:
         id:
           type: integer
@@ -5043,6 +5196,9 @@ components:
           type: string
         message:
           type: ["string", "null"]
+        messageVisibility:
+          type: string
+          enum: [private, public, anonymous]
         mode:
           type: string
           enum: [demo, live]
@@ -5053,7 +5209,7 @@ components:
 
     SupportActivityItem:
       type: object
-      required: [id, supporterDisplayName, amount, currency, message, contentType, contentId, transactionRef, createdAt]
+      required: [id, supporterDisplayName, amount, currency, message, messageVisibility, moderationStatus, status, contentType, contentId, transactionRef, createdAt]
       properties:
         id:
           type: integer
@@ -5065,6 +5221,15 @@ components:
           type: string
         message:
           type: ["string", "null"]
+        messageVisibility:
+          type: string
+          enum: [private, public, anonymous]
+        moderationStatus:
+          type: string
+          enum: [pending, approved, hidden]
+        status:
+          type: string
+          enum: [completed, failed, cancelled]
         contentType:
           type: string
         contentId:
@@ -5075,6 +5240,61 @@ components:
           type: string
         createdAt:
           type: string
+
+    SupportWallMessageItem:
+      type: object
+      required: [id, isAnonymous, supporterDisplayName, message, contentType, contentId, contentTitle, createdAt]
+      properties:
+        id:
+          type: integer
+        isAnonymous:
+          type: boolean
+        supporterDisplayName:
+          type: ["string", "null"]
+          description: Null when isAnonymous is true.
+        message:
+          type: ["string", "null"]
+        contentType:
+          type: string
+        contentId:
+          type: ["integer", "null"]
+        contentTitle:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    SupportWallPage:
+      type: object
+      required: [items, total, page, pageSize, hasMore]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/SupportWallMessageItem"
+        total:
+          type: integer
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        hasMore:
+          type: boolean
+
+    SupportTransactionStatusUpdate:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [completed, failed, cancelled]
+
+    SupportWallModerationUpdate:
+      type: object
+      required: [action]
+      properties:
+        action:
+          type: string
+          enum: [approve, hide, restore]
 
     SupportedContentItem:
       type: object
@@ -5104,6 +5324,8 @@ components:
         - supportMessages
         - followerCount
         - newFollowers30d
+        - pendingWallApprovalCount
+        - supporterCount
       properties:
         mode:
           type: string
@@ -5132,6 +5354,11 @@ components:
           type: integer
         newFollowers30d:
           type: integer
+        pendingWallApprovalCount:
+          type: integer
+        supporterCount:
+          type: integer
+          description: Real DISTINCT count of completed supporters (never inflated).
 
     TopSupporterItem:
       type: object
@@ -5174,6 +5401,7 @@ components:
         - newFollowers30d
         - recentTransactions
         - recentMessages
+        - pendingModerationCount
       properties:
         paymentMode:
           type: string
@@ -5213,6 +5441,8 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/SupportActivityItem"
+        pendingModerationCount:
+          type: integer
 
     # ── Object Storage ─────────────────────────────────────────────────────────
     UploadUrlRequest:

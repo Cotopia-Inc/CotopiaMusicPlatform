@@ -3404,37 +3404,116 @@ export const GetCreatorSupportSettingsResponse = zod.object({
   "supportEnabled": zod.boolean(),
   "provider": zod.enum(['paypal']),
   "paypalEmail": zod.string().nullable(),
-  "paypalMeLink": zod.string().nullable()
+  "paypalMeLink": zod.string().nullable(),
+  "thankYouMessage": zod.string().nullable(),
+  "supportWallEnabled": zod.boolean(),
+  "supportWallRequiresApproval": zod.boolean()
 })
 
 
 /**
  * @summary Update the current user's Creator Support payment settings
  */
+export const updateCreatorSupportSettingsBodyThankYouMessageMax = 300;
+
+
+
 export const UpdateCreatorSupportSettingsBody = zod.object({
   "supportEnabled": zod.boolean(),
   "paypalEmail": zod.string().email().nullish(),
-  "paypalMeLink": zod.string().nullish()
+  "paypalMeLink": zod.string().nullish(),
+  "thankYouMessage": zod.string().max(updateCreatorSupportSettingsBodyThankYouMessageMax).nullish(),
+  "supportWallEnabled": zod.boolean().optional(),
+  "supportWallRequiresApproval": zod.boolean().optional()
 })
 
 export const UpdateCreatorSupportSettingsResponse = zod.object({
   "supportEnabled": zod.boolean(),
   "provider": zod.enum(['paypal']),
   "paypalEmail": zod.string().nullable(),
-  "paypalMeLink": zod.string().nullable()
+  "paypalMeLink": zod.string().nullable(),
+  "thankYouMessage": zod.string().nullable(),
+  "supportWallEnabled": zod.boolean(),
+  "supportWallRequiresApproval": zod.boolean()
 })
 
 
 /**
- * @summary Check whether a given user has Creator Support enabled (public-safe, no payment details)
+ * @summary Check whether a given user has Creator Support enabled (public-safe, no payment details); optionally include a real per-content supporter count
  */
 export const GetCreatorSupportStatusParams = zod.object({
   "userId": zod.coerce.number()
 })
 
+export const GetCreatorSupportStatusQueryParams = zod.object({
+  "contentType": zod.coerce.string().optional(),
+  "contentId": zod.coerce.number().optional()
+})
+
 export const GetCreatorSupportStatusResponse = zod.object({
   "userId": zod.number(),
-  "supportEnabled": zod.boolean()
+  "supportEnabled": zod.boolean(),
+  "supporterCount": zod.number().describe('Real count of DISTINCT completed supporters for this user (never inflated).'),
+  "contentSupporterCount": zod.number().nullish().describe('Present only when contentType\/contentId query params are given — DISTINCT supporters of that specific content item.'),
+  "thankYouMessage": zod.string().nullish(),
+  "supportWallEnabled": zod.boolean().optional()
+})
+
+
+/**
+ * @summary Public paginated Support Wall for a creator (approved public/anonymous messages only, never amounts)
+ */
+export const GetSupportWallParams = zod.object({
+  "userId": zod.coerce.number()
+})
+
+export const getSupportWallQueryPageDefault = 1;
+export const getSupportWallQueryPageSizeDefault = 10;
+
+export const GetSupportWallQueryParams = zod.object({
+  "page": zod.coerce.number().default(getSupportWallQueryPageDefault),
+  "pageSize": zod.coerce.number().default(getSupportWallQueryPageSizeDefault)
+})
+
+export const GetSupportWallResponse = zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "isAnonymous": zod.boolean(),
+  "supporterDisplayName": zod.string().nullable().describe('Null when isAnonymous is true.'),
+  "message": zod.string().nullable(),
+  "contentType": zod.string(),
+  "contentId": zod.number().nullable(),
+  "contentTitle": zod.string().nullable(),
+  "createdAt": zod.string()
+})),
+  "total": zod.number(),
+  "page": zod.number(),
+  "pageSize": zod.number(),
+  "hasMore": zod.boolean()
+})
+
+
+/**
+ * @summary Recipient hides a public/anonymous message they received (does not affect the tip itself)
+ */
+export const HideSupportWallMessageParams = zod.object({
+  "transactionId": zod.coerce.number()
+})
+
+export const HideSupportWallMessageResponse = zod.object({
+  "id": zod.number(),
+  "supporterDisplayName": zod.string(),
+  "amount": zod.number(),
+  "currency": zod.string(),
+  "message": zod.string().nullable(),
+  "messageVisibility": zod.enum(['private', 'public', 'anonymous']),
+  "moderationStatus": zod.enum(['pending', 'approved', 'hidden']),
+  "status": zod.enum(['completed', 'failed', 'cancelled']),
+  "contentType": zod.string(),
+  "contentId": zod.number().nullable(),
+  "contentTitle": zod.string().nullish(),
+  "transactionRef": zod.string(),
+  "createdAt": zod.string()
 })
 
 
@@ -3445,13 +3524,14 @@ export const createSupportTipBodyAmountExclusiveMin = 0;
 
 export const createSupportTipBodyMessageMax = 500;
 
-
+export const createSupportTipBodyMessageVisibilityDefault = `private`;
 
 export const CreateSupportTipBody = zod.object({
-  "contentType": zod.enum(['song', 'video', 'artist', 'label']),
+  "contentType": zod.enum(['song', 'video', 'artist', 'label', 'creator']),
   "contentId": zod.number().optional(),
   "amount": zod.number().gt(createSupportTipBodyAmountExclusiveMin),
-  "message": zod.string().max(createSupportTipBodyMessageMax).optional()
+  "message": zod.string().max(createSupportTipBodyMessageMax).optional(),
+  "messageVisibility": zod.enum(['private', 'public', 'anonymous']).default(createSupportTipBodyMessageVisibilityDefault)
 })
 
 
@@ -3477,6 +3557,9 @@ export const GetCreatorSupportDashboardResponse = zod.object({
   "amount": zod.number(),
   "currency": zod.string(),
   "message": zod.string().nullable(),
+  "messageVisibility": zod.enum(['private', 'public', 'anonymous']),
+  "moderationStatus": zod.enum(['pending', 'approved', 'hidden']),
+  "status": zod.enum(['completed', 'failed', 'cancelled']),
   "contentType": zod.string(),
   "contentId": zod.number().nullable(),
   "contentTitle": zod.string().nullish(),
@@ -3489,6 +3572,9 @@ export const GetCreatorSupportDashboardResponse = zod.object({
   "amount": zod.number(),
   "currency": zod.string(),
   "message": zod.string().nullable(),
+  "messageVisibility": zod.enum(['private', 'public', 'anonymous']),
+  "moderationStatus": zod.enum(['pending', 'approved', 'hidden']),
+  "status": zod.enum(['completed', 'failed', 'cancelled']),
   "contentType": zod.string(),
   "contentId": zod.number().nullable(),
   "contentTitle": zod.string().nullish(),
@@ -3496,7 +3582,9 @@ export const GetCreatorSupportDashboardResponse = zod.object({
   "createdAt": zod.string()
 })),
   "followerCount": zod.number(),
-  "newFollowers30d": zod.number()
+  "newFollowers30d": zod.number(),
+  "pendingWallApprovalCount": zod.number(),
+  "supporterCount": zod.number().describe('Real DISTINCT count of completed supporters (never inflated).')
 })
 
 
@@ -3542,6 +3630,9 @@ export const GetAdminCreatorSupportOverviewResponse = zod.object({
   "amount": zod.number(),
   "currency": zod.string(),
   "message": zod.string().nullable(),
+  "messageVisibility": zod.enum(['private', 'public', 'anonymous']),
+  "moderationStatus": zod.enum(['pending', 'approved', 'hidden']),
+  "status": zod.enum(['completed', 'failed', 'cancelled']),
   "contentType": zod.string(),
   "contentId": zod.number().nullable(),
   "contentTitle": zod.string().nullish(),
@@ -3554,12 +3645,72 @@ export const GetAdminCreatorSupportOverviewResponse = zod.object({
   "amount": zod.number(),
   "currency": zod.string(),
   "message": zod.string().nullable(),
+  "messageVisibility": zod.enum(['private', 'public', 'anonymous']),
+  "moderationStatus": zod.enum(['pending', 'approved', 'hidden']),
+  "status": zod.enum(['completed', 'failed', 'cancelled']),
   "contentType": zod.string(),
   "contentId": zod.number().nullable(),
   "contentTitle": zod.string().nullish(),
   "transactionRef": zod.string(),
   "createdAt": zod.string()
-}))
+})),
+  "pendingModerationCount": zod.number()
+})
+
+
+/**
+ * @summary Admin override of a demo transaction's status (completed/failed/cancelled), for demo testing only
+ */
+export const UpdateSupportTransactionStatusParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateSupportTransactionStatusBody = zod.object({
+  "status": zod.enum(['completed', 'failed', 'cancelled'])
+})
+
+export const UpdateSupportTransactionStatusResponse = zod.object({
+  "id": zod.number(),
+  "supporterDisplayName": zod.string(),
+  "amount": zod.number(),
+  "currency": zod.string(),
+  "message": zod.string().nullable(),
+  "messageVisibility": zod.enum(['private', 'public', 'anonymous']),
+  "moderationStatus": zod.enum(['pending', 'approved', 'hidden']),
+  "status": zod.enum(['completed', 'failed', 'cancelled']),
+  "contentType": zod.string(),
+  "contentId": zod.number().nullable(),
+  "contentTitle": zod.string().nullish(),
+  "transactionRef": zod.string(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Admin approve/hide/restore a Support Wall message
+ */
+export const UpdateSupportWallModerationParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateSupportWallModerationBody = zod.object({
+  "action": zod.enum(['approve', 'hide', 'restore'])
+})
+
+export const UpdateSupportWallModerationResponse = zod.object({
+  "id": zod.number(),
+  "supporterDisplayName": zod.string(),
+  "amount": zod.number(),
+  "currency": zod.string(),
+  "message": zod.string().nullable(),
+  "messageVisibility": zod.enum(['private', 'public', 'anonymous']),
+  "moderationStatus": zod.enum(['pending', 'approved', 'hidden']),
+  "status": zod.enum(['completed', 'failed', 'cancelled']),
+  "contentType": zod.string(),
+  "contentId": zod.number().nullable(),
+  "contentTitle": zod.string().nullish(),
+  "transactionRef": zod.string(),
+  "createdAt": zod.string()
 })
 
 

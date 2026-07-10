@@ -15,6 +15,9 @@ export const creatorPaymentSettingsTable = pgTable("creator_payment_settings", {
   provider: text("provider").notNull().default("paypal"), // paypal | (future: stripe, venmo, ...)
   paypalEmail: text("paypal_email"),
   paypalMeLink: text("paypal_me_link"),
+  thankYouMessage: text("thank_you_message"),
+  supportWallEnabled: boolean("support_wall_enabled").notNull().default(true),
+  supportWallRequiresApproval: boolean("support_wall_requires_approval").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 }, (table) => [

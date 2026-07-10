@@ -9,4 +9,14 @@
 export interface CreatorSupportStatus {
   userId: number;
   supportEnabled: boolean;
+  /** Real count of DISTINCT completed supporters for this user (never inflated). */
+  supporterCount: number;
+  /**
+     * Present only when contentType/contentId query params are given — DISTINCT supporters of that specific content item.
+     * @nullable
+     */
+  contentSupporterCount?: number | null;
+  /** @nullable */
+  thankYouMessage?: string | null;
+  supportWallEnabled?: boolean;
 }

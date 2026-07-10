@@ -51,6 +51,7 @@ A full-stack music and video streaming platform with role-based access, content 
 - **Labels**: Submit and manage artists/albums, company hub posts.
 - **Admins**: Review/approve/reject submissions, manage users, configure app settings via CMS.
 - **Company Hub**: Blog-style posts for announcements and spotlights.
+- **Creator Support**: Demo-mode tipping (`/api/creator-support`, `/admin/creator-support`) — any artist, label, admin, editor, or moderator can enable Creator Support on their own account to receive tips on their profile, songs, or videos; supports a moderated public support wall and badges. No real payments are processed (demo transactions only); not available for podcasts (no podcast schema exists yet).
 
 ## Demo accounts (password: `password123`)
 
@@ -72,7 +73,7 @@ A full-stack music and video streaming platform with role-based access, content 
 
 ## Gotchas
 
-- **Production DB migrations**: when new columns are added to `lib/db/src/schema/`, run `pnpm --filter @workspace/db run push` against the production `DATABASE_URL` before deploying. Recent additions: `users.deletion_requested_at` (account deletion requests).
+- **Production DB migrations**: when new columns/tables are added to `lib/db/src/schema/`, run `pnpm --filter @workspace/db run push` against the production `DATABASE_URL` before deploying. Recent additions: `users.deletion_requested_at` (account deletion requests); `creator_payment_settings` and `support_transactions` tables (Universal Creator Support / tipping system — not covered by `ensureTables()`, so they must be pushed manually or they will 500 in prod).
 - Always run `pnpm run typecheck:libs` after changing any `lib/*` package before checking artifact types.
 - After changing `lib/api-spec/openapi.yaml`, run `pnpm --filter @workspace/api-spec run codegen` to regenerate hooks and schemas.
 - `@types/bcryptjs` and `bcryptjs` are in the pnpm catalog — use `catalog:` when adding them.

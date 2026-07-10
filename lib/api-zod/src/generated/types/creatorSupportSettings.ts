@@ -14,4 +14,8 @@ export interface CreatorSupportSettings {
   paypalEmail: string | null;
   /** @nullable */
   paypalMeLink: string | null;
+  /** @nullable */
+  thankYouMessage: string | null;
+  supportWallEnabled: boolean;
+  supportWallRequiresApproval: boolean;
 }

@@ -6,6 +6,7 @@ import {
   useRateSong, useFavoriteSong, useUnfavoriteSong,
   useDeleteSong, useUpdateSong, useUpdateArtist, useTrackAnalyticsEvent,
   useGetPresenceCount, usePostPresenceHeartbeat, useDeletePresence,
+  useGetCreatorSupportStatus,
 } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Play, Pause, Heart, Star, Send, Users, MessageCircle, ArrowLeft, Trash2, Edit2, X, Save, Upload, ImageIcon, Mic2, ChevronDown, ChevronUp, AlignLeft } from "lucide-react";
@@ -51,6 +52,12 @@ export default function SongDetail() {
   const { data: song, isLoading } = useGetSong(songId, {
     query: { enabled: !!songId, queryKey: getGetSongQueryKey(songId) }
   });
+
+  const { data: songSupportStatus } = useGetCreatorSupportStatus(
+    (song as any)?.artistUserId ?? 0,
+    { contentType: "song", contentId: songId },
+    { query: { enabled: !!(song as any)?.artistUserId, queryKey: ["getCreatorSupportStatus", (song as any)?.artistUserId, "song", songId] } },
+  );
 
   useSeo({
     title: song ? `${song.title} by ${song.artistName}` : "Song",
@@ -341,6 +348,12 @@ export default function SongDetail() {
               <span>{Math.floor(song.duration / 60)}:{(song.duration % 60).toString().padStart(2, '0')}</span>
               <span>•</span>
               <span>{song.playCount?.toLocaleString() || 0} plays</span>
+              {songSupportStatus?.supportEnabled && (
+                <>
+                  <span>•</span>
+                  <span className="flex items-center gap-1"><Heart className="w-3.5 h-3.5" /> {(songSupportStatus.contentSupporterCount ?? 0).toLocaleString()} supporters</span>
+                </>
+              )}
             </div>
           </div>
         </div>

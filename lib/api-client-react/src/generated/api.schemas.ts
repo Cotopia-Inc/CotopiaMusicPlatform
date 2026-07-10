@@ -1247,6 +1247,10 @@ export interface CreatorSupportSettings {
   paypalEmail: string | null;
   /** @nullable */
   paypalMeLink: string | null;
+  /** @nullable */
+  thankYouMessage: string | null;
+  supportWallEnabled: boolean;
+  supportWallRequiresApproval: boolean;
 }
 
 export interface CreatorSupportSettingsUpdate {
@@ -1255,11 +1259,28 @@ export interface CreatorSupportSettingsUpdate {
   paypalEmail?: string | null;
   /** @nullable */
   paypalMeLink?: string | null;
+  /**
+     * @maxLength 300
+     * @nullable
+     */
+  thankYouMessage?: string | null;
+  supportWallEnabled?: boolean;
+  supportWallRequiresApproval?: boolean;
 }
 
 export interface CreatorSupportStatus {
   userId: number;
   supportEnabled: boolean;
+  /** Real count of DISTINCT completed supporters for this user (never inflated). */
+  supporterCount: number;
+  /**
+     * Present only when contentType/contentId query params are given — DISTINCT supporters of that specific content item.
+     * @nullable
+     */
+  contentSupporterCount?: number | null;
+  /** @nullable */
+  thankYouMessage?: string | null;
+  supportWallEnabled?: boolean;
 }
 
 export type SupportTipInputContentType = typeof SupportTipInputContentType[keyof typeof SupportTipInputContentType];
@@ -1270,6 +1291,16 @@ export const SupportTipInputContentType = {
   video: 'video',
   artist: 'artist',
   label: 'label',
+  creator: 'creator',
+} as const;
+
+export type SupportTipInputMessageVisibility = typeof SupportTipInputMessageVisibility[keyof typeof SupportTipInputMessageVisibility];
+
+
+export const SupportTipInputMessageVisibility = {
+  private: 'private',
+  public: 'public',
+  anonymous: 'anonymous',
 } as const;
 
 export interface SupportTipInput {
@@ -1279,7 +1310,17 @@ export interface SupportTipInput {
   amount: number;
   /** @maxLength 500 */
   message?: string;
+  messageVisibility?: SupportTipInputMessageVisibility;
 }
+
+export type SupportTransactionMessageVisibility = typeof SupportTransactionMessageVisibility[keyof typeof SupportTransactionMessageVisibility];
+
+
+export const SupportTransactionMessageVisibility = {
+  private: 'private',
+  public: 'public',
+  anonymous: 'anonymous',
+} as const;
 
 export type SupportTransactionMode = typeof SupportTransactionMode[keyof typeof SupportTransactionMode];
 
@@ -1296,10 +1337,38 @@ export interface SupportTransaction {
   currency: string;
   /** @nullable */
   message: string | null;
+  messageVisibility: SupportTransactionMessageVisibility;
   mode: SupportTransactionMode;
   status: string;
   createdAt: string;
 }
+
+export type SupportActivityItemMessageVisibility = typeof SupportActivityItemMessageVisibility[keyof typeof SupportActivityItemMessageVisibility];
+
+
+export const SupportActivityItemMessageVisibility = {
+  private: 'private',
+  public: 'public',
+  anonymous: 'anonymous',
+} as const;
+
+export type SupportActivityItemModerationStatus = typeof SupportActivityItemModerationStatus[keyof typeof SupportActivityItemModerationStatus];
+
+
+export const SupportActivityItemModerationStatus = {
+  pending: 'pending',
+  approved: 'approved',
+  hidden: 'hidden',
+} as const;
+
+export type SupportActivityItemStatus = typeof SupportActivityItemStatus[keyof typeof SupportActivityItemStatus];
+
+
+export const SupportActivityItemStatus = {
+  completed: 'completed',
+  failed: 'failed',
+  cancelled: 'cancelled',
+} as const;
 
 export interface SupportActivityItem {
   id: number;
@@ -1308,6 +1377,9 @@ export interface SupportActivityItem {
   currency: string;
   /** @nullable */
   message: string | null;
+  messageVisibility: SupportActivityItemMessageVisibility;
+  moderationStatus: SupportActivityItemModerationStatus;
+  status: SupportActivityItemStatus;
   contentType: string;
   /** @nullable */
   contentId: number | null;
@@ -1315,6 +1387,58 @@ export interface SupportActivityItem {
   contentTitle?: string | null;
   transactionRef: string;
   createdAt: string;
+}
+
+export interface SupportWallMessageItem {
+  id: number;
+  isAnonymous: boolean;
+  /**
+     * Null when isAnonymous is true.
+     * @nullable
+     */
+  supporterDisplayName: string | null;
+  /** @nullable */
+  message: string | null;
+  contentType: string;
+  /** @nullable */
+  contentId: number | null;
+  /** @nullable */
+  contentTitle: string | null;
+  createdAt: string;
+}
+
+export interface SupportWallPage {
+  items: SupportWallMessageItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+  hasMore: boolean;
+}
+
+export type SupportTransactionStatusUpdateStatus = typeof SupportTransactionStatusUpdateStatus[keyof typeof SupportTransactionStatusUpdateStatus];
+
+
+export const SupportTransactionStatusUpdateStatus = {
+  completed: 'completed',
+  failed: 'failed',
+  cancelled: 'cancelled',
+} as const;
+
+export interface SupportTransactionStatusUpdate {
+  status: SupportTransactionStatusUpdateStatus;
+}
+
+export type SupportWallModerationUpdateAction = typeof SupportWallModerationUpdateAction[keyof typeof SupportWallModerationUpdateAction];
+
+
+export const SupportWallModerationUpdateAction = {
+  approve: 'approve',
+  hide: 'hide',
+  restore: 'restore',
+} as const;
+
+export interface SupportWallModerationUpdate {
+  action: SupportWallModerationUpdateAction;
 }
 
 export interface SupportedContentItem {
@@ -1344,6 +1468,9 @@ export interface CreatorSupportDashboard {
   supportMessages: SupportActivityItem[];
   followerCount: number;
   newFollowers30d: number;
+  pendingWallApprovalCount: number;
+  /** Real DISTINCT count of completed supporters (never inflated). */
+  supporterCount: number;
 }
 
 export interface TopSupporterItem {
@@ -1387,6 +1514,7 @@ export interface AdminCreatorSupportOverview {
   newFollowers30d: number;
   recentTransactions: SupportActivityItem[];
   recentMessages: SupportActivityItem[];
+  pendingModerationCount: number;
 }
 
 export interface UploadUrlRequest {
@@ -2323,6 +2451,16 @@ limit?: number;
 export type DeletePresenceParams = {
 clientId: string;
 epoch: string;
+};
+
+export type GetCreatorSupportStatusParams = {
+contentType?: string;
+contentId?: number;
+};
+
+export type GetSupportWallParams = {
+page?: number;
+pageSize?: number;
 };
 
 export type AdminListFeatureSuggestionsParams = {

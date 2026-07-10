@@ -20,4 +20,7 @@ export interface CreatorSupportDashboard {
   supportMessages: SupportActivityItem[];
   followerCount: number;
   newFollowers30d: number;
+  pendingWallApprovalCount: number;
+  /** Real DISTINCT count of completed supporters (never inflated). */
+  supporterCount: number;
 }

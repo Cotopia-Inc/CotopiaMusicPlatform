@@ -5,6 +5,7 @@
  * Cotopia Streaming Platform API
  * OpenAPI spec version: 0.1.0
  */
+import type { SupportTransactionMessageVisibility } from './supportTransactionMessageVisibility';
 import type { SupportTransactionMode } from './supportTransactionMode';
 
 export interface SupportTransaction {
@@ -14,6 +15,7 @@ export interface SupportTransaction {
   currency: string;
   /** @nullable */
   message: string | null;
+  messageVisibility: SupportTransactionMessageVisibility;
   mode: SupportTransactionMode;
   status: string;
   createdAt: string;

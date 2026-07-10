@@ -6,6 +6,7 @@ import {
   useRateVideo, useFavoriteVideo, useUnfavoriteVideo, useTrackAnalyticsEvent,
   useDeleteVideo, useUpdateVideo, useUpdateArtist, useRecordVideoView,
   useGetPresenceCount, usePostPresenceHeartbeat, useDeletePresence,
+  useGetCreatorSupportStatus,
 } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Play, Heart, Star, Send, Users, MessageCircle, Maximize2, ArrowLeft, Trash2, Edit2, X, Save, Upload, ImageIcon, ListPlus, Pencil, Shield, ShieldOff, Check, AlignLeft, ChevronDown, ChevronUp } from "lucide-react";
@@ -51,6 +52,12 @@ export default function VideoDetail() {
   const { data: video, isLoading } = useGetVideo(videoId, {
     query: { enabled: !!videoId, queryKey: getGetVideoQueryKey(videoId) }
   });
+
+  const { data: videoSupportStatus } = useGetCreatorSupportStatus(
+    (video as any)?.artistUserId ?? 0,
+    { contentType: "video", contentId: videoId },
+    { query: { enabled: !!(video as any)?.artistUserId, queryKey: ["getCreatorSupportStatus", (video as any)?.artistUserId, "video", videoId] } },
+  );
 
   useSeo({
     title: video ? `${video.title} by ${video.artistName}` : "Video",
@@ -662,6 +669,12 @@ export default function VideoDetail() {
             <span>•</span>
             <span>{Math.floor(video.duration / 60)}:{(video.duration % 60).toString().padStart(2, '0')}</span>
             {video.genre && <><span>•</span><Badge variant="secondary" className="text-xs capitalize">{video.genre}</Badge></>}
+            {videoSupportStatus?.supportEnabled && (
+              <>
+                <span>•</span>
+                <span className="flex items-center gap-1"><Heart className="w-3.5 h-3.5" /> {(videoSupportStatus.contentSupporterCount ?? 0).toLocaleString()} supporters</span>
+              </>
+            )}
           </div>
         </div>
 

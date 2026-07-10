@@ -1,12 +1,12 @@
 import { useParams, Link, useLocation } from "wouter";
 import { useRef, useState } from "react";
-import { useGetPublicUser, useFollowUser, useUnfollowUser } from "@workspace/api-client-react";
+import { useGetPublicUser, useFollowUser, useUnfollowUser, useGetCreatorSupportStatus } from "@workspace/api-client-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RoleBadges } from "@/components/role-badges";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
-import { ArrowLeft, CalendarDays, Music, MessageCircle, Volume2, VolumeX, Ban, UserPlus, UserCheck, Settings, LayoutDashboard, Users } from "lucide-react";
+import { ArrowLeft, CalendarDays, Music, MessageCircle, Volume2, VolumeX, Ban, UserPlus, UserCheck, Settings, LayoutDashboard, Users, Heart } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { useAuth } from "@/lib/auth";
 import { ReportModal } from "@/components/report-modal";
@@ -14,6 +14,8 @@ import { useToast } from "@/hooks/use-toast";
 import { BadgeList, type UserBadgeData } from "@/components/badge-chip";
 import { useSeo } from "@/hooks/use-seo";
 import { EventsTab } from "@/components/events-tab";
+import { SupportButton } from "@/components/support-modal";
+import { SupportWall } from "@/components/support-wall";
 
 const authHeaders = () => ({
   Authorization: `Bearer ${localStorage.getItem("cotopia_token")}`,
@@ -101,6 +103,10 @@ export default function UserProfile() {
   });
   const isFollowed = optimisticFollowed ?? user?.isFollowed ?? false;
   const followerCount = optimisticCount ?? user?.followerCount ?? 0;
+
+  const { data: profileSupportStatus } = useGetCreatorSupportStatus(targetId, undefined, {
+    query: { enabled: !!targetId, queryKey: ["getCreatorSupportStatus", targetId] },
+  });
 
 
   if (isLoading) {
@@ -259,6 +265,13 @@ export default function UserProfile() {
                   <MessageCircle className="w-4 h-4" />
                   Message
                 </Button>
+                <SupportButton
+                  creatorUserId={user.id}
+                  creatorName={user.displayName || user.username}
+                  contentType="creator"
+                  contentId={user.id}
+                  size="sm"
+                />
                 {!isStaff && (
                   <Button
                     variant="outline"
@@ -289,6 +302,13 @@ export default function UserProfile() {
             <span className="font-semibold text-foreground">{followerCount.toLocaleString()}</span>
             {followerCount === 1 ? "follower" : "followers"}
           </div>
+          {profileSupportStatus?.supportEnabled && (
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Heart className="w-3.5 h-3.5" />
+              <span className="font-semibold text-foreground">{(profileSupportStatus.supporterCount ?? 0).toLocaleString()}</span>
+              {(profileSupportStatus.supporterCount ?? 0) === 1 ? "supporter" : "supporters"}
+            </div>
+          )}
           {user.createdAt && (
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <CalendarDays className="w-3.5 h-3.5" />
@@ -322,6 +342,11 @@ export default function UserProfile() {
       {/* Events */}
       <div className="px-6 pt-8 max-w-2xl">
         <EventsTab userId={user.id} isOwner={isMe} heading="Events" />
+      </div>
+
+      {/* Community Support */}
+      <div className="px-6 pt-8 max-w-2xl">
+        <SupportWall userId={user.id} />
       </div>
     </div>
   );

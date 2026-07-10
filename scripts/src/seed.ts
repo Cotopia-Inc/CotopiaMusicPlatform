@@ -430,12 +430,20 @@ async function seed() {
     { name: "First Upload", description: "Successfully submitted and got first track approved on the platform.", category: "achievement", icon: "🚀", color: "#7c3aed" },
     { name: "Early Supporter", description: "Among the earliest supporters and champions of Everyday Radio.", category: "beta", icon: "💜", color: "#a855f7" },
     { name: "Profile Complete", description: "Filled out a full profile with display name, avatar, and bio.", category: "achievement", icon: "🪪", color: "#14b8a6" },
-    // Creator Support badges — prepared for future auto-award logic, not yet granted automatically.
+    // Creator Support badges — auto-awarded by evaluateSupportBadges() based on
+    // real DISTINCT supporter/creator counts (never dollar amounts). Creator-side
+    // ladder tracks distinct supporters received; supporter-side ladder tracks
+    // distinct creators supported.
     { name: "Fan Supported Creator", description: "Received a demo support tip from a fan.", category: "creator", icon: "❤️", color: "#f43f5e" },
     { name: "Community Favorite", description: "Received support tips from many different fans.", category: "community", icon: "🤝", color: "#22c55e" },
+    { name: "Rising Creator", description: "Growing a real base of supporters through Creator Support.", category: "creator", icon: "📈", color: "#fb923c" },
+    { name: "Founding Creator", description: "Among the most-supported early creators on the platform.", category: "creator", icon: "🏛️", color: "#7c3aed" },
+    { name: "Creator Champion", description: "Recognized for outstanding creator support activity.", category: "creator", icon: "👑", color: "#a855f7" },
+    { name: "First Supporter", description: "Sent your first demo support tip to a creator.", category: "community", icon: "💬", color: "#38bdf8" },
+    { name: "Community Supporter", description: "Supported multiple different creators on the platform.", category: "community", icon: "🎗️", color: "#34d399" },
+    { name: "Founding Supporter", description: "An early and generous supporter across the creator community.", category: "community", icon: "🌱", color: "#84cc16" },
     { name: "Top Supporter", description: "Among the most generous supporters on the platform.", category: "community", icon: "💎", color: "#0ea5e9" },
     { name: "Support Champion", description: "Consistently supports creators across the platform.", category: "community", icon: "🏅", color: "#eab308" },
-    { name: "Creator Champion", description: "Recognized for outstanding creator support activity.", category: "creator", icon: "👑", color: "#a855f7" },
   ];
 
   for (const badge of starterBadges) {

@@ -1,0 +1,721 @@
+Build and integrate the complete Universal Creator Support System for Everyday Radio.
+
+IMPORTANT
+
+Everyday Radio is currently live in Beta.
+
+Do not activate live PayPal.
+
+Do not connect real PayPal payments.
+
+Do not process real money.
+
+Do not remove or interfere with the existing submission payment system.
+
+The entire Creator Support System must operate in DEMO MODE only until we decide to make it live.
+
+Make careful, reversible changes and preserve all current working features, routes, roles, permissions, uploads, comments, chat, playlists, profiles, admin tools, and demo submission payments.
+
+====================================================
+1. UNIVERSAL CREATOR SUPPORT
+====================================================
+
+Use this primary button text:
+
+💙 Support This Creator
+
+Initially display the button on:
+
+• Song pages
+• Video pages
+• Podcast pages
+• Creator profile pages
+
+Build the system so these content types can be added later without redesigning the database:
+
+• Radio shows
+• Interviews
+• Live streams
+• Playlists
+• Events
+• Blogs
+• Other creator content
+
+Only show the support button when:
+
+• The content has a valid creator
+• The creator has Creator Support enabled
+• The content is published or otherwise publicly accessible to authorized users
+
+====================================================
+2. WHO CAN SEND AND RECEIVE SUPPORT
+====================================================
+
+Any logged-in account may support creators, including:
+
+• Listeners
+• Artists
+• Video creators
+• Podcasters
+• DJs
+• Radio hosts
+• Labels
+• Creator accounts
+• Admins
+• Moderators
+• Editors
+
+Accounts that can publish creator content may receive support, including:
+
+• Artists
+• Video creators
+• Podcasters
+• DJs
+• Radio hosts
+• Labels
+• Creator accounts
+• Community creators when added later
+
+Staff-only roles should not receive tips unless that same account also has a creator profile and Creator Support enabled.
+
+====================================================
+3. SUPPORT POPUP
+====================================================
+
+When the user clicks “Support This Creator,” open a clean popup.
+
+Title:
+
+Support [Creator Name]
+
+Message:
+
+Love this content?
+
+Support this creator and encourage them to keep creating and building their community.
+
+Show these actions:
+
+💵 Leave a Tip
+
+⭐ Follow Creator
+
+If the user already follows the creator, display:
+
+Following ✓
+
+Do not create a duplicate follow.
+
+====================================================
+4. DEMO TIP AMOUNTS
+====================================================
+
+Display quick-select amounts:
+
+$1
+
+$5
+
+$10
+
+$20
+
+$50
+
+Custom Amount
+
+Allow positive custom amounts.
+
+Reject:
+
+• Zero
+• Negative numbers
+• Invalid text
+• Excessively large or malformed values
+
+Use reasonable decimal validation.
+
+====================================================
+5. OPTIONAL SUPPORT MESSAGE
+====================================================
+
+Allow the supporter to leave an optional message.
+
+Examples:
+
+“Love this song!”
+
+“Keep creating!”
+
+“Can’t wait for the next release!”
+
+Add options:
+
+• Display my name publicly
+• Post anonymously
+• Keep this message private
+
+Default to private unless the user actively chooses public display.
+
+Do not display tip amounts publicly.
+
+====================================================
+6. DEMO TRANSACTION FLOW
+====================================================
+
+The entire flow must remain in demo mode.
+
+When a supporter confirms:
+
+• Generate a unique demo transaction ID
+• Save the support record
+• Save the selected amount
+• Save the optional message
+• Save the content source
+• Update private creator analytics
+• Update the public supporter count if the transaction completes successfully in demo mode
+
+Example transaction ID:
+
+SUP-DEMO-458291
+
+Confirmation message:
+
+Demo Support Sent
+
+Thank you for supporting this creator.
+
+This is a beta demonstration. No real payment has been processed.
+
+Then show the creator’s custom thank-you message.
+
+====================================================
+7. CREATOR SUPPORT SETTINGS
+====================================================
+
+Add a Creator Support section to creator settings.
+
+Fields:
+
+• Enable Creator Support: ON/OFF
+• PayPal email
+• PayPal.me link
+• Custom thank-you message
+• Allow public Support Wall messages: ON/OFF
+• Require approval before Support Wall messages appear: ON/OFF
+
+During demo mode:
+
+• Save PayPal information securely
+• Do not use it for payments
+• Never display the creator’s PayPal email publicly
+• Clearly label the section as Demo Mode
+
+Prepare the data structure for future providers such as:
+
+• PayPal
+• Venmo
+• Cash App
+• Stripe Connect
+• Buy Me a Coffee
+• Other providers
+
+Do not activate any provider now.
+
+====================================================
+8. PUBLIC SUPPORTER COUNTS
+====================================================
+
+Display public supporter counts instead of public dollar amounts.
+
+On creator profiles, show:
+
+• Likes
+• Followers
+• Supporters
+• Songs
+• Videos
+• Plays
+• Average rating when available
+
+Example:
+
+❤️ 12,843 Likes
+👥 3,212 Followers
+💙 426 Supporters
+🎵 48 Songs
+🎥 15 Videos
+▶ 184,522 Plays
+⭐ 4.9
+
+On song, video, and podcast pages, show:
+
+💙 Support This Creator
+
+Then show:
+
+126 Supporters
+
+Do not show:
+
+• Total dollars raised
+• Individual tip amounts
+• Public creator earnings
+• Public supporter spending totals
+
+Count unique supporters when possible.
+
+A person who supports the same creator multiple times should count as one public supporter for that creator, while all individual support events remain in private analytics.
+
+For content-specific supporter counts, count unique supporters for that specific content item.
+
+====================================================
+9. SUPPORT WALL
+====================================================
+
+Add a Support Wall section to creator profiles.
+
+Section title:
+
+💙 Community Support
+
+The Support Wall may display approved public messages such as:
+
+Supporter display name or “Anonymous Supporter”
+
+Message
+
+Date or relative time
+
+Do not display tip amounts.
+
+Example:
+
+Sarah M.
+“This song helped me through a tough week.”
+2 days ago
+
+Anonymous Supporter
+“Keep creating.”
+Today
+
+Support Wall rules:
+
+• Only show messages marked public
+• Respect anonymous selections
+• Never reveal private messages
+• Never reveal PayPal information
+• Allow creators or admins to hide inappropriate messages
+• If creator approval is enabled, hold new public messages for approval
+• Add report functionality if the existing reporting system can be reused safely
+• Use pagination or “Load More” for long walls
+
+====================================================
+10. CREATOR DASHBOARD
+====================================================
+
+Add a Creator Support dashboard.
+
+Clearly label:
+
+Demo Mode
+
+Display private creator analytics:
+
+• Total unique supporters
+• Total demo support events
+• Demo support activity
+• Support button clicks
+• Support conversion attempts
+• Most supported songs
+• Most supported videos
+• Most supported podcasts
+• Recent support messages
+• Public messages awaiting approval
+• Follower growth
+• Recent support activity
+• Demo transaction history
+
+Do not present demo totals as real earnings.
+
+Use wording such as:
+
+Beta Tip Testing
+
+$125 in demo support activity
+
+No real funds were processed.
+
+Creators may see their own demo amounts privately for testing, but no financial totals should be public.
+
+====================================================
+11. ADMIN DASHBOARD
+====================================================
+
+Add a Creator Support Management section.
+
+Admin can view:
+
+• All demo support activity
+• Demo transactions
+• Creators receiving support
+• Content receiving support
+• Support messages
+• Messages awaiting moderation
+• Most supported creators
+• Most supported songs
+• Most supported videos
+• Most supported podcasts
+• Top supporters
+• Follower growth
+• Support button clicks
+• Failed or cancelled demo transactions
+• Payment mode
+• System health
+
+Admin actions:
+
+• Hide or restore public Support Wall messages
+• Review reported messages
+• Mark a demo transaction as completed, failed, or cancelled when needed for testing
+• Search and filter records
+• View audit history
+
+Do not expose creator PayPal credentials unnecessarily.
+
+Restrict sensitive payment settings to the Master Admin or the highest authorized role.
+
+====================================================
+12. DATABASE DESIGN
+====================================================
+
+Create or update reusable tables for:
+
+Creator Payment Settings
+
+Suggested fields:
+
+• id
+• creator_id
+• support_enabled
+• provider_type
+• encrypted_provider_email or secure value
+• provider_link
+• thank_you_message
+• support_wall_enabled
+• support_wall_requires_approval
+• payment_mode
+• created_at
+• updated_at
+
+Creator Support Transactions
+
+Suggested fields:
+
+• id
+• creator_id
+• supporter_id
+• content_id
+• content_type
+• amount
+• currency
+• optional_message
+• message_visibility
+• anonymous_display
+• transaction_id
+• payment_provider
+• payment_mode
+• payment_status
+• created_at
+• updated_at
+
+Support Wall Messages
+
+Suggested fields:
+
+• id
+• support_transaction_id
+• creator_id
+• supporter_id
+• display_name
+• message
+• visibility
+• moderation_status
+• is_hidden
+• reported_count
+• created_at
+• updated_at
+
+Creator Support Analytics
+
+Track or calculate:
+
+• support button clicks
+• support attempts
+• completed demo support events
+• unique supporters
+• content-specific supporters
+• follower actions connected to the support popup
+
+Design the schema so live PayPal can be added later without replacing the entire system.
+
+====================================================
+13. BADGE INTEGRATION
+====================================================
+
+Connect the support system to the badge framework.
+
+Create these badges if they do not already exist:
+
+SUPPORTER BADGES
+
+• First Supporter
+  Completed the first successful creator support action
+
+• Community Supporter
+  Supported multiple creators
+
+• Creator Champion
+  Consistently supports creators
+
+• Super Supporter
+  Reached a high support activity milestone
+
+• Founding Supporter
+  Supported creators during the beta period
+
+CREATOR BADGES
+
+• Fan Supported Creator
+  Received support from the community
+
+• Community Favorite
+  Received strong supporter engagement
+
+• Rising Creator
+  Growing quickly in support and followers
+
+• Creator Champion
+  Built strong community support
+
+• Founding Creator
+  Participated as a creator during beta
+
+For demo mode:
+
+• Prepare the automatic award logic
+• Allow admin override
+• Clearly mark badge activity as beta testing where appropriate
+• Avoid awarding financially sensitive badges based on public dollar amounts
+
+Use supporter counts and support activity instead of public money totals.
+
+====================================================
+14. FOLLOW CREATOR INTEGRATION
+====================================================
+
+From the support popup:
+
+• If not following, allow the user to follow the creator
+• Update follower count immediately
+• Show success feedback
+• Prevent duplicates
+• If already following, display “Following ✓”
+
+Track whether the follow action came from the Creator Support popup.
+
+====================================================
+15. LEGAL AND USER-FACING NOTICES
+====================================================
+
+During demo mode, display:
+
+Creator Support is voluntary.
+
+This feature is currently operating in Demo Mode.
+
+No real payment has been processed.
+
+Prepare this future live-mode disclosure, but do not activate live mode:
+
+Creator support payments go directly to creators through their selected payment provider.
+
+Everyday Radio does not hold or manage creator tip funds.
+
+Creators are responsible for their payment accounts, taxes, refunds, chargebacks, and compliance obligations.
+
+Support does not purchase ownership, rights, royalties, access, or control over creator content.
+
+Do not promise tax or legal outcomes.
+
+====================================================
+16. SECURITY AND PRIVACY
+====================================================
+
+Protect creator payment information.
+
+Requirements:
+
+• Never expose PayPal emails in public API responses
+• Never include sensitive provider data in page source
+• Restrict payment-setting access to the account owner and authorized admin
+• Validate all tip amounts on both frontend and backend
+• Add rate limiting or spam protection
+• Prevent duplicate transaction IDs
+• Prevent users from editing another creator’s settings
+• Sanitize Support Wall messages
+• Respect private and anonymous selections
+• Log important admin actions
+• Do not rely only on frontend validation
+
+====================================================
+17. TESTING REQUIREMENTS
+====================================================
+
+Test all of the following:
+
+CREATOR SETTINGS
+
+✓ Eligible creator can enable support
+
+✓ Creator can disable support
+
+✓ PayPal email remains private
+
+✓ Creator can save a PayPal.me link
+
+✓ Thank-you message saves
+
+✓ Support Wall settings save
+
+CONTENT
+
+✓ Song displays the support button
+
+✓ Video displays the support button
+
+✓ Podcast displays the support button
+
+✓ Creator profile displays the support button
+
+✓ Button hides when support is disabled
+
+SUPPORT FLOW
+
+✓ $1 demo support works
+
+✓ $5 demo support works
+
+✓ $10 demo support works
+
+✓ $20 demo support works
+
+✓ $50 demo support works
+
+✓ Custom amount works
+
+✓ Zero and negative amounts are rejected
+
+✓ Demo transaction ID is unique
+
+✓ Optional message saves
+
+✓ Public, private, and anonymous settings work
+
+FOLLOWING
+
+✓ Follow Creator works
+
+✓ Duplicate follows are prevented
+
+✓ Existing follower count updates
+
+PUBLIC COUNTS
+
+✓ Public supporter count updates
+
+✓ Repeat support from the same supporter does not incorrectly inflate unique supporter counts
+
+✓ No public dollar amounts appear
+
+SUPPORT WALL
+
+✓ Approved public message displays
+
+✓ Private message does not display
+
+✓ Anonymous message hides the supporter identity
+
+✓ Creator/admin can hide a message
+
+✓ Approval queue works
+
+DASHBOARDS
+
+✓ Creator dashboard updates
+
+✓ Admin dashboard updates
+
+✓ Demo mode labels appear
+
+✓ Demo totals are not presented as real earnings
+
+BADGES
+
+✓ Badge rules can detect demo support activity
+
+✓ Admin can manually assign or remove support badges
+
+REGRESSION TESTS
+
+✓ Existing submission demo payments still work
+
+✓ Uploads still work
+
+✓ Login and signup still work
+
+✓ Comments and chat still work
+
+✓ Profiles still work
+
+✓ Existing badges still work
+
+✓ Existing roles and permissions still work
+
+✓ Promise Page remains the public landing page
+
+✓ Private beta pages remain protected
+
+✓ No live PayPal transaction occurs
+
+====================================================
+18. DO NOT
+====================================================
+
+Do not activate live PayPal.
+
+Do not add live PayPal credentials.
+
+Do not process real funds.
+
+Do not display public earnings.
+
+Do not expose creator PayPal emails.
+
+Do not replace the current submission payment system.
+
+Do not redesign unrelated pages.
+
+Do not alter the Promise Page, SEO rules, scraping protection, authentication rules, or private-page protections unless required to safely display the new support features.
+
+Do not break any current live beta functionality.
+
+Before finishing, provide a summary of:
+
+• Files changed
+• Database changes
+• New routes or API endpoints
+• New role permissions
+• Tests completed
+• Known limitations
+• Exact steps needed later to switch from Demo Mode to live PayPal

@@ -25,4 +25,5 @@ export interface AdminCreatorSupportOverview {
   newFollowers30d: number;
   recentTransactions: SupportActivityItem[];
   recentMessages: SupportActivityItem[];
+  pendingModerationCount: number;
 }

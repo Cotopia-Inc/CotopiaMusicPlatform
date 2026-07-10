@@ -1,9 +1,9 @@
 import { useParams, Link, useLocation } from "wouter";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useSeo } from "@/hooks/use-seo";
-import { useGetArtist, getGetArtistQueryKey, useFollowArtist, useUnfollowArtist, useTrackAnalyticsEvent, useUpdateArtist } from "@workspace/api-client-react";
+import { useGetArtist, getGetArtistQueryKey, useFollowArtist, useUnfollowArtist, useTrackAnalyticsEvent, useUpdateArtist, useGetCreatorSupportStatus } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Play, Users, Music, MessageCircle, ArrowLeft, Volume2, VolumeX, ShieldCheck, Loader2, UserCog, UserMinus, Search, Edit2, Save, X } from "lucide-react";
+import { Play, Users, Music, MessageCircle, ArrowLeft, Volume2, VolumeX, ShieldCheck, Loader2, UserCog, UserMinus, Search, Edit2, Save, X, Heart } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { RoleBadges } from "@/components/role-badges";
 import { BadgeList } from "@/components/badge-chip";
@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { EventsTab } from "@/components/events-tab";
 import { SupportButton } from "@/components/support-modal";
+import { SupportWall } from "@/components/support-wall";
 
 function getAuthHeader(): Record<string, string> {
   const token = localStorage.getItem("cotopia_token");
@@ -63,6 +64,9 @@ export default function ArtistDetail() {
   const artistUserId = (artist as any)?.userId as number | null | undefined;
   const { data: artistBadges } = useGetUserBadges(artistUserId!, {
     query: { enabled: !!artistUserId, queryKey: getGetUserBadgesQueryKey(artistUserId!) }
+  });
+  const { data: artistSupportStatus } = useGetCreatorSupportStatus(artistUserId ?? 0, undefined, {
+    query: { enabled: !!artistUserId, queryKey: ["getCreatorSupportStatus", artistUserId] },
   });
 
   const followMutation = useFollowArtist();
@@ -273,6 +277,9 @@ export default function ArtistDetail() {
             <div className="flex flex-wrap items-center gap-3 md:gap-4 text-muted-foreground font-medium text-sm">
               <span className="flex items-center gap-1"><Users className="w-4 h-4" /> {artist.followerCount?.toLocaleString() || 0} followers</span>
               <span className="flex items-center gap-1"><Music className="w-4 h-4" /> {artist.songCount || 0} tracks</span>
+              {artistSupportStatus?.supportEnabled && (
+                <span className="flex items-center gap-1"><Heart className="w-4 h-4" /> {(artistSupportStatus.supporterCount ?? 0).toLocaleString()} supporters</span>
+              )}
               {artist.labelName && (
                 <span className="text-primary">Label: {artist.labelName}</span>
               )}
@@ -513,6 +520,11 @@ export default function ArtistDetail() {
             </div>
           </TabsContent>
         </Tabs>
+        {artistUserId && (
+          <div className="mt-8">
+            <SupportWall userId={artistUserId} />
+          </div>
+        )}
       </div>
       {/* Admin: Assign to User dialog */}
       <Dialog open={assignOpen} onOpenChange={setAssignOpen}>

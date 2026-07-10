@@ -1,6 +1,6 @@
-import { useListSubmissions, getListSubmissionsQueryKey } from "@workspace/api-client-react";
+import { useListSubmissions, getListSubmissionsQueryKey, useGetCreatorSupportDashboard } from "@workspace/api-client-react";
 import { Link } from "wouter";
-import { CheckCircle2, Circle, Clock, Music, Video, XCircle, Send, Lightbulb, Bug, Star } from "lucide-react";
+import { CheckCircle2, Circle, Clock, Music, Video, XCircle, Send, Lightbulb, Bug, Star, Heart, MessageCircleHeart, UserPlus, Settings } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -62,6 +62,9 @@ export default function CreatorDashboard() {
   const { data, isLoading } = useListSubmissions({
     query: { queryKey: getListSubmissionsQueryKey() },
   });
+  const { data: supportDashboard } = useGetCreatorSupportDashboard({
+    query: { queryKey: ["getCreatorSupportDashboard"] },
+  });
   const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   const submissions = data ?? [];
@@ -115,6 +118,80 @@ export default function CreatorDashboard() {
           <p className="text-3xl font-extrabold text-yellow-500">{isLoading ? "—" : inProgress.length}</p>
           <p className="text-sm text-muted-foreground mt-0.5">In Progress</p>
         </div>
+      </div>
+
+      <div className="space-y-4">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <h2 className="text-xl font-bold flex items-center gap-2">
+            <Heart className="w-5 h-5 text-pink-500" /> Creator Support
+            <Badge variant="outline" className="text-[10px] font-semibold uppercase tracking-wide">Beta Tip Testing</Badge>
+          </h2>
+          <Link href="/profile">
+            <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-secondary/50 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
+              <Settings className="w-3.5 h-3.5" />
+              Manage Settings
+            </button>
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-card rounded-xl border border-border p-5">
+            <p className="text-2xl font-extrabold">{supportDashboard ? supportDashboard.supporterCount.toLocaleString() : "—"}</p>
+            <p className="text-sm text-muted-foreground mt-0.5">Supporters</p>
+          </div>
+          <div className="bg-card rounded-xl border border-border p-5">
+            <p className="text-2xl font-extrabold">{supportDashboard ? supportDashboard.totalDemoTips.toLocaleString() : "—"}</p>
+            <p className="text-sm text-muted-foreground mt-0.5">Demo Tips Received</p>
+          </div>
+          <div className="bg-card rounded-xl border border-border p-5">
+            <p className="text-2xl font-extrabold">{supportDashboard ? `$${supportDashboard.totalDemoAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—"}</p>
+            <p className="text-sm text-muted-foreground mt-0.5">Total Amount (Demo)</p>
+          </div>
+          <div className="bg-card rounded-xl border border-border p-5">
+            <p className="text-2xl font-extrabold">{supportDashboard ? `+${supportDashboard.newFollowers30d.toLocaleString()}` : "—"}</p>
+            <p className="text-sm text-muted-foreground mt-0.5">New Followers (30d)</p>
+          </div>
+        </div>
+
+        {supportDashboard && supportDashboard.pendingWallApprovalCount > 0 && (
+          <div className="text-xs bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 rounded-lg px-3 py-2.5 flex items-center gap-2">
+            <MessageCircleHeart className="w-4 h-4 flex-shrink-0" />
+            {supportDashboard.pendingWallApprovalCount} support wall {supportDashboard.pendingWallApprovalCount === 1 ? "message is" : "messages are"} awaiting moderator approval before appearing publicly.
+          </div>
+        )}
+
+        {supportDashboard && supportDashboard.recentActivity.length > 0 && (
+          <div className="bg-card rounded-xl border border-border p-5 space-y-3">
+            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Recent Activity</p>
+            <div className="space-y-3">
+              {supportDashboard.recentActivity.slice(0, 5).map((activity) => (
+                <div key={activity.id} className="flex items-start justify-between gap-3 text-sm">
+                  <div className="flex items-start gap-2 min-w-0">
+                    <UserPlus className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                    <div className="min-w-0">
+                      <p className="font-medium truncate">
+                        {activity.supporterDisplayName} supported {activity.contentTitle ?? "you"}
+                      </p>
+                      {activity.message && activity.messageVisibility !== "private" && (
+                        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">"{activity.message}"</p>
+                      )}
+                      <p className="text-[11px] text-muted-foreground mt-0.5">{format(new Date(activity.createdAt), "MMM d, yyyy")}</p>
+                    </div>
+                  </div>
+                  <span className="text-sm font-semibold flex-shrink-0">${activity.amount.toFixed(2)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {supportDashboard && supportDashboard.supportButtonClicks === 0 && supportDashboard.supporterCount === 0 && (
+          <div className="text-center py-10 text-muted-foreground bg-card rounded-xl border border-border border-dashed">
+            <Heart className="w-10 h-10 mx-auto mb-3 opacity-20" />
+            <p className="text-sm font-semibold">No support activity yet</p>
+            <p className="text-xs mt-1">Enable Creator Support in your profile settings to start receiving demo tips.</p>
+          </div>
+        )}
       </div>
 
       {isLoading ? (

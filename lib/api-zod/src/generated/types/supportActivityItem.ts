@@ -5,6 +5,9 @@
  * Cotopia Streaming Platform API
  * OpenAPI spec version: 0.1.0
  */
+import type { SupportActivityItemMessageVisibility } from './supportActivityItemMessageVisibility';
+import type { SupportActivityItemModerationStatus } from './supportActivityItemModerationStatus';
+import type { SupportActivityItemStatus } from './supportActivityItemStatus';
 
 export interface SupportActivityItem {
   id: number;
@@ -13,6 +16,9 @@ export interface SupportActivityItem {
   currency: string;
   /** @nullable */
   message: string | null;
+  messageVisibility: SupportActivityItemMessageVisibility;
+  moderationStatus: SupportActivityItemModerationStatus;
+  status: SupportActivityItemStatus;
   contentType: string;
   /** @nullable */
   contentId: number | null;

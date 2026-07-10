@@ -64,6 +64,7 @@ import AdminBugReports from "@/pages/admin-bug-reports";
 import AdminMembers from "@/pages/admin-members";
 import AdminBetaAnalytics from "@/pages/admin-beta-analytics";
 import AdminBadges from "@/pages/admin-badges";
+import AdminCreatorSupport from "@/pages/admin-creator-support";
 import EditorDashboard from "@/pages/editor-dashboard";
 import EditorPlaylists from "@/pages/editor-playlists";
 import EditorPicks from "@/pages/editor-picks";
@@ -422,6 +423,9 @@ function Router() {
       </Route>
       <Route path="/admin/badges">
         <RoleRoute roles={ADMIN_ROLES}><AdminBadges /></RoleRoute>
+      </Route>
+      <Route path="/admin/creator-support">
+        <RoleRoute roles={ADMIN_ROLES}><AdminCreatorSupport /></RoleRoute>
       </Route>
       <Route path="/admin/discover">
         <RoleRoute roles={EDITOR_ROLES}><AdminDiscover /></RoleRoute>

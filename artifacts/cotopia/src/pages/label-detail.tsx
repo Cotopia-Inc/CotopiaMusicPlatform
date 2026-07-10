@@ -1,9 +1,9 @@
 import { useParams, Link, useLocation } from "wouter";
 import { useRef, useState } from "react";
-import { useGetLabel, getGetLabelQueryKey, useFollowLabel, useUnfollowLabel } from "@workspace/api-client-react";
+import { useGetLabel, getGetLabelQueryKey, useFollowLabel, useUnfollowLabel, useGetCreatorSupportStatus } from "@workspace/api-client-react";
 import { SupportButton } from "@/components/support-modal";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, Music, Play, Volume2, VolumeX, UserPlus, X, Search, Loader2, ShieldCheck } from "lucide-react";
+import { Users, Music, Play, Volume2, VolumeX, UserPlus, X, Search, Loader2, ShieldCheck, Heart } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { UserLink } from "@/components/user-link";
 import { RoleBadges } from "@/components/role-badges";
@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useSeo } from "@/hooks/use-seo";
 import { EventsTab } from "@/components/events-tab";
+import { SupportWall } from "@/components/support-wall";
 
 export default function LabelDetail() {
   const { id } = useParams();
@@ -57,6 +58,9 @@ export default function LabelDetail() {
   const labelUserId = (label as any)?.userId as number | null | undefined;
   const { data: labelBadges } = useGetUserBadges(labelUserId!, {
     query: { enabled: !!labelUserId, queryKey: getGetUserBadgesQueryKey(labelUserId!) }
+  });
+  const { data: labelSupportStatus } = useGetCreatorSupportStatus(labelUserId ?? 0, undefined, {
+    query: { enabled: !!labelUserId, queryKey: ["getCreatorSupportStatus", labelUserId] },
   });
 
   const followMutation = useFollowLabel();
@@ -210,6 +214,9 @@ export default function LabelDetail() {
             <div className="flex items-center gap-4 text-muted-foreground font-medium text-sm">
               <span className="flex items-center gap-1"><Users className="w-4 h-4" /> {label.followerCount?.toLocaleString() || 0} followers</span>
               <span className="flex items-center gap-1"><Music className="w-4 h-4" /> {label.artistCount || 0} artists</span>
+              {labelSupportStatus?.supportEnabled && (
+                <span className="flex items-center gap-1"><Heart className="w-4 h-4" /> {(labelSupportStatus.supporterCount ?? 0).toLocaleString()} supporters</span>
+              )}
             </div>
             {labelBadges && labelBadges.length > 0 && (
               <BadgeList userBadges={labelBadges as any} size="sm" />
@@ -403,6 +410,11 @@ export default function LabelDetail() {
             </div>
           </TabsContent>
         </Tabs>
+        {labelUserId && (
+          <div className="mt-8">
+            <SupportWall userId={labelUserId} />
+          </div>
+        )}
       </div>
     </div>
   );

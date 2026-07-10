@@ -103,7 +103,9 @@ import type {
   FeedbackInput,
   FollowUser200,
   GetChatMessagesParams,
+  GetCreatorSupportStatusParams,
   GetHistoryParams,
+  GetSupportWallParams,
   GetTrendingSongsParams,
   GetTrendingVideosParams,
   GetUnreadMessageCount200,
@@ -154,8 +156,12 @@ import type {
   SubmissionInput,
   SubmissionReviewInput,
   SubmissionUpdate,
+  SupportActivityItem,
   SupportTipInput,
   SupportTransaction,
+  SupportTransactionStatusUpdate,
+  SupportWallModerationUpdate,
+  SupportWallPage,
   UnfollowUser200,
   UploadAccount,
   UploadUrlRequest,
@@ -10381,20 +10387,29 @@ export const useUpdateCreatorSupportSettings = <TError = ErrorType<void>,
       return useMutation(getUpdateCreatorSupportSettingsMutationOptions(options));
     }
 
-export const getGetCreatorSupportStatusUrl = (userId: number,) => {
+export const getGetCreatorSupportStatusUrl = (userId: number,
+    params?: GetCreatorSupportStatusParams,) => {
+  const normalizedParams = new URLSearchParams();
 
+  Object.entries(params || {}).forEach(([key, value]) => {
 
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
 
+  const stringifiedParams = normalizedParams.toString();
 
-  return `/api/creator-support/status/${userId}`
+  return stringifiedParams.length > 0 ? `/api/creator-support/status/${userId}?${stringifiedParams}` : `/api/creator-support/status/${userId}`
 }
 
 /**
- * @summary Check whether a given user has Creator Support enabled (public-safe, no payment details)
+ * @summary Check whether a given user has Creator Support enabled (public-safe, no payment details); optionally include a real per-content supporter count
  */
-export const getCreatorSupportStatus = async (userId: number, options?: RequestInit): Promise<CreatorSupportStatus> => {
+export const getCreatorSupportStatus = async (userId: number,
+    params?: GetCreatorSupportStatusParams, options?: RequestInit): Promise<CreatorSupportStatus> => {
 
-  return customFetch<CreatorSupportStatus>(getGetCreatorSupportStatusUrl(userId),
+  return customFetch<CreatorSupportStatus>(getGetCreatorSupportStatusUrl(userId,params),
   {
     ...options,
     method: 'GET'
@@ -10407,23 +10422,25 @@ export const getCreatorSupportStatus = async (userId: number, options?: RequestI
 
 
 
-export const getGetCreatorSupportStatusQueryKey = (userId: number,) => {
+export const getGetCreatorSupportStatusQueryKey = (userId: number,
+    params?: GetCreatorSupportStatusParams,) => {
     return [
-    `/api/creator-support/status/${userId}`
+    `/api/creator-support/status/${userId}`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getGetCreatorSupportStatusQueryOptions = <TData = Awaited<ReturnType<typeof getCreatorSupportStatus>>, TError = ErrorType<unknown>>(userId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCreatorSupportStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetCreatorSupportStatusQueryOptions = <TData = Awaited<ReturnType<typeof getCreatorSupportStatus>>, TError = ErrorType<unknown>>(userId: number,
+    params?: GetCreatorSupportStatusParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCreatorSupportStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetCreatorSupportStatusQueryKey(userId);
+  const queryKey =  queryOptions?.queryKey ?? getGetCreatorSupportStatusQueryKey(userId,params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCreatorSupportStatus>>> = ({ signal }) => getCreatorSupportStatus(userId, { signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCreatorSupportStatus>>> = ({ signal }) => getCreatorSupportStatus(userId,params, { signal, ...requestOptions });
 
 
 
@@ -10437,15 +10454,16 @@ export type GetCreatorSupportStatusQueryError = ErrorType<unknown>
 
 
 /**
- * @summary Check whether a given user has Creator Support enabled (public-safe, no payment details)
+ * @summary Check whether a given user has Creator Support enabled (public-safe, no payment details); optionally include a real per-content supporter count
  */
 
 export function useGetCreatorSupportStatus<TData = Awaited<ReturnType<typeof getCreatorSupportStatus>>, TError = ErrorType<unknown>>(
- userId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCreatorSupportStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+ userId: number,
+    params?: GetCreatorSupportStatusParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCreatorSupportStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getGetCreatorSupportStatusQueryOptions(userId,options)
+  const queryOptions = getGetCreatorSupportStatusQueryOptions(userId,params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
@@ -10457,6 +10475,165 @@ export function useGetCreatorSupportStatus<TData = Awaited<ReturnType<typeof get
 
 
 
+
+export const getGetSupportWallUrl = (userId: number,
+    params?: GetSupportWallParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/creator-support/wall/${userId}?${stringifiedParams}` : `/api/creator-support/wall/${userId}`
+}
+
+/**
+ * @summary Public paginated Support Wall for a creator (approved public/anonymous messages only, never amounts)
+ */
+export const getSupportWall = async (userId: number,
+    params?: GetSupportWallParams, options?: RequestInit): Promise<SupportWallPage> => {
+
+  return customFetch<SupportWallPage>(getGetSupportWallUrl(userId,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSupportWallQueryKey = (userId: number,
+    params?: GetSupportWallParams,) => {
+    return [
+    `/api/creator-support/wall/${userId}`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetSupportWallQueryOptions = <TData = Awaited<ReturnType<typeof getSupportWall>>, TError = ErrorType<unknown>>(userId: number,
+    params?: GetSupportWallParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSupportWall>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSupportWallQueryKey(userId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSupportWall>>> = ({ signal }) => getSupportWall(userId,params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(userId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSupportWall>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetSupportWallQueryResult = NonNullable<Awaited<ReturnType<typeof getSupportWall>>>
+export type GetSupportWallQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Public paginated Support Wall for a creator (approved public/anonymous messages only, never amounts)
+ */
+
+export function useGetSupportWall<TData = Awaited<ReturnType<typeof getSupportWall>>, TError = ErrorType<unknown>>(
+ userId: number,
+    params?: GetSupportWallParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSupportWall>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetSupportWallQueryOptions(userId,params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getHideSupportWallMessageUrl = (transactionId: number,) => {
+
+
+
+
+  return `/api/creator-support/wall/${transactionId}/hide`
+}
+
+/**
+ * @summary Recipient hides a public/anonymous message they received (does not affect the tip itself)
+ */
+export const hideSupportWallMessage = async (transactionId: number, options?: RequestInit): Promise<SupportActivityItem> => {
+
+  return customFetch<SupportActivityItem>(getHideSupportWallMessageUrl(transactionId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getHideSupportWallMessageMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof hideSupportWallMessage>>, TError,{transactionId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof hideSupportWallMessage>>, TError,{transactionId: number}, TContext> => {
+
+const mutationKey = ['hideSupportWallMessage'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof hideSupportWallMessage>>, {transactionId: number}> = (props) => {
+          const {transactionId} = props ?? {};
+
+          return  hideSupportWallMessage(transactionId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type HideSupportWallMessageMutationResult = NonNullable<Awaited<ReturnType<typeof hideSupportWallMessage>>>
+
+    export type HideSupportWallMessageMutationError = ErrorType<void>
+
+    /**
+ * @summary Recipient hides a public/anonymous message they received (does not affect the tip itself)
+ */
+export const useHideSupportWallMessage = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof hideSupportWallMessage>>, TError,{transactionId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof hideSupportWallMessage>>,
+        TError,
+        {transactionId: number},
+        TContext
+      > => {
+      return useMutation(getHideSupportWallMessageMutationOptions(options));
+    }
 
 export const getCreateSupportTipUrl = () => {
 
@@ -10682,6 +10859,150 @@ export function useGetAdminCreatorSupportOverview<TData = Awaited<ReturnType<typ
 
 
 
+
+export const getUpdateSupportTransactionStatusUrl = (id: number,) => {
+
+
+
+
+  return `/api/admin/creator-support/transactions/${id}/status`
+}
+
+/**
+ * @summary Admin override of a demo transaction's status (completed/failed/cancelled), for demo testing only
+ */
+export const updateSupportTransactionStatus = async (id: number,
+    supportTransactionStatusUpdate: SupportTransactionStatusUpdate, options?: RequestInit): Promise<SupportActivityItem> => {
+
+  return customFetch<SupportActivityItem>(getUpdateSupportTransactionStatusUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      supportTransactionStatusUpdate,)
+  }
+);}
+
+
+
+
+export const getUpdateSupportTransactionStatusMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateSupportTransactionStatus>>, TError,{id: number;data: BodyType<SupportTransactionStatusUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateSupportTransactionStatus>>, TError,{id: number;data: BodyType<SupportTransactionStatusUpdate>}, TContext> => {
+
+const mutationKey = ['updateSupportTransactionStatus'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateSupportTransactionStatus>>, {id: number;data: BodyType<SupportTransactionStatusUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateSupportTransactionStatus(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateSupportTransactionStatusMutationResult = NonNullable<Awaited<ReturnType<typeof updateSupportTransactionStatus>>>
+    export type UpdateSupportTransactionStatusMutationBody = BodyType<SupportTransactionStatusUpdate>
+    export type UpdateSupportTransactionStatusMutationError = ErrorType<void>
+
+    /**
+ * @summary Admin override of a demo transaction's status (completed/failed/cancelled), for demo testing only
+ */
+export const useUpdateSupportTransactionStatus = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateSupportTransactionStatus>>, TError,{id: number;data: BodyType<SupportTransactionStatusUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateSupportTransactionStatus>>,
+        TError,
+        {id: number;data: BodyType<SupportTransactionStatusUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateSupportTransactionStatusMutationOptions(options));
+    }
+
+export const getUpdateSupportWallModerationUrl = (id: number,) => {
+
+
+
+
+  return `/api/admin/creator-support/wall/${id}/moderation`
+}
+
+/**
+ * @summary Admin approve/hide/restore a Support Wall message
+ */
+export const updateSupportWallModeration = async (id: number,
+    supportWallModerationUpdate: SupportWallModerationUpdate, options?: RequestInit): Promise<SupportActivityItem> => {
+
+  return customFetch<SupportActivityItem>(getUpdateSupportWallModerationUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      supportWallModerationUpdate,)
+  }
+);}
+
+
+
+
+export const getUpdateSupportWallModerationMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateSupportWallModeration>>, TError,{id: number;data: BodyType<SupportWallModerationUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateSupportWallModeration>>, TError,{id: number;data: BodyType<SupportWallModerationUpdate>}, TContext> => {
+
+const mutationKey = ['updateSupportWallModeration'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateSupportWallModeration>>, {id: number;data: BodyType<SupportWallModerationUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateSupportWallModeration(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateSupportWallModerationMutationResult = NonNullable<Awaited<ReturnType<typeof updateSupportWallModeration>>>
+    export type UpdateSupportWallModerationMutationBody = BodyType<SupportWallModerationUpdate>
+    export type UpdateSupportWallModerationMutationError = ErrorType<void>
+
+    /**
+ * @summary Admin approve/hide/restore a Support Wall message
+ */
+export const useUpdateSupportWallModeration = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateSupportWallModeration>>, TError,{id: number;data: BodyType<SupportWallModerationUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateSupportWallModeration>>,
+        TError,
+        {id: number;data: BodyType<SupportWallModerationUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateSupportWallModerationMutationOptions(options));
+    }
 
 export const getRequestUploadUrlUrl = () => {
 

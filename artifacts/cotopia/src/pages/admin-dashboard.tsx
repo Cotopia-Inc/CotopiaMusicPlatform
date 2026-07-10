@@ -1,7 +1,7 @@
 import { useGetAdminAnalytics, getGetAdminAnalyticsQueryKey } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, Music, Video, PlayCircle, Eye, MessageSquare, AlertCircle, Mic2, Building2, DollarSign, ChevronRight, Megaphone, ArrowLeft, Home } from "lucide-react";
+import { Users, Music, Video, PlayCircle, Eye, MessageSquare, AlertCircle, Mic2, Building2, DollarSign, ChevronRight, Megaphone, ArrowLeft, Home, Heart } from "lucide-react";
 import { RoleTag } from "@/components/role-badges";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,7 @@ export default function AdminDashboard() {
     { href: "/admin/songs", label: "Songs", desc: "Feature, approve, and manage songs", icon: Music },
     { href: "/admin/videos", label: "Videos", desc: "Feature, approve, and manage videos", icon: Video },
     { href: "/admin/company", label: "Company Hub", desc: "Create and manage announcements and articles", icon: Megaphone },
+    { href: "/admin/creator-support", label: "Creator Support", desc: "Overview, moderation, and demo tip transactions", icon: Heart },
     { href: "/admin/comments", label: "Comments", desc: "Moderate and delete comments", icon: MessageSquare },
     { href: "/admin/settings", label: "App Settings", desc: "Platform name, branding, and settings", icon: "logo" as const },
   ];

@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { SupportTipInputContentType } from './supportTipInputContentType';
+import type { SupportTipInputMessageVisibility } from './supportTipInputMessageVisibility';
 
 export interface SupportTipInput {
   contentType: SupportTipInputContentType;
@@ -14,4 +15,5 @@ export interface SupportTipInput {
   amount: number;
   /** @maxLength 500 */
   message?: string;
+  messageVisibility?: SupportTipInputMessageVisibility;
 }

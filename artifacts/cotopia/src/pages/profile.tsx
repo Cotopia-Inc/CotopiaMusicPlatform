@@ -21,6 +21,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { MessageSquare } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EventsTab } from "@/components/events-tab";
+import { CreatorSupportSettings } from "@/components/creator-support-settings";
 
 function FeaturedBadgesSection({ userId }: { userId: number }) {
   const { toast } = useToast();
@@ -1052,6 +1053,9 @@ export default function Profile() {
           </div>
         )}
       </div>
+
+      {/* Creator Support — available to any role that wants to accept demo tips */}
+      <CreatorSupportSettings />
 
       {/* Danger Zone — Account Deletion */}
       <DangerZone profile={profile} />

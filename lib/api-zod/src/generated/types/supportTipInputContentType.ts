@@ -14,4 +14,5 @@ export const SupportTipInputContentType = {
   video: 'video',
   artist: 'artist',
   label: 'label',
+  creator: 'creator',
 } as const;

@@ -1,17 +1,22 @@
 import { Router } from "express";
-import { eq, and, or, gte, desc, count, sql } from "drizzle-orm";
+import { eq, and, or, gte, desc, count, countDistinct, sql } from "drizzle-orm";
 import {
   db, creatorPaymentSettingsTable, supportTransactionsTable,
   songsTable, videosTable, artistsTable, labelsTable, usersTable,
-  notificationsTable, followsTable, analyticsEventsTable,
+  notificationsTable, followsTable, analyticsEventsTable, adminAuditLogsTable,
 } from "@workspace/db";
-import { UpdateCreatorSupportSettingsBody, CreateSupportTipBody } from "@workspace/api-zod";
+import {
+  UpdateCreatorSupportSettingsBody, CreateSupportTipBody,
+  GetCreatorSupportStatusQueryParams, GetSupportWallQueryParams,
+  UpdateSupportTransactionStatusBody, UpdateSupportWallModerationBody,
+} from "@workspace/api-zod";
 import { requireAuth, requireRole, type AuthRequest } from "../lib/auth";
+import { evaluateSupportBadges } from "../lib/support-badges";
 
 const router = Router();
 
 const ADMIN_ROLES = ["admin", "master_admin"] as const;
-const SUPPORTABLE_TYPES = ["song", "video", "artist", "label"] as const;
+const SUPPORTABLE_TYPES = ["song", "video", "artist", "label", "creator"] as const;
 type SupportableType = (typeof SUPPORTABLE_TYPES)[number];
 
 // ── Demo-mode spam guard ────────────────────────────────────────────────────
@@ -66,6 +71,14 @@ async function resolveSupportRecipient(contentType: string, contentId: number): 
     if (!label) return null;
     return { recipientUserId: label.userId, creatorName: label.name };
   }
+  if (contentType === "creator") {
+    // Direct-to-profile tip: contentId IS the recipient's userId. This is how
+    // staff-only accounts (admin/editor/moderator) — who have no artist/label
+    // row — can receive tips once they enable Creator Support themselves.
+    const [user] = await db.select({ id: usersTable.id, displayName: usersTable.displayName, username: usersTable.username }).from(usersTable).where(eq(usersTable.id, contentId)).limit(1);
+    if (!user) return null;
+    return { recipientUserId: user.id, creatorName: user.displayName || user.username };
+  }
   return null;
 }
 
@@ -87,6 +100,7 @@ async function resolveContentTitle(contentType: string, contentId: number | null
     const [row] = await db.select({ name: labelsTable.name }).from(labelsTable).where(eq(labelsTable.id, contentId)).limit(1);
     return row?.name ?? null;
   }
+  // "creator" tips are direct-to-profile, not tied to a specific content item.
   return null;
 }
 
@@ -110,6 +124,47 @@ async function getFollowerStats(userId: number): Promise<{ followerCount: number
   return { followerCount: totalRow?.count ?? 0, newFollowers30d: recentRow?.count ?? 0 };
 }
 
+async function getSupporterCount(recipientUserId: number): Promise<number> {
+  const [row] = await db.select({ n: countDistinct(supportTransactionsTable.supporterUserId) })
+    .from(supportTransactionsTable)
+    .where(and(eq(supportTransactionsTable.recipientUserId, recipientUserId), eq(supportTransactionsTable.status, "completed")));
+  return Number(row?.n ?? 0);
+}
+
+async function getContentSupporterCount(contentType: string, contentId: number): Promise<number> {
+  const [row] = await db.select({ n: countDistinct(supportTransactionsTable.supporterUserId) })
+    .from(supportTransactionsTable)
+    .where(and(
+      eq(supportTransactionsTable.contentType, contentType),
+      eq(supportTransactionsTable.contentId, contentId),
+      eq(supportTransactionsTable.status, "completed"),
+    ));
+  return Number(row?.n ?? 0);
+}
+
+function toActivityItem(r: {
+  id: number; amount: string | number; currency: string; message: string | null;
+  messageVisibility: string; moderationStatus: string; status: string;
+  contentType: string; contentId: number | null; transactionRef: string; createdAt: Date;
+  supporterDisplayName: string | null; supporterUsername: string;
+}, contentTitle: string | null) {
+  return {
+    id: r.id,
+    supporterDisplayName: r.supporterDisplayName || r.supporterUsername,
+    amount: Number(r.amount),
+    currency: r.currency,
+    message: r.message,
+    messageVisibility: r.messageVisibility,
+    moderationStatus: r.moderationStatus,
+    status: r.status,
+    contentType: r.contentType,
+    contentId: r.contentId,
+    contentTitle,
+    transactionRef: r.transactionRef,
+    createdAt: r.createdAt,
+  };
+}
+
 // ── Creator: own payment settings ──────────────────────────────────────────
 router.get("/creator-support/settings", requireAuth, async (req: AuthRequest, res): Promise<void> => {
   const [settings] = await db.select().from(creatorPaymentSettingsTable).where(eq(creatorPaymentSettingsTable.userId, req.user!.userId)).limit(1);
@@ -118,6 +173,9 @@ router.get("/creator-support/settings", requireAuth, async (req: AuthRequest, re
     provider: settings?.provider ?? "paypal",
     paypalEmail: settings?.paypalEmail ?? null,
     paypalMeLink: settings?.paypalMeLink ?? null,
+    thankYouMessage: settings?.thankYouMessage ?? null,
+    supportWallEnabled: settings?.supportWallEnabled ?? true,
+    supportWallRequiresApproval: settings?.supportWallRequiresApproval ?? false,
   });
 });
 
@@ -127,9 +185,10 @@ router.put("/creator-support/settings", requireAuth, async (req: AuthRequest, re
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const { supportEnabled, paypalEmail, paypalMeLink } = parsed.data;
+  const { supportEnabled, paypalEmail, paypalMeLink, thankYouMessage, supportWallEnabled, supportWallRequiresApproval } = parsed.data;
   const cleanEmail = paypalEmail?.trim() || null;
   const cleanLink = paypalMeLink?.trim() || null;
+  const cleanThankYou = thankYouMessage?.trim() || null;
 
   if (supportEnabled && !cleanEmail && !cleanLink) {
     res.status(400).json({ error: "Add a PayPal email or PayPal.me link before enabling Creator Support." });
@@ -138,17 +197,25 @@ router.put("/creator-support/settings", requireAuth, async (req: AuthRequest, re
 
   const [existing] = await db.select({ id: creatorPaymentSettingsTable.id }).from(creatorPaymentSettingsTable).where(eq(creatorPaymentSettingsTable.userId, req.user!.userId)).limit(1);
 
+  const updateValues: Record<string, unknown> = {
+    supportEnabled,
+    paypalEmail: cleanEmail,
+    paypalMeLink: cleanLink,
+    thankYouMessage: cleanThankYou,
+  };
+  if (supportWallEnabled !== undefined) updateValues.supportWallEnabled = supportWallEnabled;
+  if (supportWallRequiresApproval !== undefined) updateValues.supportWallRequiresApproval = supportWallRequiresApproval;
+
   const row = existing
-    ? (await db.update(creatorPaymentSettingsTable).set({
-        supportEnabled,
-        paypalEmail: cleanEmail,
-        paypalMeLink: cleanLink,
-      }).where(eq(creatorPaymentSettingsTable.id, existing.id)).returning())[0]
+    ? (await db.update(creatorPaymentSettingsTable).set(updateValues).where(eq(creatorPaymentSettingsTable.id, existing.id)).returning())[0]
     : (await db.insert(creatorPaymentSettingsTable).values({
         userId: req.user!.userId,
         supportEnabled,
         paypalEmail: cleanEmail,
         paypalMeLink: cleanLink,
+        thankYouMessage: cleanThankYou,
+        supportWallEnabled: supportWallEnabled ?? true,
+        supportWallRequiresApproval: supportWallRequiresApproval ?? false,
       }).returning())[0];
 
   res.json({
@@ -156,18 +223,128 @@ router.put("/creator-support/settings", requireAuth, async (req: AuthRequest, re
     provider: row.provider,
     paypalEmail: row.paypalEmail,
     paypalMeLink: row.paypalMeLink,
+    thankYouMessage: row.thankYouMessage,
+    supportWallEnabled: row.supportWallEnabled,
+    supportWallRequiresApproval: row.supportWallRequiresApproval,
   });
 });
 
 // ── Public-safe: check whether a user has Creator Support enabled ─────────
-router.get("/creator-support/status/:userId", requireAuth, async (req: AuthRequest, res): Promise<void> => {
+router.get("/creator-support/status/:userId", async (req, res): Promise<void> => {
   const userId = Number(req.params.userId);
   if (isNaN(userId) || userId <= 0) {
     res.status(400).json({ error: "Invalid user id" });
     return;
   }
-  const [settings] = await db.select({ supportEnabled: creatorPaymentSettingsTable.supportEnabled }).from(creatorPaymentSettingsTable).where(eq(creatorPaymentSettingsTable.userId, userId)).limit(1);
-  res.json({ userId, supportEnabled: settings?.supportEnabled ?? false });
+  const queryParsed = GetCreatorSupportStatusQueryParams.safeParse(req.query);
+  if (!queryParsed.success) {
+    res.status(400).json({ error: queryParsed.error.message });
+    return;
+  }
+  const { contentType, contentId } = queryParsed.data;
+
+  const [settings] = await db.select({
+    supportEnabled: creatorPaymentSettingsTable.supportEnabled,
+    thankYouMessage: creatorPaymentSettingsTable.thankYouMessage,
+    supportWallEnabled: creatorPaymentSettingsTable.supportWallEnabled,
+  }).from(creatorPaymentSettingsTable).where(eq(creatorPaymentSettingsTable.userId, userId)).limit(1);
+
+  const supporterCount = await getSupporterCount(userId);
+  const contentSupporterCount = contentType && contentId !== undefined
+    ? await getContentSupporterCount(contentType, contentId)
+    : null;
+
+  res.json({
+    userId,
+    supportEnabled: settings?.supportEnabled ?? false,
+    supporterCount,
+    contentSupporterCount,
+    thankYouMessage: settings?.thankYouMessage ?? null,
+    supportWallEnabled: settings?.supportWallEnabled ?? true,
+  });
+});
+
+// ── Public: Support Wall (approved public/anonymous messages only) ────────
+router.get("/creator-support/wall/:userId", async (req, res): Promise<void> => {
+  const userId = Number(req.params.userId);
+  if (isNaN(userId) || userId <= 0) {
+    res.status(400).json({ error: "Invalid user id" });
+    return;
+  }
+  const queryParsed = GetSupportWallQueryParams.safeParse(req.query);
+  if (!queryParsed.success) {
+    res.status(400).json({ error: queryParsed.error.message });
+    return;
+  }
+  const { page, pageSize } = queryParsed.data;
+  const offset = (page - 1) * pageSize;
+
+  const whereClause = and(
+    eq(supportTransactionsTable.recipientUserId, userId),
+    eq(supportTransactionsTable.status, "completed"),
+    eq(supportTransactionsTable.moderationStatus, "approved"),
+    or(eq(supportTransactionsTable.messageVisibility, "public"), eq(supportTransactionsTable.messageVisibility, "anonymous")),
+  );
+
+  const [[totalRow], rows] = await Promise.all([
+    db.select({ count: count() }).from(supportTransactionsTable).where(whereClause),
+    db.select({
+      id: supportTransactionsTable.id,
+      messageVisibility: supportTransactionsTable.messageVisibility,
+      message: supportTransactionsTable.message,
+      contentType: supportTransactionsTable.contentType,
+      contentId: supportTransactionsTable.contentId,
+      createdAt: supportTransactionsTable.createdAt,
+      supporterDisplayName: usersTable.displayName,
+      supporterUsername: usersTable.username,
+    }).from(supportTransactionsTable)
+      .innerJoin(usersTable, eq(supportTransactionsTable.supporterUserId, usersTable.id))
+      .where(whereClause)
+      .orderBy(desc(supportTransactionsTable.createdAt))
+      .limit(pageSize)
+      .offset(offset),
+  ]);
+
+  const items = await Promise.all(rows.map(async (r) => {
+    const isAnonymous = r.messageVisibility === "anonymous";
+    return {
+      id: r.id,
+      isAnonymous,
+      supporterDisplayName: isAnonymous ? null : (r.supporterDisplayName || r.supporterUsername),
+      message: r.message,
+      contentType: r.contentType,
+      contentId: r.contentId,
+      contentTitle: await resolveContentTitle(r.contentType, r.contentId),
+      createdAt: r.createdAt,
+    };
+  }));
+
+  const total = totalRow?.count ?? 0;
+  res.json({ items, total, page, pageSize, hasMore: offset + items.length < total });
+});
+
+// ── Recipient: hide a public/anonymous message they received ──────────────
+router.post("/creator-support/wall/:transactionId/hide", requireAuth, async (req: AuthRequest, res): Promise<void> => {
+  const transactionId = Number(req.params.transactionId);
+  if (isNaN(transactionId) || transactionId <= 0) {
+    res.status(400).json({ error: "Invalid transaction id" });
+    return;
+  }
+  const [tx] = await db.select().from(supportTransactionsTable).where(eq(supportTransactionsTable.id, transactionId)).limit(1);
+  if (!tx) {
+    res.status(404).json({ error: "Transaction not found." });
+    return;
+  }
+  if (tx.recipientUserId !== req.user!.userId) {
+    res.status(403).json({ error: "You can only hide messages you received." });
+    return;
+  }
+
+  const [updated] = await db.update(supportTransactionsTable).set({ moderationStatus: "hidden" }).where(eq(supportTransactionsTable.id, transactionId)).returning();
+  const [supporter] = await db.select({ displayName: usersTable.displayName, username: usersTable.username }).from(usersTable).where(eq(usersTable.id, updated.supporterUserId)).limit(1);
+  const contentTitle = await resolveContentTitle(updated.contentType, updated.contentId);
+
+  res.json(toActivityItem({ ...updated, supporterDisplayName: supporter?.displayName ?? null, supporterUsername: supporter?.username ?? "A fan" }, contentTitle));
 });
 
 // ── Send a demo support tip ─────────────────────────────────────────────────
@@ -177,7 +354,7 @@ router.post("/creator-support/tips", requireAuth, async (req: AuthRequest, res):
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const { contentType, contentId, amount, message } = parsed.data;
+  const { contentType, contentId, amount, message, messageVisibility } = parsed.data;
 
   if (!SUPPORTABLE_TYPES.includes(contentType as SupportableType)) {
     res.status(400).json({ error: "Unsupported content type." });
@@ -204,11 +381,19 @@ router.post("/creator-support/tips", requireAuth, async (req: AuthRequest, res):
     return;
   }
 
-  const [settings] = await db.select({ supportEnabled: creatorPaymentSettingsTable.supportEnabled }).from(creatorPaymentSettingsTable).where(eq(creatorPaymentSettingsTable.userId, recipient.recipientUserId)).limit(1);
+  const [settings] = await db.select({
+    supportEnabled: creatorPaymentSettingsTable.supportEnabled,
+    thankYouMessage: creatorPaymentSettingsTable.thankYouMessage,
+    supportWallRequiresApproval: creatorPaymentSettingsTable.supportWallRequiresApproval,
+  }).from(creatorPaymentSettingsTable).where(eq(creatorPaymentSettingsTable.userId, recipient.recipientUserId)).limit(1);
   if (!settings?.supportEnabled) {
     res.status(400).json({ error: "This creator hasn't enabled Creator Support." });
     return;
   }
+
+  const moderationStatus = messageVisibility === "private"
+    ? "approved"
+    : (settings.supportWallRequiresApproval ? "pending" : "approved");
 
   let transaction;
   for (let attempt = 0; attempt < 5; attempt++) {
@@ -222,6 +407,8 @@ router.post("/creator-support/tips", requireAuth, async (req: AuthRequest, res):
         amount: amount.toFixed(2),
         currency: "USD",
         message: message?.trim() || null,
+        messageVisibility,
+        moderationStatus,
         transactionRef,
         provider: "paypal",
         mode: "demo",
@@ -252,6 +439,12 @@ router.post("/creator-support/tips", requireAuth, async (req: AuthRequest, res):
     isRead: false,
   });
 
+  try {
+    await evaluateSupportBadges(req.user!.userId, recipient.recipientUserId);
+  } catch (err) {
+    req.log.error({ err }, "Failed to evaluate support badges");
+  }
+
   req.log.info({ transactionRef: transaction.transactionRef, recipientUserId: recipient.recipientUserId, amount: transaction.amount }, "Demo support tip created");
 
   res.status(201).json({
@@ -260,17 +453,20 @@ router.post("/creator-support/tips", requireAuth, async (req: AuthRequest, res):
     amount: Number(transaction.amount),
     currency: transaction.currency,
     message: transaction.message,
+    messageVisibility: transaction.messageVisibility,
     mode: transaction.mode,
     status: transaction.status,
     createdAt: transaction.createdAt,
+    thankYouMessage: settings.thankYouMessage ?? null,
   });
 });
 
 // ── Creator: own support analytics dashboard ───────────────────────────────
 router.get("/creator-support/dashboard", requireAuth, async (req: AuthRequest, res): Promise<void> => {
   const creatorUserId = req.user!.userId;
+  const completedFilter = eq(supportTransactionsTable.status, "completed");
 
-  const [[clickRow], [attemptRow], [tipCountRow], [tipAmountRow], followerStats] = await Promise.all([
+  const [[clickRow], [attemptRow], [tipCountRow], [tipAmountRow], [pendingModerationRow], followerStats, supporterCount] = await Promise.all([
     db.select({ count: count() }).from(analyticsEventsTable).where(and(
       eq(analyticsEventsTable.eventName, "support_button_click"),
       eq(analyticsEventsTable.contentType, "user"),
@@ -281,9 +477,15 @@ router.get("/creator-support/dashboard", requireAuth, async (req: AuthRequest, r
       eq(analyticsEventsTable.contentType, "user"),
       eq(analyticsEventsTable.contentId, creatorUserId),
     )),
-    db.select({ count: count() }).from(supportTransactionsTable).where(eq(supportTransactionsTable.recipientUserId, creatorUserId)),
-    db.select({ total: sql<number>`coalesce(sum(${supportTransactionsTable.amount}::numeric), 0)` }).from(supportTransactionsTable).where(eq(supportTransactionsTable.recipientUserId, creatorUserId)),
+    db.select({ count: count() }).from(supportTransactionsTable).where(and(eq(supportTransactionsTable.recipientUserId, creatorUserId), completedFilter)),
+    db.select({ total: sql<number>`coalesce(sum(${supportTransactionsTable.amount}::numeric), 0)` }).from(supportTransactionsTable).where(and(eq(supportTransactionsTable.recipientUserId, creatorUserId), completedFilter)),
+    db.select({ count: count() }).from(supportTransactionsTable).where(and(
+      eq(supportTransactionsTable.recipientUserId, creatorUserId),
+      completedFilter,
+      eq(supportTransactionsTable.moderationStatus, "pending"),
+    )),
     getFollowerStats(creatorUserId),
+    getSupporterCount(creatorUserId),
   ]);
 
   const mostSupportedRaw = await db.select({
@@ -292,7 +494,7 @@ router.get("/creator-support/dashboard", requireAuth, async (req: AuthRequest, r
     totalAmount: sql<number>`coalesce(sum(${supportTransactionsTable.amount}::numeric), 0)`,
     tipCount: count(),
   }).from(supportTransactionsTable)
-    .where(eq(supportTransactionsTable.recipientUserId, creatorUserId))
+    .where(and(eq(supportTransactionsTable.recipientUserId, creatorUserId), completedFilter))
     .groupBy(supportTransactionsTable.contentType, supportTransactionsTable.contentId)
     .orderBy(desc(sql`sum(${supportTransactionsTable.amount}::numeric)`))
     .limit(5);
@@ -310,6 +512,9 @@ router.get("/creator-support/dashboard", requireAuth, async (req: AuthRequest, r
     amount: supportTransactionsTable.amount,
     currency: supportTransactionsTable.currency,
     message: supportTransactionsTable.message,
+    messageVisibility: supportTransactionsTable.messageVisibility,
+    moderationStatus: supportTransactionsTable.moderationStatus,
+    status: supportTransactionsTable.status,
     contentType: supportTransactionsTable.contentType,
     contentId: supportTransactionsTable.contentId,
     transactionRef: supportTransactionsTable.transactionRef,
@@ -322,20 +527,9 @@ router.get("/creator-support/dashboard", requireAuth, async (req: AuthRequest, r
     .orderBy(desc(supportTransactionsTable.createdAt))
     .limit(20);
 
-  const recentActivity = await Promise.all(recentRaw.map(async (r) => ({
-    id: r.id,
-    supporterDisplayName: r.supporterDisplayName || r.supporterUsername,
-    amount: Number(r.amount),
-    currency: r.currency,
-    message: r.message,
-    contentType: r.contentType,
-    contentId: r.contentId,
-    contentTitle: await resolveContentTitle(r.contentType, r.contentId),
-    transactionRef: r.transactionRef,
-    createdAt: r.createdAt,
-  })));
+  const recentActivity = await Promise.all(recentRaw.map(async (r) => toActivityItem(r, await resolveContentTitle(r.contentType, r.contentId))));
 
-  const supportMessages = recentActivity.filter((a) => a.message);
+  const supportMessages = recentActivity.filter((a) => a.message && a.messageVisibility !== "private");
 
   res.json({
     mode: "demo",
@@ -348,18 +542,22 @@ router.get("/creator-support/dashboard", requireAuth, async (req: AuthRequest, r
     supportMessages,
     followerCount: followerStats.followerCount,
     newFollowers30d: followerStats.newFollowers30d,
+    pendingWallApprovalCount: pendingModerationRow?.count ?? 0,
+    supporterCount,
   });
 });
 
 // ── Admin: platform-wide Creator Support overview ──────────────────────────
 router.get("/admin/creator-support", requireAuth, requireRole(...ADMIN_ROLES), async (_req: AuthRequest, res): Promise<void> => {
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const completedFilter = eq(supportTransactionsTable.status, "completed");
 
-  const [[attemptRow], [txCountRow], [txAmountRow], [newFollowersRow]] = await Promise.all([
+  const [[attemptRow], [txCountRow], [txAmountRow], [newFollowersRow], [pendingModerationRow]] = await Promise.all([
     db.select({ count: count() }).from(analyticsEventsTable).where(eq(analyticsEventsTable.eventName, "support_tip_attempt")),
-    db.select({ count: count() }).from(supportTransactionsTable),
-    db.select({ total: sql<number>`coalesce(sum(${supportTransactionsTable.amount}::numeric), 0)` }).from(supportTransactionsTable),
+    db.select({ count: count() }).from(supportTransactionsTable).where(completedFilter),
+    db.select({ total: sql<number>`coalesce(sum(${supportTransactionsTable.amount}::numeric), 0)` }).from(supportTransactionsTable).where(completedFilter),
     db.select({ count: count() }).from(followsTable).where(gte(followsTable.createdAt, thirtyDaysAgo)),
+    db.select({ count: count() }).from(supportTransactionsTable).where(and(completedFilter, eq(supportTransactionsTable.moderationStatus, "pending"))),
   ]);
 
   const topCreatorsRaw = await db.select({
@@ -367,6 +565,7 @@ router.get("/admin/creator-support", requireAuth, requireRole(...ADMIN_ROLES), a
     totalAmount: sql<number>`coalesce(sum(${supportTransactionsTable.amount}::numeric), 0)`,
     tipCount: count(),
   }).from(supportTransactionsTable)
+    .where(completedFilter)
     .groupBy(supportTransactionsTable.recipientUserId)
     .orderBy(desc(sql`sum(${supportTransactionsTable.amount}::numeric)`))
     .limit(10);
@@ -387,7 +586,7 @@ router.get("/admin/creator-support", requireAuth, requireRole(...ADMIN_ROLES), a
       totalAmount: sql<number>`coalesce(sum(${supportTransactionsTable.amount}::numeric), 0)`,
       tipCount: count(),
     }).from(supportTransactionsTable)
-      .where(eq(supportTransactionsTable.contentType, type))
+      .where(and(eq(supportTransactionsTable.contentType, type), completedFilter))
       .groupBy(supportTransactionsTable.contentId)
       .orderBy(desc(sql`sum(${supportTransactionsTable.amount}::numeric)`))
       .limit(10);
@@ -410,6 +609,7 @@ router.get("/admin/creator-support", requireAuth, requireRole(...ADMIN_ROLES), a
     totalAmount: sql<number>`coalesce(sum(${supportTransactionsTable.amount}::numeric), 0)`,
     tipCount: count(),
   }).from(supportTransactionsTable)
+    .where(completedFilter)
     .groupBy(supportTransactionsTable.supporterUserId)
     .orderBy(desc(sql`sum(${supportTransactionsTable.amount}::numeric)`))
     .limit(10);
@@ -429,6 +629,9 @@ router.get("/admin/creator-support", requireAuth, requireRole(...ADMIN_ROLES), a
     amount: supportTransactionsTable.amount,
     currency: supportTransactionsTable.currency,
     message: supportTransactionsTable.message,
+    messageVisibility: supportTransactionsTable.messageVisibility,
+    moderationStatus: supportTransactionsTable.moderationStatus,
+    status: supportTransactionsTable.status,
     contentType: supportTransactionsTable.contentType,
     contentId: supportTransactionsTable.contentId,
     transactionRef: supportTransactionsTable.transactionRef,
@@ -440,20 +643,9 @@ router.get("/admin/creator-support", requireAuth, requireRole(...ADMIN_ROLES), a
     .orderBy(desc(supportTransactionsTable.createdAt))
     .limit(20);
 
-  const recentTransactions = await Promise.all(recentRaw.map(async (r) => ({
-    id: r.id,
-    supporterDisplayName: r.supporterDisplayName || r.supporterUsername,
-    amount: Number(r.amount),
-    currency: r.currency,
-    message: r.message,
-    contentType: r.contentType,
-    contentId: r.contentId,
-    contentTitle: await resolveContentTitle(r.contentType, r.contentId),
-    transactionRef: r.transactionRef,
-    createdAt: r.createdAt,
-  })));
+  const recentTransactions = await Promise.all(recentRaw.map(async (r) => toActivityItem(r, await resolveContentTitle(r.contentType, r.contentId))));
 
-  const recentMessages = recentTransactions.filter((t) => t.message);
+  const recentMessages = recentTransactions.filter((t) => t.message && t.messageVisibility !== "private");
 
   res.json({
     paymentMode: "demo",
@@ -468,7 +660,87 @@ router.get("/admin/creator-support", requireAuth, requireRole(...ADMIN_ROLES), a
     newFollowers30d: newFollowersRow?.count ?? 0,
     recentTransactions,
     recentMessages,
+    pendingModerationCount: pendingModerationRow?.count ?? 0,
   });
+});
+
+// ── Admin: override a demo transaction's status ────────────────────────────
+router.put("/admin/creator-support/transactions/:id/status", requireAuth, requireRole(...ADMIN_ROLES), async (req: AuthRequest, res): Promise<void> => {
+  const id = Number(req.params.id);
+  if (isNaN(id) || id <= 0) {
+    res.status(400).json({ error: "Invalid transaction id" });
+    return;
+  }
+  const parsed = UpdateSupportTransactionStatusBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const [existing] = await db.select().from(supportTransactionsTable).where(eq(supportTransactionsTable.id, id)).limit(1);
+  if (!existing) {
+    res.status(404).json({ error: "Transaction not found." });
+    return;
+  }
+
+  const [updated] = await db.update(supportTransactionsTable).set({ status: parsed.data.status }).where(eq(supportTransactionsTable.id, id)).returning();
+
+  await db.insert(adminAuditLogsTable).values({
+    adminUserId: req.user!.userId,
+    action: "support_transaction_status_update",
+    targetType: "support_transaction",
+    targetId: id,
+    description: `Support transaction #${id} status updated to "${parsed.data.status}" (demo testing).`,
+    metadata: { previousStatus: existing.status, newStatus: parsed.data.status } as unknown,
+  });
+
+  if (updated.status === "completed" && existing.status !== "completed") {
+    try {
+      await evaluateSupportBadges(updated.supporterUserId, updated.recipientUserId);
+    } catch (err) {
+      req.log.error({ err }, "Failed to evaluate support badges after status override");
+    }
+  }
+
+  const [supporter] = await db.select({ displayName: usersTable.displayName, username: usersTable.username }).from(usersTable).where(eq(usersTable.id, updated.supporterUserId)).limit(1);
+  const contentTitle = await resolveContentTitle(updated.contentType, updated.contentId);
+  res.json(toActivityItem({ ...updated, supporterDisplayName: supporter?.displayName ?? null, supporterUsername: supporter?.username ?? "A fan" }, contentTitle));
+});
+
+// ── Admin: approve/hide/restore a Support Wall message ─────────────────────
+router.put("/admin/creator-support/wall/:id/moderation", requireAuth, requireRole(...ADMIN_ROLES), async (req: AuthRequest, res): Promise<void> => {
+  const id = Number(req.params.id);
+  if (isNaN(id) || id <= 0) {
+    res.status(400).json({ error: "Invalid transaction id" });
+    return;
+  }
+  const parsed = UpdateSupportWallModerationBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const [existing] = await db.select().from(supportTransactionsTable).where(eq(supportTransactionsTable.id, id)).limit(1);
+  if (!existing) {
+    res.status(404).json({ error: "Transaction not found." });
+    return;
+  }
+
+  const nextStatus = parsed.data.action === "hide" ? "hidden" : "approved";
+  const [updated] = await db.update(supportTransactionsTable).set({ moderationStatus: nextStatus }).where(eq(supportTransactionsTable.id, id)).returning();
+
+  await db.insert(adminAuditLogsTable).values({
+    adminUserId: req.user!.userId,
+    action: "support_wall_moderation",
+    targetType: "support_transaction",
+    targetId: id,
+    description: `Support Wall message #${id} moderation set to "${nextStatus}" via "${parsed.data.action}" action.`,
+    metadata: { previousModerationStatus: existing.moderationStatus, action: parsed.data.action } as unknown,
+  });
+
+  const [supporter] = await db.select({ displayName: usersTable.displayName, username: usersTable.username }).from(usersTable).where(eq(usersTable.id, updated.supporterUserId)).limit(1);
+  const contentTitle = await resolveContentTitle(updated.contentType, updated.contentId);
+  res.json(toActivityItem({ ...updated, supporterDisplayName: supporter?.displayName ?? null, supporterUsername: supporter?.username ?? "A fan" }, contentTitle));
 });
 
 export default router;
