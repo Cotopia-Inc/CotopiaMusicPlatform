@@ -49,7 +49,9 @@ function sleep(ms: number): Promise<void> {
 }
 
 function isRetryable(err: Error & { status?: number }): boolean {
-  return err.status == null || err.status >= 500;
+  if (err.status == null) return true;  // network error — worth one retry
+  if (err.status === 501) return false; // not configured — retrying won't help
+  return err.status >= 500;             // 5xx server errors; 4xx are never retried
 }
 
 // ---------------------------------------------------------------------------
@@ -329,24 +331,44 @@ async function attemptUpload(
   authHeaders: Record<string, string>,
   onProgress: (pct: number) => void,
 ): Promise<UploadResponse> {
+  let multipartUnavailable = false;
+
   if (file.size >= MULTIPART_THRESHOLD_BYTES) {
     try {
       return await attemptMultipartServerUpload(basePath, file, authHeaders, onProgress);
     } catch (err) {
       const status = (err as Error & { status?: number }).status;
-      // Hard-fail on 4xx other than 501 (bad request, auth error — retrying won't help)
-      if (status != null && status !== 501 && status >= 400 && status < 500) throw err;
+      if (status === 501) {
+        multipartUnavailable = true;
+      } else if (status != null && status >= 400 && status < 500) {
+        // Hard-fail on 4xx other than 501 (bad request, auth error)
+        throw err;
+      }
       onProgress(0);
     }
   }
 
-  // Small file, or multipart not configured (501): direct → proxy
+  // Small file, or multipart not configured: try direct presigned URL first
   try {
     return await attemptDirectUpload(basePath, file, authHeaders, onProgress);
-  } catch {
+  } catch (err) {
+    const status = (err as Error & { status?: number }).status;
+
+    // Both multipart and presign are unconfigured (501) AND the file is large —
+    // the proxy will also fail for large files. Short-circuit immediately with an
+    // actionable message instead of silently retrying a doomed proxy attempt.
+    if (status === 501 && multipartUnavailable) {
+      const sizeErr = new Error(
+        "File too large — set R2_S3_ACCESS_KEY_ID and R2_S3_SECRET_ACCESS_KEY in Render to enable large video uploads."
+      ) as Error & { status?: number };
+      sizeErr.status = 501;
+      throw sizeErr;
+    }
+
     onProgress(0);
-    return attemptProxyUpload(basePath, file, authHeaders, onProgress);
   }
+
+  return attemptProxyUpload(basePath, file, authHeaders, onProgress);
 }
 
 // ---------------------------------------------------------------------------

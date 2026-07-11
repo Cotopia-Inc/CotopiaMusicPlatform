@@ -76,6 +76,28 @@ Stored media URLs = `/api/storage/objects/uploads/<uuid>` (the frontend prepends
 
 Also fixed earlier: Node's default `server.requestTimeout`/`headersTimeout`/`keepAliveTimeout` were killing large/slow uploads before they could finish. `artifacts/api-server/src/index.ts` sets explicit longer timeouts on the `http.Server`. `useUpload.ts` (client) auto-retries network/5xx failures with backoff (never on 4xx). `r2Storage.ts`'s `saveFileToR2` itself cannot retry mid-upload (the request body is a single-use stream, not a re-readable buffer/file) — a hard timeout on the outgoing `https.request` guards against a hung connection instead.
 
+## Large-file upload: requires R2 S3 HMAC credentials for multipart (2026-07-11)
+
+Server-side S3 multipart upload was added as the path for files ≥ 100 MB
+(browser POSTs 50 MB chunks to `/multipart/part`, server calls `UploadPartCommand`).
+This requires **`R2_S3_ACCESS_KEY_ID`** and **`R2_S3_SECRET_ACCESS_KEY`** in Render —
+separate from the REST-API `R2_API_TOKEN`. Without them, `/multipart/start` returns
+501 and large files silently cycle through all three fallback paths, holding
+`isUploading=true` at 0% for 4-5 seconds before finally showing a generic error.
+
+**Key fixes shipped:**
+- `isRetryable` now treats 501 as non-retryable — retrying a missing-config error wastes time.
+- `attemptUpload` tracks `multipartUnavailable`; when both multipart and presign return
+  501 **and** the file is ≥ MULTIPART_THRESHOLD, it throws immediately with a clear
+  actionable message instead of letting the proxy attempt play out.
+- All S3 SDK calls (`CreateMultipartUploadCommand`, `UploadPartCommand`) are wrapped in
+  `withTimeout()` so a slow/unreachable R2 endpoint doesn't hang the server indefinitely.
+- Proxy route catch now detects `"HTTP 413"` from Cloudflare REST API and returns 413
+  (not 500) to the client; 413 is non-retryable so the error appears immediately.
+
+**How to get R2 HMAC keys** (Cloudflare dashboard → R2 → Manage API tokens → Create API token
+with "Object Read & Write" on the bucket → copy Access Key ID and Secret Access Key).
+
 ## Render production gotcha: repo's `.node-version` says `22`, dev container runs Node 24
 
 Render's `runtime: node` in `render.yaml` picks up the repo-root `.node-version` file to choose the Node version, which is pinned to `22` — but this Replit dev container runs Node 24. Code that only gets exercised on Render (not locally) should be checked for Node 22 compatibility, since a local build/typecheck pass does not guarantee the same behavior on Render's actual runtime version.

@@ -29,6 +29,23 @@ const router: IRouter = Router();
 const storageService = new ObjectStorageService();
 
 /**
+ * Races `promise` against a hard timeout. If the timeout fires first the
+ * returned promise rejects with a TimeoutError so S3 SDK calls don't hang
+ * indefinitely when the R2 endpoint is slow or unreachable.
+ */
+function withTimeout<T>(ms: number, promise: Promise<T>, label: string): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) =>
+      setTimeout(
+        () => reject(new Error(`${label} timed out after ${ms / 1000}s — check R2 credentials and network connectivity`)),
+        ms,
+      ),
+    ),
+  ]);
+}
+
+/**
  * Priority order for storage backends:
  * 1. GCS via Replit Object Storage (dev on Replit)
  * 2. Cloudflare R2 via REST API + public URL (production on Render)
@@ -204,17 +221,28 @@ router.post("/storage/uploads/upload", requireAuth, async (req: AuthRequest, res
       res.json({ objectPath, metadata: { name, size, contentType } });
     }
   } catch (error: unknown) {
-    // If the outgoing upload (to R2, or the local write stream) fails or is
-    // rejected mid-transfer, make sure we stop reading from the client too —
-    // otherwise the browser keeps sending into a dead pipe until it finishes
-    // or a timeout fires, holding the connection open for no reason.
+    // Stop draining from the client — the outgoing write stream is dead
     if (!req.destroyed) req.destroy();
 
     if (error instanceof UploadTooLargeError) {
       res.status(413).json({ error: "File is too large. Maximum upload size is 10GB." });
       return;
     }
+
     const detail = error instanceof Error ? error.message : String(error);
+
+    // Cloudflare R2's REST API returns HTTP 413 when the object exceeds its
+    // single-PUT size limit. Surface this as a 413 to the browser so the
+    // client can show a clear "file too large" message and stop retrying.
+    if (typeof detail === "string" && detail.includes("HTTP 413")) {
+      req.log.warn({ detail }, "R2 rejected upload as too large (HTTP 413)");
+      res.status(413).json({
+        error:
+          "File is too large for direct upload. Set R2_S3_ACCESS_KEY_ID and R2_S3_SECRET_ACCESS_KEY in Render to enable large video uploads via multipart.",
+      });
+      return;
+    }
+
     req.log.error({ err: error, detail }, "Error saving uploaded file");
     res.status(500).json({ error: "File upload failed. Please try again." });
   }
@@ -299,7 +327,11 @@ router.post("/storage/uploads/multipart/start", requireAuth, async (req: AuthReq
   }
 
   try {
-    const { uploadId, objectPath } = await initiateR2MultipartUpload(contentType);
+    const { uploadId, objectPath } = await withTimeout(
+      30_000,
+      initiateR2MultipartUpload(contentType),
+      "CreateMultipartUpload",
+    );
     res.json({ uploadId, objectPath, metadata: { name, size, contentType } });
   } catch (error) {
     req.log.warn({ err: error }, "Error initiating multipart upload");
@@ -351,7 +383,11 @@ router.post("/storage/uploads/multipart/part", requireAuth, async (req: AuthRequ
   const body = Buffer.concat(chunks);
 
   try {
-    const etag = await uploadR2Part(objectPath, uploadId, partNumber, body);
+    const etag = await withTimeout(
+      60_000,
+      uploadR2Part(objectPath, uploadId, partNumber, body),
+      "UploadPart",
+    );
     res.json({ partNumber, etag });
   } catch (error) {
     req.log.warn({ err: error, objectPath, partNumber }, "Error uploading multipart part to R2");
