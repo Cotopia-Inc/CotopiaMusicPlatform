@@ -21,6 +21,10 @@ Two endpoints, both `requireAuth`:
 
 **Verified in a real browser (not just curl, which bypasses CORS):** direct GCS PUT works with no CORS errors against the dev bucket's default config. R2 presigned PUT direct-upload has NOT been verified in a real browser yet — before relying on it in production, confirm the R2 bucket's CORS policy allows the app's origin for PUT requests (Cloudflare R2 dashboard → bucket → Settings → CORS Policy), since S3-style presigned PUTs are subject to bucket CORS just like GCS.
 
+## R2 S3 SDK — `forcePathStyle: true` is required
+
+Without `forcePathStyle: true` in the `S3Client` constructor, the SDK defaults to virtual-hosted-style addressing (`bucket.accountid.r2.cloudflarestorage.com`). `getSignedUrl` is purely local (no network call) so it silently works without this flag, but any actual HTTP call (`CreateMultipartUploadCommand`, etc.) will throw `ERR_INVALID_CHAR` immediately (0 retries, never makes a network connection). This was the root cause of multipart upload failing in production. **Always set `forcePathStyle: true` for all R2 S3Client instances.**
+
 ## R2 setup — Cloudflare REST API (NOT S3/AWS SDK)
 
 **Why REST API, not S3 SDK:** The S3-compatible API requires R2-specific API token key pairs (Access Key ID + Secret). Copy-paste from Cloudflare can introduce invisible Unicode/whitespace characters that cause "Invalid character in header" errors in Node.js's http module. The Cloudflare REST API uses a standard Bearer token that avoids this entirely.

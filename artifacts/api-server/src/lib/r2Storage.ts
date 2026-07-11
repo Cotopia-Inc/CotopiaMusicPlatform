@@ -48,12 +48,22 @@ export function r2PresignAvailable(): boolean {
 
 let s3Client: S3Client | null = null;
 
+/** Reset the cached client — call after env-var changes in tests. */
+export function resetS3Client(): void {
+  s3Client = null;
+}
+
 function getS3Client(): S3Client {
   if (s3Client) return s3Client;
   const accountId = process.env.R2_ACCOUNT_ID!.trim();
   s3Client = new S3Client({
     region: "auto",
     endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+    // Required for Cloudflare R2 — without this the SDK defaults to
+    // virtual-hosted-style (bucket.accountid.r2.cloudflarestorage.com)
+    // which triggers ERR_INVALID_CHAR in Node's HTTP client for actual
+    // requests (getSignedUrl is local-only so it doesn't show this bug).
+    forcePathStyle: true,
     credentials: {
       accessKeyId: process.env.R2_S3_ACCESS_KEY_ID!.trim(),
       secretAccessKey: process.env.R2_S3_SECRET_ACCESS_KEY!.trim(),
