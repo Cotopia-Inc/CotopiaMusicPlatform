@@ -30,7 +30,7 @@ const MAX_FILES_TOTAL = 20;
 // No product-level size cap right now — this only guards against the technical
 // safety ceiling in the Express route's express.raw({ limit }) in
 // artifacts/api-server/src/routes/storage.ts.
-const MAX_FILE_SIZE_BYTES = 200 * 1024 * 1024 * 1024; // 200GB — supports 8-hour video at high bitrate
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024 * 1024;
 
 function formatFileSize(bytes: number): string {
   const gb = bytes / (1024 * 1024 * 1024);

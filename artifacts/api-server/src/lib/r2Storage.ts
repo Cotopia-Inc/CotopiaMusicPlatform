@@ -261,14 +261,19 @@ export async function initiateR2MultipartUpload(
 }
 
 /**
- * Generates a presigned PUT URL for a single multipart part. The browser uses
- * this to PUT the chunk directly to R2; the ETag from R2's response is then
- * collected for the final CompleteMultipartUpload call.
+ * Uploads one chunk (Buffer) to R2 as a single multipart part.
+ * Called server-side — the browser sends the raw bytes to the Express route,
+ * which buffers them and calls this function. No CORS configuration on the R2
+ * bucket is required since the browser never communicates directly with R2.
+ *
+ * Returns the ETag string exactly as returned by R2 (including quotes), which
+ * is what CompleteMultipartUpload expects.
  */
-export async function presignR2UploadPart(
+export async function uploadR2Part(
   objectPath: string,
   uploadId: string,
   partNumber: number,
+  body: Buffer,
   client: S3Client = getS3Client(),
 ): Promise<string> {
   const bucket = process.env.R2_BUCKET_NAME!.trim();
@@ -279,9 +284,12 @@ export async function presignR2UploadPart(
     Key: key,
     UploadId: uploadId,
     PartNumber: partNumber,
+    Body: body,
+    ContentLength: body.byteLength,
   });
 
-  return getSignedUrl(client, command, { expiresIn: PRESIGN_PART_TTL_SEC });
+  const result = await client.send(command);
+  return result.ETag ?? "";
 }
 
 /**

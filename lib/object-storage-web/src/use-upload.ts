@@ -14,43 +14,35 @@ export interface UploadResponse {
 }
 
 export interface UseUploadOptions {
-  /** Base path where object storage routes are mounted (default: "/api/storage") */
   basePath?: string;
-  /**
-   * Returns extra headers (e.g. `Authorization`) to attach to upload
-   * requests. Both `/uploads/upload` and `/uploads/request-url` require
-   * auth, so callers whose backend enforces auth on these routes must
-   * supply this.
-   */
   getAuthHeaders?: () => Record<string, string>;
   onSuccess?: (response: UploadResponse) => void;
   onError?: (error: Error) => void;
 }
 
 /**
- * Upload strategy:
- *
+ * Upload strategy
+ * ───────────────
  * Small files (< MULTIPART_THRESHOLD):
- *   1. Direct single-PUT via presigned URL (browser → R2 directly, fastest)
- *   2. Server-proxy fallback (browser → server → R2)
+ *   1. Direct single-PUT via presigned URL (browser → R2, fastest)
+ *   2. Server-proxy fallback (browser → server → R2 REST API)
  *
  * Large files (≥ MULTIPART_THRESHOLD):
- *   1. Multipart direct upload — file is split into CHUNK_SIZE chunks, each
- *      chunk gets its own 1-hour presigned URL, browser PUTs all chunks
- *      directly to R2 in parallel batches, server finalises with CompleteMultipartUpload.
- *      This avoids single-connection timeouts on slow networks entirely.
- *   2. Single-PUT direct (fallback if multipart returns 501 / not configured)
- *   3. Server-proxy fallback (last resort)
- *
- * All paths retry on transient 5xx / network errors (up to MAX_AUTO_RETRIES).
+ *   1. Server-side S3 multipart — file is split into CHUNK_SIZE chunks; each
+ *      chunk is POSTed to /multipart/part where the server uploads it to R2
+ *      via UploadPartCommand. No CORS configuration on the R2 bucket required;
+ *      no browser↔R2 direct connection. Returns 501 when R2 S3 credentials
+ *      are not configured, falls through to the single-PUT paths below.
+ *   2. Direct single-PUT via presigned URL (fallback)
+ *   3. Server-proxy fallback (last resort, fails for very large files if
+ *      Cloudflare is in the request path and imposes a body-size limit)
  */
 
-const MULTIPART_THRESHOLD_BYTES = 100 * 1024 * 1024;  // 100 MB
-const CHUNK_SIZE_BYTES          =  50 * 1024 * 1024;  //  50 MB per chunk
-const MAX_CONCURRENT_PARTS      = 3;                   // parallel chunk uploads
+const MULTIPART_THRESHOLD_BYTES = 100 * 1024 * 1024; //  100 MB
+const CHUNK_SIZE_BYTES          =  50 * 1024 * 1024; //   50 MB per chunk
 
-const MAX_AUTO_RETRIES = 2; // 3 total attempts
-const RETRY_DELAY_MS = [1000, 3000];
+const MAX_AUTO_RETRIES = 2;
+const RETRY_DELAY_MS   = [1000, 3000];
 
 function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -69,7 +61,7 @@ async function requestPresignedUrl(
   file: File,
   authHeaders: Record<string, string>,
 ): Promise<UploadResponse> {
-  const response = await fetch(`${basePath}/uploads/request-url`, {
+  const res = await fetch(`${basePath}/uploads/request-url`, {
     method: "POST",
     headers: { "Content-Type": "application/json", ...authHeaders },
     body: JSON.stringify({
@@ -78,14 +70,12 @@ async function requestPresignedUrl(
       contentType: file.type || "application/octet-stream",
     }),
   });
-
-  if (!response.ok) {
-    const err = new Error(`Failed to get upload URL (${response.status})`) as Error & { status?: number };
-    err.status = response.status;
+  if (!res.ok) {
+    const err = new Error(`Failed to get upload URL (${res.status})`) as Error & { status?: number };
+    err.status = res.status;
     throw err;
   }
-
-  return (await response.json()) as UploadResponse;
+  return (await res.json()) as UploadResponse;
 }
 
 function xhrPut(
@@ -98,13 +88,9 @@ function xhrPut(
     const xhr = new XMLHttpRequest();
     xhr.open("PUT", url);
     xhr.setRequestHeader("Content-Type", contentType);
-
     xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable) {
-        onProgress(Math.min(95, Math.round((e.loaded / e.total) * 95)));
-      }
+      if (e.lengthComputable) onProgress(Math.min(95, Math.round((e.loaded / e.total) * 95)));
     };
-
     xhr.onload = () => {
       if (xhr.status >= 200 && xhr.status < 300) {
         resolve();
@@ -116,7 +102,6 @@ function xhrPut(
     };
     xhr.onerror = () => reject(new Error("Direct upload network error"));
     xhr.onabort = () => reject(new Error("Upload cancelled"));
-
     xhr.send(file);
   });
 }
@@ -128,9 +113,7 @@ async function attemptDirectUpload(
   onProgress: (pct: number) => void,
 ): Promise<UploadResponse> {
   const { uploadURL, objectPath, metadata } = await requestPresignedUrl(basePath, file, authHeaders);
-
   await xhrPut(uploadURL, file, file.type || "application/octet-stream", onProgress);
-
   return {
     uploadURL,
     objectPath,
@@ -139,7 +122,7 @@ async function attemptDirectUpload(
 }
 
 // ---------------------------------------------------------------------------
-// Server-proxy upload (fallback)
+// Server-proxy upload (fallback for small files)
 // ---------------------------------------------------------------------------
 
 function attemptProxyUpload(
@@ -156,13 +139,9 @@ function attemptProxyUpload(
     for (const [key, value] of Object.entries(authHeaders)) {
       xhr.setRequestHeader(key, value);
     }
-
     xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable) {
-        onProgress(Math.min(95, Math.round((e.loaded / e.total) * 95)));
-      }
+      if (e.lengthComputable) onProgress(Math.min(95, Math.round((e.loaded / e.total) * 95)));
     };
-
     xhr.onload = () => {
       if (xhr.status >= 200 && xhr.status < 300) {
         try {
@@ -183,57 +162,57 @@ function attemptProxyUpload(
         reject(err);
       }
     };
-
     xhr.onerror = () => {
       const err = new Error("Network error — check your connection and try again") as Error & { status?: number };
       err.status = null as unknown as number;
       reject(err);
     };
     xhr.onabort = () => reject(new Error("Upload cancelled"));
-
     xhr.send(file);
   });
 }
 
 // ---------------------------------------------------------------------------
-// Multipart direct upload (large files)
+// Server-side S3 multipart upload (large files)
 // ---------------------------------------------------------------------------
 
-interface MultipartStartResponse {
-  uploadId: string;
-  objectPath: string;
-  partUrls: string[];
-  metadata: UploadMetadata;
-}
-
 /**
- * PUT a single chunk to R2 using a presigned URL. Returns the ETag from the
- * response header — R2 always includes this (with surrounding quotes) which
- * is exactly what CompleteMultipartUpload expects.
+ * POST one binary chunk to the server's /multipart/part endpoint using XHR so
+ * we get upload-progress events. The server buffers the chunk and calls
+ * UploadPartCommand — no direct browser↔R2 connection needed.
  *
- * `onLoaded` receives the total bytes loaded so far for this chunk so the
- * caller can aggregate progress across parallel parts.
+ * Returns the ETag string from the JSON response body (as returned by R2).
  */
-function uploadPart(
-  url: string,
+function uploadChunkToServer(
+  basePath: string,
+  objectPath: string,
+  uploadId: string,
+  partNumber: number,
   chunk: Blob,
-  onLoaded: (loadedBytes: number) => void,
+  authHeaders: Record<string, string>,
+  onLoaded: (bytes: number) => void,
 ): Promise<string> {
   return new Promise<string>((resolve, reject) => {
     const xhr = new XMLHttpRequest();
-    xhr.open("PUT", url);
-
+    xhr.open("POST", `${basePath}/uploads/multipart/part`);
+    xhr.setRequestHeader("Content-Type", "application/octet-stream");
+    xhr.setRequestHeader("X-Object-Path", objectPath);
+    xhr.setRequestHeader("X-Upload-Id", uploadId);
+    xhr.setRequestHeader("X-Part-Number", String(partNumber));
+    for (const [key, value] of Object.entries(authHeaders)) {
+      xhr.setRequestHeader(key, value);
+    }
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable) onLoaded(e.loaded);
     };
-
     xhr.onload = () => {
       if (xhr.status >= 200 && xhr.status < 300) {
-        const etag =
-          xhr.getResponseHeader("ETag") ??
-          xhr.getResponseHeader("etag") ??
-          "";
-        resolve(etag);
+        try {
+          const data = JSON.parse(xhr.responseText) as { etag: string };
+          resolve(data.etag);
+        } catch {
+          reject(new Error("Invalid part response"));
+        }
       } else {
         const err = new Error(`Part upload failed (${xhr.status})`) as Error & { status?: number };
         err.status = xhr.status;
@@ -242,30 +221,26 @@ function uploadPart(
     };
     xhr.onerror = () => reject(new Error("Part upload network error"));
     xhr.onabort = () => reject(new Error("Part upload cancelled"));
-
     xhr.send(chunk);
   });
 }
 
 /**
- * Multipart direct upload:
- *  1. Ask the server to create an R2 multipart upload and presign all part URLs
- *  2. PUT each 50 MB chunk directly to R2 (MAX_CONCURRENT_PARTS in parallel)
- *  3. Tell the server to call CompleteMultipartUpload with the ordered ETag list
+ * Server-side S3 multipart upload:
+ *  1. POST /multipart/start  — server creates the R2 multipart upload
+ *  2. POST /multipart/part   — for each 50 MB chunk (sequential; server→R2 via S3 SDK)
+ *  3. POST /multipart/complete — server calls CompleteMultipartUpload
  *
- * Each part URL is valid for 1 hour — even a very slow connection won't expire
- * a 50 MB chunk's URL before the chunk finishes uploading.
- * If any part fails, the upload is aborted (best-effort) to free R2 storage.
+ * Falls through (throws with status 501) if R2 S3 credentials are not set in
+ * the server environment, so the caller can fall back to the single-PUT paths.
  */
-async function attemptMultipartDirectUpload(
+async function attemptMultipartServerUpload(
   basePath: string,
   file: File,
   authHeaders: Record<string, string>,
   onProgress: (pct: number) => void,
 ): Promise<UploadResponse> {
-  const partCount = Math.ceil(file.size / CHUNK_SIZE_BYTES);
-
-  // 1. Initiate and get all presigned part URLs
+  // 1. Initiate
   const startRes = await fetch(`${basePath}/uploads/multipart/start`, {
     method: "POST",
     headers: { "Content-Type": "application/json", ...authHeaders },
@@ -273,7 +248,6 @@ async function attemptMultipartDirectUpload(
       name: file.name,
       size: file.size,
       contentType: file.type || "application/octet-stream",
-      partCount,
     }),
   });
 
@@ -283,53 +257,50 @@ async function attemptMultipartDirectUpload(
     throw err;
   }
 
-  const { uploadId, objectPath, partUrls, metadata }: MultipartStartResponse =
-    await startRes.json();
-
-  // 2. Upload parts in parallel batches; track per-part loaded bytes for accurate progress
-  const partBytesLoaded = new Array<number>(partCount).fill(0);
-  const parts: Array<{ partNumber: number; etag: string }> = [];
-
-  const updateProgress = () => {
-    const loaded = partBytesLoaded.reduce((a, b) => a + b, 0);
-    onProgress(Math.min(94, Math.round((loaded / file.size) * 94)));
+  const { uploadId, objectPath, metadata } = (await startRes.json()) as {
+    uploadId: string;
+    objectPath: string;
+    metadata: UploadMetadata;
   };
 
+  const partCount = Math.ceil(file.size / CHUNK_SIZE_BYTES);
+  const parts: Array<{ partNumber: number; etag: string }> = [];
+  let uploadedBytes = 0;
+
+  // 2. Upload chunks sequentially (server buffers each, uploads to R2 via S3 SDK)
   try {
-    for (let batchStart = 0; batchStart < partCount; batchStart += MAX_CONCURRENT_PARTS) {
-      const batchIndices = Array.from(
-        { length: Math.min(MAX_CONCURRENT_PARTS, partCount - batchStart) },
-        (_, i) => batchStart + i,
+    for (let i = 0; i < partCount; i++) {
+      const partNumber = i + 1;
+      const start = i * CHUNK_SIZE_BYTES;
+      const chunk = file.slice(start, Math.min(start + CHUNK_SIZE_BYTES, file.size));
+
+      const etag = await uploadChunkToServer(
+        basePath,
+        objectPath,
+        uploadId,
+        partNumber,
+        chunk,
+        authHeaders,
+        (loaded) => {
+          onProgress(Math.min(94, Math.round(((uploadedBytes + loaded) / file.size) * 94)));
+        },
       );
 
-      const batchResults = await Promise.all(
-        batchIndices.map(async (partIndex) => {
-          const partNumber = partIndex + 1;
-          const start = partIndex * CHUNK_SIZE_BYTES;
-          const chunk = file.slice(start, Math.min(start + CHUNK_SIZE_BYTES, file.size));
-
-          const etag = await uploadPart(partUrls[partIndex], chunk, (loaded) => {
-            partBytesLoaded[partIndex] = loaded;
-            updateProgress();
-          });
-
-          return { partNumber, etag };
-        }),
-      );
-
-      parts.push(...batchResults);
+      uploadedBytes += chunk.size;
+      parts.push({ partNumber, etag });
+      onProgress(Math.min(94, Math.round((uploadedBytes / file.size) * 94)));
     }
   } catch (partError) {
-    // Best-effort abort — frees the in-progress R2 multipart upload storage
+    // Best-effort abort — frees the in-progress R2 multipart upload
     fetch(`${basePath}/uploads/multipart/abort`, {
       method: "DELETE",
       headers: { "Content-Type": "application/json", ...authHeaders },
       body: JSON.stringify({ objectPath, uploadId }),
-    }).catch(() => { /* ignore abort errors */ });
+    }).catch(() => { /* ignore */ });
     throw partError;
   }
 
-  // 3. Complete — R2 assembles all parts into the final object
+  // 3. Complete
   onProgress(95);
   parts.sort((a, b) => a.partNumber - b.partNumber);
 
@@ -349,7 +320,7 @@ async function attemptMultipartDirectUpload(
 }
 
 // ---------------------------------------------------------------------------
-// Unified attempt — picks the right strategy per file size
+// Unified upload strategy
 // ---------------------------------------------------------------------------
 
 async function attemptUpload(
@@ -358,21 +329,18 @@ async function attemptUpload(
   authHeaders: Record<string, string>,
   onProgress: (pct: number) => void,
 ): Promise<UploadResponse> {
-  // Large files: try chunked multipart direct upload first.
-  // Each 50 MB chunk has its own 1-hour presigned URL so no expiry risk even
-  // on very slow connections. Falls through on 501 (not configured) or errors.
   if (file.size >= MULTIPART_THRESHOLD_BYTES) {
     try {
-      return await attemptMultipartDirectUpload(basePath, file, authHeaders, onProgress);
+      return await attemptMultipartServerUpload(basePath, file, authHeaders, onProgress);
     } catch (err) {
       const status = (err as Error & { status?: number }).status;
-      // 4xx other than 501 are hard failures (bad request, auth) — don't fall through
+      // Hard-fail on 4xx other than 501 (bad request, auth error — retrying won't help)
       if (status != null && status !== 501 && status >= 400 && status < 500) throw err;
       onProgress(0);
     }
   }
 
-  // Small files (or multipart not configured): direct single-PUT → proxy fallback
+  // Small file, or multipart not configured (501): direct → proxy
   try {
     return await attemptDirectUpload(basePath, file, authHeaders, onProgress);
   } catch {
@@ -385,9 +353,6 @@ async function attemptUpload(
 // React hook
 // ---------------------------------------------------------------------------
 
-/**
- * React hook for handling file uploads.
- */
 export function useUpload(options: UseUploadOptions = {}) {
   const basePath = options.basePath ?? "/api/storage";
   const [isUploading, setIsUploading] = useState(false);
@@ -433,13 +398,9 @@ export function useUpload(options: UseUploadOptions = {}) {
   const getUploadParameters = useCallback(
     async (
       file: UppyFile<Record<string, unknown>, Record<string, unknown>>
-    ): Promise<{
-      method: "PUT";
-      url: string;
-      headers?: Record<string, string>;
-    }> => {
+    ): Promise<{ method: "PUT"; url: string; headers?: Record<string, string> }> => {
       const authHeaders = optionsRef.current.getAuthHeaders?.() ?? {};
-      const response = await fetch(`${basePath}/uploads/request-url`, {
+      const res = await fetch(`${basePath}/uploads/request-url`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...authHeaders },
         body: JSON.stringify({
@@ -448,28 +409,12 @@ export function useUpload(options: UseUploadOptions = {}) {
           contentType: file.type || "application/octet-stream",
         }),
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to get upload URL");
-      }
-
-      const data = (await response.json()) as { uploadURL: string };
-      return {
-        method: "PUT",
-        url: data.uploadURL,
-        headers: {
-          "Content-Type": file.type || "application/octet-stream",
-        },
-      };
+      if (!res.ok) throw new Error("Failed to get upload URL");
+      const data = (await res.json()) as { uploadURL: string };
+      return { method: "PUT", url: data.uploadURL, headers: { "Content-Type": file.type || "application/octet-stream" } };
     },
-    [basePath]
+    [basePath],
   );
 
-  return {
-    uploadFile,
-    getUploadParameters,
-    isUploading,
-    error,
-    progress,
-  };
+  return { uploadFile, getUploadParameters, isUploading, error, progress };
 }

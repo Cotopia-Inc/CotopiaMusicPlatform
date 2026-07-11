@@ -18,7 +18,7 @@ import {
   getR2PublicUrl,
   checkR2Connectivity,
   initiateR2MultipartUpload,
-  presignR2UploadPart,
+  uploadR2Part,
   completeR2MultipartUpload,
   abortR2MultipartUpload,
 } from "../lib/r2Storage";
@@ -85,7 +85,7 @@ router.get("/storage/status", async (req: Request, res: Response) => {
 // be large "one take" recordings. We still set a very high technical ceiling
 // (rather than truly unbounded) so a single garbage/malicious request can't
 // fill the disk or run forever.
-const MAX_UPLOAD_BYTES = 200 * 1024 * 1024 * 1024; // 200GB — supports 8-hour video at high bitrate
+const MAX_UPLOAD_BYTES = 10 * 1024 * 1024 * 1024; // 10GB
 
 class UploadTooLargeError extends Error {
   constructor() {
@@ -146,7 +146,7 @@ router.post("/storage/uploads/upload", requireAuth, async (req: AuthRequest, res
   const contentLengthHeader = req.headers["content-length"];
   const contentLength = contentLengthHeader ? Number(contentLengthHeader) : NaN;
   if (Number.isFinite(contentLength) && contentLength > MAX_UPLOAD_BYTES) {
-    res.status(413).json({ error: "File is too large. Maximum upload size is 200GB." });
+    res.status(413).json({ error: "File is too large. Maximum upload size is 10GB." });
     return;
   }
   if (Number.isFinite(contentLength) && contentLength === 0) {
@@ -211,7 +211,7 @@ router.post("/storage/uploads/upload", requireAuth, async (req: AuthRequest, res
     if (!req.destroyed) req.destroy();
 
     if (error instanceof UploadTooLargeError) {
-      res.status(413).json({ error: "File is too large. Maximum upload size is 200GB." });
+      res.status(413).json({ error: "File is too large. Maximum upload size is 10GB." });
       return;
     }
     const detail = error instanceof Error ? error.message : String(error);
@@ -242,7 +242,7 @@ router.post("/storage/uploads/request-url", requireAuth, async (req: AuthRequest
   const { name, size, contentType } = parsed.data;
 
   if (size > MAX_UPLOAD_BYTES) {
-    res.status(413).json({ error: "File is too large. Maximum upload size is 200GB." });
+    res.status(413).json({ error: "File is too large. Maximum upload size is 10GB." });
     return;
   }
 
@@ -267,10 +267,10 @@ router.post("/storage/uploads/request-url", requireAuth, async (req: AuthRequest
 /**
  * POST /storage/uploads/multipart/start
  *
- * Initiates an R2 multipart upload and returns a presigned PUT URL for every
- * part. The browser PUTs each chunk directly to R2 — no bytes go through the
- * server. Only available when R2_S3_ACCESS_KEY_ID / R2_S3_SECRET_ACCESS_KEY
- * are configured; returns 501 otherwise so the client can fall back.
+ * Initiates an R2 S3 multipart upload and returns { uploadId, objectPath }.
+ * The client then sends individual chunks to /multipart/part (server-proxied,
+ * no CORS needed) and finalises with /multipart/complete.
+ * Returns 501 when R2 S3 credentials are not configured.
  */
 router.post("/storage/uploads/multipart/start", requireAuth, async (req: AuthRequest, res: Response) => {
   if (!r2PresignAvailable()) {
@@ -278,41 +278,84 @@ router.post("/storage/uploads/multipart/start", requireAuth, async (req: AuthReq
     return;
   }
 
-  const { name, size, contentType, partCount } = req.body as {
+  const { name, size, contentType } = req.body as {
     name?: string;
     size?: number;
     contentType?: string;
-    partCount?: number;
   };
 
   if (
     typeof name !== "string" || !name ||
     typeof size !== "number" ||
-    typeof contentType !== "string" || !contentType ||
-    typeof partCount !== "number" || partCount < 1 || partCount > 10_000
+    typeof contentType !== "string" || !contentType
   ) {
     res.status(400).json({ error: "Invalid multipart upload request." });
     return;
   }
 
   if (size > MAX_UPLOAD_BYTES) {
-    res.status(413).json({ error: "File is too large. Maximum upload size is 200GB." });
+    res.status(413).json({ error: "File is too large. Maximum upload size is 10GB." });
     return;
   }
 
   try {
     const { uploadId, objectPath } = await initiateR2MultipartUpload(contentType);
-
-    const partUrls = await Promise.all(
-      Array.from({ length: partCount }, (_, i) =>
-        presignR2UploadPart(objectPath, uploadId, i + 1),
-      ),
-    );
-
-    res.json({ uploadId, objectPath, partUrls, metadata: { name, size, contentType } });
+    res.json({ uploadId, objectPath, metadata: { name, size, contentType } });
   } catch (error) {
-    req.log.error({ err: error }, "Error initiating multipart upload");
+    req.log.warn({ err: error }, "Error initiating multipart upload");
     res.status(500).json({ error: "Could not start multipart upload. Please try again." });
+  }
+});
+
+/**
+ * POST /storage/uploads/multipart/part
+ *
+ * Receives a raw binary chunk from the browser and uploads it to R2 as one
+ * S3 multipart part. The server buffers the chunk (≤ CHUNK_SIZE_BYTES) and
+ * calls UploadPartCommand — no CORS configuration on the R2 bucket required.
+ *
+ * Required headers (not body — body is raw binary):
+ *   X-Object-Path  — objectPath returned by /multipart/start
+ *   X-Upload-Id    — uploadId returned by /multipart/start
+ *   X-Part-Number  — 1-based integer
+ *   Content-Length — byte length of this chunk
+ */
+router.post("/storage/uploads/multipart/part", requireAuth, async (req: AuthRequest, res: Response) => {
+  if (!r2PresignAvailable()) {
+    res.status(501).json({ error: "Multipart upload is not configured." });
+    return;
+  }
+
+  const objectPath = req.headers["x-object-path"] as string | undefined;
+  const uploadId   = req.headers["x-upload-id"]   as string | undefined;
+  const partNumber = Number(req.headers["x-part-number"]);
+
+  if (!objectPath || !uploadId || !Number.isFinite(partNumber) || partNumber < 1 || partNumber > 10_000) {
+    res.status(400).json({ error: "Missing or invalid multipart part headers." });
+    return;
+  }
+
+  const MAX_PART_BYTES = 200 * 1024 * 1024; // 200 MB hard ceiling per part
+  const chunks: Buffer[] = [];
+  let received = 0;
+
+  for await (const chunk of req) {
+    received += (chunk as Buffer).byteLength;
+    if (received > MAX_PART_BYTES) {
+      res.status(413).json({ error: "Part is too large." });
+      return;
+    }
+    chunks.push(chunk as Buffer);
+  }
+
+  const body = Buffer.concat(chunks);
+
+  try {
+    const etag = await uploadR2Part(objectPath, uploadId, partNumber, body);
+    res.json({ partNumber, etag });
+  } catch (error) {
+    req.log.warn({ err: error, objectPath, partNumber }, "Error uploading multipart part to R2");
+    res.status(500).json({ error: "Could not upload part. Please try again." });
   }
 });
 
@@ -320,8 +363,7 @@ router.post("/storage/uploads/multipart/start", requireAuth, async (req: AuthReq
  * POST /storage/uploads/multipart/complete
  *
  * Finalises a multipart upload. The client provides the ordered ETag list
- * collected from each part's PUT response header. R2 assembles the parts
- * into the final object.
+ * from each /multipart/part response. R2 assembles the parts into the final object.
  */
 router.post("/storage/uploads/multipart/complete", requireAuth, async (req: AuthRequest, res: Response) => {
   if (!r2PresignAvailable()) {
@@ -346,7 +388,7 @@ router.post("/storage/uploads/multipart/complete", requireAuth, async (req: Auth
     req.log.info({ objectPath, partCount: parts.length, backend: "r2-multipart" }, "Multipart upload completed");
     res.json({ objectPath, metadata });
   } catch (error) {
-    req.log.error({ err: error }, "Error completing multipart upload");
+    req.log.warn({ err: error }, "Error completing multipart upload");
     res.status(500).json({ error: "Could not complete multipart upload. Please try again." });
   }
 });
@@ -354,9 +396,8 @@ router.post("/storage/uploads/multipart/complete", requireAuth, async (req: Auth
 /**
  * DELETE /storage/uploads/multipart/abort
  *
- * Aborts an in-progress multipart upload. Called automatically by the client
- * when part uploads fail, so R2 releases the stored parts. Best-effort — the
- * server never errors the client on abort failure (R2 auto-cleans after 7 days).
+ * Aborts an in-progress multipart upload. Best-effort cleanup — never errors
+ * the client. R2 auto-cleans unfinished multipart uploads after 7 days.
  */
 router.delete("/storage/uploads/multipart/abort", requireAuth, async (req: AuthRequest, res: Response) => {
   if (!r2PresignAvailable()) {
