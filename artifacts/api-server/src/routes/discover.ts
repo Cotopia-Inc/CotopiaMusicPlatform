@@ -19,8 +19,8 @@ router.get("/discover", requireAuth, async (_req, res): Promise<void> => {
     artistName: artistsTable.stageName, albumId: songsTable.albumId,
     albumName: albumsTable.title, genre: songsTable.genre, duration: songsTable.duration,
     coverUrl: songsTable.coverUrl, streamUrl: songsTable.streamUrl,
-    playCount: songsTable.playCount, status: songsTable.status, createdAt: songsTable.createdAt,
-    artistIsVerified: usersTable.isVerified,
+    playCount: songsTable.playCount, status: songsTable.status, releaseType: songsTable.releaseType,
+    createdAt: songsTable.createdAt, artistIsVerified: usersTable.isVerified,
     artistUserRole: usersTable.role,
   };
 

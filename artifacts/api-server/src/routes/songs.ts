@@ -45,6 +45,7 @@ async function getSongWithArtist(id: number, userId?: number) {
       playCount: songsTable.playCount,
       isFeatured: songsTable.isFeatured,
       status: songsTable.status,
+      releaseType: songsTable.releaseType,
       releaseDate: songsTable.releaseDate,
       createdAt: songsTable.createdAt,
       lyrics: songsTable.lyrics,
@@ -121,6 +122,7 @@ router.get("/songs", requireAuth, async (req: AuthRequest, res): Promise<void> =
       playCount: songsTable.playCount,
       isFeatured: songsTable.isFeatured,
       status: songsTable.status,
+      releaseType: songsTable.releaseType,
       createdAt: songsTable.createdAt,
     })
     .from(songsTable)
@@ -182,6 +184,7 @@ router.get("/songs/featured", requireAuth, async (_req, res): Promise<void> => {
       streamUrl: songsTable.streamUrl,
       playCount: songsTable.playCount,
       status: songsTable.status,
+      releaseType: songsTable.releaseType,
       createdAt: songsTable.createdAt,
     })
     .from(songsTable)
@@ -222,6 +225,7 @@ router.get("/songs/trending", requireAuth, async (req, res): Promise<void> => {
       streamUrl: songsTable.streamUrl,
       playCount: songsTable.playCount,
       status: songsTable.status,
+      releaseType: songsTable.releaseType,
       createdAt: songsTable.createdAt,
     })
     .from(songsTable)
