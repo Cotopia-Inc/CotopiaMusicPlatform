@@ -20,3 +20,7 @@ services:
         generateValue: true
       - key: RESEND_API_KEY
         sync: false
+      - key: R2_S3_ACCESS_KEY_ID
+        sync: false
+      - key: R2_S3_SECRET_ACCESS_KEY
+        sync: false
