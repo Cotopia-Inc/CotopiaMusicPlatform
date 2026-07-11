@@ -50,7 +50,7 @@ app.use(
       (err as { type?: string }).type === "entity.too.large"
     ) {
       res.status(413).json({
-        error: "File is too large. Maximum upload size is 10GB.",
+        error: "File is too large. Maximum upload size is 200GB.",
       });
       return;
     }

@@ -85,7 +85,7 @@ router.get("/storage/status", async (req: Request, res: Response) => {
 // be large "one take" recordings. We still set a very high technical ceiling
 // (rather than truly unbounded) so a single garbage/malicious request can't
 // fill the disk or run forever.
-const MAX_UPLOAD_BYTES = 10 * 1024 * 1024 * 1024; // 10GB
+const MAX_UPLOAD_BYTES = 200 * 1024 * 1024 * 1024; // 200GB — supports 8-hour video at high bitrate
 
 class UploadTooLargeError extends Error {
   constructor() {
@@ -146,7 +146,7 @@ router.post("/storage/uploads/upload", requireAuth, async (req: AuthRequest, res
   const contentLengthHeader = req.headers["content-length"];
   const contentLength = contentLengthHeader ? Number(contentLengthHeader) : NaN;
   if (Number.isFinite(contentLength) && contentLength > MAX_UPLOAD_BYTES) {
-    res.status(413).json({ error: "File is too large. Maximum upload size is 10GB." });
+    res.status(413).json({ error: "File is too large. Maximum upload size is 200GB." });
     return;
   }
   if (Number.isFinite(contentLength) && contentLength === 0) {
@@ -211,7 +211,7 @@ router.post("/storage/uploads/upload", requireAuth, async (req: AuthRequest, res
     if (!req.destroyed) req.destroy();
 
     if (error instanceof UploadTooLargeError) {
-      res.status(413).json({ error: "File is too large. Maximum upload size is 10GB." });
+      res.status(413).json({ error: "File is too large. Maximum upload size is 200GB." });
       return;
     }
     const detail = error instanceof Error ? error.message : String(error);
@@ -242,7 +242,7 @@ router.post("/storage/uploads/request-url", requireAuth, async (req: AuthRequest
   const { name, size, contentType } = parsed.data;
 
   if (size > MAX_UPLOAD_BYTES) {
-    res.status(413).json({ error: "File is too large. Maximum upload size is 10GB." });
+    res.status(413).json({ error: "File is too large. Maximum upload size is 200GB." });
     return;
   }
 
@@ -296,7 +296,7 @@ router.post("/storage/uploads/multipart/start", requireAuth, async (req: AuthReq
   }
 
   if (size > MAX_UPLOAD_BYTES) {
-    res.status(413).json({ error: "File is too large. Maximum upload size is 10GB." });
+    res.status(413).json({ error: "File is too large. Maximum upload size is 200GB." });
     return;
   }
 
