@@ -1,7 +1,14 @@
 import { randomUUID } from "crypto";
 import https from "https";
 import type { Readable } from "stream";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import {
+  S3Client,
+  PutObjectCommand,
+  CreateMultipartUploadCommand,
+  UploadPartCommand,
+  CompleteMultipartUploadCommand,
+  AbortMultipartUploadCommand,
+} from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 /**
@@ -56,6 +63,7 @@ function getS3Client(): S3Client {
 }
 
 const PRESIGN_TTL_SEC = 900;
+const PRESIGN_PART_TTL_SEC = 3600; // 1 hour — generous for slow connections
 
 /**
  * Generates a presigned PUT URL the browser can upload directly to, bypassing
@@ -215,6 +223,101 @@ export function getR2PublicUrl(objectPath: string): string {
   const publicBase = process.env.R2_PUBLIC_URL!.replace(/\/$/, "");
   const key = objectPathToKey(objectPath);
   return `${publicBase}/${key}`;
+}
+
+/**
+ * Initiates a multipart upload and returns the uploadId + objectPath.
+ * The caller must follow up with presignR2UploadPart for each part and then
+ * completeR2MultipartUpload once all parts have been PUT by the browser.
+ */
+export async function initiateR2MultipartUpload(
+  contentType: string,
+  client: S3Client = getS3Client(),
+): Promise<{ uploadId: string; objectPath: string }> {
+  const bucket = process.env.R2_BUCKET_NAME!.trim();
+  const id = randomUUID();
+  const key = `uploads/${id}`;
+
+  const command = new CreateMultipartUploadCommand({
+    Bucket: bucket,
+    Key: key,
+    ContentType: contentType,
+  });
+
+  const result = await client.send(command);
+  if (!result.UploadId) throw new Error("R2 did not return an upload ID");
+
+  return { uploadId: result.UploadId, objectPath: `/objects/uploads/${id}` };
+}
+
+/**
+ * Generates a presigned PUT URL for a single multipart part. The browser uses
+ * this to PUT the chunk directly to R2; the ETag from R2's response is then
+ * collected for the final CompleteMultipartUpload call.
+ */
+export async function presignR2UploadPart(
+  objectPath: string,
+  uploadId: string,
+  partNumber: number,
+  client: S3Client = getS3Client(),
+): Promise<string> {
+  const bucket = process.env.R2_BUCKET_NAME!.trim();
+  const key = objectPathToKey(objectPath);
+
+  const command = new UploadPartCommand({
+    Bucket: bucket,
+    Key: key,
+    UploadId: uploadId,
+    PartNumber: partNumber,
+  });
+
+  return getSignedUrl(client, command, { expiresIn: PRESIGN_PART_TTL_SEC });
+}
+
+/**
+ * Finalises a multipart upload. `parts` must be sorted by partNumber ascending
+ * and each ETag must be exactly as returned by R2 (including surrounding quotes).
+ */
+export async function completeR2MultipartUpload(
+  objectPath: string,
+  uploadId: string,
+  parts: Array<{ partNumber: number; etag: string }>,
+  client: S3Client = getS3Client(),
+): Promise<void> {
+  const bucket = process.env.R2_BUCKET_NAME!.trim();
+  const key = objectPathToKey(objectPath);
+
+  const command = new CompleteMultipartUploadCommand({
+    Bucket: bucket,
+    Key: key,
+    UploadId: uploadId,
+    MultipartUpload: {
+      Parts: parts.map((p) => ({ PartNumber: p.partNumber, ETag: p.etag })),
+    },
+  });
+
+  await client.send(command);
+}
+
+/**
+ * Aborts an in-progress multipart upload, releasing any stored parts.
+ * Best-effort cleanup — callers should swallow errors from this.
+ */
+export async function abortR2MultipartUpload(
+  objectPath: string,
+  uploadId: string,
+  client: S3Client = getS3Client(),
+): Promise<void> {
+  const bucket = process.env.R2_BUCKET_NAME!.trim();
+  const key = objectPathToKey(objectPath);
+
+  const command = new AbortMultipartUploadCommand({
+    Bucket: bucket,
+    Key: key,
+    UploadId: uploadId,
+  });
+
+  await client.send(command);
 }
 
 /**

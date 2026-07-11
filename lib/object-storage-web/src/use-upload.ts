@@ -28,25 +28,26 @@ export interface UseUploadOptions {
 }
 
 /**
- * Two-step direct-to-storage upload, with automatic fallback to the
- * server-proxied route:
+ * Upload strategy:
  *
- *   1. POST {basePath}/uploads/request-url — ask the server for a presigned
- *      PUT URL (GCS signed URL, or R2 S3-compatible presign).
- *   2. PUT the raw file bytes straight to that URL — the bytes never touch
- *      the API server, so this is roughly 2x faster than proxying through
- *      the server and doesn't consume server bandwidth/CPU at all.
+ * Small files (< MULTIPART_THRESHOLD):
+ *   1. Direct single-PUT via presigned URL (browser → R2 directly, fastest)
+ *   2. Server-proxy fallback (browser → server → R2)
  *
- * If either step fails for ANY reason (backend doesn't support direct
- * upload yet, expired/misconfigured URL, CORS misconfiguration, network
- * error), this transparently falls back to the server-proxy route
- * (POST {basePath}/uploads/upload with the raw bytes) — this makes direct
- * upload a pure speed optimization that can never break uploads outright.
+ * Large files (≥ MULTIPART_THRESHOLD):
+ *   1. Multipart direct upload — file is split into CHUNK_SIZE chunks, each
+ *      chunk gets its own 1-hour presigned URL, browser PUTs all chunks
+ *      directly to R2 in parallel batches, server finalises with CompleteMultipartUpload.
+ *      This avoids single-connection timeouts on slow networks entirely.
+ *   2. Single-PUT direct (fallback if multipart returns 501 / not configured)
+ *   3. Server-proxy fallback (last resort)
  *
- * Large uploads can hit transient network errors or a 5xx mid-transfer.
- * Rather than surfacing that as an immediate failure, this hook
- * automatically retries a few times with backoff before giving up.
+ * All paths retry on transient 5xx / network errors (up to MAX_AUTO_RETRIES).
  */
+
+const MULTIPART_THRESHOLD_BYTES = 100 * 1024 * 1024;  // 100 MB
+const CHUNK_SIZE_BYTES          =  50 * 1024 * 1024;  //  50 MB per chunk
+const MAX_CONCURRENT_PARTS      = 3;                   // parallel chunk uploads
 
 const MAX_AUTO_RETRIES = 2; // 3 total attempts
 const RETRY_DELAY_MS = [1000, 3000];
@@ -56,10 +57,12 @@ function sleep(ms: number): Promise<void> {
 }
 
 function isRetryable(err: Error & { status?: number }): boolean {
-  // Retry on network errors (no status) or server errors (5xx).
-  // Never retry on 4xx — those are permanent (bad request, too large, etc).
   return err.status == null || err.status >= 500;
 }
+
+// ---------------------------------------------------------------------------
+// Single-PUT direct upload
+// ---------------------------------------------------------------------------
 
 async function requestPresignedUrl(
   basePath: string,
@@ -135,6 +138,10 @@ async function attemptDirectUpload(
   };
 }
 
+// ---------------------------------------------------------------------------
+// Server-proxy upload (fallback)
+// ---------------------------------------------------------------------------
+
 function attemptProxyUpload(
   basePath: string,
   file: File,
@@ -188,22 +195,195 @@ function attemptProxyUpload(
   });
 }
 
+// ---------------------------------------------------------------------------
+// Multipart direct upload (large files)
+// ---------------------------------------------------------------------------
+
+interface MultipartStartResponse {
+  uploadId: string;
+  objectPath: string;
+  partUrls: string[];
+  metadata: UploadMetadata;
+}
+
+/**
+ * PUT a single chunk to R2 using a presigned URL. Returns the ETag from the
+ * response header — R2 always includes this (with surrounding quotes) which
+ * is exactly what CompleteMultipartUpload expects.
+ *
+ * `onLoaded` receives the total bytes loaded so far for this chunk so the
+ * caller can aggregate progress across parallel parts.
+ */
+function uploadPart(
+  url: string,
+  chunk: Blob,
+  onLoaded: (loadedBytes: number) => void,
+): Promise<string> {
+  return new Promise<string>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", url);
+
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) onLoaded(e.loaded);
+    };
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        const etag =
+          xhr.getResponseHeader("ETag") ??
+          xhr.getResponseHeader("etag") ??
+          "";
+        resolve(etag);
+      } else {
+        const err = new Error(`Part upload failed (${xhr.status})`) as Error & { status?: number };
+        err.status = xhr.status;
+        reject(err);
+      }
+    };
+    xhr.onerror = () => reject(new Error("Part upload network error"));
+    xhr.onabort = () => reject(new Error("Part upload cancelled"));
+
+    xhr.send(chunk);
+  });
+}
+
+/**
+ * Multipart direct upload:
+ *  1. Ask the server to create an R2 multipart upload and presign all part URLs
+ *  2. PUT each 50 MB chunk directly to R2 (MAX_CONCURRENT_PARTS in parallel)
+ *  3. Tell the server to call CompleteMultipartUpload with the ordered ETag list
+ *
+ * Each part URL is valid for 1 hour — even a very slow connection won't expire
+ * a 50 MB chunk's URL before the chunk finishes uploading.
+ * If any part fails, the upload is aborted (best-effort) to free R2 storage.
+ */
+async function attemptMultipartDirectUpload(
+  basePath: string,
+  file: File,
+  authHeaders: Record<string, string>,
+  onProgress: (pct: number) => void,
+): Promise<UploadResponse> {
+  const partCount = Math.ceil(file.size / CHUNK_SIZE_BYTES);
+
+  // 1. Initiate and get all presigned part URLs
+  const startRes = await fetch(`${basePath}/uploads/multipart/start`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders },
+    body: JSON.stringify({
+      name: file.name,
+      size: file.size,
+      contentType: file.type || "application/octet-stream",
+      partCount,
+    }),
+  });
+
+  if (!startRes.ok) {
+    const err = new Error(`Multipart start failed (${startRes.status})`) as Error & { status?: number };
+    err.status = startRes.status;
+    throw err;
+  }
+
+  const { uploadId, objectPath, partUrls, metadata }: MultipartStartResponse =
+    await startRes.json();
+
+  // 2. Upload parts in parallel batches; track per-part loaded bytes for accurate progress
+  const partBytesLoaded = new Array<number>(partCount).fill(0);
+  const parts: Array<{ partNumber: number; etag: string }> = [];
+
+  const updateProgress = () => {
+    const loaded = partBytesLoaded.reduce((a, b) => a + b, 0);
+    onProgress(Math.min(94, Math.round((loaded / file.size) * 94)));
+  };
+
+  try {
+    for (let batchStart = 0; batchStart < partCount; batchStart += MAX_CONCURRENT_PARTS) {
+      const batchIndices = Array.from(
+        { length: Math.min(MAX_CONCURRENT_PARTS, partCount - batchStart) },
+        (_, i) => batchStart + i,
+      );
+
+      const batchResults = await Promise.all(
+        batchIndices.map(async (partIndex) => {
+          const partNumber = partIndex + 1;
+          const start = partIndex * CHUNK_SIZE_BYTES;
+          const chunk = file.slice(start, Math.min(start + CHUNK_SIZE_BYTES, file.size));
+
+          const etag = await uploadPart(partUrls[partIndex], chunk, (loaded) => {
+            partBytesLoaded[partIndex] = loaded;
+            updateProgress();
+          });
+
+          return { partNumber, etag };
+        }),
+      );
+
+      parts.push(...batchResults);
+    }
+  } catch (partError) {
+    // Best-effort abort — frees the in-progress R2 multipart upload storage
+    fetch(`${basePath}/uploads/multipart/abort`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json", ...authHeaders },
+      body: JSON.stringify({ objectPath, uploadId }),
+    }).catch(() => { /* ignore abort errors */ });
+    throw partError;
+  }
+
+  // 3. Complete — R2 assembles all parts into the final object
+  onProgress(95);
+  parts.sort((a, b) => a.partNumber - b.partNumber);
+
+  const completeRes = await fetch(`${basePath}/uploads/multipart/complete`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders },
+    body: JSON.stringify({ objectPath, uploadId, parts, metadata }),
+  });
+
+  if (!completeRes.ok) {
+    const err = new Error(`Multipart complete failed (${completeRes.status})`) as Error & { status?: number };
+    err.status = completeRes.status;
+    throw err;
+  }
+
+  return { uploadURL: "", objectPath, metadata };
+}
+
+// ---------------------------------------------------------------------------
+// Unified attempt — picks the right strategy per file size
+// ---------------------------------------------------------------------------
+
 async function attemptUpload(
   basePath: string,
   file: File,
   authHeaders: Record<string, string>,
   onProgress: (pct: number) => void,
 ): Promise<UploadResponse> {
+  // Large files: try chunked multipart direct upload first.
+  // Each 50 MB chunk has its own 1-hour presigned URL so no expiry risk even
+  // on very slow connections. Falls through on 501 (not configured) or errors.
+  if (file.size >= MULTIPART_THRESHOLD_BYTES) {
+    try {
+      return await attemptMultipartDirectUpload(basePath, file, authHeaders, onProgress);
+    } catch (err) {
+      const status = (err as Error & { status?: number }).status;
+      // 4xx other than 501 are hard failures (bad request, auth) — don't fall through
+      if (status != null && status !== 501 && status >= 400 && status < 500) throw err;
+      onProgress(0);
+    }
+  }
+
+  // Small files (or multipart not configured): direct single-PUT → proxy fallback
   try {
     return await attemptDirectUpload(basePath, file, authHeaders, onProgress);
   } catch {
-    // Direct upload isn't available or failed for this backend/URL — fall
-    // back to the reliable server-proxy path. Reset progress since the
-    // failed direct attempt may have made partial progress.
     onProgress(0);
     return attemptProxyUpload(basePath, file, authHeaders, onProgress);
   }
 }
+
+// ---------------------------------------------------------------------------
+// React hook
+// ---------------------------------------------------------------------------
 
 /**
  * React hook for handling file uploads.

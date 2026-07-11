@@ -17,6 +17,10 @@ import {
   presignR2Upload,
   getR2PublicUrl,
   checkR2Connectivity,
+  initiateR2MultipartUpload,
+  presignR2UploadPart,
+  completeR2MultipartUpload,
+  abortR2MultipartUpload,
 } from "../lib/r2Storage";
 import { requireAuth, type AuthRequest } from "../lib/auth";
 import { RequestUploadUrlBody } from "@workspace/api-zod";
@@ -258,6 +262,121 @@ router.post("/storage/uploads/request-url", requireAuth, async (req: AuthRequest
     req.log.error({ err: error }, "Error generating presigned upload URL");
     res.status(500).json({ error: "Could not generate an upload URL. Please try again." });
   }
+});
+
+/**
+ * POST /storage/uploads/multipart/start
+ *
+ * Initiates an R2 multipart upload and returns a presigned PUT URL for every
+ * part. The browser PUTs each chunk directly to R2 — no bytes go through the
+ * server. Only available when R2_S3_ACCESS_KEY_ID / R2_S3_SECRET_ACCESS_KEY
+ * are configured; returns 501 otherwise so the client can fall back.
+ */
+router.post("/storage/uploads/multipart/start", requireAuth, async (req: AuthRequest, res: Response) => {
+  if (!r2PresignAvailable()) {
+    res.status(501).json({ error: "Multipart upload is not configured for this storage backend." });
+    return;
+  }
+
+  const { name, size, contentType, partCount } = req.body as {
+    name?: string;
+    size?: number;
+    contentType?: string;
+    partCount?: number;
+  };
+
+  if (
+    typeof name !== "string" || !name ||
+    typeof size !== "number" ||
+    typeof contentType !== "string" || !contentType ||
+    typeof partCount !== "number" || partCount < 1 || partCount > 10_000
+  ) {
+    res.status(400).json({ error: "Invalid multipart upload request." });
+    return;
+  }
+
+  if (size > MAX_UPLOAD_BYTES) {
+    res.status(413).json({ error: "File is too large. Maximum upload size is 10GB." });
+    return;
+  }
+
+  try {
+    const { uploadId, objectPath } = await initiateR2MultipartUpload(contentType);
+
+    const partUrls = await Promise.all(
+      Array.from({ length: partCount }, (_, i) =>
+        presignR2UploadPart(objectPath, uploadId, i + 1),
+      ),
+    );
+
+    res.json({ uploadId, objectPath, partUrls, metadata: { name, size, contentType } });
+  } catch (error) {
+    req.log.error({ err: error }, "Error initiating multipart upload");
+    res.status(500).json({ error: "Could not start multipart upload. Please try again." });
+  }
+});
+
+/**
+ * POST /storage/uploads/multipart/complete
+ *
+ * Finalises a multipart upload. The client provides the ordered ETag list
+ * collected from each part's PUT response header. R2 assembles the parts
+ * into the final object.
+ */
+router.post("/storage/uploads/multipart/complete", requireAuth, async (req: AuthRequest, res: Response) => {
+  if (!r2PresignAvailable()) {
+    res.status(501).json({ error: "Multipart upload is not configured for this storage backend." });
+    return;
+  }
+
+  const { objectPath, uploadId, parts, metadata } = req.body as {
+    objectPath?: string;
+    uploadId?: string;
+    parts?: Array<{ partNumber: number; etag: string }>;
+    metadata?: { name: string; size: number; contentType: string };
+  };
+
+  if (!objectPath || !uploadId || !Array.isArray(parts) || parts.length === 0 || !metadata) {
+    res.status(400).json({ error: "Invalid multipart complete request." });
+    return;
+  }
+
+  try {
+    await completeR2MultipartUpload(objectPath, uploadId, parts);
+    req.log.info({ objectPath, partCount: parts.length, backend: "r2-multipart" }, "Multipart upload completed");
+    res.json({ objectPath, metadata });
+  } catch (error) {
+    req.log.error({ err: error }, "Error completing multipart upload");
+    res.status(500).json({ error: "Could not complete multipart upload. Please try again." });
+  }
+});
+
+/**
+ * DELETE /storage/uploads/multipart/abort
+ *
+ * Aborts an in-progress multipart upload. Called automatically by the client
+ * when part uploads fail, so R2 releases the stored parts. Best-effort — the
+ * server never errors the client on abort failure (R2 auto-cleans after 7 days).
+ */
+router.delete("/storage/uploads/multipart/abort", requireAuth, async (req: AuthRequest, res: Response) => {
+  if (!r2PresignAvailable()) {
+    res.sendStatus(204);
+    return;
+  }
+
+  const { objectPath, uploadId } = req.body as { objectPath?: string; uploadId?: string };
+
+  if (!objectPath || !uploadId) {
+    res.status(400).json({ error: "objectPath and uploadId are required." });
+    return;
+  }
+
+  try {
+    await abortR2MultipartUpload(objectPath, uploadId);
+  } catch {
+    // Swallow — best-effort cleanup only
+  }
+  res.sendStatus(204);
 });
 
 /**
