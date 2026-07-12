@@ -119,8 +119,12 @@ export default function About({ showAuthNav = false }: AboutProps) {
           <div className="relative rounded-2xl overflow-hidden border border-primary/20 bg-gradient-to-br from-primary/10 via-card to-card">
             <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-[0.04]" />
             <div className="relative p-8 md:p-10 space-y-5">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-400/10 border border-amber-400/20 text-amber-400 text-xs font-semibold uppercase tracking-wider">
+                <Star className="w-3.5 h-3.5" />
+                Featured Founding Creator
+              </div>
               <div className="space-y-2">
-                <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">Meet Asia Qu – Featured Founding Creator</h2>
+                <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">Meet Asia Qu</h2>
                 <p className="text-base text-muted-foreground max-w-xl leading-relaxed">
                   Asia Qu is one of the creators helping shape the future of Everyday Radio.
                 </p>
