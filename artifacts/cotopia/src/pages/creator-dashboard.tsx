@@ -4,7 +4,7 @@ import {
   useGetCreatorPendingWallMessages, useApproveSupportWallMessage, useHideSupportWallMessage,
 } from "@workspace/api-client-react";
 import { Link } from "wouter";
-import { CheckCircle2, Circle, Clock, Music, Video, XCircle, Send, Lightbulb, Bug, Star, Heart, MessageCircleHeart, UserPlus, Settings, Trash2, ThumbsUp } from "lucide-react";
+import { CheckCircle2, Circle, Clock, Music, Video, XCircle, Send, Lightbulb, Bug, Star, Heart, MessageCircleHeart, UserPlus, Settings, Trash2, ThumbsUp, Globe, EyeOff, Lock } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -261,7 +261,24 @@ export default function CreatorDashboard() {
                       {activity.message && activity.messageVisibility !== "private" && (
                         <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">"{activity.message}"</p>
                       )}
-                      <p className="text-[11px] text-muted-foreground mt-0.5">{format(new Date(activity.createdAt), "MMM d, yyyy")}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <p className="text-[11px] text-muted-foreground">{format(new Date(activity.createdAt), "MMM d, yyyy")}</p>
+                        {activity.messageVisibility === "anonymous" && (
+                          <span className="inline-flex items-center gap-1 text-[10px] text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded">
+                            <EyeOff className="w-3 h-3" />Anonymous
+                          </span>
+                        )}
+                        {activity.messageVisibility === "private" && (
+                          <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                            <Lock className="w-3 h-3" />Private
+                          </span>
+                        )}
+                        {activity.messageVisibility === "public" && (
+                          <span className="inline-flex items-center gap-1 text-[10px] text-green-400 bg-green-400/10 px-1.5 py-0.5 rounded">
+                            <Globe className="w-3 h-3" />Public
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <span className="text-sm font-semibold flex-shrink-0">${activity.amount.toFixed(2)}</span>
