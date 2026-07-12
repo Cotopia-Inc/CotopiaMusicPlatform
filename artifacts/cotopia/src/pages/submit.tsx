@@ -146,7 +146,12 @@ function FileRow({
         className="flex-1 h-8 text-sm bg-background/50"
         placeholder="Track title"
       />
-      <span className="text-xs text-muted-foreground truncate max-w-[120px] flex-shrink-0" title={file.name}>{file.name}</span>
+      <div className="flex flex-col flex-shrink-0 max-w-[120px] min-w-0">
+        <span className="text-xs text-muted-foreground truncate" title={file.name}>{file.name}</span>
+        {accept.includes("video") && !done && (
+          <span className="text-[10px] text-muted-foreground/50 italic leading-tight">larger files may take a few min</span>
+        )}
+      </div>
       {done ? (
         <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
       ) : upload.isUploading ? (
