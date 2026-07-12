@@ -13,6 +13,24 @@ import React, { useState } from "react";
 import { ExperienceFeedbackModal } from "@/components/experience-feedback-modal";
 import { useToast } from "@/hooks/use-toast";
 
+const VISIBILITY_BADGE: Record<string, { icon: React.ElementType; label: string; className: string }> = {
+  public:    { icon: Globe,   label: "Public",    className: "text-green-400 bg-green-400/10" },
+  anonymous: { icon: EyeOff, label: "Anonymous", className: "text-amber-400 bg-amber-400/10" },
+  private:   { icon: Lock,   label: "Private",   className: "text-muted-foreground bg-muted" },
+};
+
+function VisibilityBadge({ visibility }: { visibility: string }) {
+  const meta = VISIBILITY_BADGE[visibility];
+  const Icon = meta?.icon ?? Globe;
+  const label = meta?.label ?? visibility.replace(/_/g, " ");
+  const cls = meta?.className ?? "text-muted-foreground bg-muted";
+  return (
+    <span className={`inline-flex items-center gap-1 text-[10px] capitalize px-1.5 py-0.5 rounded ${cls}`}>
+      <Icon className="w-3 h-3" />{label}
+    </span>
+  );
+}
+
 const STEPS = ["Received", "In Review", "Approved", "Scheduled", "Published"] as const;
 
 function statusToStep(status: string): number {
@@ -263,21 +281,7 @@ export default function CreatorDashboard() {
                       )}
                       <div className="flex items-center gap-2 mt-0.5">
                         <p className="text-[11px] text-muted-foreground">{format(new Date(activity.createdAt), "MMM d, yyyy")}</p>
-                        {activity.messageVisibility === "anonymous" && (
-                          <span className="inline-flex items-center gap-1 text-[10px] text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded">
-                            <EyeOff className="w-3 h-3" />Anonymous
-                          </span>
-                        )}
-                        {activity.messageVisibility === "private" && (
-                          <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                            <Lock className="w-3 h-3" />Private
-                          </span>
-                        )}
-                        {activity.messageVisibility === "public" && (
-                          <span className="inline-flex items-center gap-1 text-[10px] text-green-400 bg-green-400/10 px-1.5 py-0.5 rounded">
-                            <Globe className="w-3 h-3" />Public
-                          </span>
-                        )}
+                        <VisibilityBadge visibility={activity.messageVisibility} />
                       </div>
                     </div>
                   </div>
