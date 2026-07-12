@@ -1,0 +1,292 @@
+Enhance the Everyday Radio Promise Page (Public Landing Page).
+
+IMPORTANT
+
+The Promise Page is now the official public landing page.
+
+DO NOT redesign the page from scratch.
+
+DO NOT remove or rewrite the existing Promise.
+
+DO NOT remove the AI Policy.
+
+DO NOT remove the current SEO strategy.
+
+DO NOT remove the existing branding.
+
+Build ON TOP OF what already exists.
+
+Maintain the same visual style, colors, spacing, typography and overall feel.
+
+====================================================
+1. KEEP THE EXISTING PROMISE
+====================================================
+
+Leave the current Promise section exactly as it is.
+
+Do not rewrite it.
+
+Do not shorten it.
+
+Do not replace it.
+
+This is the foundation of the Everyday Radio brand.
+
+====================================================
+2. KEEP ASIA QU
+====================================================
+
+Keep Asia Qu on the landing page.
+
+Instead of making the page feel centered around only Asia Qu,
+position her as:
+
+⭐ Featured Founding Creator
+
+Do not remove her current content unless necessary.
+
+Simply update the surrounding messaging.
+
+Suggested heading:
+
+Featured Founding Creator
+
+Suggested supporting text:
+
+Asia Qu is one of the creators helping shape the future of Everyday Radio.
+
+Discover her music, follow her journey, and see what creator-first publishing looks like.
+
+Buttons:
+
+Listen to Asia Qu
+
+View Creator Profile
+
+(Prepare for future)
+
+Support This Creator
+
+If the Support System is not yet complete,
+disable or hide this button until available.
+
+====================================================
+3. NEW SECTION
+
+Add a new section AFTER the Promise.
+
+Title
+
+Discover.
+Create.
+Support.
+
+Text
+
+Everyday Radio is a creator-first discovery and community platform where independent creators publish music, videos, podcasts, and original content while building lasting relationships with their audiences.
+
+====================================================
+4. THREE FEATURE CARDS
+
+Card 1
+
+🎵 Discover
+
+Discover independent music, videos, podcasts, and creators before everyone else.
+
+------------------------------------
+
+Card 2
+
+🤝 Connect
+
+Follow creators.
+
+Join conversations.
+
+Build playlists.
+
+Earn badges.
+
+Become part of a growing creator community.
+
+------------------------------------
+
+Card 3
+
+💙 Support
+
+Support creators directly.
+
+Help independent creators continue building amazing content and lasting communities.
+
+====================================================
+5. WHY JOIN THE BETA
+
+Create another section.
+
+Title
+
+Why Join the Beta?
+
+Show cards or checklist.
+
+✔ Help shape Everyday Radio
+
+✔ Discover amazing creators
+
+✔ Become a Founding Creator
+
+✔ Build your audience
+
+✔ Earn exclusive Beta badges
+
+✔ Help improve future features
+
+✔ Join a creator-first community
+
+====================================================
+6. COMMUNITY SECTION
+
+Title
+
+Built for Creators.
+Powered by Community.
+
+Text
+
+Everyday Radio was built to help creators grow.
+
+Whether you're making music, videos, podcasts, or original content, you'll have a place to publish, connect with supporters, and build your community.
+
+====================================================
+7. SUPPORT SECTION
+
+Title
+
+Support Independent Creators
+
+Text
+
+Every follow.
+
+Every comment.
+
+Every conversation.
+
+Every share.
+
+Every supporter.
+
+Helps creators continue doing what they love.
+
+====================================================
+8. CTA SECTION
+
+Title
+
+Ready to Join?
+
+Buttons
+
+Become a Creator
+
+Sign In
+
+Change every public "Sign Up" button to:
+
+Become a Creator
+
+The button should continue using the existing registration system.
+
+Do not change backend registration logic.
+
+====================================================
+9. KEEP SEO
+
+Continue using the Promise Page as the public landing page.
+
+Do not expose:
+
+Dashboard
+
+Creator Dashboard
+
+Uploads
+
+Payments
+
+Moderation
+
+Admin
+
+Private Profiles
+
+====================================================
+10. KEEP PROTECTED ROUTES
+
+All protected pages remain behind authentication.
+
+Do not expose beta features publicly.
+
+====================================================
+11. MOBILE
+
+All new sections must be responsive.
+
+Desktop
+
+Tablet
+
+Mobile
+
+====================================================
+12. PERFORMANCE
+
+Do not slow down the landing page.
+
+Lazy-load images where appropriate.
+
+Reuse existing components when possible.
+
+====================================================
+13. TEST
+
+Verify:
+
+✓ Promise remains unchanged
+
+✓ AI Policy remains
+
+✓ Asia Qu still appears
+
+✓ Become a Creator works
+
+✓ Sign In works
+
+✓ Existing registration still works
+
+✓ SEO remains intact
+
+✓ Protected pages stay protected
+
+✓ Mobile layouts work
+
+✓ Existing navigation continues working
+
+====================================================
+14. DO NOT
+
+Do not redesign the site.
+
+Do not change colors.
+
+Do not remove branding.
+
+Do not remove the Promise.
+
+Do not remove Asia Qu.
+
+Do not remove the AI Policy.
+
+Only expand the landing page while keeping the current visual identity.

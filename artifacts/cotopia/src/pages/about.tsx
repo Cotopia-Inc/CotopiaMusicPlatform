@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { Heart, Users, Lightbulb, Shield, ArrowRight, Music, Video, Globe, MessageCircle, TrendingUp, Star, LogIn, UserPlus, Check, Headphones } from "lucide-react";
+import { Heart, Users, Lightbulb, Shield, ArrowRight, Music, Video, Globe, MessageCircle, TrendingUp, Star, LogIn, UserPlus, Check, Headphones, Play } from "lucide-react";
 import { useSeo } from "@/hooks/use-seo";
 
 interface AboutProps {
@@ -83,33 +83,69 @@ export default function About({ showAuthNav = false }: AboutProps) {
             </h2>
             <div className="w-12 h-0.5 bg-primary mx-auto rounded-full" />
             <p className="text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              Everyday Radio is a creator-first discovery and community platform where independent creators share music, videos, podcasts, and original content while building lasting relationships with their audiences.
+              Everyday Radio is a creator-first discovery and community platform where independent creators publish music, videos, podcasts, and original content while building lasting relationships with their audiences.
             </p>
           </div>
           <div className="grid sm:grid-cols-3 gap-5">
-            {[
-              {
-                emoji: "🎵",
-                title: "Discover",
-                desc: "Discover independent music, videos, podcasts, and creators before everyone else.",
-              },
-              {
-                emoji: "🤝",
-                title: "Connect",
-                desc: "Follow creators, chat, comment, build playlists, earn badges, and become part of a growing creator community.",
-              },
-              {
-                emoji: "💙",
-                title: "Support",
-                desc: "Support creators directly and help them continue creating amazing content while building lasting communities.",
-              },
-            ].map(({ emoji, title, desc }) => (
-              <div key={title} className="flex flex-col gap-4 p-6 rounded-xl bg-card border border-border hover:border-primary/30 transition-colors">
-                <div className="text-3xl">{emoji}</div>
-                <h3 className="text-lg font-bold">{title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{desc}</p>
+            <div className="flex flex-col gap-4 p-6 rounded-xl bg-card border border-border hover:border-primary/30 transition-colors">
+              <div className="text-3xl">🎵</div>
+              <h3 className="text-lg font-bold">Discover</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">Discover independent music, videos, podcasts, and creators before everyone else.</p>
+            </div>
+            <div className="flex flex-col gap-4 p-6 rounded-xl bg-card border border-border hover:border-primary/30 transition-colors">
+              <div className="text-3xl">🤝</div>
+              <h3 className="text-lg font-bold">Connect</h3>
+              <ul className="space-y-1 text-sm text-muted-foreground">
+                <li>Follow creators.</li>
+                <li>Join conversations.</li>
+                <li>Build playlists.</li>
+                <li>Earn badges.</li>
+                <li>Become part of a growing creator community.</li>
+              </ul>
+            </div>
+            <div className="flex flex-col gap-4 p-6 rounded-xl bg-card border border-border hover:border-primary/30 transition-colors">
+              <div className="text-3xl">💙</div>
+              <h3 className="text-lg font-bold">Support</h3>
+              <ul className="space-y-1 text-sm text-muted-foreground">
+                <li>Support creators directly.</li>
+                <li>Help independent creators continue building amazing content and lasting communities.</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        {/* Featured Founding Creator — Asia Qu */}
+        <section className="space-y-6">
+          <div className="relative rounded-2xl overflow-hidden border border-primary/20 bg-gradient-to-br from-primary/10 via-card to-card">
+            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-[0.04]" />
+            <div className="relative p-8 md:p-10 space-y-5">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-400/10 border border-amber-400/20 text-amber-400 text-xs font-semibold uppercase tracking-wider">
+                <Star className="w-3.5 h-3.5" />
+                Featured Founding Creator
               </div>
-            ))}
+              <div className="space-y-2">
+                <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">Asia Qu</h2>
+                <p className="text-base text-muted-foreground max-w-xl leading-relaxed">
+                  Asia Qu is one of the creators helping shape the future of Everyday Radio.
+                </p>
+                <p className="text-sm text-muted-foreground/80 max-w-xl leading-relaxed">
+                  Discover her music, follow her journey, and see what creator-first publishing looks like.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-3 pt-2">
+                <Link href="/songs/37">
+                  <button className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors text-sm">
+                    <Play className="w-4 h-4 fill-current" />
+                    Listen to Asia Qu
+                  </button>
+                </Link>
+                <Link href="/videos/21">
+                  <button className="inline-flex items-center gap-2 px-5 py-2.5 bg-secondary text-secondary-foreground rounded-lg font-semibold hover:bg-secondary/80 transition-colors border border-border text-sm">
+                    View Creator Profile
+                  </button>
+                </Link>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -279,13 +315,13 @@ export default function About({ showAuthNav = false }: AboutProps) {
           </div>
           <div className="grid sm:grid-cols-2 gap-3">
             {[
-              "Help shape the future of Everyday Radio",
-              "Discover amazing independent creators",
-              "Build your audience",
+              "Help shape Everyday Radio",
+              "Discover amazing creators",
               "Become a Founding Creator",
-              "Earn exclusive beta badges",
-              "Help improve the platform through your feedback",
-              "Join a growing creator-first community",
+              "Build your audience",
+              "Earn exclusive Beta badges",
+              "Help improve future features",
+              "Join a creator-first community",
             ].map(item => (
               <div key={item} className="flex items-center gap-3 p-4 rounded-xl bg-card border border-border hover:border-primary/30 transition-colors">
                 <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -307,10 +343,10 @@ export default function About({ showAuthNav = false }: AboutProps) {
           </div>
           <div className="p-8 rounded-2xl bg-card border border-border space-y-4">
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Everyday Radio was built to give independent creators a place to publish content, connect with supporters, and build real communities.
+              Everyday Radio was built to help creators grow.
             </p>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Whether you're making music, videos, podcasts, or original content, this platform is designed to help you grow while maintaining control of your creative journey.
+              Whether you're making music, videos, podcasts, or original content, you'll have a place to publish, connect with supporters, and build your community.
             </p>
           </div>
         </section>
@@ -323,12 +359,12 @@ export default function About({ showAuthNav = false }: AboutProps) {
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
-              { icon: Users, text: "Follow your favorite creators." },
-              { icon: MessageCircle, text: "Leave comments." },
-              { icon: Globe, text: "Join conversations." },
-              { icon: TrendingUp, text: "Share amazing content." },
-              { icon: Heart, text: "Support creators directly." },
-              { icon: Headphones, text: "Every interaction helps independent creators continue creating." },
+              { icon: Users, text: "Every follow." },
+              { icon: MessageCircle, text: "Every comment." },
+              { icon: Globe, text: "Every conversation." },
+              { icon: TrendingUp, text: "Every share." },
+              { icon: Heart, text: "Every supporter." },
+              { icon: Headphones, text: "Helps creators continue doing what they love." },
             ].map(({ icon: Icon, text }) => (
               <div key={text} className="flex items-start gap-3 p-5 rounded-xl bg-card border border-border hover:border-primary/30 transition-colors">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -340,7 +376,7 @@ export default function About({ showAuthNav = false }: AboutProps) {
           </div>
         </section>
 
-        {/* Founding Creator */}
+        {/* Founding Creator callout */}
         <section className="space-y-6">
           <div className="p-8 md:p-10 rounded-2xl bg-gradient-to-br from-primary/15 via-primary/5 to-background border border-primary/25 text-center space-y-5">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold uppercase tracking-wider">
@@ -366,7 +402,7 @@ export default function About({ showAuthNav = false }: AboutProps) {
 
         {/* Final CTA */}
         <section className="text-center space-y-6 py-8 border-t border-border/30">
-          <p className="text-2xl font-bold">Ready to begin?</p>
+          <p className="text-2xl font-bold">Ready to Join?</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link href="/register">
               <button className="inline-flex items-center gap-2 px-7 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors">
