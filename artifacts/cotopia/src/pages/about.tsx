@@ -139,20 +139,16 @@ export default function About({ showAuthNav = false }: AboutProps) {
                     Listen to Asia Qu
                   </button>
                 </Link>
-                <Link href="/videos/21">
+                <a
+                  href="https://cotopia.org/artists/9"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <button className="inline-flex items-center gap-2 px-5 py-2.5 bg-secondary text-secondary-foreground rounded-lg font-semibold hover:bg-secondary/80 transition-colors border border-border text-sm">
                     View Creator Profile
                   </button>
-                </Link>
+                </a>
               </div>
-              <a
-                href="https://cotopia.org/artists/9"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block text-xs text-muted-foreground hover:text-primary underline underline-offset-4 transition-colors"
-              >
-                https://cotopia.org/artists/9
-              </a>
             </div>
           </div>
         </section>
