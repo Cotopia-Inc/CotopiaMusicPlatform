@@ -170,6 +170,7 @@ export function Sidebar({ onMobileClose }: SidebarProps = {}) {
     { href: "/artists", label: "Artists", icon: Mic2 },
     { href: "/labels", label: "Labels", icon: Users },
     { href: "/company", label: "Company Hub", icon: Building2 },
+    { href: "/trust", label: "Trust Center", icon: ShieldCheck },
     { href: "/contact", label: "Contact", icon: Mail },
   ];
 
@@ -209,6 +210,7 @@ export function Sidebar({ onMobileClose }: SidebarProps = {}) {
     { href: "/admin/bug-reports", label: "Bug Reports", icon: Bug },
     { href: "/admin/badges", label: "Badges", icon: Award },
     { href: "/admin/creator-support", label: "Creator Support", icon: Heart },
+    { href: "/admin/trust", label: "Trust Center", icon: ShieldCheck },
     { href: "/admin/beta-analytics", label: "Beta Analytics", icon: BarChart3 },
     { href: "/admin/settings", label: "Settings", icon: Settings },
   ];

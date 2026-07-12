@@ -59,6 +59,8 @@ tags:
     description: Achievement badges
   - name: creator-support
     description: Universal Creator Support (tip/support) system — demo mode only
+  - name: trust
+    description: Trust Center public data — known issues, release notes, we heard you, timeline, appeals
 
 paths:
   /healthz:
@@ -3608,6 +3610,85 @@ paths:
         "204":
           description: No content
 
+  /trust/known-issues:
+    get:
+      operationId: listTrustKnownIssues
+      tags: [trust]
+      summary: Public list of known issues
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TrustKnownIssue"
+
+  /trust/release-notes:
+    get:
+      operationId: listTrustReleaseNotes
+      tags: [trust]
+      summary: Public list of release notes
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TrustReleaseNote"
+
+  /trust/we-heard-you:
+    get:
+      operationId: listTrustWeHeardYou
+      tags: [trust]
+      summary: Public list of We Heard You entries
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TrustWeHeardYouItem"
+
+  /trust/timeline:
+    get:
+      operationId: listTrustTimeline
+      tags: [trust]
+      summary: Public trust timeline
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TrustTimelineItem"
+
+  /trust/appeals:
+    post:
+      operationId: submitTrustAppeal
+      tags: [trust]
+      summary: Submit a public appeal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TrustAppealInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TrustAppeal"
+
 components:
   schemas:
     HealthStatus:
@@ -6393,3 +6474,155 @@ components:
         reason:
           type: string
           maxLength: 500
+
+    TrustKnownIssue:
+      type: object
+      required: [id, title, description, status, isPublic, dateReported, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+        affectedArea:
+          type: ["string", "null"]
+        workaround:
+          type: ["string", "null"]
+        isPublic:
+          type: boolean
+        dateReported:
+          type: string
+        resolutionDate:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    TrustReleaseNote:
+      type: object
+      required: [id, version, releaseDate, summary, status, isPublic, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        version:
+          type: string
+        releaseDate:
+          type: string
+        summary:
+          type: string
+        newFeatures:
+          type: ["string", "null"]
+        improvements:
+          type: ["string", "null"]
+        bugFixes:
+          type: ["string", "null"]
+        policyUpdates:
+          type: ["string", "null"]
+        knownLimitations:
+          type: ["string", "null"]
+        status:
+          type: string
+        isPublic:
+          type: boolean
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    TrustWeHeardYouItem:
+      type: object
+      required: [id, youAsked, weDid, status, isPublic, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        youAsked:
+          type: string
+        weDid:
+          type: string
+        status:
+          type: string
+        dateRequested:
+          type: ["string", "null"]
+        dateReleased:
+          type: ["string", "null"]
+        relatedFeature:
+          type: ["string", "null"]
+        link:
+          type: ["string", "null"]
+        isPublic:
+          type: boolean
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    TrustTimelineItem:
+      type: object
+      required: [id, eventDate, title, description, category, isPublic, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        eventDate:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        isPublic:
+          type: boolean
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    TrustAppealInput:
+      type: object
+      required: [actionType, reason]
+      properties:
+        submitterEmail:
+          type: string
+        submitterName:
+          type: string
+        actionType:
+          type: string
+        relatedContent:
+          type: string
+        reason:
+          type: string
+        supportingInfo:
+          type: string
+
+    TrustAppeal:
+      type: object
+      required: [id, actionType, reason, status, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: ["integer", "null"]
+        submitterEmail:
+          type: ["string", "null"]
+        submitterName:
+          type: ["string", "null"]
+        actionType:
+          type: string
+        relatedContent:
+          type: ["string", "null"]
+        reason:
+          type: string
+        supportingInfo:
+          type: ["string", "null"]
+        status:
+          type: string
+        adminNotes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string

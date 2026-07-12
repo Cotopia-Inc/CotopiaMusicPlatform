@@ -4295,3 +4295,91 @@ export const AdminRemoveUserBadgeParams = zod.object({
 })
 
 
+/**
+ * @summary Public list of known issues
+ */
+export const ListTrustKnownIssuesResponseItem = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "status": zod.string(),
+  "affectedArea": zod.string().nullish(),
+  "workaround": zod.string().nullish(),
+  "isPublic": zod.boolean(),
+  "dateReported": zod.string(),
+  "resolutionDate": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const ListTrustKnownIssuesResponse = zod.array(ListTrustKnownIssuesResponseItem)
+
+
+/**
+ * @summary Public list of release notes
+ */
+export const ListTrustReleaseNotesResponseItem = zod.object({
+  "id": zod.number(),
+  "version": zod.string(),
+  "releaseDate": zod.string(),
+  "summary": zod.string(),
+  "newFeatures": zod.string().nullish(),
+  "improvements": zod.string().nullish(),
+  "bugFixes": zod.string().nullish(),
+  "policyUpdates": zod.string().nullish(),
+  "knownLimitations": zod.string().nullish(),
+  "status": zod.string(),
+  "isPublic": zod.boolean(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const ListTrustReleaseNotesResponse = zod.array(ListTrustReleaseNotesResponseItem)
+
+
+/**
+ * @summary Public list of We Heard You entries
+ */
+export const ListTrustWeHeardYouResponseItem = zod.object({
+  "id": zod.number(),
+  "youAsked": zod.string(),
+  "weDid": zod.string(),
+  "status": zod.string(),
+  "dateRequested": zod.string().nullish(),
+  "dateReleased": zod.string().nullish(),
+  "relatedFeature": zod.string().nullish(),
+  "link": zod.string().nullish(),
+  "isPublic": zod.boolean(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const ListTrustWeHeardYouResponse = zod.array(ListTrustWeHeardYouResponseItem)
+
+
+/**
+ * @summary Public trust timeline
+ */
+export const ListTrustTimelineResponseItem = zod.object({
+  "id": zod.number(),
+  "eventDate": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "category": zod.string(),
+  "isPublic": zod.boolean(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const ListTrustTimelineResponse = zod.array(ListTrustTimelineResponseItem)
+
+
+/**
+ * @summary Submit a public appeal
+ */
+export const SubmitTrustAppealBody = zod.object({
+  "submitterEmail": zod.string().optional(),
+  "submitterName": zod.string().optional(),
+  "actionType": zod.string(),
+  "relatedContent": zod.string().optional(),
+  "reason": zod.string(),
+  "supportingInfo": zod.string().optional()
+})
+
+

@@ -1,0 +1,821 @@
+Build and integrate the complete Everyday Radio Trust Center.
+
+IMPORTANT
+
+Everyday Radio is live in Beta.
+
+Do not remove the existing Legal Center.
+
+Do not rewrite or remove the existing Promise Page.
+
+Do not alter the current AI Policy, Terms, Privacy Policy, Creator Agreement, or other legal documents unless needed to connect them properly to the Trust Center.
+
+Do not activate live PayPal.
+
+Do not expose protected app pages.
+
+Do not change the current scraping protections, SEO rules, authentication, or payment mode.
+
+Build the Trust Center as a transparent public hub that organizes existing policies, platform commitments, safety information, updates, and accountability tools.
+
+====================================================
+1. TRUST CENTER PURPOSE
+====================================================
+
+Create a public page named:
+
+Everyday Radio Trust Center
+
+Suggested introduction:
+
+Transparency is part of our promise.
+
+The Everyday Radio Trust Center brings together our policies, platform commitments, safety practices, creator protections, product updates, and accountability tools in one place.
+
+We do not promise perfection.
+
+We promise to listen, communicate openly, protect creators' rights, respect user data, and continue improving Everyday Radio with our community.
+
+The Trust Center should feel clear, human, professional, creator-first, and easy to navigate.
+
+====================================================
+2. TRUST CENTER NAVIGATION
+====================================================
+
+Organize the Trust Center into these main sections:
+
+• Our Promise
+• Platform Principles
+• Legal
+• AI & Technology
+• Creator Trust
+• Content & Moderation
+• Platform Transparency
+• Security & Privacy
+• We Heard You
+• Release Notes
+• Trust Timeline
+• Contact & Reporting
+
+Use cards, tabs, anchors, or a clean sidebar navigation that works well on desktop and mobile.
+
+Do not overcrowd the page.
+
+====================================================
+3. OUR PROMISE
+====================================================
+
+Link to or display a short summary of the existing Everyday Radio Promise.
+
+Do not replace the existing Promise Page.
+
+Include a button:
+
+Read Our Full Promise
+
+Suggested summary:
+
+Everyday Radio was built around a commitment to creator ownership, community, transparency, responsible technology, and open communication.
+
+====================================================
+4. PLATFORM PRINCIPLES
+====================================================
+
+Create a page or section titled:
+
+Our Platform Principles
+
+Display these principles:
+
+1. Creators retain ownership of their work.
+
+2. We communicate openly.
+
+3. Transparency builds trust.
+
+4. Community matters.
+
+5. AI should support creators, not exploit them.
+
+6. Feedback helps shape the platform.
+
+7. Innovation should be responsible.
+
+8. Privacy and security come first.
+
+9. Support for creators should be clear and voluntary.
+
+10. We will explain meaningful platform changes.
+
+Add a short note:
+
+These principles guide how Everyday Radio develops features, reviews content, communicates with the community, and makes platform decisions.
+
+====================================================
+5. OUR COMMITMENTS
+====================================================
+
+Add a highlighted section titled:
+
+Our Commitments
+
+Use this message:
+
+We do not promise perfection.
+
+We promise to keep improving.
+
+We promise to listen.
+
+We promise to communicate openly.
+
+We promise to protect creators' rights.
+
+We promise to respect your data.
+
+We promise to be transparent when we make mistakes.
+
+We promise to keep building Everyday Radio with our community, not just for our community.
+
+====================================================
+6. LEGAL SECTION
+====================================================
+
+Connect the existing Legal Center to the Trust Center.
+
+Display links to all current legal documents, including where available:
+
+• Terms of Service
+• Privacy Policy
+• AI Policy
+• Creator Agreement
+• Creator Payments Addendum
+• Creator Support Policy
+• Community Guidelines
+• Refund Policy
+• Copyright Policy
+• DMCA Policy
+• Beta Policy
+• Cookie Policy
+• Any other existing legal document
+
+Do not duplicate legal document content unnecessarily.
+
+Use the existing legal pages and version-management system.
+
+Add:
+
+View Version History
+
+where supported.
+
+====================================================
+7. AI & TECHNOLOGY
+====================================================
+
+Create an AI & Technology section.
+
+Include:
+
+• AI Policy
+• AI Usage Statement
+• Scraping Protection
+• Data Protection
+• Platform Security
+• Future AI Change Log
+
+Suggested wording:
+
+Everyday Radio does not currently use creator content to train AI systems.
+
+The platform has temporary anti-scraping protections in place during Beta to help protect creator content and platform data.
+
+Any meaningful future change to our AI practices should be disclosed through the AI Policy and AI Change Log.
+
+Do not expose private security implementation details.
+
+====================================================
+8. CREATOR TRUST
+====================================================
+
+Create a Creator Trust section covering:
+
+• Creator ownership
+• How publishing review works
+• Creator Support system
+• Payment transparency
+• No hidden platform fee on direct creator tips
+• Creator verification
+• Badge system
+• Submission review transparency
+• Creator agreement responsibilities
+
+Clearly separate:
+
+Creator Services
+
+Payments made to Everyday Radio for submission review or featured-placement services.
+
+Creator Support
+
+Voluntary support directed to creators through their selected payment provider when live.
+
+During Beta, clearly state that Creator Support operates in Demo Mode and no real support payments are processed.
+
+====================================================
+9. CONTENT & MODERATION
+====================================================
+
+Create a Content & Moderation section.
+
+Include:
+
+• Publishing Guidelines
+• Review Process
+• Community Moderation
+• Copyright Reporting
+• DMCA Process
+• Appeals Process
+• Account Actions
+• Support Wall Moderation
+• Reporting Tools
+
+Explain the review workflow in plain language:
+
+Received
+
+In Review
+
+Additional Information Requested
+
+Approved
+
+Scheduled
+
+Published
+
+Featured
+
+Declined
+
+Add a note:
+
+Approval, rejection, moderation, and featured-placement decisions may involve platform guidelines, safety, copyright, quality, relevance, or community considerations.
+
+Do not promise that all decisions can be fully automated or immediately resolved.
+
+====================================================
+10. APPEALS AND ACCOUNTABILITY
+====================================================
+
+Create an Appeals section.
+
+Allow users to understand how to request review of:
+
+• Content rejection
+• Content removal
+• Account restriction
+• Badge removal
+• Verification denial
+• Support Wall moderation
+• Copyright action
+
+If an appeals form already exists, link to it.
+
+If not, create a simple structured form with:
+
+• User
+• Action being appealed
+• Related content or account
+• Reason for appeal
+• Supporting information
+• Submission date
+• Status
+
+Admin statuses:
+
+Received
+
+Under Review
+
+More Information Needed
+
+Upheld
+
+Reversed
+
+Closed
+
+Do not change existing moderation permissions without review.
+
+====================================================
+11. PLATFORM TRANSPARENCY
+====================================================
+
+Create a Platform Transparency section.
+
+Show:
+
+• Current Beta status
+• Recently released features
+• Known issues
+• Planned improvements
+• Maintenance notices
+• Major policy changes
+• Current demo-only systems
+• Features not yet live
+
+Use clear labels:
+
+Live
+
+Beta
+
+Demo Mode
+
+Planned
+
+Known Issue
+
+Resolved
+
+Do not publish confidential internal notes.
+
+====================================================
+12. KNOWN ISSUES
+====================================================
+
+Create a Known Issues page or section.
+
+Each issue should support:
+
+• Title
+• Short description
+• Status
+• Date reported
+• Last updated
+• Affected area
+• Workaround, if available
+• Resolution date
+
+Statuses:
+
+Investigating
+
+Identified
+
+Fix in Progress
+
+Monitoring
+
+Resolved
+
+Allow authorized admins to create and update issues.
+
+Only publish issues marked public.
+
+====================================================
+13. RELEASE NOTES
+====================================================
+
+Create a Release Notes section.
+
+Each release entry should support:
+
+• Version number
+• Release date
+• Summary
+• New features
+• Improvements
+• Bug fixes
+• Policy updates
+• Known limitations
+• Status
+
+Use plain-language entries.
+
+Example:
+
+Version 0.9.4
+
+Added:
+• Creator Support in Demo Mode
+• Support Wall
+• Public supporter counts
+• Beta badges
+• Suggest a Feature form
+
+Improved:
+• Promise Page
+• Submission wording
+• Creator onboarding
+
+Fixed:
+• Chat and upload issues
+
+Do not invent past version numbers or release history.
+
+Create initial entries only from changes that can be verified in the current codebase or admin records.
+
+====================================================
+14. WE HEARD YOU
+====================================================
+
+Create a public page titled:
+
+We Heard You
+
+Purpose:
+
+Show users how feedback influences Everyday Radio.
+
+Each entry should support:
+
+• You Asked
+• We Did
+• Status
+• Date requested
+• Date released
+• Related feature
+• Optional link to release notes
+
+Suggested initial entries, only if those features are currently implemented:
+
+You Asked:
+Creators wanted a way to receive direct community support.
+
+We Did:
+Built the Creator Support System in Demo Mode, including supporter counts, optional support messages, and creator dashboards.
+
+You Asked:
+Early users wanted recognition.
+
+We Did:
+Added Founding Creator, Founding Member, Beta Tester, and other badge options.
+
+You Asked:
+Users wanted easier ways to report bugs and suggest improvements.
+
+We Did:
+Added Report a Bug, Suggest a Feature, and How Was Your Experience forms.
+
+Only publish verified completed work.
+
+Allow statuses:
+
+Requested
+
+Planned
+
+In Progress
+
+Released
+
+Not Planned
+
+====================================================
+15. TRUST TIMELINE
+====================================================
+
+Create a Trust Timeline.
+
+Each timeline item should support:
+
+• Date
+• Title
+• Description
+• Category
+• Public status
+
+Suggested categories:
+
+Promise
+
+AI
+
+Beta
+
+Creator Support
+
+Legal
+
+Safety
+
+Community
+
+Product
+
+Possible verified milestones include:
+
+• Promise published
+• AI Policy introduced
+• Beta opened
+• Promise Page became the public landing page
+• Creator Support added in Demo Mode
+• Badge system introduced
+• Feedback tools added
+• Trust Center launched
+
+Do not add dates unless they are known or available from platform records.
+
+====================================================
+16. SECURITY & PRIVACY
+====================================================
+
+Create a Security & Privacy section.
+
+Include:
+
+• Account Protection
+• Data Privacy
+• Payment Information Protection
+• Scraping Protection
+• Data Requests
+• Account Deletion
+• Report a Security Concern
+• Responsible Disclosure, marked Future if not yet active
+
+Use plain language.
+
+Do not reveal:
+
+• API keys
+• Credentials
+• Exact security architecture
+• Internal vulnerability details
+• Private admin routes
+• Anti-scraping implementation details
+
+====================================================
+17. USER DATA REQUESTS
+====================================================
+
+Add or link to processes for:
+
+• Requesting account data
+• Correcting personal information
+• Deleting an account
+• Asking privacy questions
+
+If forms do not already exist, create simple forms that save requests securely.
+
+Suggested request statuses:
+
+Received
+
+Identity Verification Needed
+
+In Review
+
+Completed
+
+Denied
+
+Closed
+
+Restrict access to authorized admin roles.
+
+====================================================
+18. CONTACT & REPORTING
+====================================================
+
+Create a Contact & Reporting section.
+
+Provide clear paths for:
+
+• General support
+• Legal questions
+• Privacy questions
+• Copyright reports
+• Appeals
+• Security concerns
+• Bug reports
+• Feature suggestions
+
+Use existing forms and routes where available.
+
+Avoid creating duplicate systems.
+
+====================================================
+19. LEGAL VERSION AND ACCEPTANCE CONNECTION
+====================================================
+
+Integrate with the Legal Compliance Management System.
+
+Where appropriate, show:
+
+• Current version
+• Effective date
+• Last updated
+• Summary of changes
+• Previous versions
+
+For logged-in users, add a private section:
+
+My Agreement History
+
+Show only that user's acceptance history.
+
+Do not expose acceptance records publicly.
+
+====================================================
+20. ADMIN TRUST MANAGEMENT
+====================================================
+
+Add a Trust Center Management section to the admin dashboard.
+
+Authorized admins should be able to manage:
+
+• Public known issues
+• Release notes
+• We Heard You entries
+• Trust Timeline entries
+• Platform status labels
+• Public transparency notices
+• Appeals
+• Data requests
+• Trust Center featured messages
+
+Include:
+
+• Draft
+• Preview
+• Publish
+• Archive
+• Schedule publication where supported
+
+Do not give moderators or editors access to legal publishing unless their current permissions explicitly allow it.
+
+Use Master Admin or authorized admin permissions for sensitive areas.
+
+====================================================
+21. PUBLIC AND PRIVATE ACCESS
+====================================================
+
+The Trust Center should be publicly accessible because it supports transparency and trust.
+
+Public access may include:
+
+• Promise summary
+• Platform Principles
+• Our Commitments
+• Legal documents
+• AI information
+• Creator Trust
+• Moderation information
+• Release Notes
+• Known Issues
+• We Heard You
+• Trust Timeline
+• Contact and reporting links
+
+Private access should remain required for:
+
+• Personal agreement history
+• Appeals tied to a user
+• Data requests
+• Admin management
+• Private support tickets
+• Internal audit logs
+• Sensitive legal acceptance records
+
+====================================================
+22. FOOTER AND NAVIGATION
+====================================================
+
+Add a clear Trust Center link to the public footer.
+
+Keep the existing Legal Center available.
+
+The Legal Center may remain its own page and also be accessible inside the Trust Center.
+
+Do not remove existing footer links.
+
+Avoid clutter by grouping links where appropriate.
+
+====================================================
+23. SEO
+====================================================
+
+Allow appropriate Trust Center public pages to be indexed, including:
+
+• Trust Center main page
+• Platform Principles
+• Public policies
+• Release Notes
+• We Heard You
+• Public Trust Timeline
+
+Do not index:
+
+• Personal agreement history
+• Appeals
+• Data requests
+• Admin pages
+• Private account records
+• Internal audit logs
+
+Preserve the Promise Page as the main public landing page.
+
+====================================================
+24. ACCESSIBILITY AND MOBILE
+====================================================
+
+Ensure the Trust Center is:
+
+• Fully responsive
+• Keyboard accessible
+• Screen-reader friendly
+• Easy to read
+• High contrast
+• Organized with proper headings
+• Usable on mobile, tablet, and desktop
+
+Do not rely only on icons to communicate meaning.
+
+====================================================
+25. TESTING
+====================================================
+
+Verify:
+
+✓ Trust Center loads publicly
+
+✓ Existing Legal Center remains intact
+
+✓ Existing legal links work
+
+✓ Promise Page remains unchanged
+
+✓ AI Policy remains unchanged unless linked
+
+✓ Public transparency pages work
+
+✓ Private records remain private
+
+✓ Release Notes can be created and published
+
+✓ Known Issues can be created and updated
+
+✓ We Heard You entries work
+
+✓ Trust Timeline works
+
+✓ Appeals can be submitted and reviewed
+
+✓ Data requests can be submitted and reviewed
+
+✓ Agreement history is visible only to the correct user
+
+✓ Admin permissions are enforced
+
+✓ Mobile layout works
+
+✓ SEO rules are correct
+
+✓ Protected routes remain protected
+
+✓ Existing authentication works
+
+✓ Existing Creator Support system works
+
+✓ Existing demo payment systems remain in Demo Mode
+
+✓ No live PayPal transactions occur
+
+====================================================
+26. DO NOT
+====================================================
+
+Do not remove the existing Legal Center.
+
+Do not rewrite the Promise Page.
+
+Do not activate live payments.
+
+Do not make private app pages public.
+
+Do not weaken authentication.
+
+Do not weaken anti-scraping protections.
+
+Do not expose security details.
+
+Do not invent platform statistics, release history, issue history, or policy dates.
+
+Do not publish unfinished internal roadmap details.
+
+Do not change unrelated functionality.
+
+Before finishing, provide a summary of:
+
+• Files changed
+• Database changes
+• New routes
+• New admin permissions
+• Public pages added
+• Private pages added
+• Forms added
+• Tests completed
+• Known limitations
+• Any content that still requires manual review before public publication

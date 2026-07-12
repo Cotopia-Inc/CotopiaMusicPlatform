@@ -41,3 +41,8 @@ export * from "./events";
 export * from "./creator_message";
 export * from "./creator_payment_settings";
 export * from "./support_transactions";
+export * from "./trust_known_issues";
+export * from "./trust_release_notes";
+export * from "./trust_we_heard_you";
+export * from "./trust_timeline";
+export * from "./trust_appeals";

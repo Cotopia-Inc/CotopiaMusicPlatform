@@ -2294,6 +2294,103 @@ export interface BadgeAssignInput {
   reason?: string;
 }
 
+export interface TrustKnownIssue {
+  id: number;
+  title: string;
+  description: string;
+  status: string;
+  /** @nullable */
+  affectedArea?: string | null;
+  /** @nullable */
+  workaround?: string | null;
+  isPublic: boolean;
+  dateReported: string;
+  /** @nullable */
+  resolutionDate?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TrustReleaseNote {
+  id: number;
+  version: string;
+  releaseDate: string;
+  summary: string;
+  /** @nullable */
+  newFeatures?: string | null;
+  /** @nullable */
+  improvements?: string | null;
+  /** @nullable */
+  bugFixes?: string | null;
+  /** @nullable */
+  policyUpdates?: string | null;
+  /** @nullable */
+  knownLimitations?: string | null;
+  status: string;
+  isPublic: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TrustWeHeardYouItem {
+  id: number;
+  youAsked: string;
+  weDid: string;
+  status: string;
+  /** @nullable */
+  dateRequested?: string | null;
+  /** @nullable */
+  dateReleased?: string | null;
+  /** @nullable */
+  relatedFeature?: string | null;
+  /** @nullable */
+  link?: string | null;
+  isPublic: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TrustTimelineItem {
+  id: number;
+  eventDate: string;
+  title: string;
+  description: string;
+  category: string;
+  isPublic: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TrustAppealInput {
+  submitterEmail?: string;
+  submitterName?: string;
+  actionType: string;
+  relatedContent?: string;
+  reason: string;
+  supportingInfo?: string;
+}
+
+export interface TrustAppeal {
+  id: number;
+  /** @nullable */
+  userId?: number | null;
+  /** @nullable */
+  submitterEmail?: string | null;
+  /** @nullable */
+  submitterName?: string | null;
+  actionType: string;
+  /** @nullable */
+  relatedContent?: string | null;
+  reason: string;
+  /** @nullable */
+  supportingInfo?: string | null;
+  status: string;
+  /** @nullable */
+  adminNotes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type SendOtp200 = {
   ok?: boolean;
 };

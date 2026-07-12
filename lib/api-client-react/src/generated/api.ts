@@ -163,6 +163,12 @@ import type {
   SupportTransactionStatusUpdate,
   SupportWallModerationUpdate,
   SupportWallPage,
+  TrustAppeal,
+  TrustAppealInput,
+  TrustKnownIssue,
+  TrustReleaseNote,
+  TrustTimelineItem,
+  TrustWeHeardYouItem,
   UnfollowUser200,
   UploadAccount,
   UploadUrlRequest,
@@ -12957,5 +12963,384 @@ export const useAdminRemoveUserBadge = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getAdminRemoveUserBadgeMutationOptions(options));
+    }
+
+export const getListTrustKnownIssuesUrl = () => {
+
+
+
+
+  return `/api/trust/known-issues`
+}
+
+/**
+ * @summary Public list of known issues
+ */
+export const listTrustKnownIssues = async ( options?: RequestInit): Promise<TrustKnownIssue[]> => {
+
+  return customFetch<TrustKnownIssue[]>(getListTrustKnownIssuesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListTrustKnownIssuesQueryKey = () => {
+    return [
+    `/api/trust/known-issues`
+    ] as const;
+    }
+
+
+export const getListTrustKnownIssuesQueryOptions = <TData = Awaited<ReturnType<typeof listTrustKnownIssues>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTrustKnownIssues>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListTrustKnownIssuesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listTrustKnownIssues>>> = ({ signal }) => listTrustKnownIssues({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listTrustKnownIssues>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListTrustKnownIssuesQueryResult = NonNullable<Awaited<ReturnType<typeof listTrustKnownIssues>>>
+export type ListTrustKnownIssuesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Public list of known issues
+ */
+
+export function useListTrustKnownIssues<TData = Awaited<ReturnType<typeof listTrustKnownIssues>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTrustKnownIssues>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListTrustKnownIssuesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getListTrustReleaseNotesUrl = () => {
+
+
+
+
+  return `/api/trust/release-notes`
+}
+
+/**
+ * @summary Public list of release notes
+ */
+export const listTrustReleaseNotes = async ( options?: RequestInit): Promise<TrustReleaseNote[]> => {
+
+  return customFetch<TrustReleaseNote[]>(getListTrustReleaseNotesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListTrustReleaseNotesQueryKey = () => {
+    return [
+    `/api/trust/release-notes`
+    ] as const;
+    }
+
+
+export const getListTrustReleaseNotesQueryOptions = <TData = Awaited<ReturnType<typeof listTrustReleaseNotes>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTrustReleaseNotes>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListTrustReleaseNotesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listTrustReleaseNotes>>> = ({ signal }) => listTrustReleaseNotes({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listTrustReleaseNotes>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListTrustReleaseNotesQueryResult = NonNullable<Awaited<ReturnType<typeof listTrustReleaseNotes>>>
+export type ListTrustReleaseNotesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Public list of release notes
+ */
+
+export function useListTrustReleaseNotes<TData = Awaited<ReturnType<typeof listTrustReleaseNotes>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTrustReleaseNotes>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListTrustReleaseNotesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getListTrustWeHeardYouUrl = () => {
+
+
+
+
+  return `/api/trust/we-heard-you`
+}
+
+/**
+ * @summary Public list of We Heard You entries
+ */
+export const listTrustWeHeardYou = async ( options?: RequestInit): Promise<TrustWeHeardYouItem[]> => {
+
+  return customFetch<TrustWeHeardYouItem[]>(getListTrustWeHeardYouUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListTrustWeHeardYouQueryKey = () => {
+    return [
+    `/api/trust/we-heard-you`
+    ] as const;
+    }
+
+
+export const getListTrustWeHeardYouQueryOptions = <TData = Awaited<ReturnType<typeof listTrustWeHeardYou>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTrustWeHeardYou>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListTrustWeHeardYouQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listTrustWeHeardYou>>> = ({ signal }) => listTrustWeHeardYou({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listTrustWeHeardYou>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListTrustWeHeardYouQueryResult = NonNullable<Awaited<ReturnType<typeof listTrustWeHeardYou>>>
+export type ListTrustWeHeardYouQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Public list of We Heard You entries
+ */
+
+export function useListTrustWeHeardYou<TData = Awaited<ReturnType<typeof listTrustWeHeardYou>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTrustWeHeardYou>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListTrustWeHeardYouQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getListTrustTimelineUrl = () => {
+
+
+
+
+  return `/api/trust/timeline`
+}
+
+/**
+ * @summary Public trust timeline
+ */
+export const listTrustTimeline = async ( options?: RequestInit): Promise<TrustTimelineItem[]> => {
+
+  return customFetch<TrustTimelineItem[]>(getListTrustTimelineUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListTrustTimelineQueryKey = () => {
+    return [
+    `/api/trust/timeline`
+    ] as const;
+    }
+
+
+export const getListTrustTimelineQueryOptions = <TData = Awaited<ReturnType<typeof listTrustTimeline>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTrustTimeline>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListTrustTimelineQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listTrustTimeline>>> = ({ signal }) => listTrustTimeline({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listTrustTimeline>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListTrustTimelineQueryResult = NonNullable<Awaited<ReturnType<typeof listTrustTimeline>>>
+export type ListTrustTimelineQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Public trust timeline
+ */
+
+export function useListTrustTimeline<TData = Awaited<ReturnType<typeof listTrustTimeline>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTrustTimeline>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListTrustTimelineQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getSubmitTrustAppealUrl = () => {
+
+
+
+
+  return `/api/trust/appeals`
+}
+
+/**
+ * @summary Submit a public appeal
+ */
+export const submitTrustAppeal = async (trustAppealInput: TrustAppealInput, options?: RequestInit): Promise<TrustAppeal> => {
+
+  return customFetch<TrustAppeal>(getSubmitTrustAppealUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      trustAppealInput,)
+  }
+);}
+
+
+
+
+export const getSubmitTrustAppealMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitTrustAppeal>>, TError,{data: BodyType<TrustAppealInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof submitTrustAppeal>>, TError,{data: BodyType<TrustAppealInput>}, TContext> => {
+
+const mutationKey = ['submitTrustAppeal'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof submitTrustAppeal>>, {data: BodyType<TrustAppealInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  submitTrustAppeal(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SubmitTrustAppealMutationResult = NonNullable<Awaited<ReturnType<typeof submitTrustAppeal>>>
+    export type SubmitTrustAppealMutationBody = BodyType<TrustAppealInput>
+    export type SubmitTrustAppealMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Submit a public appeal
+ */
+export const useSubmitTrustAppeal = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitTrustAppeal>>, TError,{data: BodyType<TrustAppealInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof submitTrustAppeal>>,
+        TError,
+        {data: BodyType<TrustAppealInput>},
+        TContext
+      > => {
+      return useMutation(getSubmitTrustAppealMutationOptions(options));
     }
 

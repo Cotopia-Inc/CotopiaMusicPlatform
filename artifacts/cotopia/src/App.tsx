@@ -60,6 +60,21 @@ import LegalCreatorPaymentsAddendum from "@/pages/legal/creator-payments-addendu
 import LegalCreatorSupportPolicy from "@/pages/legal/creator-support-policy";
 import LegalBetaPolicy from "@/pages/legal/beta-policy";
 
+import TrustCenter from "@/pages/trust/index";
+import TrustPrinciples from "@/pages/trust/principles";
+import TrustAI from "@/pages/trust/ai";
+import TrustCreator from "@/pages/trust/creator";
+import TrustModeration from "@/pages/trust/moderation";
+import TrustSecurity from "@/pages/trust/security";
+import TrustContact from "@/pages/trust/contact";
+import TrustTransparency from "@/pages/trust/transparency";
+import TrustKnownIssues from "@/pages/trust/known-issues";
+import TrustReleaseNotes from "@/pages/trust/release-notes";
+import TrustWeHeardYou from "@/pages/trust/we-heard-you";
+import TrustTimeline from "@/pages/trust/timeline";
+import TrustAppeals from "@/pages/trust/appeals";
+import AdminTrust from "@/pages/admin-trust";
+
 import AdminDashboard from "@/pages/admin-dashboard";
 import AdminUsers from "@/pages/admin-users";
 import AdminSubmissions from "@/pages/admin-submissions";
@@ -251,6 +266,20 @@ function Router() {
       <Route path="/legal/creator-support-policy" component={LegalCreatorSupportPolicy} />
       <Route path="/legal/beta-policy" component={LegalBetaPolicy} />
 
+      <Route path="/trust" component={TrustCenter} />
+      <Route path="/trust/principles" component={TrustPrinciples} />
+      <Route path="/trust/ai" component={TrustAI} />
+      <Route path="/trust/creator" component={TrustCreator} />
+      <Route path="/trust/moderation" component={TrustModeration} />
+      <Route path="/trust/security" component={TrustSecurity} />
+      <Route path="/trust/contact" component={TrustContact} />
+      <Route path="/trust/transparency" component={TrustTransparency} />
+      <Route path="/trust/known-issues" component={TrustKnownIssues} />
+      <Route path="/trust/release-notes" component={TrustReleaseNotes} />
+      <Route path="/trust/we-heard-you" component={TrustWeHeardYou} />
+      <Route path="/trust/timeline" component={TrustTimeline} />
+      <Route path="/trust/appeals" component={TrustAppeals} />
+
       <Route path="/admin"><RoleRoute roles={ADMIN_ROLES}><AdminDashboard /></RoleRoute></Route>
       <Route path="/admin/analytics"><RoleRoute roles={ADMIN_ROLES}><AdminAnalytics /></RoleRoute></Route>
       <Route path="/admin/users"><RoleRoute roles={ADMIN_ROLES}><AdminUsers /></RoleRoute></Route>
@@ -284,6 +313,7 @@ function Router() {
       <Route path="/admin/creator-support"><RoleRoute roles={ADMIN_ROLES}><AdminCreatorSupport /></RoleRoute></Route>
       <Route path="/admin/discover"><RoleRoute roles={EDITOR_ROLES}><AdminDiscover /></RoleRoute></Route>
       <Route path="/admin/copyright-concerns"><RoleRoute roles={ADMIN_ROLES}><AdminCopyrightConcerns /></RoleRoute></Route>
+      <Route path="/admin/trust"><RoleRoute roles={ADMIN_ROLES}><AdminTrust /></RoleRoute></Route>
 
       <Route path="/editor"><RoleRoute roles={EDITOR_ROLES}><EditorDashboard /></RoleRoute></Route>
       <Route path="/editor/playlists"><RoleRoute roles={EDITOR_ROLES}><EditorPlaylists /></RoleRoute></Route>
