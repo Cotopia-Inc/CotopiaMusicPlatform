@@ -75,7 +75,12 @@ export default function AiPolicy() {
         <p>You are not required to publicly label your content as AI-generated on your profile, but you may not actively misrepresent AI content as entirely human-made.</p>
       </Section>
 
-      <Section title="6. Enforcement">
+      <Section title="6. Creator Support Messages">
+        <p>Support messages submitted through the Creator Support system may be reviewed by Everyday Radio for moderation and platform safety purposes.</p>
+        <p><strong className="text-foreground">Support messages are not used to train AI systems.</strong> This applies to all support messages, whether public or private, unless the AI Policy is explicitly updated in the future to state otherwise. Any such change would be communicated clearly through the Platform before taking effect.</p>
+      </Section>
+
+      <Section title="7. Enforcement">
         <p>Violations of this AI Policy may result in content removal, account suspension, or termination. Rights holders whose work is infringed by AI content may file a DMCA claim through our standard process.</p>
       </Section>
 

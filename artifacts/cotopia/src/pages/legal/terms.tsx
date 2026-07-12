@@ -99,7 +99,22 @@ export default function TermsOfService() {
         <p>These Terms are governed by applicable law. Disputes shall be resolved through binding arbitration or in courts of competent jurisdiction, as applicable.</p>
       </Section>
 
-      <Section title="12. Changes to Terms">
+      <Section title="12. Creator Support">
+        <p>Creator Support is a voluntary feature that allows supporters to send contributions directly to creators through their selected payment provider. Creator Support is entirely optional for both creators and supporters.</p>
+        <p>During Beta, Creator Support operates in Demo Mode. No real money is processed during Demo Mode. When Creator Support becomes live, support payments will be sent directly to creators using their selected payment provider.</p>
+        <p>Everyday Radio does not hold creator support funds, act as a payment processor for creator support transactions, or take a percentage of creator support payments.</p>
+        <p>Everyday Radio is not responsible for payment provider outages, delays, or failures. Everyday Radio does not guarantee successful payment processing through third-party providers.</p>
+        <p>Supporting a creator does not purchase or transfer:</p>
+        <ul className="list-disc list-inside space-y-1 pl-2">
+          <li>Ownership rights or investment interests in the creator or their work</li>
+          <li>Copyrights, royalties, or licensing rights of any kind</li>
+          <li>Commercial rights of any kind</li>
+        </ul>
+        <p>Supporting a creator does not guarantee communication, services, exclusive content, or future releases unless explicitly offered by that creator through a separate written agreement.</p>
+        <p>Creators who enable Creator Support agree to the Creator Agreement and Creator Payments Addendum, both available in the Legal Center.</p>
+      </Section>
+
+      <Section title="13. Changes to Terms">
         <p>We may update these Terms at any time. Material changes will be announced on the Platform. Continued use after changes constitutes acceptance of the new Terms.</p>
       </Section>
 

@@ -89,7 +89,17 @@ export default function PrivacyPolicy() {
         <p>We use local storage and session tokens to maintain your login state and preferences. We do not use third-party tracking cookies.</p>
       </Section>
 
-      <Section title="9. Changes to This Policy">
+      <Section title="9. Creator Support Data">
+        <p><strong className="text-foreground">Support Activity:</strong> When you send or receive Creator Support, we collect data about the support event, including the creator supported, the support amount (in Demo Mode, simulated), the timestamp, and whether the support was marked as anonymous.</p>
+        <p><strong className="text-foreground">Support Messages:</strong> If you include a message with your support, that message is stored and may appear on the public Support Wall if you choose to make it public. Support messages may be reviewed for moderation and platform safety purposes.</p>
+        <p><strong className="text-foreground">Creator Payment Configuration:</strong> If you are a creator who has enabled Creator Support, we store your payment provider preference and configuration (such as your payment account identifier). We do not store full payment card numbers or sensitive payment credentials — these are handled entirely by your selected payment provider.</p>
+        <p><strong className="text-foreground">Support Analytics:</strong> Creators who have enabled Creator Support may have access to aggregate analytics about their support activity, including total support received and supporter counts.</p>
+        <p><strong className="text-foreground">Follower Interactions:</strong> Follow activity, including which creators you follow and when, is stored to power your personalized discovery experience and creator follower counts.</p>
+        <p>Payment information is stored securely. Everyday Radio does not store supporter credit card or bank account information. When Creator Support transitions to live mode, payment processing will be handled directly by the creator's selected payment provider.</p>
+        <p>Support messages are not used to train AI systems. See our <Link href="/legal/ai-policy" className="text-primary hover:underline">AI Content Policy</Link> for details.</p>
+      </Section>
+
+      <Section title="10. Changes to This Policy">
         <p>We may update this Privacy Policy from time to time. We will notify you of material changes through the Platform. Continued use after changes constitutes acceptance.</p>
       </Section>
 

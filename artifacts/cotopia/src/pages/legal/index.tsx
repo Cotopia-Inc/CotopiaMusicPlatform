@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { Scale, Shield, Copyright, Users, Brain, RotateCcw, FileCheck, AlertTriangle, ChevronRight, Home, ScrollText } from "lucide-react";
+import { Scale, Shield, Copyright, Users, Brain, RotateCcw, FileCheck, AlertTriangle, ChevronRight, Home, ScrollText, Heart, CreditCard, Zap, FileText } from "lucide-react";
 
 const policies = [
   {
@@ -9,28 +9,10 @@ const policies = [
     icon: Scale,
   },
   {
-    href: "/legal/content-license",
-    title: "Content License and Rights Grant",
-    description: "The worldwide license you grant Cotopia when you upload or submit any content.",
-    icon: ScrollText,
-  },
-  {
     href: "/legal/privacy",
     title: "Privacy Policy",
     description: "How we collect, use, and protect your personal information.",
     icon: Shield,
-  },
-  {
-    href: "/legal/dmca",
-    title: "DMCA Policy",
-    description: "Our Digital Millennium Copyright Act compliance and takedown procedures.",
-    icon: Copyright,
-  },
-  {
-    href: "/legal/community-guidelines",
-    title: "Community Guidelines",
-    description: "Standards for content and behavior on the platform.",
-    icon: Users,
   },
   {
     href: "/legal/ai-policy",
@@ -39,16 +21,58 @@ const policies = [
     icon: Brain,
   },
   {
+    href: "/legal/creator-agreement",
+    title: "Creator Agreement",
+    description: "Terms that apply to all artists, labels, and creators on the platform.",
+    icon: FileText,
+  },
+  {
+    href: "/legal/creator-payments-addendum",
+    title: "Creator Payments Addendum",
+    description: "Payment responsibilities, tax obligations, and Creator Support terms for creators.",
+    icon: CreditCard,
+  },
+  {
+    href: "/legal/creator-support-policy",
+    title: "Creator Support Policy",
+    description: "How Creator Support works, who receives payments, privacy, refunds, and Beta Demo Mode.",
+    icon: Heart,
+  },
+  {
+    href: "/legal/community-guidelines",
+    title: "Community Guidelines",
+    description: "Standards for content and behavior on the platform.",
+    icon: Users,
+  },
+  {
     href: "/legal/refund-policy",
     title: "Refund Policy",
-    description: "Terms for submission fees, promotion fees, and chargebacks.",
+    description: "Terms for submission fees, promotion fees, Creator Support, and chargebacks.",
     icon: RotateCcw,
+  },
+  {
+    href: "/legal/content-license",
+    title: "Content License and Rights Grant",
+    description: "The worldwide license you grant Cotopia when you upload or submit any content.",
+    icon: ScrollText,
   },
   {
     href: "/legal/submission-agreement",
     title: "Submission Agreement",
     description: "The license agreement covering all content submitted to the platform.",
     icon: FileCheck,
+  },
+  {
+    href: "/legal/dmca",
+    title: "DMCA Policy",
+    description: "Our Digital Millennium Copyright Act compliance and takedown procedures.",
+    icon: Copyright,
+  },
+  {
+    href: "/legal/beta-policy",
+    title: "Beta Policy",
+    description: "Platform availability, features, Creator Support Demo Mode, and Founding Creator status during Beta.",
+    icon: Zap,
   },
   {
     href: "/legal/copyright-complaint",

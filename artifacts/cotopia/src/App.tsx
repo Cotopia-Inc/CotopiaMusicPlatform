@@ -55,6 +55,10 @@ import LegalRefundPolicy from "@/pages/legal/refund-policy";
 import LegalSubmissionAgreement from "@/pages/legal/submission-agreement";
 import LegalContentLicense from "@/pages/legal/content-license";
 import LegalCopyrightComplaint from "@/pages/legal/copyright-complaint";
+import LegalCreatorAgreement from "@/pages/legal/creator-agreement";
+import LegalCreatorPaymentsAddendum from "@/pages/legal/creator-payments-addendum";
+import LegalCreatorSupportPolicy from "@/pages/legal/creator-support-policy";
+import LegalBetaPolicy from "@/pages/legal/beta-policy";
 
 import AdminDashboard from "@/pages/admin-dashboard";
 import AdminUsers from "@/pages/admin-users";
@@ -242,6 +246,10 @@ function Router() {
       <Route path="/legal/submission-agreement" component={LegalSubmissionAgreement} />
       <Route path="/legal/content-license" component={LegalContentLicense} />
       <Route path="/legal/copyright-complaint" component={LegalCopyrightComplaint} />
+      <Route path="/legal/creator-agreement" component={LegalCreatorAgreement} />
+      <Route path="/legal/creator-payments-addendum" component={LegalCreatorPaymentsAddendum} />
+      <Route path="/legal/creator-support-policy" component={LegalCreatorSupportPolicy} />
+      <Route path="/legal/beta-policy" component={LegalBetaPolicy} />
 
       <Route path="/admin"><RoleRoute roles={ADMIN_ROLES}><AdminDashboard /></RoleRoute></Route>
       <Route path="/admin/analytics"><RoleRoute roles={ADMIN_ROLES}><AdminAnalytics /></RoleRoute></Route>

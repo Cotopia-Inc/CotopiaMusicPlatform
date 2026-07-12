@@ -64,9 +64,22 @@ export default function RefundPolicy() {
         <p>If you believe a charge was made in error, contact us at <a href="mailto:support@cotopia.org" className="text-primary hover:underline">support@cotopia.org</a> before filing a dispute with your payment provider.</p>
       </Section>
 
-      <Section title="5. Contact for Billing Issues">
-        <p>For all billing inquiries, potential errors, or refund requests, contact us at <a href="mailto:support@cotopia.org" className="text-primary hover:underline">support@cotopia.org</a> with your account email, transaction reference, and a description of the issue.</p>
+      <Section title="5. Creator Support Refunds">
+        <p><strong className="text-foreground">Creator Support and Creator Services are separate and follow different refund processes.</strong></p>
+        <p>Creator Support payments are voluntary contributions sent directly from supporters to creators through their selected payment provider. Everyday Radio does not process, approve, or deny Creator Support refunds.</p>
+        <p>If you believe you are entitled to a refund for a Creator Support payment, you must contact your payment provider directly. Refund eligibility is determined entirely by your payment provider's policies, not by Everyday Radio.</p>
+        <p>During Beta Demo Mode, no real payments are made through Creator Support, and refunds are not applicable.</p>
+        <p>To summarize the distinction:</p>
+        <ul className="list-disc list-inside space-y-1 pl-2">
+          <li><strong className="text-foreground">Creator Services</strong> (submission fees, promotion fees): governed by Everyday Radio's Refund Policy — non-refundable once review or campaign work has begun. Contact <a href="mailto:support@cotopia.org" className="text-primary hover:underline">support@cotopia.org</a> for billing issues.</li>
+          <li><strong className="text-foreground">Creator Support</strong> (voluntary supporter contributions): governed by the creator's selected payment provider policy. Contact your payment provider directly for refund requests.</li>
+        </ul>
+      </Section>
+
+      <Section title="6. Contact for Billing Issues">
+        <p>For all Creator Services billing inquiries, potential errors, or refund requests, contact us at <a href="mailto:support@cotopia.org" className="text-primary hover:underline">support@cotopia.org</a> with your account email, transaction reference, and a description of the issue.</p>
         <p>We aim to respond to billing inquiries within 3 business days.</p>
+        <p>For Creator Support payment issues, contact your payment provider directly.</p>
       </Section>
 
       <div className="pt-4 border-t border-border">

@@ -1,0 +1,347 @@
+Update the Everyday Radio Legal Center and related legal documents to support the new Creator Support System.
+
+IMPORTANT
+
+The Creator Support System is currently operating entirely in Demo Mode.
+
+Do NOT activate live PayPal.
+
+Do NOT modify any existing payment processing.
+
+Do NOT remove any current legal documents.
+
+Expand the existing legal framework.
+
+Keep the current branding and writing style consistent throughout all documents.
+
+====================================================
+1. TERMS OF SERVICE
+====================================================
+
+Add a new section:
+
+Creator Support
+
+Include language explaining:
+
+• Creator Support is voluntary.
+
+• During Beta, Creator Support operates in Demo Mode.
+
+• When Creator Support becomes live, support payments will be sent directly to creators using their selected payment provider.
+
+• Everyday Radio does not hold creator support funds.
+
+• Everyday Radio is not the payment processor for creator support.
+
+• Everyday Radio is not responsible for payment provider outages.
+
+• Everyday Radio does not guarantee successful payment processing through third-party providers.
+
+• Supporting a creator does not purchase ownership rights, copyrights, royalties, licensing rights, or investment interests.
+
+• Supporting a creator does not guarantee communication, services, exclusive content, or future releases unless explicitly offered by that creator.
+
+====================================================
+2. CREATOR AGREEMENT
+====================================================
+
+Add a Creator Support section.
+
+Creators agree that:
+
+• They own or are authorized to use the connected payment account.
+
+• Their payment information is accurate.
+
+• They may disable Creator Support at any time.
+
+• They are responsible for tax reporting.
+
+• They are responsible for refunds where applicable.
+
+• They are responsible for chargebacks handled through their payment provider.
+
+• They authorize Everyday Radio to display a Support This Creator button.
+
+• They understand Everyday Radio does not guarantee support activity.
+
+====================================================
+3. CREATOR PAYMENTS ADDENDUM (NEW)
+====================================================
+
+Create a new legal document:
+
+Creator Payments Addendum
+
+This document explains:
+
+Connecting payment accounts
+
+Creator payment responsibilities
+
+Tax responsibilities
+
+Payment provider requirements
+
+Chargebacks
+
+Fraud prevention
+
+Voluntary support
+
+Platform responsibilities
+
+Creator responsibilities
+
+Future payment providers
+
+Acceptance requirements
+
+Require creators to accept this Addendum the first time they enable Creator Support.
+
+====================================================
+4. CREATOR SUPPORT POLICY (NEW)
+====================================================
+
+Create a dedicated policy.
+
+Topics include:
+
+What Creator Support is
+
+How it works
+
+Who receives support
+
+Payment providers
+
+Privacy
+
+Anonymous support
+
+Public Support Wall
+
+Support messages
+
+Refund information
+
+Dispute information
+
+Beta Demo Mode
+
+Future Live Mode
+
+====================================================
+5. PRIVACY POLICY
+====================================================
+
+Update Privacy Policy.
+
+Explain collection of:
+
+Support activity
+
+Support messages
+
+Creator payment configuration
+
+Support analytics
+
+Follower interactions
+
+Clarify:
+
+Payment information is stored securely.
+
+Everyday Radio does not store supporter credit card information.
+
+Future payment providers process payments directly.
+
+====================================================
+6. COMMUNITY GUIDELINES
+====================================================
+
+Add Creator Support rules.
+
+Creators may not:
+
+Harass supporters.
+
+Pressure supporters.
+
+Promise investments.
+
+Offer illegal incentives.
+
+Mislead supporters.
+
+Operate scams.
+
+Supporters may not:
+
+Spam creators.
+
+Harass creators.
+
+Use stolen payment methods.
+
+Post abusive support messages.
+
+====================================================
+7. COPYRIGHT POLICY
+====================================================
+
+Add:
+
+Providing Creator Support does not transfer ownership.
+
+No copyright is transferred.
+
+No licensing rights are granted.
+
+No commercial rights are granted.
+
+====================================================
+8. REFUND POLICY
+====================================================
+
+Separate:
+
+Creator Services
+
+and
+
+Creator Support
+
+Creator Services follow Everyday Radio policies.
+
+Creator Support follows creator payment provider policies where applicable.
+
+Clearly distinguish the two.
+
+====================================================
+9. FAQ
+====================================================
+
+Add questions:
+
+How does Creator Support work?
+
+Who receives my support?
+
+Does Everyday Radio keep a percentage?
+
+Can I support anonymously?
+
+Can I remove a support message?
+
+How are refunds handled?
+
+Can creators disable support?
+
+====================================================
+10. AI POLICY
+====================================================
+
+Add:
+
+Support messages may be reviewed for moderation and platform safety.
+
+Support messages are not used to train AI unless the AI Policy changes in the future.
+
+====================================================
+11. BETA POLICY
+====================================================
+
+Update Beta Policy.
+
+Explain:
+
+Creator Support currently operates in Demo Mode.
+
+No real money is processed.
+
+Future live payments will be announced separately.
+
+====================================================
+12. LEGAL NOTICES
+====================================================
+
+Where appropriate display:
+
+Creator Support is voluntary.
+
+Payments are handled through third-party payment providers when live.
+
+Everyday Radio does not hold creator support funds.
+
+Creators are responsible for their own payment accounts and applicable legal obligations.
+
+====================================================
+13. FOOTER / LEGAL CENTER
+====================================================
+
+Verify these documents appear within the existing Legal Center:
+
+Terms of Service
+
+Privacy Policy
+
+AI Policy
+
+Creator Agreement
+
+Creator Payments Addendum
+
+Creator Support Policy
+
+Community Guidelines
+
+Refund Policy
+
+Copyright Policy
+
+Beta Policy
+
+DMCA Policy (if already present)
+
+Do not remove existing documents.
+
+====================================================
+14. FUTURE READY
+====================================================
+
+Write all legal language so changing from Demo Mode to Live Mode requires minimal edits.
+
+Avoid hardcoding PayPal as the only payment provider.
+
+Use wording such as:
+
+"Selected payment provider."
+
+====================================================
+15. TESTING
+====================================================
+
+Verify:
+
+Legal Center navigation works.
+
+New documents open correctly.
+
+Creator Agreement acceptance works.
+
+Creator Payments Addendum acceptance works.
+
+No broken links.
+
+Mobile layout works.
+
+Existing legal documents remain intact.
+
+No existing functionality is affected.
+
+Do not activate live payments.
+
+Keep the legal framework ready for future production use.

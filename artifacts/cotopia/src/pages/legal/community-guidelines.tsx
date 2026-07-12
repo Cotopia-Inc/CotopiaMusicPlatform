@@ -69,6 +69,32 @@ export default function CommunityGuidelines() {
         </ul>
       </section>
 
+      <section className="space-y-4">
+        <h2 className="text-lg font-bold">Creator Support Rules</h2>
+        <p className="text-sm text-muted-foreground leading-relaxed">Creator Support is a voluntary feature and must be used honestly and respectfully.</p>
+        <div className="space-y-3">
+          <div>
+            <p className="text-sm font-semibold text-foreground mb-2">Creators may not:</p>
+            <ul className="space-y-2.5">
+              <Rule>Harass or pressure supporters into providing support</Rule>
+              <Rule>Promise investment returns, ownership stakes, royalties, or illegal incentives in exchange for support</Rule>
+              <Rule>Mislead supporters about how funds will be used</Rule>
+              <Rule>Operate scams, fraudulent schemes, or deceptive campaigns through Creator Support</Rule>
+              <Rule>Offer unauthorized commercial arrangements (such as revenue sharing) without a separate written agreement</Rule>
+            </ul>
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-foreground mb-2">Supporters may not:</p>
+            <ul className="space-y-2.5">
+              <Rule>Spam creators with repeated unwanted support messages</Rule>
+              <Rule>Harass, threaten, or demean creators through support messages</Rule>
+              <Rule>Use stolen, unauthorized, or fraudulently obtained payment methods</Rule>
+              <Rule>Post abusive, threatening, or policy-violating content in support messages</Rule>
+            </ul>
+          </div>
+        </div>
+      </section>
+
       <section className="space-y-3">
         <h2 className="text-lg font-bold">Enforcement</h2>
         <div className="text-sm text-muted-foreground leading-relaxed space-y-3">
