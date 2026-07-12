@@ -1,0 +1,265 @@
+Update the Everyday Radio Promise Page and landing experience.
+
+IMPORTANT
+
+The Promise Page is now the public landing page.
+
+Do NOT redesign the overall look and feel.
+
+Do NOT change the existing Promise, Mission, AI Policy, SEO strategy, or authentication.
+
+Build on what already exists.
+
+Keep the page fast, responsive, and SEO-friendly.
+
+====================================================
+1. PRIMARY CALL TO ACTION
+====================================================
+
+Keep:
+
+Sign In
+
+Change:
+
+Sign Up
+
+to
+
+Become a Creator
+
+Use this button everywhere on the Promise Page and landing page.
+
+Clicking "Become a Creator" should continue to use the existing registration flow.
+
+Do not break the current registration process.
+
+Future enhancement:
+Allow additional registration paths later, but for now keep existing functionality.
+
+====================================================
+2. NEW SECTION
+
+Add this section immediately after the Promise section.
+
+Title:
+
+Discover.
+Create.
+Support.
+
+Subtitle:
+
+Everyday Radio is a creator-first discovery and community platform where independent creators share music, videos, podcasts, and original content while building lasting relationships with their audiences.
+
+====================================================
+3. FEATURE CARDS
+
+Create three responsive cards.
+
+----------------------------------------------------
+
+CARD 1
+
+🎵 Discover
+
+Description:
+
+Discover independent music, videos, podcasts, and creators before everyone else.
+
+----------------------------------------------------
+
+CARD 2
+
+🤝 Connect
+
+Description:
+
+Follow creators, chat, comment, build playlists, earn badges, and become part of a growing creator community.
+
+----------------------------------------------------
+
+CARD 3
+
+💙 Support
+
+Description:
+
+Support creators directly and help them continue creating amazing content while building lasting communities.
+
+====================================================
+4. WHY JOIN THE BETA
+
+Add another section.
+
+Title:
+
+Why Join the Beta?
+
+Display cards or checklist.
+
+✔ Help shape the future of Everyday Radio
+
+✔ Discover amazing independent creators
+
+✔ Build your audience
+
+✔ Become a Founding Creator
+
+✔ Earn exclusive beta badges
+
+✔ Help improve the platform through your feedback
+
+✔ Join a growing creator-first community
+
+====================================================
+5. COMMUNITY MESSAGE
+
+Add a section.
+
+Title:
+
+Built for Creators.
+Powered by Community.
+
+Text:
+
+Everyday Radio was built to give independent creators a place to publish content, connect with supporters, and build real communities.
+
+Whether you're making music, videos, podcasts, or original content, this platform is designed to help you grow while maintaining control of your creative journey.
+
+====================================================
+6. SUPPORT MESSAGE
+
+Add another section.
+
+Title:
+
+Support Independent Creators
+
+Text:
+
+Follow your favorite creators.
+
+Leave comments.
+
+Join conversations.
+
+Share amazing content.
+
+Support creators directly.
+
+Every interaction helps independent creators continue creating.
+
+====================================================
+7. FOUNDING CREATOR SECTION
+
+Add a highlighted section.
+
+Title:
+
+Become a Founding Creator
+
+Text:
+
+Join Everyday Radio during Beta and become part of the platform's foundation.
+
+Early creators will help shape future features, test new tools, and earn exclusive Founding Creator recognition.
+
+====================================================
+8. FINAL CALL TO ACTION
+
+At the bottom of the page display:
+
+Ready to begin?
+
+Buttons:
+
+Become a Creator
+
+Sign In
+
+====================================================
+9. DESIGN
+
+Maintain the current Everyday Radio visual identity.
+
+Do not redesign the Promise Page.
+
+Build onto the existing page.
+
+Keep typography, colors, spacing, animations, and branding consistent.
+
+Use existing components whenever possible.
+
+====================================================
+10. MOBILE
+
+Ensure all new sections are fully responsive.
+
+Optimize for:
+
+Desktop
+
+Tablet
+
+Mobile
+
+====================================================
+11. SEO
+
+Maintain existing SEO.
+
+Do not reduce search indexing on the Promise Page.
+
+Keep the Promise Page as the only public landing page.
+
+Do not expose protected areas of the application.
+
+====================================================
+12. SECURITY
+
+Do not expose:
+
+Dashboard
+
+Creator Dashboard
+
+Uploads
+
+Admin
+
+Payments
+
+Private Profiles
+
+Moderation
+
+Creator Settings
+
+These should remain behind authentication.
+
+====================================================
+13. TESTING
+
+Verify:
+
+✓ Promise Page loads correctly
+
+✓ Become a Creator button works
+
+✓ Sign In works
+
+✓ Existing registration still works
+
+✓ Existing login still works
+
+✓ Mobile layout works
+
+✓ SEO remains intact
+
+✓ No protected pages become public
+
+✓ Existing routing continues working
+
+Do not modify unrelated functionality.

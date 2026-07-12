@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { Heart, Users, Lightbulb, Shield, ArrowRight, Music, Video, Globe, MessageCircle, TrendingUp, Star, LogIn, UserPlus } from "lucide-react";
+import { Heart, Users, Lightbulb, Shield, ArrowRight, Music, Video, Globe, MessageCircle, TrendingUp, Star, LogIn, UserPlus, Check, Headphones } from "lucide-react";
 import { useSeo } from "@/hooks/use-seo";
 
 interface AboutProps {
@@ -8,8 +8,8 @@ interface AboutProps {
 
 export default function About({ showAuthNav = false }: AboutProps) {
   useSeo({
-    title: "About Us",
-    description: "Learn about Cotopia's mission to champion independent artists and build a community that lives for music.",
+    title: "Everyday Radio by Cotopia — Discover. Create. Support.",
+    description: "Everyday Radio is a creator-first discovery and community platform where independent creators share music, videos, podcasts, and original content while building lasting relationships with their audiences.",
   });
 
   return (
@@ -30,13 +30,14 @@ export default function About({ showAuthNav = false }: AboutProps) {
             <Link href="/register">
               <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
                 <UserPlus className="w-3.5 h-3.5" />
-                Sign Up
+                Become a Creator
               </button>
             </Link>
           </div>
         </div>
       )}
-      {/* Hero */}
+
+      {/* Hero / Promise */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-background" />
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-5" />
@@ -60,7 +61,7 @@ export default function About({ showAuthNav = false }: AboutProps) {
           <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
             <Link href="/register">
               <button className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors">
-                Join the Platform <ArrowRight className="w-4 h-4" />
+                Become a Creator <ArrowRight className="w-4 h-4" />
               </button>
             </Link>
             <Link href="/discover">
@@ -73,6 +74,44 @@ export default function About({ showAuthNav = false }: AboutProps) {
       </div>
 
       <div className="max-w-4xl mx-auto px-6 pb-24 space-y-20">
+
+        {/* Discover. Create. Support. */}
+        <section className="space-y-8">
+          <div className="text-center space-y-3">
+            <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight leading-tight">
+              Discover.<br />Create.<br />Support.
+            </h2>
+            <div className="w-12 h-0.5 bg-primary mx-auto rounded-full" />
+            <p className="text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+              Everyday Radio is a creator-first discovery and community platform where independent creators share music, videos, podcasts, and original content while building lasting relationships with their audiences.
+            </p>
+          </div>
+          <div className="grid sm:grid-cols-3 gap-5">
+            {[
+              {
+                emoji: "🎵",
+                title: "Discover",
+                desc: "Discover independent music, videos, podcasts, and creators before everyone else.",
+              },
+              {
+                emoji: "🤝",
+                title: "Connect",
+                desc: "Follow creators, chat, comment, build playlists, earn badges, and become part of a growing creator community.",
+              },
+              {
+                emoji: "💙",
+                title: "Support",
+                desc: "Support creators directly and help them continue creating amazing content while building lasting communities.",
+              },
+            ].map(({ emoji, title, desc }) => (
+              <div key={title} className="flex flex-col gap-4 p-6 rounded-xl bg-card border border-border hover:border-primary/30 transition-colors">
+                <div className="text-3xl">{emoji}</div>
+                <h3 className="text-lg font-bold">{title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{desc}</p>
+              </div>
+            ))}
+          </div>
+        </section>
 
         {/* What We Believe */}
         <section className="space-y-8">
@@ -171,7 +210,6 @@ export default function About({ showAuthNav = false }: AboutProps) {
         {/* Three pillars */}
         <section className="space-y-8">
           <div className="grid sm:grid-cols-3 gap-6">
-            {/* Ownership */}
             <div className="space-y-4 p-6 rounded-xl bg-card border border-border">
               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
                 <Shield className="w-5 h-5 text-primary" />
@@ -184,7 +222,6 @@ export default function About({ showAuthNav = false }: AboutProps) {
                 <li>Trust is earned.</li>
               </ul>
             </div>
-            {/* Community */}
             <div className="space-y-4 p-6 rounded-xl bg-card border border-border">
               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
                 <Users className="w-5 h-5 text-primary" />
@@ -196,7 +233,6 @@ export default function About({ showAuthNav = false }: AboutProps) {
                 <li>Every user helps shape the future of the platform.</li>
               </ul>
             </div>
-            {/* Innovation */}
             <div className="space-y-4 p-6 rounded-xl bg-card border border-border">
               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
                 <Lightbulb className="w-5 h-5 text-primary" />
@@ -235,21 +271,131 @@ export default function About({ showAuthNav = false }: AboutProps) {
           </div>
         </section>
 
-        {/* Closing */}
-        <section className="text-center space-y-4 py-8 border-t border-border/30">
-          <p className="text-lg font-medium text-muted-foreground">Thank you for being part of the journey.</p>
-          <div className="flex items-center justify-center gap-2">
-            <img src="/logo.jpg" alt="Cotopia" className="w-4 h-4 rounded-sm object-cover flex-shrink-0" />
-            <span className="text-sm font-semibold">Everyday Radio by Cotopia</span>
+        {/* Why Join the Beta */}
+        <section className="space-y-8">
+          <div className="text-center space-y-2">
+            <h2 className="text-3xl font-bold tracking-tight">Why Join the Beta?</h2>
+            <div className="w-12 h-0.5 bg-primary mx-auto rounded-full" />
           </div>
-          <p className="text-xs text-muted-foreground/50">Powered by Cotopia.</p>
-          <div className="flex items-center justify-center gap-6 pt-2">
-            <Link href="/register" className="text-xs text-primary hover:underline font-medium">Get Started</Link>
-            <Link href="/discover" className="text-xs text-muted-foreground hover:text-foreground transition-colors">Discover Music</Link>
-            <Link href="/company" className="text-xs text-muted-foreground hover:text-foreground transition-colors">Company Hub</Link>
-            <Link href="/legal" className="text-xs text-muted-foreground hover:text-foreground transition-colors">Legal Center</Link>
+          <div className="grid sm:grid-cols-2 gap-3">
+            {[
+              "Help shape the future of Everyday Radio",
+              "Discover amazing independent creators",
+              "Build your audience",
+              "Become a Founding Creator",
+              "Earn exclusive beta badges",
+              "Help improve the platform through your feedback",
+              "Join a growing creator-first community",
+            ].map(item => (
+              <div key={item} className="flex items-center gap-3 p-4 rounded-xl bg-card border border-border hover:border-primary/30 transition-colors">
+                <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Check className="w-3.5 h-3.5 text-primary" />
+                </div>
+                <span className="text-sm font-medium">{item}</span>
+              </div>
+            ))}
           </div>
         </section>
+
+        {/* Built for Creators. Powered by Community. */}
+        <section className="space-y-6">
+          <div className="text-center space-y-2">
+            <h2 className="text-3xl font-bold tracking-tight leading-tight">
+              Built for Creators.<br />Powered by Community.
+            </h2>
+            <div className="w-12 h-0.5 bg-primary mx-auto rounded-full" />
+          </div>
+          <div className="p-8 rounded-2xl bg-card border border-border space-y-4">
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Everyday Radio was built to give independent creators a place to publish content, connect with supporters, and build real communities.
+            </p>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Whether you're making music, videos, podcasts, or original content, this platform is designed to help you grow while maintaining control of your creative journey.
+            </p>
+          </div>
+        </section>
+
+        {/* Support Independent Creators */}
+        <section className="space-y-8">
+          <div className="text-center space-y-2">
+            <h2 className="text-3xl font-bold tracking-tight">Support Independent Creators</h2>
+            <div className="w-12 h-0.5 bg-primary mx-auto rounded-full" />
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[
+              { icon: Users, text: "Follow your favorite creators." },
+              { icon: MessageCircle, text: "Leave comments." },
+              { icon: Globe, text: "Join conversations." },
+              { icon: TrendingUp, text: "Share amazing content." },
+              { icon: Heart, text: "Support creators directly." },
+              { icon: Headphones, text: "Every interaction helps independent creators continue creating." },
+            ].map(({ icon: Icon, text }) => (
+              <div key={text} className="flex items-start gap-3 p-5 rounded-xl bg-card border border-border hover:border-primary/30 transition-colors">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Icon className="w-4 h-4 text-primary" />
+                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed">{text}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Founding Creator */}
+        <section className="space-y-6">
+          <div className="p-8 md:p-10 rounded-2xl bg-gradient-to-br from-primary/15 via-primary/5 to-background border border-primary/25 text-center space-y-5">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold uppercase tracking-wider">
+              <Star className="w-3.5 h-3.5" />
+              Founding Creator
+            </div>
+            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">Become a Founding Creator</h2>
+            <p className="text-base text-muted-foreground max-w-xl mx-auto leading-relaxed">
+              Join Everyday Radio during Beta and become part of the platform's foundation.
+            </p>
+            <p className="text-sm text-muted-foreground max-w-xl mx-auto leading-relaxed">
+              Early creators will help shape future features, test new tools, and earn exclusive Founding Creator recognition.
+            </p>
+            <div className="pt-2">
+              <Link href="/register">
+                <button className="inline-flex items-center gap-2 px-7 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20">
+                  Become a Creator <ArrowRight className="w-4 h-4" />
+                </button>
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* Final CTA */}
+        <section className="text-center space-y-6 py-8 border-t border-border/30">
+          <p className="text-2xl font-bold">Ready to begin?</p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link href="/register">
+              <button className="inline-flex items-center gap-2 px-7 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors">
+                <UserPlus className="w-4 h-4" />
+                Become a Creator
+              </button>
+            </Link>
+            <Link href="/login">
+              <button className="inline-flex items-center gap-2 px-7 py-3 bg-secondary text-secondary-foreground rounded-lg font-semibold hover:bg-secondary/80 transition-colors border border-border">
+                <LogIn className="w-4 h-4" />
+                Sign In
+              </button>
+            </Link>
+          </div>
+          <div className="pt-4 space-y-3">
+            <div className="flex items-center justify-center gap-2">
+              <img src="/logo.jpg" alt="Cotopia" className="w-4 h-4 rounded-sm object-cover flex-shrink-0" />
+              <span className="text-sm font-semibold">Everyday Radio by Cotopia</span>
+            </div>
+            <p className="text-xs text-muted-foreground/50">Powered by Cotopia.</p>
+            <div className="flex flex-wrap items-center justify-center gap-4 gap-y-2 pt-2">
+              <Link href="/register" className="text-xs text-primary hover:underline font-medium">Get Started</Link>
+              <Link href="/discover" className="text-xs text-muted-foreground hover:text-foreground transition-colors">Discover Music</Link>
+              <Link href="/company" className="text-xs text-muted-foreground hover:text-foreground transition-colors">Company Hub</Link>
+              <Link href="/legal" className="text-xs text-muted-foreground hover:text-foreground transition-colors">Legal Center</Link>
+            </div>
+          </div>
+        </section>
+
       </div>
     </div>
   );
