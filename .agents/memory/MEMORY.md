@@ -22,3 +22,4 @@
 - [Cotopia completion-rate inflation](cotopia-completion-rate-inflation.md) — completion events weren't session-deduped like plays/views; fix needs both client dedup ref AND server-side Math.min clamp
 - [Cotopia artist id vs user id](cotopia-artist-vs-user-id.md) — /artists/:id is the artists table PK, not the user id; resolve via artist.userId for any user-scoped feature (support, messaging, follows)
 - [Cotopia generic "Please try again" toast diagnosis](cotopia-generic-error-toast.md) — means err.data wasn't structured JSON (404/HTML from stale server or crash), not a real app error; restart api-server first before debugging route logic
+- [Cotopia lazy-loading production crash](cotopia-lazy-loading-crash.md) — React.lazy + Rollup manualChunks caused silent React crash in production only; Vite dev unaffected; avoid code-splitting until root cause is known
