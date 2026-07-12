@@ -23,6 +23,82 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!--
+      Asset-load error recovery.
+      Fires when any local /assets/ script or stylesheet returns a 404 — most
+      commonly during the brief Render deploy window when old chunks are gone
+      but the new bundle hasn't fully landed yet.  One auto-reload per minute;
+      after that a manual Refresh button is shown so the user is never stuck on
+      a black screen silently.
+    -->
+    <script>
+      (function () {
+        var RELOAD_KEY = 'asset_404_reload';
+        var FALLBACK_DELAY_MS = 9000;
+
+        // Catch script / stylesheet load failures at the capture phase so we
+        // hear about them before they bubble (resource errors don't bubble).
+        window.addEventListener('error', function (e) {
+          var t = e.target;
+          if (!t || typeof t.tagName !== 'string') return;
+          var tag = t.tagName.toUpperCase();
+          var src = (t.src || t.href || '');
+          // Only act on our own hashed assets, not fonts / analytics / images.
+          if ((tag === 'SCRIPT' || tag === 'LINK') && src.indexOf('/assets/') !== -1) {
+            var last = Number(sessionStorage.getItem(RELOAD_KEY) || 0);
+            if (Date.now() - last > 60000) {
+              sessionStorage.setItem(RELOAD_KEY, String(Date.now()));
+              window.location.reload();
+            } else {
+              showFallback('An asset failed to load after a recent update.');
+            }
+          }
+        }, true);
+
+        // Dead-mount detector: if #root is still empty FALLBACK_DELAY_MS after
+        // the page loads (JS executed but React never mounted), show recovery UI.
+        window.addEventListener('load', function () {
+          setTimeout(function () {
+            var root = document.getElementById('root');
+            if (root && !root.firstChild) {
+              var last = Number(sessionStorage.getItem(RELOAD_KEY) || 0);
+              if (Date.now() - last > 60000) {
+                sessionStorage.setItem(RELOAD_KEY, String(Date.now()));
+                window.location.reload();
+              } else {
+                showFallback('The page failed to start after a recent update.');
+              }
+            }
+          }, FALLBACK_DELAY_MS);
+        });
+
+        function showFallback(reason) {
+          var root = document.getElementById('root');
+          if (!root || root.getAttribute('data-fallback')) return;
+          root.setAttribute('data-fallback', '1');
+          root.style.cssText = [
+            'min-height:100dvh',
+            'display:flex',
+            'flex-direction:column',
+            'align-items:center',
+            'justify-content:center',
+            'gap:1rem',
+            'background:#0a0a0f',
+            'color:#f2f2f2',
+            'font-family:Inter,sans-serif',
+            'padding:2rem',
+            'text-align:center',
+          ].join(';');
+          root.innerHTML = [
+            '<img src="/logo.jpg" alt="Cotopia" style="width:48px;height:48px;border-radius:8px;object-fit:cover;margin-bottom:8px" />',
+            '<h2 style="font-size:1.1rem;font-weight:700;margin:0">Having trouble loading</h2>',
+            '<p style="font-size:0.85rem;color:#888;max-width:340px;margin:0">' + reason + ' Please refresh to get the latest version.</p>',
+            '<button onclick="sessionStorage.clear();location.reload()" style="margin-top:8px;padding:0.55rem 1.5rem;border-radius:9999px;background:#7c3aed;color:#fff;border:none;font-weight:600;font-size:0.875rem;cursor:pointer">Refresh page</button>',
+          ].join('');
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
