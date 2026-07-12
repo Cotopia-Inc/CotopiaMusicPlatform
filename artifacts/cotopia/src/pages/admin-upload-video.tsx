@@ -63,7 +63,7 @@ function VideoUploadRow({
       <div className="flex flex-col flex-shrink-0 max-w-[130px] min-w-0">
         <span className="text-xs text-muted-foreground truncate" title={file.name}>{file.name}</span>
         {!done && (
-          <span className="text-[10px] text-muted-foreground/50 italic leading-tight">larger files may take a few min</span>
+          <span className="text-[10px] text-muted-foreground/50 italic leading-tight">Larger Files May Take A Little Longer</span>
         )}
       </div>
       {done ? (
