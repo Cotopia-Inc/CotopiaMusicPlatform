@@ -65,7 +65,7 @@ export default function Home() {
                 <Play className="w-4 h-4 fill-current" /> Listen Now
               </button>
             </Link>
-            <Link href="/videos/15">
+            <Link href="/videos/21">
               <button className="bg-secondary text-secondary-foreground font-semibold px-6 py-2.5 rounded-full text-sm hover:bg-secondary/80 transition-colors border border-border flex items-center gap-2">
                 <span aria-hidden="true">🎵</span> Watch It Work
               </button>
