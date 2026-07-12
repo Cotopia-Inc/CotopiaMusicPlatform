@@ -145,6 +145,14 @@ export default function About({ showAuthNav = false }: AboutProps) {
                   </button>
                 </Link>
               </div>
+              <a
+                href="https://cotopia.org/artists/9"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block text-xs text-muted-foreground hover:text-primary underline underline-offset-4 transition-colors"
+              >
+                https://cotopia.org/artists/9
+              </a>
             </div>
           </div>
         </section>
