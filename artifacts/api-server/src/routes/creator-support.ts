@@ -422,8 +422,9 @@ router.get("/creator-support/pending-wall-messages", requireAuth, async (req: Au
 
   const items = await Promise.all(rows.map(async (r) => ({
     id: r.id,
-    isAnonymous: false,
-    supporterDisplayName: r.supporterDisplayName || r.supporterUsername,
+    isAnonymous: r.messageVisibility === "anonymous",
+    messageVisibility: r.messageVisibility,
+    supporterDisplayName: r.messageVisibility === "anonymous" ? null : (r.supporterDisplayName || r.supporterUsername),
     message: r.message,
     contentType: r.contentType,
     contentId: r.contentId,

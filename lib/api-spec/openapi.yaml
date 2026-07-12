@@ -5298,12 +5298,15 @@ components:
 
     SupportWallMessageItem:
       type: object
-      required: [id, isAnonymous, supporterDisplayName, message, contentType, contentId, contentTitle, createdAt]
+      required: [id, isAnonymous, messageVisibility, supporterDisplayName, message, contentType, contentId, contentTitle, createdAt]
       properties:
         id:
           type: integer
         isAnonymous:
           type: boolean
+        messageVisibility:
+          type: string
+          description: Visibility chosen by the supporter. Known values — public, anonymous, private — but treat as open string for forward-compatibility.
         supporterDisplayName:
           type: ["string", "null"]
           description: Null when isAnonymous is true.

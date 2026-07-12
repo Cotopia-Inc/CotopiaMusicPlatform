@@ -9,6 +9,8 @@
 export interface SupportWallMessageItem {
   id: number;
   isAnonymous: boolean;
+  /** Visibility chosen by the supporter. Known values — public, anonymous, private — but treat as open string for forward-compatibility. */
+  messageVisibility: string;
   /**
      * Null when isAnonymous is true.
      * @nullable

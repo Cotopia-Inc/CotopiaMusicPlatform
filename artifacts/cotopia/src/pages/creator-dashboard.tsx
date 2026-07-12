@@ -224,6 +224,7 @@ export default function CreatorDashboard() {
                     <div className="flex-1 min-w-0 space-y-0.5">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-sm font-medium">{item.supporterDisplayName ?? "Anonymous Supporter"}</span>
+                        <VisibilityBadge visibility={item.messageVisibility} />
                         <span className="text-xs text-muted-foreground">
                           {formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })}
                         </span>

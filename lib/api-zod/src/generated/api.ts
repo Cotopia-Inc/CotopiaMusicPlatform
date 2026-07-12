@@ -3479,6 +3479,7 @@ export const GetSupportWallResponse = zod.object({
   "items": zod.array(zod.object({
   "id": zod.number(),
   "isAnonymous": zod.boolean(),
+  "messageVisibility": zod.string().describe('Visibility chosen by the supporter. Known values — public, anonymous, private — but treat as open string for forward-compatibility.'),
   "supporterDisplayName": zod.string().nullable().describe('Null when isAnonymous is true.'),
   "message": zod.string().nullable(),
   "contentType": zod.string(),
@@ -3556,6 +3557,7 @@ export const GetCreatorPendingWallMessagesResponse = zod.object({
   "items": zod.array(zod.object({
   "id": zod.number(),
   "isAnonymous": zod.boolean(),
+  "messageVisibility": zod.string().describe('Visibility chosen by the supporter. Known values — public, anonymous, private — but treat as open string for forward-compatibility.'),
   "supporterDisplayName": zod.string().nullable().describe('Null when isAnonymous is true.'),
   "message": zod.string().nullable(),
   "contentType": zod.string(),
