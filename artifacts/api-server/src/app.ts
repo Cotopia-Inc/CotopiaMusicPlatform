@@ -64,15 +64,23 @@ const staticDir = path.resolve(
   process.env.STATIC_DIR ?? "artifacts/cotopia/dist/public",
 );
 if (fs.existsSync(staticDir)) {
-  app.use(express.static(staticDir));
+  // Serve hashed JS/CSS assets with long-lived caching, but force index.html
+  // to never be cached. This prevents a "blank screen on refresh" bug: when a
+  // new deploy changes chunk filenames, a browser holding a stale cached
+  // index.html would request old chunk URLs that no longer exist, causing React
+  // to fail silently and show nothing.
+  app.use(
+    express.static(staticDir, {
+      setHeaders(res, filePath) {
+        if (path.basename(filePath) === "index.html") {
+          res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, private");
+          res.setHeader("Pragma", "no-cache");
+        }
+      },
+    }),
+  );
   app.use((_req, res) => {
-    // Never let the browser (or its back/forward cache) serve a stale copy of
-    // the SPA shell — otherwise a logged-out user could hit "back" and see a
-    // cached snapshot of a page rendered while they were signed in.
-    res.setHeader(
-      "Cache-Control",
-      "no-store, no-cache, must-revalidate, private",
-    );
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, private");
     res.setHeader("Pragma", "no-cache");
     res.sendFile(path.join(staticDir, "index.html"));
   });
