@@ -9,7 +9,7 @@ import { usePlayer } from "@/lib/player";
 import { useSeo } from "@/hooks/use-seo";
 
 export default function Home() {
-  const { play, track: currentTrack } = usePlayer();
+  const { play } = usePlayer();
   const { data: feed, isLoading } = useGetHomeFeed({
     query: { queryKey: getGetHomeFeedQueryKey() }
   });
@@ -109,13 +109,7 @@ export default function Home() {
                   <div className="flex items-center gap-3 p-3">
                     {/* Art */}
                     <Link href={href}>
-                      <div
-                        className={`w-14 h-14 overflow-hidden bg-secondary flex-shrink-0 ${isArtist ? "rounded-full border-2 border-border" : "rounded-lg"}`}
-                        onMouseEnter={() => {
-                          if (isSong && pick.song && currentTrack?.id !== pick.song.id) play({ id: pick.song.id, title: pick.song.title, artistName: pick.song.artistName ?? "", artistId: pick.song.artistId, artistUserRole: (pick.song as any).artistUserRole ?? null, artistIsVerified: (pick.song as any).artistIsVerified ?? false, coverUrl: pick.song.coverUrl, streamUrl: pick.song.streamUrl, duration: pick.song.duration });
-                          if (isVideo && pick.video && currentTrack?.id !== pick.video.id) play({ id: pick.video.id, title: pick.video.title, artistName: pick.video.artistName ?? "", artistId: pick.video.artistId, artistUserRole: (pick.video as any).artistUserRole ?? null, artistIsVerified: (pick.video as any).artistIsVerified ?? false, coverUrl: pick.video.thumbnailUrl, videoUrl: pick.video.videoUrl, duration: pick.video.duration });
-                        }}
-                      >
+                      <div className={`w-14 h-14 overflow-hidden bg-secondary flex-shrink-0 ${isArtist ? "rounded-full border-2 border-border" : "rounded-lg"}`}>
                         {art
                           ? <img src={art} alt={title ?? ""} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                           : <div className="w-full h-full flex items-center justify-center text-muted-foreground/30">
@@ -212,12 +206,7 @@ export default function Home() {
             feed.featuredSongs.map((song) => (
               <div key={song.id} className="group cursor-pointer space-y-3">
                 <Link href={`/songs/${song.id}`}>
-                  <div
-                    className="aspect-square relative overflow-hidden rounded-xl bg-secondary border border-border/50 shadow-md"
-                    onMouseEnter={() => {
-                      if (currentTrack?.id !== song.id) play({ id: song.id, title: song.title, artistName: song.artistName ?? "", artistId: song.artistId, artistUserRole: song.artistUserRole ?? null, artistIsVerified: song.artistIsVerified ?? false, coverUrl: song.coverUrl, streamUrl: song.streamUrl, duration: song.duration });
-                    }}
-                  >
+                  <div className="aspect-square relative overflow-hidden rounded-xl bg-secondary border border-border/50 shadow-md">
                     {song.coverUrl ? (
                       <img src={song.coverUrl} alt={song.title} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
                     ) : (
@@ -285,12 +274,7 @@ export default function Home() {
             ) : (feed?.newReleases ?? []).slice(0, 6).map((song) => (
               <div key={song.id} className="group cursor-pointer space-y-2">
                 <Link href={`/songs/${song.id}`}>
-                  <div
-                    className="aspect-square relative overflow-hidden rounded-lg bg-secondary border border-border/50"
-                    onMouseEnter={() => {
-                      if (currentTrack?.id !== song.id) play({ id: song.id, title: song.title, artistName: song.artistName ?? "", artistId: song.artistId, artistUserRole: song.artistUserRole ?? null, artistIsVerified: song.artistIsVerified ?? false, coverUrl: song.coverUrl, streamUrl: song.streamUrl, duration: song.duration });
-                    }}
-                  >
+                  <div className="aspect-square relative overflow-hidden rounded-lg bg-secondary border border-border/50">
                     {song.coverUrl ? (
                       <img src={song.coverUrl} alt={song.title} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
                     ) : (
@@ -354,12 +338,7 @@ export default function Home() {
             ) : feed?.featuredVideos?.map((video) => (
               <div key={video.id} className="group cursor-pointer space-y-3">
                 <Link href={`/videos/${video.id}`}>
-                  <div
-                    className="w-full aspect-video relative overflow-hidden rounded-xl bg-secondary border border-border/50 shadow-md"
-                    onMouseEnter={() => {
-                      if (currentTrack?.id !== video.id) play({ id: video.id, title: video.title, artistName: video.artistName ?? "", artistId: video.artistId, artistUserRole: video.artistUserRole ?? null, artistIsVerified: video.artistIsVerified ?? false, coverUrl: video.thumbnailUrl, videoUrl: video.videoUrl, duration: video.duration });
-                    }}
-                  >
+                  <div className="w-full aspect-video relative overflow-hidden rounded-xl bg-secondary border border-border/50 shadow-md">
                     {video.thumbnailUrl ? (
                       <img src={video.thumbnailUrl} alt={video.title} className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500" />
                     ) : (
