@@ -34,16 +34,26 @@ function PushNotificationBanner() {
 
   if (!isSupported) {
     return (
-      <div className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3.5">
-        <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-          <BellOff className="w-4 h-4 text-muted-foreground" />
+      <div className="flex items-center justify-between gap-4 rounded-xl border border-border bg-card px-4 py-3.5">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+            <BellOff className="w-4 h-4 text-muted-foreground" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold leading-tight">Enable push notifications</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Open the app in a full browser tab to turn on push alerts.
+            </p>
+          </div>
         </div>
-        <div>
-          <p className="text-sm font-semibold leading-tight">Push notifications</p>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Open the app in a browser tab (not the embedded preview) to enable push notifications.
-          </p>
-        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex-shrink-0"
+          onClick={() => window.open(window.location.href, "_blank")}
+        >
+          Open in tab ↗
+        </Button>
       </div>
     );
   }
