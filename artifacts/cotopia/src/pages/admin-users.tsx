@@ -424,9 +424,13 @@ export default function AdminUsers() {
   const handleToggleActive = (userId: number, currentStatus: boolean) => {
     updateMutation.mutate({ id: userId, data: { isActive: !currentStatus } }, {
       onSuccess: () => {
-        toast({ title: "User updated successfully" });
+        toast({ title: currentStatus ? "User deactivated" : "User activated" });
         queryClient.invalidateQueries({ queryKey: getAdminListUsersQueryKey({ limit: 50 }) });
-      }
+      },
+      onError: (err) => {
+        const msg = (err as { data?: { error?: string } })?.data?.error ?? err.message ?? "Something went wrong";
+        toast({ variant: "destructive", title: "Failed to update user", description: msg });
+      },
     });
   };
 

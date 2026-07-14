@@ -125,6 +125,7 @@ router.patch("/admin/users/:id", requireAuth, requireRole(...ADMIN_ROLES), async
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
 
   const [user] = await db.update(usersTable).set(parsed.data).where(eq(usersTable.id, id)).returning();
+  if (!user) { res.status(404).json({ error: "User not found" }); return; }
   const { passwordHash: _, ...userOut } = user;
   res.json(userOut);
 });
