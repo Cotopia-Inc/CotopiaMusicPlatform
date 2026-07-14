@@ -34,8 +34,14 @@ export default function Login() {
         toast({ title: "Welcome back", description: "Tuned into Everyday Radio." });
         setLocation("/");
       },
-      onError: () => {
-        toast({ variant: "destructive", title: "Login failed", description: "Please check your credentials and try again." });
+      onError: (err) => {
+        const code = (err as { data?: { code?: string; error?: string } })?.data?.code;
+        const msg = (err as { data?: { error?: string } })?.data?.error;
+        if (code === "deactivated" || msg?.toLowerCase().includes("deactivated")) {
+          toast({ variant: "destructive", title: "Account deactivated", description: "Your account has been deactivated. Please contact support." });
+        } else {
+          toast({ variant: "destructive", title: "Login failed", description: "Please check your credentials and try again." });
+        }
       }
     });
   };

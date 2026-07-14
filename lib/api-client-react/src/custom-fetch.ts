@@ -367,6 +367,14 @@ export async function customFetch<T = unknown>(
 
   if (!response.ok) {
     const errorData = await parseErrorBody(response, method);
+    if (
+      typeof window !== "undefined" &&
+      errorData &&
+      typeof errorData === "object" &&
+      (errorData as Record<string, unknown>).code === "deactivated"
+    ) {
+      window.dispatchEvent(new CustomEvent("cotopia:deactivated"));
+    }
     throw new ApiError(response, errorData, requestInfo);
   }
 

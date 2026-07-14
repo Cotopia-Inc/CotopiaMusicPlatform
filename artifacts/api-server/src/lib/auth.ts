@@ -34,6 +34,7 @@ export async function requireAuth(req: AuthRequest, res: Response, next: NextFun
     const [fresh] = await db
       .select({
         role: usersTable.role,
+        isActive: usersTable.isActive,
         isBanned: usersTable.isBanned,
         isSuspended: usersTable.isSuspended,
         suspendedUntil: usersTable.suspendedUntil,
@@ -41,11 +42,19 @@ export async function requireAuth(req: AuthRequest, res: Response, next: NextFun
       .from(usersTable)
       .where(eq(usersTable.id, payload.userId))
       .limit(1);
-    if (fresh?.isBanned) {
+    if (!fresh) {
+      res.status(401).json({ error: "Your session has expired. Please sign in again." });
+      return;
+    }
+    if (fresh.isActive === false) {
+      res.status(403).json({ error: "Your account has been deactivated. Please contact support.", code: "deactivated" });
+      return;
+    }
+    if (fresh.isBanned) {
       res.status(403).json({ error: "Your account has been permanently banned.", code: "banned" });
       return;
     }
-    if (fresh?.isSuspended) {
+    if (fresh.isSuspended) {
       const expiry = fresh.suspendedUntil ? new Date(fresh.suspendedUntil) : null;
       const stillActive = !expiry || expiry.getTime() > Date.now();
       if (stillActive) {
@@ -53,7 +62,7 @@ export async function requireAuth(req: AuthRequest, res: Response, next: NextFun
         return;
       }
     }
-    req.user = { userId: payload.userId, role: fresh?.role ?? payload.role };
+    req.user = { userId: payload.userId, role: fresh.role };
     next();
   } catch {
     res.status(401).json({ error: "Your session has expired. Please sign in again." });

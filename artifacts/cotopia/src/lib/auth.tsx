@@ -50,6 +50,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     window.dispatchEvent(new CustomEvent("cotopia:logout"));
   };
 
+  useEffect(() => {
+    const handleDeactivated = () => {
+      setToken(null);
+      localStorage.removeItem("cotopia_token");
+      queryClient.clear();
+      window.dispatchEvent(new CustomEvent("cotopia:logout"));
+    };
+    window.addEventListener("cotopia:deactivated", handleDeactivated);
+    return () => window.removeEventListener("cotopia:deactivated", handleDeactivated);
+  }, [queryClient]);
+
   return (
     <AuthContext.Provider value={{ user: user || null, token, isLoading, login, logout }}>
       {children}

@@ -134,12 +134,12 @@ const AppealUpdateBody = z.object({
 });
 
 // ── Admin: known issues CRUD ─────────────────────────────────────────────────
-router.get("/admin/trust/known-issues", requireAuth, requireRole(ADMIN_ROLES), async (_req, res): Promise<void> => {
+router.get("/admin/trust/known-issues", requireAuth, requireRole(...ADMIN_ROLES), async (_req, res): Promise<void> => {
   const rows = await db.select().from(trustKnownIssuesTable).orderBy(desc(trustKnownIssuesTable.createdAt));
   res.json(rows);
 });
 
-router.post("/admin/trust/known-issues", requireAuth, requireRole(ADMIN_ROLES), async (req, res): Promise<void> => {
+router.post("/admin/trust/known-issues", requireAuth, requireRole(...ADMIN_ROLES), async (req, res): Promise<void> => {
   const parsed = KnownIssueBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   const [row] = await db.insert(trustKnownIssuesTable).values({
@@ -150,7 +150,7 @@ router.post("/admin/trust/known-issues", requireAuth, requireRole(ADMIN_ROLES), 
   res.status(201).json(row);
 });
 
-router.patch("/admin/trust/known-issues/:id", requireAuth, requireRole(ADMIN_ROLES), async (req, res): Promise<void> => {
+router.patch("/admin/trust/known-issues/:id", requireAuth, requireRole(...ADMIN_ROLES), async (req, res): Promise<void> => {
   const id = Number(req.params["id"]);
   const parsed = KnownIssueBody.partial().safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
@@ -163,18 +163,18 @@ router.patch("/admin/trust/known-issues/:id", requireAuth, requireRole(ADMIN_ROL
   res.json(row);
 });
 
-router.delete("/admin/trust/known-issues/:id", requireAuth, requireRole(ADMIN_ROLES), async (req, res): Promise<void> => {
+router.delete("/admin/trust/known-issues/:id", requireAuth, requireRole(...ADMIN_ROLES), async (req, res): Promise<void> => {
   await db.delete(trustKnownIssuesTable).where(eq(trustKnownIssuesTable.id, Number(req.params["id"])));
   res.status(204).send();
 });
 
 // ── Admin: release notes CRUD ────────────────────────────────────────────────
-router.get("/admin/trust/release-notes", requireAuth, requireRole(ADMIN_ROLES), async (_req, res): Promise<void> => {
+router.get("/admin/trust/release-notes", requireAuth, requireRole(...ADMIN_ROLES), async (_req, res): Promise<void> => {
   const rows = await db.select().from(trustReleaseNotesTable).orderBy(desc(trustReleaseNotesTable.releaseDate));
   res.json(rows);
 });
 
-router.post("/admin/trust/release-notes", requireAuth, requireRole(ADMIN_ROLES), async (req, res): Promise<void> => {
+router.post("/admin/trust/release-notes", requireAuth, requireRole(...ADMIN_ROLES), async (req, res): Promise<void> => {
   const parsed = ReleaseNoteBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   const [row] = await db.insert(trustReleaseNotesTable).values({
@@ -184,7 +184,7 @@ router.post("/admin/trust/release-notes", requireAuth, requireRole(ADMIN_ROLES),
   res.status(201).json(row);
 });
 
-router.patch("/admin/trust/release-notes/:id", requireAuth, requireRole(ADMIN_ROLES), async (req, res): Promise<void> => {
+router.patch("/admin/trust/release-notes/:id", requireAuth, requireRole(...ADMIN_ROLES), async (req, res): Promise<void> => {
   const id = Number(req.params["id"]);
   const parsed = ReleaseNoteBody.partial().safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
@@ -196,18 +196,18 @@ router.patch("/admin/trust/release-notes/:id", requireAuth, requireRole(ADMIN_RO
   res.json(row);
 });
 
-router.delete("/admin/trust/release-notes/:id", requireAuth, requireRole(ADMIN_ROLES), async (req, res): Promise<void> => {
+router.delete("/admin/trust/release-notes/:id", requireAuth, requireRole(...ADMIN_ROLES), async (req, res): Promise<void> => {
   await db.delete(trustReleaseNotesTable).where(eq(trustReleaseNotesTable.id, Number(req.params["id"])));
   res.status(204).send();
 });
 
 // ── Admin: we heard you CRUD ─────────────────────────────────────────────────
-router.get("/admin/trust/we-heard-you", requireAuth, requireRole(ADMIN_ROLES), async (_req, res): Promise<void> => {
+router.get("/admin/trust/we-heard-you", requireAuth, requireRole(...ADMIN_ROLES), async (_req, res): Promise<void> => {
   const rows = await db.select().from(trustWeHeardYouTable).orderBy(desc(trustWeHeardYouTable.createdAt));
   res.json(rows);
 });
 
-router.post("/admin/trust/we-heard-you", requireAuth, requireRole(ADMIN_ROLES), async (req, res): Promise<void> => {
+router.post("/admin/trust/we-heard-you", requireAuth, requireRole(...ADMIN_ROLES), async (req, res): Promise<void> => {
   const parsed = WeHeardYouBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   const [row] = await db.insert(trustWeHeardYouTable).values({
@@ -218,7 +218,7 @@ router.post("/admin/trust/we-heard-you", requireAuth, requireRole(ADMIN_ROLES), 
   res.status(201).json(row);
 });
 
-router.patch("/admin/trust/we-heard-you/:id", requireAuth, requireRole(ADMIN_ROLES), async (req, res): Promise<void> => {
+router.patch("/admin/trust/we-heard-you/:id", requireAuth, requireRole(...ADMIN_ROLES), async (req, res): Promise<void> => {
   const id = Number(req.params["id"]);
   const parsed = WeHeardYouBody.partial().safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
@@ -231,18 +231,18 @@ router.patch("/admin/trust/we-heard-you/:id", requireAuth, requireRole(ADMIN_ROL
   res.json(row);
 });
 
-router.delete("/admin/trust/we-heard-you/:id", requireAuth, requireRole(ADMIN_ROLES), async (req, res): Promise<void> => {
+router.delete("/admin/trust/we-heard-you/:id", requireAuth, requireRole(...ADMIN_ROLES), async (req, res): Promise<void> => {
   await db.delete(trustWeHeardYouTable).where(eq(trustWeHeardYouTable.id, Number(req.params["id"])));
   res.status(204).send();
 });
 
 // ── Admin: trust timeline CRUD ───────────────────────────────────────────────
-router.get("/admin/trust/timeline", requireAuth, requireRole(ADMIN_ROLES), async (_req, res): Promise<void> => {
+router.get("/admin/trust/timeline", requireAuth, requireRole(...ADMIN_ROLES), async (_req, res): Promise<void> => {
   const rows = await db.select().from(trustTimelineTable).orderBy(desc(trustTimelineTable.eventDate));
   res.json(rows);
 });
 
-router.post("/admin/trust/timeline", requireAuth, requireRole(ADMIN_ROLES), async (req, res): Promise<void> => {
+router.post("/admin/trust/timeline", requireAuth, requireRole(...ADMIN_ROLES), async (req, res): Promise<void> => {
   const parsed = TimelineBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   const [row] = await db.insert(trustTimelineTable).values({
@@ -252,7 +252,7 @@ router.post("/admin/trust/timeline", requireAuth, requireRole(ADMIN_ROLES), asyn
   res.status(201).json(row);
 });
 
-router.patch("/admin/trust/timeline/:id", requireAuth, requireRole(ADMIN_ROLES), async (req, res): Promise<void> => {
+router.patch("/admin/trust/timeline/:id", requireAuth, requireRole(...ADMIN_ROLES), async (req, res): Promise<void> => {
   const id = Number(req.params["id"]);
   const parsed = TimelineBody.partial().safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
@@ -264,13 +264,13 @@ router.patch("/admin/trust/timeline/:id", requireAuth, requireRole(ADMIN_ROLES),
   res.json(row);
 });
 
-router.delete("/admin/trust/timeline/:id", requireAuth, requireRole(ADMIN_ROLES), async (req, res): Promise<void> => {
+router.delete("/admin/trust/timeline/:id", requireAuth, requireRole(...ADMIN_ROLES), async (req, res): Promise<void> => {
   await db.delete(trustTimelineTable).where(eq(trustTimelineTable.id, Number(req.params["id"])));
   res.status(204).send();
 });
 
 // ── Admin: appeals management ────────────────────────────────────────────────
-router.get("/admin/trust/appeals", requireAuth, requireRole(ADMIN_ROLES), async (req, res): Promise<void> => {
+router.get("/admin/trust/appeals", requireAuth, requireRole(...ADMIN_ROLES), async (req, res): Promise<void> => {
   const statusFilter = req.query["status"] as string | undefined;
   const where = statusFilter && statusFilter !== "all"
     ? eq(trustAppealsTable.status, statusFilter)
@@ -281,7 +281,7 @@ router.get("/admin/trust/appeals", requireAuth, requireRole(ADMIN_ROLES), async 
   res.json(rows);
 });
 
-router.patch("/admin/trust/appeals/:id", requireAuth, requireRole(ADMIN_ROLES), async (req, res): Promise<void> => {
+router.patch("/admin/trust/appeals/:id", requireAuth, requireRole(...ADMIN_ROLES), async (req, res): Promise<void> => {
   const id = Number(req.params["id"]);
   const parsed = AppealUpdateBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
