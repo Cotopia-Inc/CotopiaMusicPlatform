@@ -32,7 +32,37 @@ function PushNotificationBanner() {
   const { isSupported, permission, isSubscribed, isLoading, subscribe, unsubscribe } = usePushNotifications();
   const { toast } = useToast();
 
-  if (!isSupported || permission === "denied") return null;
+  if (!isSupported) {
+    return (
+      <div className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3.5">
+        <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+          <BellOff className="w-4 h-4 text-muted-foreground" />
+        </div>
+        <div>
+          <p className="text-sm font-semibold leading-tight">Push notifications</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Open the app in a browser tab (not the embedded preview) to enable push notifications.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (permission === "denied") {
+    return (
+      <div className="flex items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3.5">
+        <div className="w-8 h-8 rounded-full bg-destructive/10 flex items-center justify-center flex-shrink-0">
+          <BellOff className="w-4 h-4 text-destructive" />
+        </div>
+        <div>
+          <p className="text-sm font-semibold leading-tight">Notifications blocked</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Allow notifications in your browser settings to re-enable push alerts.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const handleToggle = async () => {
     if (isSubscribed) {
