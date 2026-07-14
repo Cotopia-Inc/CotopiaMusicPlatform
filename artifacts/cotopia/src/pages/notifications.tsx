@@ -10,7 +10,7 @@ import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCheck, Bell, CheckCircle, XCircle, Megaphone, Trash2, BellRing, BellOff } from "lucide-react";
+import { CheckCheck, Bell, CheckCircle, XCircle, Megaphone, Trash2, BellRing, BellOff, Share } from "lucide-react";
 import { Link } from "wouter";
 import { formatDistanceToNow } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
@@ -28,11 +28,53 @@ function typeIcon(type: string) {
   return <Megaphone className="w-4 h-4 text-primary flex-shrink-0" />;
 }
 
+const isIOS =
+  typeof navigator !== "undefined" &&
+  /iPhone|iPad|iPod/.test(navigator.userAgent) &&
+  !(window.navigator as { standalone?: boolean }).standalone &&
+  !window.matchMedia("(display-mode: standalone)").matches;
+
 function PushNotificationBanner() {
   const { isSupported, permission, isSubscribed, isLoading, subscribe, unsubscribe } = usePushNotifications();
   const { toast } = useToast();
 
   if (!isSupported) {
+    if (isIOS) {
+      return (
+        <div className="rounded-xl border border-border bg-card px-4 py-4 space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+              <BellOff className="w-4 h-4 text-muted-foreground" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold leading-tight">Enable push notifications on iPhone</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Add Cotopia to your home screen to receive push alerts.
+              </p>
+            </div>
+          </div>
+          <ol className="space-y-2 pl-1">
+            <li className="flex items-start gap-2.5 text-xs text-muted-foreground">
+              <span className="w-5 h-5 rounded-full bg-muted flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-foreground mt-0.5">1</span>
+              <span>Tap the <Share className="inline w-3.5 h-3.5 mb-0.5" /> <strong>Share</strong> button at the bottom of Safari</span>
+            </li>
+            <li className="flex items-start gap-2.5 text-xs text-muted-foreground">
+              <span className="w-5 h-5 rounded-full bg-muted flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-foreground mt-0.5">2</span>
+              <span>Scroll down and tap <strong>"Add to Home Screen"</strong></span>
+            </li>
+            <li className="flex items-start gap-2.5 text-xs text-muted-foreground">
+              <span className="w-5 h-5 rounded-full bg-muted flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-foreground mt-0.5">3</span>
+              <span>Tap <strong>"Add"</strong> to confirm</span>
+            </li>
+            <li className="flex items-start gap-2.5 text-xs text-muted-foreground">
+              <span className="w-5 h-5 rounded-full bg-muted flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-foreground mt-0.5">4</span>
+              <span>Open <strong>Cotopia</strong> from your home screen, come back to Notifications, and tap <strong>"Turn on"</strong></span>
+            </li>
+          </ol>
+        </div>
+      );
+    }
+
     return (
       <div className="flex items-center justify-between gap-4 rounded-xl border border-border bg-card px-4 py-3.5">
         <div className="flex items-center gap-3">
