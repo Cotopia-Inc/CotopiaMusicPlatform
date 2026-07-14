@@ -70,6 +70,7 @@ A full-stack music and video streaming platform with role-based access, content 
 ## User preferences
 
 - **"Push" / deploy always means Render** — unless explicitly stated otherwise, all deployment references are to the Render production environment.
+- **Everything targets production** — all changes, fixes, and features are intended for production (Render) unless explicitly stated otherwise.
 
 ## Gotchas
 
