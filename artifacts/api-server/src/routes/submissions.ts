@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { eq, desc, and } from "drizzle-orm";
-import { db, submissionsTable, usersTable, songsTable, videosTable, artistsTable, notificationsTable, adminAuditLogsTable } from "@workspace/db";
+import { db, submissionsTable, usersTable, songsTable, videosTable, artistsTable, adminAuditLogsTable } from "@workspace/db";
+import { notify } from "../lib/notify";
 import {
   CreateSubmissionBody, GetSubmissionParams,
   UpdateSubmissionParams, UpdateSubmissionBody,
@@ -317,7 +318,7 @@ router.patch("/submissions/:id", requireAuth, async (req: AuthRequest, res): Pro
       }
 
       // Notify the submitter of the scheduled release date
-      await db.insert(notificationsTable).values({
+      await notify({
         userId: submission.userId,
         type: "submission_approved",
         title: `"${enriched.title}" approved — scheduled for ${releaseDate}`,
@@ -332,7 +333,7 @@ router.patch("/submissions/:id", requireAuth, async (req: AuthRequest, res): Pro
       await publishContent(submission.type as "song" | "video", submission.contentId, { submissionId: submission.id });
 
       // Notify submitter
-      await db.insert(notificationsTable).values({
+      await notify({
         userId: submission.userId,
         type: "submission_approved",
         title: `"${enriched.title}" is now live!`,
@@ -348,7 +349,7 @@ router.patch("/submissions/:id", requireAuth, async (req: AuthRequest, res): Pro
   // ── Rejection flow ───────────────────────────────────────────────────────
   if (requestedBody.status === "rejected") {
     const enriched = await enrichSubmission(submission);
-    await db.insert(notificationsTable).values({
+    await notify({
       userId: submission.userId,
       type: "submission_rejected",
       title: `"${enriched.title}" was not approved`,
@@ -620,7 +621,7 @@ router.post("/submissions/:id/review", requireAuth, async (req: AuthRequest, res
   });
 
   if (notification) {
-    await db.insert(notificationsTable).values({
+    await notify({
       userId: submission.userId,
       type: notification.type,
       title: notification.title,

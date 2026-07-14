@@ -53,3 +53,11 @@ externalPort = 3000
 
 [nix]
 channel = "stable-25_05"
+
+[userenv]
+
+[userenv.shared]
+VAPID_PUBLIC_KEY = "BFnQz2DCxNPmt5XqhI5vkRZQWYgb47e8U_fnKNzVcEPD-kD8l5CON6Kvr8U5GED0obtw7u_Q8rHSfbtet2W9GCM"
+VAPID_PRIVATE_KEY = "g3RLGWZopYHaz9A9RKykj_-_DJnYBKY_TDyLAFgzOjQ"
+VAPID_SUBJECT = "mailto:support@cotopia.com"
+VITE_VAPID_PUBLIC_KEY = "BFnQz2DCxNPmt5XqhI5vkRZQWYgb47e8U_fnKNzVcEPD-kD8l5CON6Kvr8U5GED0obtw7u_Q8rHSfbtet2W9GCM"

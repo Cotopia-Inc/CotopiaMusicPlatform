@@ -24,4 +24,10 @@ window.addEventListener("pageshow", (event) => {
   }
 });
 
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker
+    .register(`${import.meta.env.BASE_URL}sw.js`)
+    .catch(() => {});
+}
+
 createRoot(document.getElementById("root")!).render(<App />);

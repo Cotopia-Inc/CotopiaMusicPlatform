@@ -10,10 +10,11 @@ import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCheck, Bell, CheckCircle, XCircle, Megaphone, Trash2 } from "lucide-react";
+import { CheckCheck, Bell, CheckCircle, XCircle, Megaphone, Trash2, BellRing, BellOff } from "lucide-react";
 import { Link } from "wouter";
 import { formatDistanceToNow } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { usePushNotifications } from "@/lib/usePushNotifications";
 
 function authHeaders() {
   const token = localStorage.getItem("cotopia_token");
@@ -25,6 +26,62 @@ function typeIcon(type: string) {
   if (type === "submission_rejected") return <XCircle className="w-4 h-4 text-red-400 flex-shrink-0" />;
   if (type === "announcement") return <Megaphone className="w-4 h-4 text-amber-400 flex-shrink-0" />;
   return <Megaphone className="w-4 h-4 text-primary flex-shrink-0" />;
+}
+
+function PushNotificationBanner() {
+  const { isSupported, permission, isSubscribed, isLoading, subscribe, unsubscribe } = usePushNotifications();
+  const { toast } = useToast();
+
+  if (!isSupported || permission === "denied") return null;
+
+  const handleToggle = async () => {
+    if (isSubscribed) {
+      await unsubscribe();
+      toast({ title: "Push notifications disabled" });
+    } else {
+      const ok = await subscribe();
+      if (ok) {
+        toast({ title: "Push notifications enabled", description: "You'll get notified even when the app is closed." });
+      } else {
+        toast({ title: "Notifications blocked", description: "Allow notifications in your browser settings to enable push.", variant: "destructive" });
+      }
+    }
+  };
+
+  return (
+    <div className={`flex items-center justify-between gap-4 rounded-xl border px-4 py-3.5 ${isSubscribed ? "border-primary/30 bg-primary/5" : "border-border bg-card"}`}>
+      <div className="flex items-center gap-3">
+        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${isSubscribed ? "bg-primary/15" : "bg-muted"}`}>
+          {isSubscribed ? <BellRing className="w-4 h-4 text-primary" /> : <BellOff className="w-4 h-4 text-muted-foreground" />}
+        </div>
+        <div>
+          <p className="text-sm font-semibold leading-tight">
+            {isSubscribed ? "Push notifications on" : "Enable push notifications"}
+          </p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {isSubscribed
+              ? "You'll receive alerts even when the app is closed."
+              : "Get notified about submissions and activity even when you're away."}
+          </p>
+        </div>
+      </div>
+      <Button
+        variant={isSubscribed ? "outline" : "default"}
+        size="sm"
+        onClick={handleToggle}
+        disabled={isLoading}
+        className="flex-shrink-0"
+      >
+        {isLoading ? (
+          <div className="w-3.5 h-3.5 border border-current border-t-transparent rounded-full animate-spin" />
+        ) : isSubscribed ? (
+          "Turn off"
+        ) : (
+          "Turn on"
+        )}
+      </Button>
+    </div>
+  );
 }
 
 export default function NotificationsPage() {
@@ -116,6 +173,8 @@ export default function NotificationsPage() {
           )}
         </div>
       </div>
+
+      <PushNotificationBanner />
 
       <div className="space-y-2">
         {isLoading ? (

@@ -2,10 +2,11 @@ import { Router } from "express";
 import { eq, and, desc, count, sql, inArray } from "drizzle-orm";
 import {
   db, reportsTable, feedbackTable, enforcementActionsTable, appSettingsTable,
-  usersTable, notificationsTable, adminAuditLogsTable, analyticsEventsTable,
+  usersTable, adminAuditLogsTable, analyticsEventsTable,
   songsTable, artistsTable,
 } from "@workspace/db";
 import { requireAuth, requireRole, type AuthRequest } from "../lib/auth";
+import { notify } from "../lib/notify";
 
 const router = Router();
 
@@ -81,7 +82,7 @@ async function maybeAutoEscalate(
     .set({ isSuspended: true, suspendedUntil: expiresAt })
     .where(eq(usersTable.id, target.id));
 
-  await db.insert(notificationsTable).values({
+  await notify({
     userId: target.id,
     type: "enforcement",
     title: "⛔ Account Suspended",
@@ -130,7 +131,7 @@ async function maybeAutoEscalate(
       .select({ id: usersTable.id })
       .from(usersTable).where(eq(usersTable.role, "master_admin"));
     if (masterAdmins.length) {
-      await db.insert(notificationsTable).values(masterAdmins.map(a => ({
+      await notify(masterAdmins.map(a => ({
         userId: a.id,
         type: "admin" as const,
         title: "🚩 Ban Review Recommended",
@@ -241,7 +242,7 @@ router.patch("/admin/reports/:id", requireAuth, requireRole(...MOD_ROLES), async
 
   if ((status === "resolved" || status === "dismissed") && report.reporterId) {
     const resolved = status === "resolved";
-    await db.insert(notificationsTable).values({
+    await notify({
       userId: report.reporterId,
       type: "report_update",
       title: resolved ? "✅ Your report was reviewed" : "Your report was reviewed",
@@ -429,7 +430,7 @@ router.post("/admin/enforcement", requireAuth, requireRole(...MOD_ROLES), async 
     ban: "🚫 Account Permanently Banned",
   };
   const expiryNote = expiresAt ? ` Your suspension lasts until ${expiresAt.toISOString().slice(0, 10)}.` : "";
-  await db.insert(notificationsTable).values({
+  await notify({
     userId: targetId,
     type: "enforcement",
     title: labels[actionType] ?? "Account Action",
@@ -559,7 +560,7 @@ router.post("/admin/verification", requireAuth, requireRole(...ADMIN_ROLES), asy
     metadata: { verificationType: grant ? verificationType ?? null : null } as unknown,
   });
 
-  await db.insert(notificationsTable).values({
+  await notify({
     userId: targetId,
     type: "verification",
     title: grant ? "✅ You're Verified!" : "Verification Removed",

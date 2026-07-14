@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { eq, or, and, desc, ne } from "drizzle-orm";
-import { db, conversationsTable, directMessagesTable, usersTable, notificationsTable, artistsTable, labelsTable, followsTable, userBlocksTable } from "@workspace/db";
+import { db, conversationsTable, directMessagesTable, usersTable, artistsTable, labelsTable, followsTable, userBlocksTable } from "@workspace/db";
+import { notify } from "../lib/notify";
 import { requireAuth, requireVerifiedEmail, type AuthRequest } from "../lib/auth";
 import { count } from "drizzle-orm";
 
@@ -237,7 +238,7 @@ router.post("/messages", requireAuth, requireVerifiedEmail, async (req: AuthRequ
 
   const [sender] = await db.select({ username: usersTable.username }).from(usersTable).where(eq(usersTable.id, userId)).limit(1);
 
-  await db.insert(notificationsTable).values({
+  await notify({
     userId: toUserId,
     type: "message",
     title: `New message from ${sender?.username ?? "someone"}`,

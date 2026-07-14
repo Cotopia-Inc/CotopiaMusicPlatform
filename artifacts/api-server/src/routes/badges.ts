@@ -1,7 +1,8 @@
 import { Router } from "express";
 import { eq, and, ne, desc, inArray, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
-import { db, badgesTable, userBadgesTable, usersTable, notificationsTable } from "@workspace/db";
+import { db, badgesTable, userBadgesTable, usersTable } from "@workspace/db";
+import { notify } from "../lib/notify";
 import { requireAuth, requireRole, type AuthRequest } from "../lib/auth";
 
 const router = Router();
@@ -343,7 +344,7 @@ router.post("/admin/user-badges", requireAuth, requireRole(...ADMIN_ROLES), asyn
 
   const [adminRow] = await db.select({ username: adminUser.username }).from(adminUser).where(eq(adminUser.id, req.user!.userId)).limit(1);
 
-  await db.insert(notificationsTable).values({
+  await notify({
     userId,
     type: "badge_awarded",
     title: `${badge.icon} You've earned a badge!`,
@@ -403,7 +404,7 @@ export async function awardBadgeByName(userId: number, badgeName: string, option
   });
 
   if (fullBadge) {
-    await db.insert(notificationsTable).values({
+    await notify({
       userId,
       type: "badge_awarded",
       title: `${fullBadge.icon} You've earned a badge!`,

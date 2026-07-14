@@ -7,9 +7,10 @@
 import { eq, and, lte, inArray } from "drizzle-orm";
 import {
   db, songsTable, videosTable, submissionsTable,
-  artistsTable, followsTable, notificationsTable, usersTable, eventsTable,
+  artistsTable, followsTable, usersTable, eventsTable,
 } from "@workspace/db";
 import { logger } from "./logger";
+import { notify } from "./notify";
 import { getTodayInReleaseTimezone } from "./timezone";
 
 /**
@@ -162,7 +163,7 @@ async function sendFollowerNotifications(
   }));
 
   if (notifications.length) {
-    await db.insert(notificationsTable).values(notifications);
+    await notify(notifications);
     logger.info({ artistId, contentId, type, followerCount: followers.length }, "Sent release notifications to followers");
   }
 }

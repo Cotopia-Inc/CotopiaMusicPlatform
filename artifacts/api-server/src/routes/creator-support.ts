@@ -3,7 +3,7 @@ import { eq, and, or, gte, desc, count, countDistinct, sql } from "drizzle-orm";
 import {
   db, creatorPaymentSettingsTable, supportTransactionsTable,
   songsTable, videosTable, artistsTable, labelsTable, usersTable,
-  notificationsTable, followsTable, analyticsEventsTable, adminAuditLogsTable,
+  followsTable, analyticsEventsTable, adminAuditLogsTable,
 } from "@workspace/db";
 import {
   UpdateCreatorSupportSettingsBody, CreateSupportTipBody,
@@ -12,6 +12,7 @@ import {
 } from "@workspace/api-zod";
 import { requireAuth, requireRole, type AuthRequest } from "../lib/auth";
 import { evaluateSupportBadges } from "../lib/support-badges";
+import { notify } from "../lib/notify";
 
 const router = Router();
 
@@ -520,7 +521,7 @@ router.post("/creator-support/tips", requireAuth, async (req: AuthRequest, res):
   const [supporter] = await db.select({ displayName: usersTable.displayName, username: usersTable.username }).from(usersTable).where(eq(usersTable.id, req.user!.userId)).limit(1);
   const supporterName = supporter?.displayName || supporter?.username || "A fan";
 
-  await db.insert(notificationsTable).values({
+  await notify({
     userId: recipient.recipientUserId,
     type: "general",
     title: "You received a demo tip! 💵",

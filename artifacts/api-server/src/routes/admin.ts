@@ -15,6 +15,7 @@ import {
   AdminBulkUploadSongsBody, AdminBulkUploadVideosBody, SendBroadcastBody,
 } from "@workspace/api-zod";
 import { requireAuth, requireRole, type AuthRequest } from "../lib/auth";
+import { notify, sendPushToUsers } from "../lib/notify";
 
 const router = Router();
 
@@ -139,7 +140,7 @@ router.patch("/admin/users/:id", requireAuth, requireRole(...ADMIN_ROLES), async
   if (!user) { res.status(404).json({ error: "User not found" }); return; }
 
   if (parsed.data.isActive !== undefined && prevIsActive !== undefined && parsed.data.isActive !== prevIsActive) {
-    await db.insert(notificationsTable).values({
+    await notify({
       userId: id,
       type: "general",
       title: parsed.data.isActive ? "Your account has been reactivated" : "Your account has been deactivated",
@@ -845,7 +846,7 @@ router.post("/admin/dmca/:claimId/strike", requireAuth, requireRole(...ADMIN_ROL
     notifMessage = `Your ${contentType} #${contentId} has received a copyright strike: ${String(strikeReason)}. Please remove any infringing content immediately. Accumulating 3 strikes will result in account suspension.`;
   }
 
-  await db.insert(notificationsTable).values({
+  await notify({
     userId: Number(userId),
     type: "copyright_strike",
     title: notifTitle,
@@ -959,10 +960,10 @@ router.patch("/admin/legal-settings", requireAuth, requireRole("master_admin"), 
       if (allUsers.length > 0) {
         const CHUNK = 500;
         for (let i = 0; i < allUsers.length; i += CHUNK) {
-          await db.insert(notificationsTable).values(
+          await notify(
             allUsers.slice(i, i + CHUNK).map(u => ({
               userId: u.id,
-              type: "general",
+              type: "general" as const,
               title: notifTitle,
               message: notifMessage,
             }))
@@ -1123,7 +1124,7 @@ router.post("/admin/strikes", requireAuth, requireRole(...ADMIN_ROLES), async (r
     notifMessage = `Your ${contentType} ${contentLabel} has received a copyright strike: ${String(strikeReason)}. Please remove any infringing content immediately to avoid further action. Accumulating 3 strikes will result in account suspension — either take it down yourself, or we will.`;
   }
 
-  await db.insert(notificationsTable).values({
+  await notify({
     userId: resolvedUserId,
     type: "copyright_strike",
     title: notifTitle,
@@ -1299,6 +1300,9 @@ router.post("/admin/broadcast", requireAuth, requireRole(...ADMIN_ROLES), async 
     return row;
   });
 
+  if (recipients.length > 0) {
+    sendPushToUsers(recipients.map(r => ({ userId: r.id, title: parsed.data.title, message: parsed.data.message })));
+  }
   req.log.info({ broadcastId: broadcast.id, recipientCount: recipients.length }, "broadcast sent");
   res.status(201).json(broadcast);
 });
@@ -1358,9 +1362,9 @@ router.post("/admin/copyright-concerns", requireAuth, requireRole(...ADMIN_ROLES
   const admins = await db.select({ id: usersTable.id }).from(usersTable)
     .where(or(eq(usersTable.role, "admin"), eq(usersTable.role, "master_admin")));
   if (admins.length > 0) {
-    await db.insert(notificationsTable).values(admins.map(a => ({
+    await notify(admins.map(a => ({
       userId: a.id,
-      type: "system",
+      type: "system" as const,
       title: "Copyright concern escalated",
       message: `A moderator escalated a copyright concern${contentTitle ? ` about "${String(contentTitle)}"` : ""}. Review it in the admin panel.`,
     })));
@@ -1435,7 +1439,7 @@ router.patch("/admin/copyright-concerns/:id", requireAuth, requireRole(...ADMIN_
     strike_issued: "Your escalated concern has been reviewed. An admin has decided to issue a copyright strike.",
     reviewed: "Your copyright concern has been reviewed by an admin.",
   };
-  await db.insert(notificationsTable).values({
+  await notify({
     userId: concern.reporterId,
     type: "system",
     title: "Copyright concern update",

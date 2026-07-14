@@ -33,6 +33,7 @@ import presenceRouter from "./presence";
 import eventsRouter from "./events";
 import creatorSupportRouter from "./creator-support";
 import trustRouter from "./trust";
+import pushRouter from "./push";
 
 const router: IRouter = Router();
 
@@ -70,5 +71,6 @@ router.use(presenceRouter);
 router.use(eventsRouter);
 router.use(creatorSupportRouter);
 router.use(trustRouter);
+router.use(pushRouter);
 
 export default router;

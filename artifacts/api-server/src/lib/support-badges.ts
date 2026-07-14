@@ -1,5 +1,6 @@
 import { eq, and, countDistinct } from "drizzle-orm";
-import { db, badgesTable, userBadgesTable, supportTransactionsTable, notificationsTable } from "@workspace/db";
+import { db, badgesTable, userBadgesTable, supportTransactionsTable } from "@workspace/db";
+import { notify } from "./notify";
 
 // Auto-award engine for the Creator Support badge ladder. Runs after every
 // completed demo tip. Idempotent (INSERT ... ON CONFLICT DO NOTHING against
@@ -41,7 +42,7 @@ async function awardBadgeIfMissing(userId: number, badgeName: string): Promise<b
 }
 
 async function notifyBadgeAwarded(userId: number, badgeName: string): Promise<void> {
-  await db.insert(notificationsTable).values({
+  await notify({
     userId,
     type: "general",
     title: "New badge earned! 🏅",
