@@ -124,8 +124,32 @@ router.patch("/admin/users/:id", requireAuth, requireRole(...ADMIN_ROLES), async
   const parsed = AdminUpdateUserBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
 
+  if (parsed.data.isActive === false && req.user!.userId === id) {
+    res.status(400).json({ error: "You cannot deactivate your own account." });
+    return;
+  }
+
+  let prevIsActive: boolean | null | undefined = undefined;
+  if (parsed.data.isActive !== undefined) {
+    const [current] = await db.select({ isActive: usersTable.isActive }).from(usersTable).where(eq(usersTable.id, id)).limit(1);
+    prevIsActive = current?.isActive;
+  }
+
   const [user] = await db.update(usersTable).set(parsed.data).where(eq(usersTable.id, id)).returning();
   if (!user) { res.status(404).json({ error: "User not found" }); return; }
+
+  if (parsed.data.isActive !== undefined && prevIsActive !== undefined && parsed.data.isActive !== prevIsActive) {
+    await db.insert(notificationsTable).values({
+      userId: id,
+      type: "general",
+      title: parsed.data.isActive ? "Your account has been reactivated" : "Your account has been deactivated",
+      message: parsed.data.isActive
+        ? "Your account has been reactivated. You can log in and access Everyday Radio again."
+        : "An administrator has deactivated your account. Please contact support if you believe this was a mistake.",
+      isRead: false,
+    });
+  }
+
   const { passwordHash: _, ...userOut } = user;
   res.json(userOut);
 });

@@ -529,14 +529,16 @@ export default function AdminUsers() {
                       >
                         <AlertTriangle className="w-3 h-3" />Strike
                       </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleToggleActive(user.id, user.isActive ?? true)}
-                        disabled={updateMutation.isPending}
-                      >
-                        {user.isActive ? "Deactivate" : "Activate"}
-                      </Button>
+                      {user.id !== currentUser?.id && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleToggleActive(user.id, user.isActive ?? true)}
+                          disabled={updateMutation.isPending}
+                        >
+                          {user.isActive ? "Deactivate" : "Activate"}
+                        </Button>
+                      )}
                       {isMasterAdmin && user.role !== "master_admin" && (
                         <Button
                           variant="outline"
