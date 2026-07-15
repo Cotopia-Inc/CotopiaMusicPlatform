@@ -255,7 +255,7 @@ export default function AdminSettings() {
           <div className="flex items-center justify-between p-4 bg-secondary/30 rounded-lg border border-border">
             <div className="space-y-1">
               <Label className="font-bold text-base">Top Rated Board</Label>
-              <p className="text-sm text-muted-foreground">Show the Top Rated section on the Discover page, ranking songs by average listener rating. When off, the section is hidden from all users.</p>
+              <p className="text-sm text-muted-foreground">Show the Top Rated section on the Discover page, ranking songs by average creator rating. When off, the section is hidden from all users.</p>
             </div>
             <Switch
               checked={formData.showTopRated}

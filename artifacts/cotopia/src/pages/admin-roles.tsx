@@ -53,7 +53,7 @@ export default function AdminRoles() {
     try {
       await changeRole.mutateAsync({ id: userId, data: { role: newRole } });
       queryClient.invalidateQueries({ queryKey: getAdminListUsersQueryKey() });
-      toast({ title: "Role updated", description: `User role changed to ${newRole.replace("_", " ")}` });
+      toast({ title: "Role updated", description: `User role changed to ${displayRole(newRole)}` });
     } catch {
       toast({ title: "Failed to update role", variant: "destructive" });
     }
