@@ -1,4 +1,5 @@
 import { useParams, Link, useLocation } from "wouter";
+import { displayRole } from "@/lib/display-role";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useSeo } from "@/hooks/use-seo";
 import { useGetArtist, getGetArtistQueryKey, useFollowArtist, useUnfollowArtist, useTrackAnalyticsEvent, useUpdateArtist, useGetCreatorSupportStatus } from "@workspace/api-client-react";
@@ -565,7 +566,7 @@ export default function ArtistDetail() {
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">{u.displayName ?? u.username}</p>
-                    <p className="text-xs text-muted-foreground truncate">@{u.username} · {u.role.replace("_", " ")}</p>
+                    <p className="text-xs text-muted-foreground truncate">@{u.username} · {displayRole(u.role)}</p>
                   </div>
                 </button>
               ))}

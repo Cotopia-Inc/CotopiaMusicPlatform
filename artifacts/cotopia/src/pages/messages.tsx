@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { displayRole } from "@/lib/display-role";
 import { useAuth } from "@/lib/auth";
 import { usePlatformConfig } from "@/lib/platform-config";
 import { useLocation } from "wouter";
@@ -464,7 +465,7 @@ export default function MessagesPage() {
                     <RoleBadges role={activeUser?.role} size="sm" isVerified={activeUser?.isVerified ?? false} />
                   </p>
                 </Link>
-                <p className="text-[10px] text-muted-foreground capitalize">{newConvUser ? "New conversation" : activeUser?.role?.replace("_", " ")}</p>
+                <p className="text-[10px] text-muted-foreground capitalize">{newConvUser ? "New conversation" : displayRole(activeUser?.role)}</p>
               </div>
               <div className="flex items-center gap-1">
                 <Link href={`/users/${activeUser?.id}`}>

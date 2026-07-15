@@ -1,4 +1,5 @@
 import { useParams, Link, useLocation } from "wouter";
+import { displayRole } from "@/lib/display-role";
 import { useRef, useState } from "react";
 import { useGetPublicUser, useFollowUser, useUnfollowUser, useGetCreatorSupportStatus } from "@workspace/api-client-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -193,7 +194,7 @@ export default function UserProfile() {
             {user.displayName && (
               <p className="text-sm text-muted-foreground">@{user.username}</p>
             )}
-            <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">{user.role?.replace("_", " ")}</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">{displayRole(user.role)}</p>
           </div>
           <div className="flex gap-3 flex-wrap">
             {user.role === "artist" && user.artistId && (

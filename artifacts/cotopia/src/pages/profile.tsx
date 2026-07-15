@@ -1,4 +1,5 @@
 import { useGetMe, getGetMeQueryKey, useUpdateMe, useChangePassword, useChangeUsername, useSendOtp, useVerifyOtp, useGetMySettings, getGetMySettingsQueryKey, useUpdateMySettings, type UserSettingsUpdate } from "@workspace/api-client-react";
+import { displayRole } from "@/lib/display-role";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { BadgeList, type UserBadgeData } from "@/components/badge-chip";
 import { useAuth } from "@/lib/auth";
@@ -676,7 +677,7 @@ export default function Profile() {
           {profile.username}
           <RoleBadges role={profile.role} isVerified={profile.isVerified} size="lg" />
         </h1>
-        <p className="text-muted-foreground uppercase tracking-widest text-xs font-semibold">{{ listener: "Creator", master_admin: "Master Admin", admin: "Admin", editor: "Editor", moderator: "Moderator", artist: "Artist", label: "Label", business: "Business" }[profile.role ?? ""] ?? profile.role?.replace("_", " ")}</p>
+        <p className="text-muted-foreground uppercase tracking-widest text-xs font-semibold">{displayRole(profile.role)}</p>
         {myBadges && myBadges.length > 0 && (
           <div className="flex justify-center">
             <BadgeList

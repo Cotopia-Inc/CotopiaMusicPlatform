@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { displayRole } from "@/lib/display-role";
 import { Link, useRoute } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, AlertOctagon, Save, AlertTriangle, CheckCircle, Loader2, ExternalLink, Search, UserX, User } from "lucide-react";
@@ -283,7 +284,7 @@ export default function AdminDmcaDetail() {
                 </div>
                 <div>
                   <p className="text-sm font-medium">{foundUser.displayName || foundUser.username}</p>
-                  <p className="text-xs text-muted-foreground">@{foundUser.username} · {foundUser.email} · <span className="capitalize">{foundUser.role.replace(/_/g, " ")}</span></p>
+                  <p className="text-xs text-muted-foreground">@{foundUser.username} · {foundUser.email} · <span className="capitalize">{displayRole(foundUser.role)}</span></p>
                 </div>
               </div>
               <p className="text-xs text-muted-foreground">

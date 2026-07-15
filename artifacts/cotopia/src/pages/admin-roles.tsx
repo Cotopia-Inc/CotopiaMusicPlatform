@@ -17,8 +17,9 @@ import {
   DropdownMenuSeparator, DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 
+import { displayRole } from "@/lib/display-role";
+
 const ALL_ROLES = ["listener", "artist", "label", "business", "moderator", "editor", "admin", "master_admin"] as const;
-const displayRole = (r: string) => r === "listener" ? "Creator" : r.replace("_", " ");
 type Role = typeof ALL_ROLES[number];
 
 const ROLE_COLORS: Record<string, string> = {
@@ -99,7 +100,7 @@ export default function AdminRoles() {
             <Card key={role} className="cursor-pointer hover:border-primary/50 transition-colors" onClick={() => setFilterRole(filterRole === role ? undefined : role)}>
               <CardContent className="pt-4 pb-4">
                 <p className={`text-[10px] font-bold uppercase tracking-wider capitalize mb-1 ${ROLE_COLORS[role]?.split(" ")[1] ?? "text-muted-foreground"}`}>
-                  {role.replace("_", " ")}
+                  {displayRole(role)}
                 </p>
                 <p className="text-xl font-bold">{cnt}</p>
               </CardContent>
