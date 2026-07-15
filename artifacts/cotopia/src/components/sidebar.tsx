@@ -569,7 +569,9 @@ export function Sidebar({ onMobileClose }: SidebarProps = {}) {
                     {user.username}
                     <RoleBadges role={user.role} size="sm" isVerified={user.isVerified ?? false} />
                   </p>
-                  <p className="text-[10px] text-muted-foreground capitalize">{user.role.replace("_", " ")}</p>
+                  <p className="text-[10px] text-muted-foreground capitalize">
+                    {{ listener: "Creator", master_admin: "Master Admin", admin: "Admin", editor: "Editor", moderator: "Moderator", artist: "Artist", label: "Label", business: "Business" }[user.role] ?? user.role.replace("_", " ")}
+                  </p>
                 </div>
               </div>
             </Link>
