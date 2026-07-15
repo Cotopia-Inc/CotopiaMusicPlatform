@@ -676,7 +676,7 @@ export default function Profile() {
           {profile.username}
           <RoleBadges role={profile.role} isVerified={profile.isVerified} size="lg" />
         </h1>
-        <p className="text-muted-foreground uppercase tracking-widest text-xs font-semibold">{profile.role?.replace("_", " ")}</p>
+        <p className="text-muted-foreground uppercase tracking-widest text-xs font-semibold">{{ listener: "Creator", master_admin: "Master Admin", admin: "Admin", editor: "Editor", moderator: "Moderator", artist: "Artist", label: "Label", business: "Business" }[profile.role ?? ""] ?? profile.role?.replace("_", " ")}</p>
         {myBadges && myBadges.length > 0 && (
           <div className="flex justify-center">
             <BadgeList
