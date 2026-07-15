@@ -2909,6 +2909,14 @@ export const AdminListBroadcastsResponse = zod.array(AdminListBroadcastsResponse
 
 
 /**
+ * @summary Delete a single broadcast by ID (admin)
+ */
+export const AdminDeleteBroadcastParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
  * @summary Track an analytics event
  */
 export const TrackAnalyticsEventBody = zod.object({

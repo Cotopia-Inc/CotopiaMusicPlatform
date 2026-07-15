@@ -1544,6 +1544,19 @@ router.get("/admin/broadcasts", requireAuth, requireRole(...ADMIN_ROLES), async 
   res.json(rows);
 });
 
+router.delete("/admin/broadcasts/:id", requireAuth, requireRole(...ADMIN_ROLES), async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  const [deleted] = await db.delete(broadcastsTable).where(eq(broadcastsTable.id, id)).returning({ id: broadcastsTable.id });
+  if (!deleted) { res.status(404).json({ error: "Not found" }); return; }
+  res.status(204).end();
+});
+
+router.delete("/admin/broadcasts", requireAuth, requireRole(...ADMIN_ROLES), async (_req, res): Promise<void> => {
+  await db.delete(broadcastsTable);
+  res.status(204).end();
+});
+
 // ── Admin Payments List ───────────────────────────────────────────────────
 router.get("/admin/payments", requireAuth, requireRole("admin", "master_admin"), async (_req, res): Promise<void> => {
   const rows = await db

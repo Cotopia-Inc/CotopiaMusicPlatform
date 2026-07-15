@@ -8290,6 +8290,146 @@ export function useAdminListBroadcasts<TData = Awaited<ReturnType<typeof adminLi
 
 
 
+export const getAdminDeleteAllBroadcastsUrl = () => {
+
+
+
+
+  return `/api/admin/broadcasts`
+}
+
+/**
+ * @summary Delete all broadcast history (admin)
+ */
+export const adminDeleteAllBroadcasts = async ( options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getAdminDeleteAllBroadcastsUrl(),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getAdminDeleteAllBroadcastsMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminDeleteAllBroadcasts>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminDeleteAllBroadcasts>>, TError,void, TContext> => {
+
+const mutationKey = ['adminDeleteAllBroadcasts'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminDeleteAllBroadcasts>>, void> = () => {
+
+
+          return  adminDeleteAllBroadcasts(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminDeleteAllBroadcastsMutationResult = NonNullable<Awaited<ReturnType<typeof adminDeleteAllBroadcasts>>>
+
+    export type AdminDeleteAllBroadcastsMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete all broadcast history (admin)
+ */
+export const useAdminDeleteAllBroadcasts = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminDeleteAllBroadcasts>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof adminDeleteAllBroadcasts>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getAdminDeleteAllBroadcastsMutationOptions(options));
+    }
+
+export const getAdminDeleteBroadcastUrl = (id: number,) => {
+
+
+
+
+  return `/api/admin/broadcasts/${id}`
+}
+
+/**
+ * @summary Delete a single broadcast by ID (admin)
+ */
+export const adminDeleteBroadcast = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getAdminDeleteBroadcastUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getAdminDeleteBroadcastMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminDeleteBroadcast>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminDeleteBroadcast>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['adminDeleteBroadcast'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminDeleteBroadcast>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  adminDeleteBroadcast(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminDeleteBroadcastMutationResult = NonNullable<Awaited<ReturnType<typeof adminDeleteBroadcast>>>
+
+    export type AdminDeleteBroadcastMutationError = ErrorType<void>
+
+    /**
+ * @summary Delete a single broadcast by ID (admin)
+ */
+export const useAdminDeleteBroadcast = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminDeleteBroadcast>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof adminDeleteBroadcast>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getAdminDeleteBroadcastMutationOptions(options));
+    }
+
 export const getTrackAnalyticsEventUrl = () => {
 
 

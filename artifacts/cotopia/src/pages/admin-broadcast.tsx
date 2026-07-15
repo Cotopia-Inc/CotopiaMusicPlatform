@@ -1,6 +1,8 @@
 import {
   useSendBroadcast,
   useAdminListBroadcasts,
+  useAdminDeleteBroadcast,
+  useAdminDeleteAllBroadcasts,
   getAdminListBroadcastsQueryKey,
   useAdminListUsers,
   getAdminListUsersQueryKey,
@@ -16,8 +18,19 @@ import { RoleBadges } from "@/components/role-badges";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
-import { Megaphone, Send, Search, X, Users, UserMinus } from "lucide-react";
+import { Megaphone, Send, Search, X, Users, UserMinus, Trash2 } from "lucide-react";
 import { useState } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function AdminBroadcastPage() {
   const queryClient = useQueryClient();
@@ -38,6 +51,8 @@ export default function AdminBroadcastPage() {
   );
 
   const sendBroadcast = useSendBroadcast();
+  const deleteBroadcast = useAdminDeleteBroadcast();
+  const deleteAllBroadcasts = useAdminDeleteAllBroadcasts();
 
   const excludedIds = new Set(excluded.map((u) => u.id));
   const searchMatches = (userResults?.items ?? []).filter((u) => !excludedIds.has(u.id));
@@ -74,6 +89,33 @@ export default function AdminBroadcastPage() {
         },
       }
     );
+  };
+
+  const handleDelete = (id: number) => {
+    deleteBroadcast.mutate(
+      { id },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getAdminListBroadcastsQueryKey() });
+          toast({ title: "Broadcast deleted" });
+        },
+        onError: () => {
+          toast({ title: "Failed to delete broadcast", variant: "destructive" });
+        },
+      }
+    );
+  };
+
+  const handleDeleteAll = () => {
+    deleteAllBroadcasts.mutate(undefined, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getAdminListBroadcastsQueryKey() });
+        toast({ title: "All broadcasts deleted" });
+      },
+      onError: () => {
+        toast({ title: "Failed to delete broadcasts", variant: "destructive" });
+      },
+    });
   };
 
   return (
@@ -186,44 +228,93 @@ export default function AdminBroadcastPage() {
         </div>
 
         {/* History */}
-        <div className="lg:col-span-2 space-y-3">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">History</h2>
-          {historyLoading ? (
-            Array(3).fill(0).map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-xl" />)
-          ) : history?.length ? (
-            history.map((b) => (
-              <div key={b.id} className="bg-card border border-border rounded-xl p-4 space-y-1.5">
-                <div className="flex items-start justify-between gap-2">
-                  <p className="text-sm font-semibold leading-tight">{b.title}</p>
-                  <span className="text-[10px] text-muted-foreground whitespace-nowrap shrink-0">
-                    {formatDistanceToNow(new Date(b.createdAt), { addSuffix: true })}
-                  </span>
-                </div>
-                <p className="text-xs text-muted-foreground line-clamp-3">{b.message}</p>
-                <div className="flex items-center gap-3 pt-1 text-[11px] text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <Users className="w-3 h-3" />
-                    {b.recipientCount} reached
-                  </span>
-                  {b.excludedUserIds.length > 0 && (
+        <div className="lg:col-span-2 flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+              History {history && history.length > 0 && `(${history.length})`}
+            </h2>
+            {history && history.length > 0 && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs text-destructive hover:text-destructive hover:bg-destructive/10 gap-1.5"
+                    disabled={deleteAllBroadcasts.isPending}
+                  >
+                    <Trash2 className="w-3 h-3" />
+                    Delete all
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete all broadcasts?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will permanently remove all {history.length} broadcast{history.length === 1 ? "" : "s"} from the history. This cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDeleteAll}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Delete all
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </div>
+
+          <div className="overflow-y-auto max-h-[600px] space-y-3 pr-1">
+            {historyLoading ? (
+              Array(3).fill(0).map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-xl" />)
+            ) : history?.length ? (
+              history.map((b) => (
+                <div key={b.id} className="bg-card border border-border rounded-xl p-4 space-y-1.5">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-sm font-semibold leading-tight">{b.title}</p>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                        {formatDistanceToNow(new Date(b.createdAt), { addSuffix: true })}
+                      </span>
+                      <button
+                        onClick={() => handleDelete(b.id)}
+                        disabled={deleteBroadcast.isPending}
+                        className="rounded p-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                        title="Delete broadcast"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground line-clamp-3">{b.message}</p>
+                  <div className="flex items-center gap-3 pt-1 text-[11px] text-muted-foreground">
                     <span className="flex items-center gap-1">
-                      <UserMinus className="w-3 h-3" />
-                      {b.excludedUserIds.length} excluded
+                      <Users className="w-3 h-3" />
+                      {b.recipientCount} reached
                     </span>
-                  )}
-                  {(b.senderDisplayName || b.senderUsername) && (
-                    <span className="ml-auto truncate inline-flex items-center gap-0.5">by {b.senderDisplayName || b.senderUsername}<RoleBadges role={b.senderRole} size="sm" isVerified={false} /></span>
-                  )}
+                    {b.excludedUserIds.length > 0 && (
+                      <span className="flex items-center gap-1">
+                        <UserMinus className="w-3 h-3" />
+                        {b.excludedUserIds.length} excluded
+                      </span>
+                    )}
+                    {(b.senderDisplayName || b.senderUsername) && (
+                      <span className="ml-auto truncate inline-flex items-center gap-0.5">by {b.senderDisplayName || b.senderUsername}<RoleBadges role={b.senderRole} size="sm" isVerified={false} /></span>
+                    )}
+                  </div>
                 </div>
+              ))
+            ) : (
+              <div className="text-center py-12 bg-card rounded-2xl border border-border text-muted-foreground">
+                <Megaphone className="w-10 h-10 mx-auto mb-3 opacity-20" />
+                <p className="text-sm font-medium">No broadcasts yet</p>
+                <p className="text-xs mt-1">Your sent announcements will appear here.</p>
               </div>
-            ))
-          ) : (
-            <div className="text-center py-12 bg-card rounded-2xl border border-border text-muted-foreground">
-              <Megaphone className="w-10 h-10 mx-auto mb-3 opacity-20" />
-              <p className="text-sm font-medium">No broadcasts yet</p>
-              <p className="text-xs mt-1">Your sent announcements will appear here.</p>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>

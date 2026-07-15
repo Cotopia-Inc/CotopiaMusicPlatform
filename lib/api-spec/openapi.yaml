@@ -2180,6 +2180,30 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Broadcast"
+    delete:
+      operationId: adminDeleteAllBroadcasts
+      tags: [admin]
+      summary: Delete all broadcast history (admin)
+      responses:
+        "204":
+          description: No Content
+
+  /admin/broadcasts/{id}:
+    delete:
+      operationId: adminDeleteBroadcast
+      tags: [admin]
+      summary: Delete a single broadcast by ID (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not found
 
   # ── Analytics Events ─────────────────────────────────────────────────────
   /analytics/events:
