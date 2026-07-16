@@ -21,6 +21,12 @@ export interface AppSettings {
   footerText?: string | null;
   songSubmissionFee?: number;
   videoSubmissionFee?: number;
+  singleSongFee?: number;
+  batchSongFee?: number;
+  premiumSongFee?: number;
+  singleVideoFee?: number;
+  batchVideoFee?: number;
+  premiumVideoFee?: number;
   maintenanceMode?: boolean;
   requireEmailVerification?: boolean;
   featureRotation?: boolean;

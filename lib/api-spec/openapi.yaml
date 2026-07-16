@@ -5027,6 +5027,18 @@ components:
           type: number
         videoSubmissionFee:
           type: number
+        singleSongFee:
+          type: number
+        batchSongFee:
+          type: number
+        premiumSongFee:
+          type: number
+        singleVideoFee:
+          type: number
+        batchVideoFee:
+          type: number
+        premiumVideoFee:
+          type: number
         maintenanceMode:
           type: boolean
         requireEmailVerification:
@@ -5064,6 +5076,18 @@ components:
         songSubmissionFee:
           type: number
         videoSubmissionFee:
+          type: number
+        singleSongFee:
+          type: number
+        batchSongFee:
+          type: number
+        premiumSongFee:
+          type: number
+        singleVideoFee:
+          type: number
+        batchVideoFee:
+          type: number
+        premiumVideoFee:
           type: number
         maintenanceMode:
           type: boolean

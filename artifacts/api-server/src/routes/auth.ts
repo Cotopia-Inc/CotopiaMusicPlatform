@@ -399,11 +399,29 @@ router.post("/auth/demographics", requireAuth, async (req: AuthRequest, res): Pr
 
 // ── Public platform config ─────────────────────────────────────────────────
 router.get("/platform-config", async (_req, res): Promise<void> => {
-  const [settings] = await db
-    .select({ requireEmailVerification: appSettingsTable.requireEmailVerification })
+  const [s] = await db
+    .select({
+      requireEmailVerification: appSettingsTable.requireEmailVerification,
+      singleSongFee: appSettingsTable.singleSongFee,
+      batchSongFee: appSettingsTable.batchSongFee,
+      premiumSongFee: appSettingsTable.premiumSongFee,
+      singleVideoFee: appSettingsTable.singleVideoFee,
+      batchVideoFee: appSettingsTable.batchVideoFee,
+      premiumVideoFee: appSettingsTable.premiumVideoFee,
+      maintenanceMode: appSettingsTable.maintenanceMode,
+    })
     .from(appSettingsTable)
     .limit(1);
-  res.json({ requireEmailVerification: settings?.requireEmailVerification ?? true });
+  res.json({
+    requireEmailVerification: s?.requireEmailVerification ?? true,
+    singleSongFee: parseFloat(s?.singleSongFee ?? "9.99"),
+    batchSongFee: parseFloat(s?.batchSongFee ?? "19.99"),
+    premiumSongFee: parseFloat(s?.premiumSongFee ?? "49.99"),
+    singleVideoFee: parseFloat(s?.singleVideoFee ?? "14.99"),
+    batchVideoFee: parseFloat(s?.batchVideoFee ?? "29.99"),
+    premiumVideoFee: parseFloat(s?.premiumVideoFee ?? "79.99"),
+    maintenanceMode: s?.maintenanceMode ?? false,
+  });
 });
 
 // ── User search ────────────────────────────────────────────────────────────

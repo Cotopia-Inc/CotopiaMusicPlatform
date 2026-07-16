@@ -32,11 +32,12 @@ router.post("/payments/initiate", requireAuth, async (req: AuthRequest, res): Pr
 
   const plan = submission.plan ?? "basic";
   const PRICES: Record<string, Record<string, number>> = {
-    single: { song: 9.99, video: 14.99 },
-    basic:  { song: 19.99, video: 29.99 },
-    premium: { song: 49.99, video: 79.99 },
+    single:  { song: parseFloat(settings.singleSongFee), video: parseFloat(settings.singleVideoFee) },
+    basic:   { song: parseFloat(settings.batchSongFee),  video: parseFloat(settings.batchVideoFee) },
+    premium: { song: parseFloat(settings.premiumSongFee), video: parseFloat(settings.premiumVideoFee) },
   };
-  const amount = PRICES[plan]?.[submission.type] ?? PRICES.basic[submission.type];
+  const fallback = PRICES.basic;
+  const amount = PRICES[plan]?.[submission.type] ?? fallback[submission.type];
 
   const mockOrderId = `PAYPAL-${Date.now()}-${submission.id}`;
   const approvalUrl = `https://www.paypal.com/checkoutnow?token=${mockOrderId}`;

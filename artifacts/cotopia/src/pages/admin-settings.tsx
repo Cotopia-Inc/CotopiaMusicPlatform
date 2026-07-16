@@ -36,8 +36,12 @@ export default function AdminSettings() {
     appName: "",
     logoUrl: "",
     primaryColor: "#7c3aed",
-    songSubmissionFee: 0,
-    videoSubmissionFee: 0,
+    singleSongFee: 9.99,
+    batchSongFee: 19.99,
+    premiumSongFee: 49.99,
+    singleVideoFee: 14.99,
+    batchVideoFee: 29.99,
+    premiumVideoFee: 79.99,
     maintenanceMode: false,
     requireEmailVerification: true,
     featureRotation: true,
@@ -55,8 +59,12 @@ export default function AdminSettings() {
         appName: settings.appName || "",
         logoUrl: settings.logoUrl || "",
         primaryColor: settings.primaryColor || "#7c3aed",
-        songSubmissionFee: settings.songSubmissionFee || 0,
-        videoSubmissionFee: settings.videoSubmissionFee || 0,
+        singleSongFee: settings.singleSongFee ?? 9.99,
+        batchSongFee: settings.batchSongFee ?? 19.99,
+        premiumSongFee: settings.premiumSongFee ?? 49.99,
+        singleVideoFee: settings.singleVideoFee ?? 14.99,
+        batchVideoFee: settings.batchVideoFee ?? 29.99,
+        premiumVideoFee: settings.premiumVideoFee ?? 79.99,
         maintenanceMode: settings.maintenanceMode || false,
         requireEmailVerification: settings.requireEmailVerification ?? true,
         featureRotation: settings.featureRotation ?? true,
@@ -191,28 +199,79 @@ export default function AdminSettings() {
 
         <div className="space-y-4">
           <h3 className="text-lg font-bold border-b border-border pb-2">Financials</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Song Submission Fee ($)</Label>
-              <Input 
-                type="number"
-                min={0}
-                step={0.01}
-                value={formData.songSubmissionFee}
-                onChange={(e) => setFormData({...formData, songSubmissionFee: Number(e.target.value)})}
-                className="bg-secondary/50 border-secondary"
-              />
+          <p className="text-sm text-muted-foreground">Submission fees per plan tier. Changes apply to all new payment initiations immediately.</p>
+
+          <div className="space-y-4">
+            <div className="p-4 bg-secondary/20 rounded-lg border border-border space-y-3">
+              <p className="text-sm font-semibold">Single Submission</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Song ($)</Label>
+                  <Input
+                    type="number" min={0} step={0.01}
+                    value={formData.singleSongFee}
+                    onChange={(e) => setFormData({ ...formData, singleSongFee: Number(e.target.value) })}
+                    className="bg-secondary/50 border-secondary"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Video ($)</Label>
+                  <Input
+                    type="number" min={0} step={0.01}
+                    value={formData.singleVideoFee}
+                    onChange={(e) => setFormData({ ...formData, singleVideoFee: Number(e.target.value) })}
+                    className="bg-secondary/50 border-secondary"
+                  />
+                </div>
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label>Video Submission Fee ($)</Label>
-              <Input 
-                type="number"
-                min={0}
-                step={0.01}
-                value={formData.videoSubmissionFee}
-                onChange={(e) => setFormData({...formData, videoSubmissionFee: Number(e.target.value)})}
-                className="bg-secondary/50 border-secondary"
-              />
+
+            <div className="p-4 bg-secondary/20 rounded-lg border border-border space-y-3">
+              <p className="text-sm font-semibold">Batch Submission</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Song ($)</Label>
+                  <Input
+                    type="number" min={0} step={0.01}
+                    value={formData.batchSongFee}
+                    onChange={(e) => setFormData({ ...formData, batchSongFee: Number(e.target.value) })}
+                    className="bg-secondary/50 border-secondary"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Video ($)</Label>
+                  <Input
+                    type="number" min={0} step={0.01}
+                    value={formData.batchVideoFee}
+                    onChange={(e) => setFormData({ ...formData, batchVideoFee: Number(e.target.value) })}
+                    className="bg-secondary/50 border-secondary"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 bg-secondary/20 rounded-lg border border-border space-y-3">
+              <p className="text-sm font-semibold">Featured Placement</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Song ($)</Label>
+                  <Input
+                    type="number" min={0} step={0.01}
+                    value={formData.premiumSongFee}
+                    onChange={(e) => setFormData({ ...formData, premiumSongFee: Number(e.target.value) })}
+                    className="bg-secondary/50 border-secondary"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Video ($)</Label>
+                  <Input
+                    type="number" min={0} step={0.01}
+                    value={formData.premiumVideoFee}
+                    onChange={(e) => setFormData({ ...formData, premiumVideoFee: Number(e.target.value) })}
+                    className="bg-secondary/50 border-secondary"
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>

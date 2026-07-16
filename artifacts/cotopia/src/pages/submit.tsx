@@ -15,6 +15,7 @@ import { VerifyEmailBanner } from "@/components/verify-email-banner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useLocation, Link } from "wouter";
 import { useAuth } from "@/lib/auth";
+import { usePlatformConfig } from "@/lib/platform-config";
 import {
   Music, Film, CheckCircle, CreditCard, FileText,
   ChevronRight, ChevronLeft, Star, Zap, Upload,
@@ -48,10 +49,6 @@ const PACKAGE_LIMITS: Record<"single" | "basic" | "premium", Record<"song" | "vi
   premium: { song: 1,  video: 1 },
 };
 
-const PLAN_PRICES = {
-  song:  { single: 9.99,  basic: 19.99, premium: 49.99 },
-  video: { single: 14.99, basic: 29.99, premium: 79.99 },
-};
 
 const PLAN_NAMES: Record<string, string> = {
   single:  "Single Submission",
@@ -419,6 +416,11 @@ const defaultMeta: SharedMeta = { artistName: "", labelName: "", genre: "", mood
 
 export default function Submit() {
   const { user } = useAuth();
+  const platformConfig = usePlatformConfig();
+  const PLAN_PRICES = {
+    song:  { single: platformConfig.singleSongFee, basic: platformConfig.batchSongFee, premium: platformConfig.premiumSongFee },
+    video: { single: platformConfig.singleVideoFee, basic: platformConfig.batchVideoFee, premium: platformConfig.premiumVideoFee },
+  };
   const lockedArtistName = (user as any)?.displayName || user?.username || "";
   const { toast } = useToast();
 

@@ -16,6 +16,7 @@ import {
 } from "@workspace/api-zod";
 import { requireAuth, requireRole, type AuthRequest } from "../lib/auth";
 import { notify, sendPushToUsers } from "../lib/notify";
+import { invalidateMaintenanceCache } from "../lib/maintenance-cache";
 
 const router = Router();
 
@@ -628,10 +629,24 @@ router.post("/admin/bulk-upload-videos", requireAuth, requireRole(...ADMIN_ROLES
 
 // ── App Settings ─────────────────────────────────────────────────────────
 
+function parseSettingsFees(s: typeof import("@workspace/db").appSettingsTable.$inferSelect) {
+  return {
+    ...s,
+    songSubmissionFee: parseFloat(s.songSubmissionFee),
+    videoSubmissionFee: parseFloat(s.videoSubmissionFee),
+    singleSongFee: parseFloat(s.singleSongFee),
+    batchSongFee: parseFloat(s.batchSongFee),
+    premiumSongFee: parseFloat(s.premiumSongFee),
+    singleVideoFee: parseFloat(s.singleVideoFee),
+    batchVideoFee: parseFloat(s.batchVideoFee),
+    premiumVideoFee: parseFloat(s.premiumVideoFee),
+  };
+}
+
 router.get("/admin/settings", requireAuth, requireRole(...ADMIN_ROLES), async (_req, res): Promise<void> => {
   let [settings] = await db.select().from(appSettingsTable).limit(1);
   if (!settings) [settings] = await db.insert(appSettingsTable).values({}).returning();
-  res.json({ ...settings, songSubmissionFee: parseFloat(settings.songSubmissionFee), videoSubmissionFee: parseFloat(settings.videoSubmissionFee) });
+  res.json(parseSettingsFees(settings));
 });
 
 router.patch("/admin/settings", requireAuth, requireRole(...ADMIN_ROLES), async (req: AuthRequest, res): Promise<void> => {
@@ -639,14 +654,24 @@ router.patch("/admin/settings", requireAuth, requireRole(...ADMIN_ROLES), async 
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
 
   const dbData: Record<string, unknown> = { ...parsed.data };
-  if (parsed.data.songSubmissionFee !== undefined) dbData.songSubmissionFee = String(parsed.data.songSubmissionFee);
-  if (parsed.data.videoSubmissionFee !== undefined) dbData.videoSubmissionFee = String(parsed.data.videoSubmissionFee);
+  const feeFields = [
+    "songSubmissionFee", "videoSubmissionFee",
+    "singleSongFee", "batchSongFee", "premiumSongFee",
+    "singleVideoFee", "batchVideoFee", "premiumVideoFee",
+  ] as const;
+  for (const field of feeFields) {
+    if (parsed.data[field] !== undefined) dbData[field] = String(parsed.data[field]);
+  }
 
   let [existing] = await db.select().from(appSettingsTable).limit(1);
   if (!existing) [existing] = await db.insert(appSettingsTable).values({}).returning();
 
   const [updated] = await db.update(appSettingsTable).set(dbData).where(eq(appSettingsTable.id, existing.id)).returning();
-  res.json({ ...updated, songSubmissionFee: parseFloat(updated.songSubmissionFee), videoSubmissionFee: parseFloat(updated.videoSubmissionFee) });
+
+  // Invalidate the maintenance mode cache so changes take effect immediately
+  invalidateMaintenanceCache();
+
+  res.json(parseSettingsFees(updated));
 });
 
 // ── Chat ─────────────────────────────────────────────────────────────────
