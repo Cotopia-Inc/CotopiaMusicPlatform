@@ -78,12 +78,18 @@ export default function AdminSettings() {
     }
   }, [settings]);
 
-  const handleSave = () => {
-    updateMutation.mutate({ data: formData }, {
-      onSuccess: () => {
-        toast({ title: "Settings updated successfully" });
-      }
-    });
+  const handleSave = async () => {
+    try {
+      await updateMutation.mutateAsync({ data: formData });
+      toast({ title: "Settings updated successfully" });
+    } catch (error) {
+      const err = error as { data?: { error?: string }; message?: string };
+      toast({
+        title: "Failed to save settings",
+        description: err?.data?.error || err?.message || "Something went wrong",
+        variant: "destructive",
+      });
+    }
   };
 
   if (isLoading) {

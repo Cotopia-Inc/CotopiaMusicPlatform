@@ -54,14 +54,14 @@ async function getMaintenanceMode(): Promise<boolean> {
 }
 
 // Block non-admin API traffic when maintenance mode is on.
-// Exempted paths: auth endpoints (so admins can log in), admin/settings (so
-// admins can turn maintenance off), platform-config, and storage.
+// Exempted paths: auth endpoints (login), all /admin/* routes (they carry their
+// own requireAuth/requireRole guards), platform-config, and storage.
 app.use("/api", async (req, res, next) => {
   const p = req.path;
   if (
     p.startsWith("/auth/") ||
     p === "/platform-config" ||
-    p.startsWith("/admin/settings") ||
+    p.startsWith("/admin/") ||
     p.startsWith("/storage/")
   ) {
     next(); return;
