@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import {
   db,
   usersTable,
@@ -238,11 +238,22 @@ async function seed() {
     { artistId: a3, albumId: al3, title: "Echoes of You", genre: "Indie Pop", duration: 192, playCount: 0, isFeatured: true, streamUrl: SH(9), coverUrl: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=400&q=80" },
   ];
 
-  const insertedSongs = await Promise.all(songData.map(s =>
-    db.insert(songsTable).values({ ...s, status: "published" }).onConflictDoNothing().returning()
-  ));
-  const songs = insertedSongs.map(r => r[0]).filter(Boolean);
-  console.log(`✓ ${songs.length} songs created`);
+  // Check which song titles already exist to avoid creating duplicates on re-seed
+  // (songs table has no unique constraint on title, so onConflictDoNothing is a no-op)
+  const songTitles = songData.map(s => s.title);
+  const existingSongRows = await db.select({ id: songsTable.id, title: songsTable.title })
+    .from(songsTable).where(inArray(songsTable.title, songTitles));
+  const existingSongTitles = new Set(existingSongRows.map(r => r.title));
+  const newSongData = songData.filter(s => !existingSongTitles.has(s.title));
+  const insertedSongs = newSongData.length > 0
+    ? await Promise.all(newSongData.map(s =>
+        db.insert(songsTable).values({ ...s, status: "published" }).returning()
+      )).then(rs => rs.map(r => r[0]).filter(Boolean))
+    : [];
+  const songs = insertedSongs.length > 0
+    ? insertedSongs
+    : await db.select().from(songsTable).where(inArray(songsTable.title, songTitles));
+  console.log(`✓ ${insertedSongs.length > 0 ? insertedSongs.length : "0 new"} songs created (${songs.length} total demo songs in DB)`);
 
   // Videos
   const videoData = [
@@ -253,17 +264,66 @@ async function seed() {
     { artistId: a3, title: "Echoes of You — Lyric Video", genre: "Indie Pop", duration: 198, viewCount: 0, isFeatured: false, videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4", thumbnailUrl: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&q=80", description: "Official lyric video with animated typography." },
   ];
 
-  const insertedVideos = await Promise.all(videoData.map(v =>
-    db.insert(videosTable).values({ ...v, status: "published" }).onConflictDoNothing().returning()
-  ));
-  const videos = insertedVideos.map(r => r[0]).filter(Boolean);
-  console.log(`✓ ${videos.length} videos created`);
+  // Same idempotency check for videos
+  const videoTitles = videoData.map(v => v.title);
+  const existingVideoRows = await db.select({ id: videosTable.id, title: videosTable.title })
+    .from(videosTable).where(inArray(videosTable.title, videoTitles));
+  const existingVideoTitles = new Set(existingVideoRows.map(r => r.title));
+  const newVideoData = videoData.filter(v => !existingVideoTitles.has(v.title));
+  const insertedVideos = newVideoData.length > 0
+    ? await Promise.all(newVideoData.map(v =>
+        db.insert(videosTable).values({ ...v, status: "published" }).returning()
+      )).then(rs => rs.map(r => r[0]).filter(Boolean))
+    : [];
+  const videos = insertedVideos.length > 0
+    ? insertedVideos
+    : await db.select().from(videosTable).where(inArray(videosTable.title, videoTitles));
+  console.log(`✓ ${insertedVideos.length > 0 ? insertedVideos.length : "0 new"} videos created (${videos.length} total demo videos in DB)`);
 
-  // Ratings
-  if (listener1 && songs.length > 0) {
-    await Promise.all(songs.slice(0, 6).map((s, i) =>
-      db.insert(ratingsTable).values({ userId: listener1.id, contentType: "song", contentId: s.id, rating: Math.min(5, 3 + (i % 3)) }).onConflictDoNothing()
+  // Ratings — multiple users rate songs and videos with varied scores so the
+  // discover top-rated ranking can be properly verified.
+  const ratingSeeds: Array<{ userId: number; contentType: "song" | "video"; contentId: number; rating: number }> = [];
+
+  const raterIds = [listener1].filter(Boolean).map(u => u!.id);
+  // Artist users can also rate
+  const artistUserIds: number[] = [];
+  for (const u of await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.role, "artist"))) {
+    artistUserIds.push(u.id);
+  }
+  const allRaterIds = [...raterIds, ...artistUserIds.slice(0, 3)];
+
+  // Assign deterministic but varied ratings to songs (higher-index songs get
+  // deliberately lower scores to make sort verification easy).
+  const songRatings = [5, 5, 4, 4, 4, 3, 3, 2, 2, 1];
+  songs.slice(0, Math.min(songs.length, 10)).forEach((s, idx) => {
+    allRaterIds.forEach((uid, uidx) => {
+      const base = songRatings[idx] ?? 3;
+      // Slightly vary per-user so averages land at expected positions
+      const rating = Math.max(1, Math.min(5, base + (uidx % 2 === 0 ? 0 : -1 + (idx % 2))));
+      ratingSeeds.push({ userId: uid, contentType: "song", contentId: s.id, rating });
+    });
+  });
+
+  // Rate videos too
+  const videoRatings = [5, 4, 3, 2, 1];
+  videos.slice(0, Math.min(videos.length, 5)).forEach((v, idx) => {
+    allRaterIds.forEach((uid, uidx) => {
+      const base = videoRatings[idx] ?? 3;
+      const rating = Math.max(1, Math.min(5, base + (uidx % 2 === 0 ? 0 : 0)));
+      ratingSeeds.push({ userId: uid, contentType: "video", contentId: v.id, rating });
+    });
+  });
+
+  if (ratingSeeds.length > 0) {
+    // Use upsert so re-seeds always overwrite stale ratings with intended scores
+    await Promise.all(ratingSeeds.map(r =>
+      db.insert(ratingsTable).values(r)
+        .onConflictDoUpdate({
+          target: [ratingsTable.userId, ratingsTable.contentType, ratingsTable.contentId],
+          set: { rating: r.rating },
+        })
     ));
+    console.log(`✓ ${ratingSeeds.length} ratings seeded`);
   }
 
   // Comments
@@ -276,17 +336,6 @@ async function seed() {
     "The way this builds... absolutely stunning.",
     "Can't stop listening. This is the soundtrack to my week.",
   ];
-
-  if (listener1 && songs.length > 0) {
-    await Promise.all(commentTexts.slice(0, 4).map((content, i) =>
-      db.insert(commentsTable).values({
-        userId: listener1.id,
-        contentType: "song",
-        contentId: songs[i % songs.length].id,
-        content,
-      }).onConflictDoNothing()
-    ));
-  }
 
   // Resolve user IDs — fall back to DB query if inserts were no-ops (re-seed)
   const resolveUser = async (inserted: typeof listener1, email: string) => {
@@ -311,6 +360,21 @@ async function seed() {
     return db.select().from(videosTable).where(eq(videosTable.status, "published")).limit(5);
   };
   const [allSongs, allVideos] = await Promise.all([resolveSongs(), resolveVideos()]);
+
+  // Comments (for mostDiscussed section) — uses resolved user IDs so this
+  // works even on re-seed where the user inserts are no-ops.
+  if (rListener1 && allSongs.length > 0) {
+    const commentInserts = commentTexts.slice(0, Math.min(7, allSongs.length * 2)).map((content, i) =>
+      db.insert(commentsTable).values({
+        userId: rListener1.id,
+        contentType: "song" as const,
+        contentId: allSongs[i % allSongs.length].id,
+        content,
+      }).onConflictDoNothing()
+    );
+    await Promise.all(commentInserts);
+    console.log(`✓ ${commentInserts.length} comments seeded`);
+  }
 
   // Chat messages — seed demo fan chat for songs and videos
   const chatUsers = [rListener1, rArtist1, rArtist2, rArtist3].filter(Boolean);

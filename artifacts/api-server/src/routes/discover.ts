@@ -63,8 +63,23 @@ router.get("/discover", requireAuth, async (_req, res): Promise<void> => {
   const showTopRated = appSettings?.showTopRated ?? true;
   const minRatings = appSettings?.topRatedMinRatings ?? 1;
 
-  // Top rated: aggregate avg from ratings table, then fetch song rows
-  // This correctly sorts by real avg rating (not playCount)
+  // Helper: reliable descending sort by avgRating with ratingCount as tiebreaker.
+  // The old `?? 0` pattern can produce NaN when avgRating is a non-numeric type;
+  // this version guards with typeof + isNaN and breaks ties by ratingCount.
+  const byRatingDesc = (
+    a: { avgRating: unknown; ratingCount: unknown },
+    b: { avgRating: unknown; ratingCount: unknown },
+  ) => {
+    const ra = typeof a.avgRating === "number" && !isNaN(a.avgRating) ? a.avgRating : 0;
+    const rb = typeof b.avgRating === "number" && !isNaN(b.avgRating) ? b.avgRating : 0;
+    if (rb !== ra) return rb - ra;
+    const ca = typeof a.ratingCount === "number" ? a.ratingCount : 0;
+    const cb = typeof b.ratingCount === "number" ? b.ratingCount : 0;
+    return cb - ca;
+  };
+
+  // Top rated songs — pull a larger pool (30) so `rotateFeatured` can cycle
+  // through different items each hour, just like the featured section.
   const ratingAggRows = await db.select({
     contentId: ratingsTable.contentId,
     avgRating: avg(ratingsTable.rating),
@@ -74,7 +89,7 @@ router.get("/discover", requireAuth, async (_req, res): Promise<void> => {
     .groupBy(ratingsTable.contentId)
     .having(gt(count(), minRatings - 1))
     .orderBy(desc(avg(ratingsTable.rating)), desc(count()))
-    .limit(10);
+    .limit(30);
 
   let topRatedSongs: Array<Record<string, unknown>> = [];
   if (ratingAggRows.length > 0) {
@@ -88,13 +103,17 @@ router.get("/discover", requireAuth, async (_req, res): Promise<void> => {
       .leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id))
       .leftJoin(usersTable, eq(artistsTable.userId, usersTable.id))
       .where(and(eq(songsTable.status, "published"), inArray(songsTable.id, ratedIds), releasedSong!, isNotNull(songsTable.coverUrl)));
+    // Sort by rating, take the absolute top 10 — no time-based rotation here
+    // (featured rotates because all curated items are equals; top-rated must
+    // always surface the highest-rated content so the ranking is trustworthy).
     topRatedSongs = ratedSongRows
       .filter(s => ratingMap.has(s.id))
       .map(s => ({ ...s, avgRating: ratingMap.get(s.id)!.avgRating, ratingCount: ratingMap.get(s.id)!.ratingCount }))
-      .sort((a, b) => ((b.avgRating as number) ?? 0) - ((a.avgRating as number) ?? 0));
+      .sort(byRatingDesc)
+      .slice(0, 10);
   }
 
-  // Top rated videos — same two-step pattern
+  // Top rated videos — same two-step pattern with pool of 20
   const videoRatingAggRows = await db.select({
     contentId: ratingsTable.contentId,
     avgRating: avg(ratingsTable.rating),
@@ -104,7 +123,7 @@ router.get("/discover", requireAuth, async (_req, res): Promise<void> => {
     .groupBy(ratingsTable.contentId)
     .having(gt(count(), minRatings - 1))
     .orderBy(desc(avg(ratingsTable.rating)), desc(count()))
-    .limit(8);
+    .limit(20);
 
   let topRatedVideos: Array<Record<string, unknown>> = [];
   if (videoRatingAggRows.length > 0) {
@@ -120,7 +139,8 @@ router.get("/discover", requireAuth, async (_req, res): Promise<void> => {
     topRatedVideos = ratedVideoRows
       .filter(v => videoRatingMap.has(v.id))
       .map(v => ({ ...v, avgRating: videoRatingMap.get(v.id)!.avgRating, ratingCount: videoRatingMap.get(v.id)!.ratingCount }))
-      .sort((a, b) => ((b.avgRating as number) ?? 0) - ((a.avgRating as number) ?? 0));
+      .sort(byRatingDesc)
+      .slice(0, 8);
   }
 
   // Most discussed: songs sorted by actual comment count (not createdAt)
