@@ -74,6 +74,19 @@ export async function ensureTables(): Promise<void> {
       );
 
       ALTER TABLE users ADD COLUMN IF NOT EXISTS deletion_requested_at TIMESTAMP WITH TIME ZONE;
+
+      -- app_settings columns added after initial schema (safe to run every startup)
+      ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS single_song_fee TEXT NOT NULL DEFAULT '9.99';
+      ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS batch_song_fee TEXT NOT NULL DEFAULT '19.99';
+      ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS premium_song_fee TEXT NOT NULL DEFAULT '49.99';
+      ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS single_video_fee TEXT NOT NULL DEFAULT '14.99';
+      ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS batch_video_fee TEXT NOT NULL DEFAULT '29.99';
+      ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS premium_video_fee TEXT NOT NULL DEFAULT '79.99';
+      ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS show_top_rated BOOLEAN NOT NULL DEFAULT true;
+      ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS top_rated_min_ratings INTEGER NOT NULL DEFAULT 1;
+      ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS refund_policy_text TEXT;
+      ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS ai_policy_text TEXT;
+      ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS community_rules_text TEXT;
     `);
     logger.info("ensureTables: schema up to date");
   } catch (err) {
