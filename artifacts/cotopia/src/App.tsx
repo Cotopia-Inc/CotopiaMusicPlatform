@@ -179,17 +179,21 @@ function RoleRoute({ roles, children }: { roles: string[]; children: React.React
 }
 
 function MaintenanceGate({ children }: { children: React.ReactNode }) {
-  const { user, logout } = useAuth();
+  const { user, logout, isLoading: authLoading } = useAuth();
   const [, navigate] = useLocation();
   const [showMaintenance, setShowMaintenance] = useState(false);
 
-  // Keep a ref so the event-listener callback always sees the current user
-  // without being re-registered on every render.
+  // Keep refs so event-listener callbacks always see current values
+  // without needing to be re-registered on every render.
   const userRef = useRef(user);
-  useEffect(() => { userRef.current = user; });
+  const authLoadingRef = useRef(authLoading);
+  useEffect(() => {
+    userRef.current = user;
+    authLoadingRef.current = authLoading;
+  });
 
-  const isNonAdmin = (role?: string) =>
-    role !== "admin" && role !== "master_admin";
+  const isAdminRole = (role?: string | null) =>
+    role === "admin" || role === "master_admin";
 
   // ── Poll every 15 s so idle users get kicked eventually ──────────────────
   const { data: config } = useQuery<{ maintenanceMode: boolean } | null>({
@@ -218,19 +222,27 @@ function MaintenanceGate({ children }: { children: React.ReactNode }) {
       setShowMaintenance(false);
       return;
     }
-    if (!isNonAdmin(user?.role)) return; // admin — let them through
+    // Wait until auth resolves before acting — avoids false lockout while
+    // user/token is still loading (user would be null and look like a guest).
+    if (authLoading) return;
+    // Admins and master admins are never locked out.
+    if (isAdminRole(user?.role)) return;
     setShowMaintenance(true);
     if (user) {
       logout();
       navigate("/");
     }
-  }, [config?.maintenanceMode, user?.role, user?.id]);
+  }, [config?.maintenanceMode, authLoading, user?.role, user?.id]);
 
   // ── Immediate detection: any 503 from the API → lock out right away ──────
   useEffect(() => {
     const handleMaintenance = () => {
+      // If auth is still resolving, we don't know the role yet — skip.
+      if (authLoadingRef.current) return;
       const u = userRef.current;
-      if (!isNonAdmin(u?.role)) return; // admin — ignore
+      // Admins are exempt — the backend also lets them through, so a 503 they
+      // receive is unexpected (e.g. token expired). Don't lock them out.
+      if (isAdminRole(u?.role)) return;
       setShowMaintenance(true);
       if (u) {
         logout();
@@ -239,7 +251,7 @@ function MaintenanceGate({ children }: { children: React.ReactNode }) {
     };
     window.addEventListener("cotopia:maintenance", handleMaintenance);
     return () => window.removeEventListener("cotopia:maintenance", handleMaintenance);
-  }, []); // register once — userRef keeps the value fresh
+  }, []); // register once — refs keep values fresh
 
   return (
     <>
