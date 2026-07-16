@@ -110,6 +110,17 @@ app.use(
   },
 );
 
+// Catch-all JSON error handler — prevents Express from returning HTML 500 pages
+app.use(
+  (err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+    const e = err as { status?: number; statusCode?: number; message?: string };
+    const status = e?.status ?? e?.statusCode ?? 500;
+    const message =
+      (err instanceof Error ? err.message : undefined) ?? "Internal server error";
+    res.status(status).json({ error: message });
+  },
+);
+
 // Serve the built Vite frontend if the static dir exists (production / Render)
 const staticDir = path.resolve(
   process.cwd(),

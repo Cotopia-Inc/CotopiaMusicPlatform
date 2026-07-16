@@ -1,12 +1,13 @@
 import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { PlayerProvider } from "@/lib/player";
 import { Layout } from "@/components/layout";
 import { ErrorBoundary } from "@/components/error-boundary";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { MaintenanceModal } from "@/components/maintenance-modal";
 
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
@@ -177,6 +178,54 @@ function RoleRoute({ roles, children }: { roles: string[]; children: React.React
   return <Layout>{children}</Layout>;
 }
 
+function MaintenanceGate({ children }: { children: React.ReactNode }) {
+  const { user, logout } = useAuth();
+  const [, navigate] = useLocation();
+  const [showMaintenance, setShowMaintenance] = useState(false);
+
+  const { data: config } = useQuery<{ maintenanceMode: boolean } | null>({
+    queryKey: ["platform-config"],
+    queryFn: async () => {
+      try {
+        const base = import.meta.env.BASE_URL ?? "/";
+        const url = base.endsWith("/") ? `${base}api/platform-config` : `${base}/api/platform-config`;
+        const res = await fetch(url);
+        if (!res.ok) return null;
+        return res.json() as Promise<{ maintenanceMode: boolean }>;
+      } catch {
+        return null;
+      }
+    },
+    refetchInterval: 30_000,
+    staleTime: 0,
+  });
+
+  useEffect(() => {
+    if (config == null) return;
+    if (!config.maintenanceMode) {
+      setShowMaintenance(false);
+      return;
+    }
+    const isAdmin = user?.role === "admin" || user?.role === "master_admin";
+    if (isAdmin) {
+      setShowMaintenance(false);
+      return;
+    }
+    setShowMaintenance(true);
+    if (user) {
+      logout();
+      navigate("/");
+    }
+  }, [config?.maintenanceMode, user?.role, user?.id]);
+
+  return (
+    <>
+      {children}
+      {showMaintenance && <MaintenanceModal />}
+    </>
+  );
+}
+
 function AuthRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
   const [, navigate] = useLocation();
@@ -342,7 +391,9 @@ function App() {
           <AuthProvider>
             <PlayerProvider>
               <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-                <Router />
+                <MaintenanceGate>
+                  <Router />
+                </MaintenanceGate>
               </WouterRouter>
             </PlayerProvider>
           </AuthProvider>
