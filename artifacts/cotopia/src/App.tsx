@@ -6,7 +6,7 @@ import { AuthProvider, useAuth } from "@/lib/auth";
 import { PlayerProvider } from "@/lib/player";
 import { Layout } from "@/components/layout";
 import { ErrorBoundary } from "@/components/error-boundary";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { MaintenanceModal } from "@/components/maintenance-modal";
 
 import NotFound from "@/pages/not-found";
@@ -183,12 +183,23 @@ function MaintenanceGate({ children }: { children: React.ReactNode }) {
   const [, navigate] = useLocation();
   const [showMaintenance, setShowMaintenance] = useState(false);
 
+  // Keep a ref so the event-listener callback always sees the current user
+  // without being re-registered on every render.
+  const userRef = useRef(user);
+  useEffect(() => { userRef.current = user; });
+
+  const isNonAdmin = (role?: string) =>
+    role !== "admin" && role !== "master_admin";
+
+  // ── Poll every 15 s so idle users get kicked eventually ──────────────────
   const { data: config } = useQuery<{ maintenanceMode: boolean } | null>({
     queryKey: ["platform-config"],
     queryFn: async () => {
       try {
         const base = import.meta.env.BASE_URL ?? "/";
-        const url = base.endsWith("/") ? `${base}api/platform-config` : `${base}/api/platform-config`;
+        const url = base.endsWith("/")
+          ? `${base}api/platform-config`
+          : `${base}/api/platform-config`;
         const res = await fetch(url);
         if (!res.ok) return null;
         return res.json() as Promise<{ maintenanceMode: boolean }>;
@@ -196,27 +207,39 @@ function MaintenanceGate({ children }: { children: React.ReactNode }) {
         return null;
       }
     },
-    refetchInterval: 30_000,
+    refetchInterval: 15_000,
     staleTime: 0,
   });
 
+  // React to polling results
   useEffect(() => {
     if (config == null) return;
     if (!config.maintenanceMode) {
       setShowMaintenance(false);
       return;
     }
-    const isAdmin = user?.role === "admin" || user?.role === "master_admin";
-    if (isAdmin) {
-      setShowMaintenance(false);
-      return;
-    }
+    if (!isNonAdmin(user?.role)) return; // admin — let them through
     setShowMaintenance(true);
     if (user) {
       logout();
       navigate("/");
     }
   }, [config?.maintenanceMode, user?.role, user?.id]);
+
+  // ── Immediate detection: any 503 from the API → lock out right away ──────
+  useEffect(() => {
+    const handleMaintenance = () => {
+      const u = userRef.current;
+      if (!isNonAdmin(u?.role)) return; // admin — ignore
+      setShowMaintenance(true);
+      if (u) {
+        logout();
+        navigate("/");
+      }
+    };
+    window.addEventListener("cotopia:maintenance", handleMaintenance);
+    return () => window.removeEventListener("cotopia:maintenance", handleMaintenance);
+  }, []); // register once — userRef keeps the value fresh
 
   return (
     <>

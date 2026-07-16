@@ -367,13 +367,18 @@ export async function customFetch<T = unknown>(
 
   if (!response.ok) {
     const errorData = await parseErrorBody(response, method);
-    if (
-      typeof window !== "undefined" &&
-      errorData &&
-      typeof errorData === "object" &&
-      (errorData as Record<string, unknown>).code === "deactivated"
-    ) {
-      window.dispatchEvent(new CustomEvent("cotopia:deactivated"));
+    if (typeof window !== "undefined") {
+      if (
+        errorData &&
+        typeof errorData === "object" &&
+        (errorData as Record<string, unknown>).code === "deactivated"
+      ) {
+        window.dispatchEvent(new CustomEvent("cotopia:deactivated"));
+      }
+      // Any 503 means maintenance mode is on — signal all listeners immediately
+      if (response.status === 503) {
+        window.dispatchEvent(new CustomEvent("cotopia:maintenance"));
+      }
     }
     throw new ApiError(response, errorData, requestInfo);
   }
