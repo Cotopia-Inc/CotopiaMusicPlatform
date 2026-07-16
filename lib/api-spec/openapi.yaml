@@ -4717,8 +4717,16 @@ components:
     # ── Home Feed ─────────────────────────────────────────────────────────────
     HomeFeed:
       type: object
-      required: [featuredSongs, featuredVideos, featuredArtists, featuredLabels, trendingSongs, newReleases, announcements, editorPicks]
+      required: [featuredSongs, featuredVideos, featuredArtists, featuredLabels, trendingSongs, newReleases, announcements, editorPicks, topRatedSongs, topRatedVideos]
       properties:
+        topRatedSongs:
+          type: array
+          items:
+            $ref: "#/components/schemas/Song"
+        topRatedVideos:
+          type: array
+          items:
+            $ref: "#/components/schemas/Video"
         featuredSongs:
           type: array
           items:

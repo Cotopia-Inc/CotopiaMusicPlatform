@@ -1544,6 +1544,47 @@ export const GetHistoryResponse = zod.array(GetHistoryResponseItem)
  * @summary Get aggregated home page data
  */
 export const GetHomeFeedResponse = zod.object({
+  "topRatedSongs": zod.array(zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "artistId": zod.number(),
+  "artistUserId": zod.number().nullish(),
+  "artistName": zod.string(),
+  "artistUserRole": zod.string().nullish(),
+  "artistIsVerified": zod.boolean().optional(),
+  "albumId": zod.number().nullish(),
+  "albumName": zod.string().nullish(),
+  "genre": zod.string().nullish(),
+  "duration": zod.number(),
+  "coverUrl": zod.string().nullish(),
+  "streamUrl": zod.string().nullish(),
+  "playCount": zod.number().optional(),
+  "avgRating": zod.number().nullish(),
+  "status": zod.enum(['draft', 'pending_review', 'approved', 'rejected', 'published']),
+  "releaseType": zod.enum(['single', 'ep', 'album']).optional(),
+  "isFeatured": zod.boolean().optional(),
+  "credits": zod.string().nullish(),
+  "createdAt": zod.string()
+})),
+  "topRatedVideos": zod.array(zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "artistId": zod.number(),
+  "artistUserId": zod.number().nullish(),
+  "artistName": zod.string(),
+  "artistUserRole": zod.string().nullish(),
+  "artistIsVerified": zod.boolean().optional(),
+  "genre": zod.string().nullish(),
+  "duration": zod.number(),
+  "thumbnailUrl": zod.string().nullish(),
+  "videoUrl": zod.string().nullish(),
+  "viewCount": zod.number().optional(),
+  "avgRating": zod.number().nullish(),
+  "status": zod.enum(['draft', 'pending_review', 'approved', 'rejected', 'published']),
+  "isFeatured": zod.boolean().optional(),
+  "credits": zod.string().nullish(),
+  "createdAt": zod.string()
+})),
   "featuredSongs": zod.array(zod.object({
   "id": zod.number(),
   "title": zod.string(),

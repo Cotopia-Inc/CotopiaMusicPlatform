@@ -1,7 +1,6 @@
 import { Router } from "express";
-import { eq, desc, and, avg, sql, isNotNull, or, isNull, lte } from "drizzle-orm";
+import { eq, desc, and, avg, sql, isNotNull, or, isNull, lte, count, gt, inArray } from "drizzle-orm";
 import { db, songsTable, videosTable, artistsTable, labelsTable, albumsTable, companyPostsTable, followsTable, ratingsTable, editorPicksTable, usersTable } from "@workspace/db";
-import { count } from "drizzle-orm";
 import { isFeatureRotationEnabled, rotateFeatured, FEATURED_POOL_SIZE } from "../lib/featured";
 import { requireAuth } from "../lib/auth";
 import { getTodayInReleaseTimezone } from "../lib/timezone";
@@ -144,7 +143,68 @@ router.get("/home", requireAuth, async (_req, res): Promise<void> => {
     return { ...p, song, video, artist };
   }));
 
+  // Top-rated songs (top 3) for home showcase
+  const byRatingDesc = (
+    a: { avgRating: unknown; ratingCount: unknown },
+    b: { avgRating: unknown; ratingCount: unknown },
+  ) => {
+    const ra = typeof a.avgRating === "number" && !isNaN(a.avgRating) ? a.avgRating : 0;
+    const rb = typeof b.avgRating === "number" && !isNaN(b.avgRating) ? b.avgRating : 0;
+    if (rb !== ra) return rb - ra;
+    const ca = typeof a.ratingCount === "number" ? a.ratingCount : 0;
+    const cb = typeof b.ratingCount === "number" ? b.ratingCount : 0;
+    return cb - ca;
+  };
+
+  const [songRatingAgg, videoRatingAgg] = await Promise.all([
+    db.select({ contentId: ratingsTable.contentId, avgRating: avg(ratingsTable.rating), ratingCount: count() })
+      .from(ratingsTable).where(eq(ratingsTable.contentType, "song"))
+      .groupBy(ratingsTable.contentId).having(gt(count(), 0))
+      .orderBy(desc(avg(ratingsTable.rating)), desc(count())).limit(15),
+    db.select({ contentId: ratingsTable.contentId, avgRating: avg(ratingsTable.rating), ratingCount: count() })
+      .from(ratingsTable).where(eq(ratingsTable.contentType, "video"))
+      .groupBy(ratingsTable.contentId).having(gt(count(), 0))
+      .orderBy(desc(avg(ratingsTable.rating)), desc(count())).limit(10),
+  ]);
+
+  let topRatedSongs: Array<Record<string, unknown>> = [];
+  if (songRatingAgg.length > 0) {
+    const ratedIds = songRatingAgg.map(r => r.contentId);
+    const ratingMap = new Map(songRatingAgg.map(r => [r.contentId, {
+      avgRating: r.avgRating ? parseFloat(r.avgRating) : null,
+      ratingCount: r.ratingCount,
+    }]));
+    const rows = await db.select(songSelect).from(songsTable)
+      .leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id))
+      .leftJoin(albumsTable, eq(songsTable.albumId, albumsTable.id))
+      .leftJoin(usersTable, eq(artistsTable.userId, usersTable.id))
+      .where(and(eq(songsTable.status, "published"), inArray(songsTable.id, ratedIds), releasedSong, isNotNull(songsTable.coverUrl)));
+    topRatedSongs = rows
+      .filter(s => ratingMap.has(s.id))
+      .map(s => ({ ...s, avgRating: ratingMap.get(s.id)!.avgRating, ratingCount: ratingMap.get(s.id)!.ratingCount }))
+      .sort(byRatingDesc).slice(0, 3);
+  }
+
+  let topRatedVideos: Array<Record<string, unknown>> = [];
+  if (videoRatingAgg.length > 0) {
+    const ratedIds = videoRatingAgg.map(r => r.contentId);
+    const ratingMap = new Map(videoRatingAgg.map(r => [r.contentId, {
+      avgRating: r.avgRating ? parseFloat(r.avgRating) : null,
+      ratingCount: r.ratingCount,
+    }]));
+    const rows = await db.select(videoSelect).from(videosTable)
+      .leftJoin(artistsTable, eq(videosTable.artistId, artistsTable.id))
+      .leftJoin(usersTable, eq(artistsTable.userId, usersTable.id))
+      .where(and(eq(videosTable.status, "published"), inArray(videosTable.id, ratedIds), releasedVideo, isNotNull(videosTable.thumbnailUrl)));
+    topRatedVideos = rows
+      .filter(v => ratingMap.has(v.id))
+      .map(v => ({ ...v, avgRating: ratingMap.get(v.id)!.avgRating, ratingCount: ratingMap.get(v.id)!.ratingCount }))
+      .sort(byRatingDesc).slice(0, 3);
+  }
+
   res.json({
+    topRatedSongs,
+    topRatedVideos,
     featuredSongs: await Promise.all(rotatedFeaturedSongs.map(addRatingToSong)),
     featuredVideos: await Promise.all(rotatedFeaturedVideos.map(addRatingToVideo)),
     featuredArtists,

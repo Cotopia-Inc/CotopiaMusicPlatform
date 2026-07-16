@@ -13,6 +13,8 @@ import type { Song } from './song';
 import type { Video } from './video';
 
 export interface HomeFeed {
+  topRatedSongs: Song[];
+  topRatedVideos: Video[];
   featuredSongs: Song[];
   featuredVideos: Video[];
   featuredArtists: Artist[];

@@ -1,5 +1,5 @@
 import { useGetHomeFeed, getGetHomeFeedQueryKey } from "@workspace/api-client-react";
-import { Play, TrendingUp, Video, Sparkles, Compass, Music2 } from "lucide-react";
+import { Play, TrendingUp, Video, Sparkles, Compass, Music2, Star, ChevronRight } from "lucide-react";
 import { RoleBadges } from "@/components/role-badges";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "wouter";
@@ -249,6 +249,160 @@ export default function Home() {
           )}
         </div>
       </section>
+
+      {/* Top Rated Showcase + Discover CTA */}
+      {(isLoading || (feed?.topRatedSongs?.length ?? 0) > 0 || (feed?.topRatedVideos?.length ?? 0) > 0) && (
+        <section>
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+              <h3 className="text-xl font-bold tracking-tight">Top Rated Right Now</h3>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400 bg-amber-400/10 border border-amber-400/20 px-2 py-0.5 rounded-full">Community picks</span>
+            </div>
+            <Link href="/discover">
+              <span className="text-sm text-muted-foreground hover:text-primary transition-colors cursor-pointer flex items-center gap-1">Full rankings <ChevronRight className="w-3 h-3" /></span>
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            {/* Top 3 Songs */}
+            <div className="space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                <Music2 className="w-3 h-3" /> Songs
+              </p>
+              {isLoading ? (
+                Array(3).fill(0).map((_, i) => (
+                  <div key={i} className="flex items-center gap-3 p-3 rounded-xl border border-border bg-card">
+                    <Skeleton className="w-6 h-5" />
+                    <Skeleton className="w-12 h-12 rounded-lg flex-shrink-0" />
+                    <div className="flex-1 space-y-1.5">
+                      <Skeleton className="h-4 w-2/3" />
+                      <Skeleton className="h-3 w-1/3" />
+                    </div>
+                    <Skeleton className="h-4 w-10" />
+                  </div>
+                ))
+              ) : (feed?.topRatedSongs ?? []).map((song, idx) => (
+                <div key={song.id} className="group flex items-center gap-3 p-3 rounded-xl border border-border/60 hover:border-amber-400/30 bg-card hover:shadow-md hover:shadow-amber-400/5 transition-all duration-200">
+                  {/* Rank */}
+                  <span className={`text-base font-black w-6 text-center flex-shrink-0 ${idx === 0 ? "text-amber-400" : idx === 1 ? "text-zinc-400" : "text-amber-700"}`}>
+                    {idx + 1}
+                  </span>
+                  {/* Art */}
+                  <Link href={`/songs/${song.id}`}>
+                    <div className="w-12 h-12 overflow-hidden rounded-lg bg-secondary flex-shrink-0 border border-border/50">
+                      {song.coverUrl
+                        ? <img src={song.coverUrl} alt={song.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        : <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-secondary"><Music2 className="w-4 h-4 text-muted-foreground/30" /></div>
+                      }
+                    </div>
+                  </Link>
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <Link href={`/songs/${song.id}`}>
+                      <p className="font-semibold text-sm truncate hover:text-primary transition-colors">{song.title}</p>
+                    </Link>
+                    <UserLink username={song.artistName} artistId={song.artistId} role={song.artistUserRole} isVerified={song.artistIsVerified ?? false} className="text-xs text-muted-foreground" />
+                  </div>
+                  {/* Rating */}
+                  {song.avgRating != null && (
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
+                      <span className="text-xs font-bold text-amber-400">{(song.avgRating as number).toFixed(1)}</span>
+                    </div>
+                  )}
+                  {/* Play */}
+                  <button
+                    onClick={() => play({ id: song.id, title: song.title, artistName: song.artistName ?? "", artistId: song.artistId, artistUserRole: song.artistUserRole ?? null, artistIsVerified: song.artistIsVerified ?? false, coverUrl: song.coverUrl, streamUrl: song.streamUrl, duration: song.duration })}
+                    className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground transition-all flex items-center justify-center opacity-0 group-hover:opacity-100"
+                    title={`Play ${song.title}`}
+                  >
+                    <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {/* Top 3 Videos */}
+            <div className="space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                <Video className="w-3 h-3" /> Videos
+              </p>
+              {isLoading ? (
+                Array(3).fill(0).map((_, i) => (
+                  <div key={i} className="flex items-center gap-3 p-3 rounded-xl border border-border bg-card">
+                    <Skeleton className="w-6 h-5" />
+                    <Skeleton className="w-20 h-12 rounded-lg flex-shrink-0" />
+                    <div className="flex-1 space-y-1.5">
+                      <Skeleton className="h-4 w-2/3" />
+                      <Skeleton className="h-3 w-1/3" />
+                    </div>
+                    <Skeleton className="h-4 w-10" />
+                  </div>
+                ))
+              ) : (feed?.topRatedVideos ?? []).map((video, idx) => (
+                <div key={video.id} className="group flex items-center gap-3 p-3 rounded-xl border border-border/60 hover:border-amber-400/30 bg-card hover:shadow-md hover:shadow-amber-400/5 transition-all duration-200">
+                  {/* Rank */}
+                  <span className={`text-base font-black w-6 text-center flex-shrink-0 ${idx === 0 ? "text-amber-400" : idx === 1 ? "text-zinc-400" : "text-amber-700"}`}>
+                    {idx + 1}
+                  </span>
+                  {/* Thumbnail */}
+                  <Link href={`/videos/${video.id}`}>
+                    <div className="w-20 h-12 overflow-hidden rounded-lg bg-secondary flex-shrink-0 border border-border/50">
+                      {video.thumbnailUrl
+                        ? <img src={video.thumbnailUrl} alt={video.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        : <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-secondary"><Video className="w-4 h-4 text-muted-foreground/30" /></div>
+                      }
+                    </div>
+                  </Link>
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <Link href={`/videos/${video.id}`}>
+                      <p className="font-semibold text-sm truncate hover:text-primary transition-colors">{video.title}</p>
+                    </Link>
+                    <UserLink username={video.artistName} artistId={video.artistId} role={video.artistUserRole} isVerified={video.artistIsVerified ?? false} className="text-xs text-muted-foreground" />
+                  </div>
+                  {/* Rating */}
+                  {video.avgRating != null && (
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
+                      <span className="text-xs font-bold text-amber-400">{(video.avgRating as number).toFixed(1)}</span>
+                    </div>
+                  )}
+                  {/* Play */}
+                  <button
+                    onClick={() => play({ id: video.id, title: video.title, artistName: video.artistName ?? "", artistId: video.artistId, artistUserRole: video.artistUserRole ?? null, artistIsVerified: video.artistIsVerified ?? false, coverUrl: video.thumbnailUrl, videoUrl: video.videoUrl, duration: video.duration })}
+                    className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground transition-all flex items-center justify-center opacity-0 group-hover:opacity-100"
+                    title={`Play ${video.title}`}
+                  >
+                    <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Discover invite banner */}
+          <Link href="/discover">
+            <div className="relative rounded-2xl overflow-hidden cursor-pointer group border border-primary/20 hover:border-primary/40 transition-colors">
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/10 to-transparent" />
+              <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-5 group-hover:opacity-10 transition-opacity" />
+              <div className="relative z-10 flex items-center justify-between p-5 md:p-6">
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-primary">Discover Page</p>
+                  <h4 className="text-lg md:text-xl font-bold tracking-tight">There's more waiting for you.</h4>
+                  <p className="text-sm text-muted-foreground">Trending tracks, most-discussed songs, new artists — all in one place.</p>
+                </div>
+                <div className="flex-shrink-0 ml-4 bg-primary text-primary-foreground font-semibold px-5 py-2.5 rounded-full flex items-center gap-2 group-hover:scale-105 transition-transform text-sm shadow-lg shadow-primary/25">
+                  <Compass className="w-4 h-4" />
+                  Explore Now
+                </div>
+              </div>
+            </div>
+          </Link>
+        </section>
+      )}
 
       {/* Discover section */}
       {(isLoading || (feed?.newReleases?.length ?? 0) > 0) && (

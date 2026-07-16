@@ -897,6 +897,8 @@ export interface EditorPickExpanded {
 }
 
 export interface HomeFeed {
+  topRatedSongs: Song[];
+  topRatedVideos: Video[];
   featuredSongs: Song[];
   featuredVideos: Video[];
   featuredArtists: Artist[];
