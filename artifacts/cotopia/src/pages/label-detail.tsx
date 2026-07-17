@@ -222,7 +222,7 @@ export default function LabelDetail() {
             {labelBadges && labelBadges.length > 0 && (
               <BadgeList userBadges={labelBadges as any} size="sm" />
             )}
-            {(label.instagramUrl || label.xUrl || label.tiktokUrl || label.linkedinUrl || label.pinterestUrl) && (
+            {(label.instagramUrl || label.xUrl || label.tiktokUrl || label.linkedinUrl || label.pinterestUrl || label.websiteUrl1 || label.websiteUrl2 || label.websiteUrl3) && (
               <div className="flex items-center gap-3 flex-wrap">
                 {label.instagramUrl && (
                   <a href={label.instagramUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-pink-400 transition-colors" title="Instagram">
@@ -247,6 +247,21 @@ export default function LabelDetail() {
                 {label.pinterestUrl && (
                   <a href={label.pinterestUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-red-400 transition-colors" title="Pinterest">
                     <ExternalLink className="w-3.5 h-3.5" /><span className="hidden sm:inline">Pinterest</span>
+                  </a>
+                )}
+                {label.websiteUrl1 && (
+                  <a href={label.websiteUrl1} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors" title={label.websiteUrl1}>
+                    <ExternalLink className="w-3.5 h-3.5" /><span className="hidden sm:inline truncate max-w-[120px]">Website</span>
+                  </a>
+                )}
+                {label.websiteUrl2 && (
+                  <a href={label.websiteUrl2} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors" title={label.websiteUrl2}>
+                    <ExternalLink className="w-3.5 h-3.5" /><span className="hidden sm:inline truncate max-w-[120px]">Website</span>
+                  </a>
+                )}
+                {label.websiteUrl3 && (
+                  <a href={label.websiteUrl3} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors" title={label.websiteUrl3}>
+                    <ExternalLink className="w-3.5 h-3.5" /><span className="hidden sm:inline truncate max-w-[120px]">Website</span>
                   </a>
                 )}
               </div>
@@ -437,7 +452,7 @@ export default function LabelDetail() {
               <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
                 {label.bio ? <LinkifiedText text={label.bio} /> : "No information provided."}
               </p>
-              {(label.instagramUrl || label.xUrl || label.tiktokUrl || label.linkedinUrl || label.pinterestUrl) && (
+              {(label.instagramUrl || label.xUrl || label.tiktokUrl || label.linkedinUrl || label.pinterestUrl || label.websiteUrl1 || label.websiteUrl2 || label.websiteUrl3) && (
                 <div className="flex items-center gap-3 flex-wrap pt-1">
                   {label.instagramUrl && (
                     <a href={label.instagramUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-pink-400 transition-colors" title="Instagram">
@@ -462,6 +477,21 @@ export default function LabelDetail() {
                   {label.pinterestUrl && (
                     <a href={label.pinterestUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-red-400 transition-colors" title="Pinterest">
                       <ExternalLink className="w-3.5 h-3.5" /><span>Pinterest</span>
+                    </a>
+                  )}
+                  {label.websiteUrl1 && (
+                    <a href={label.websiteUrl1} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors" title={label.websiteUrl1}>
+                      <ExternalLink className="w-3.5 h-3.5" /><span>Website</span>
+                    </a>
+                  )}
+                  {label.websiteUrl2 && (
+                    <a href={label.websiteUrl2} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors" title={label.websiteUrl2}>
+                      <ExternalLink className="w-3.5 h-3.5" /><span>Website</span>
+                    </a>
+                  )}
+                  {label.websiteUrl3 && (
+                    <a href={label.websiteUrl3} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors" title={label.websiteUrl3}>
+                      <ExternalLink className="w-3.5 h-3.5" /><span>Website</span>
                     </a>
                   )}
                 </div>

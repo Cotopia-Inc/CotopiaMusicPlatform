@@ -94,7 +94,7 @@ async function seed() {
     role: "artist",
     isVerified: true,
   }).onConflictDoNothing().returning();
-  await db.update(usersTable).set({ isVerified: true, instagramUrl: "https://instagram.com/novasounds", xUrl: "https://x.com/novasounds", tiktokUrl: "https://tiktok.com/@novasounds" }).where(eq(usersTable.email, "nova@example.com"));
+  await db.update(usersTable).set({ isVerified: true, instagramUrl: "https://instagram.com/novasounds", xUrl: "https://x.com/novasounds", tiktokUrl: "https://tiktok.com/@novasounds", websiteUrl1: "https://novasounds.com", websiteUrl2: "https://novasounds.bandcamp.com" }).where(eq(usersTable.email, "nova@example.com"));
 
   const [artist2User] = await db.insert(usersTable).values({
     email: "midnight@example.com",
@@ -105,7 +105,7 @@ async function seed() {
     role: "artist",
     isVerified: true,
   }).onConflictDoNothing().returning();
-  await db.update(usersTable).set({ isVerified: true, instagramUrl: "https://instagram.com/midnightecho", xUrl: "https://x.com/midnightecho", tiktokUrl: "https://tiktok.com/@midnightecho", pinterestUrl: "https://pinterest.com/midnightecho" }).where(eq(usersTable.email, "midnight@example.com"));
+  await db.update(usersTable).set({ isVerified: true, instagramUrl: "https://instagram.com/midnightecho", xUrl: "https://x.com/midnightecho", tiktokUrl: "https://tiktok.com/@midnightecho", pinterestUrl: "https://pinterest.com/midnightecho", websiteUrl1: "https://midnightecho.co", websiteUrl2: "https://midnightecho.bandcamp.com" }).where(eq(usersTable.email, "midnight@example.com"));
 
   const [artist3User] = await db.insert(usersTable).values({
     email: "lyra@example.com",
@@ -116,7 +116,7 @@ async function seed() {
     role: "artist",
     isVerified: true,
   }).onConflictDoNothing().returning();
-  await db.update(usersTable).set({ isVerified: true, instagramUrl: "https://instagram.com/lyrawave", xUrl: "https://x.com/lyrawave", linkedinUrl: "https://linkedin.com/in/lyrawave" }).where(eq(usersTable.email, "lyra@example.com"));
+  await db.update(usersTable).set({ isVerified: true, instagramUrl: "https://instagram.com/lyrawave", xUrl: "https://x.com/lyrawave", linkedinUrl: "https://linkedin.com/in/lyrawave", websiteUrl1: "https://lyrawave.io", websiteUrl2: "https://lyrawave.bandcamp.com", websiteUrl3: "https://lyrawave.behance.net" }).where(eq(usersTable.email, "lyra@example.com"));
 
   const [label1User] = await db.insert(usersTable).values({
     email: "deepwave@example.com",
@@ -126,7 +126,7 @@ async function seed() {
     role: "label",
     isVerified: true,
   }).onConflictDoNothing().returning();
-  await db.update(usersTable).set({ isVerified: true, instagramUrl: "https://instagram.com/deepwaverecords", xUrl: "https://x.com/deepwaverecords", tiktokUrl: "https://tiktok.com/@deepwaverecords", linkedinUrl: "https://linkedin.com/company/deepwaverecords" }).where(eq(usersTable.email, "deepwave@example.com"));
+  await db.update(usersTable).set({ isVerified: true, instagramUrl: "https://instagram.com/deepwaverecords", xUrl: "https://x.com/deepwaverecords", tiktokUrl: "https://tiktok.com/@deepwaverecords", linkedinUrl: "https://linkedin.com/company/deepwaverecords", websiteUrl1: "https://deepwaverecords.com" }).where(eq(usersTable.email, "deepwave@example.com"));
 
   const [label2User] = await db.insert(usersTable).values({
     email: "neon@example.com",
@@ -136,7 +136,7 @@ async function seed() {
     role: "label",
     isVerified: true,
   }).onConflictDoNothing().returning();
-  await db.update(usersTable).set({ isVerified: true, instagramUrl: "https://instagram.com/neoncollective", xUrl: "https://x.com/neoncollective", tiktokUrl: "https://tiktok.com/@neoncollective" }).where(eq(usersTable.email, "neon@example.com"));
+  await db.update(usersTable).set({ isVerified: true, instagramUrl: "https://instagram.com/neoncollective", xUrl: "https://x.com/neoncollective", tiktokUrl: "https://tiktok.com/@neoncollective", websiteUrl1: "https://neoncollective.com", websiteUrl2: "https://neoncollective.bandcamp.com" }).where(eq(usersTable.email, "neon@example.com"));
 
   console.log("✓ Users created");
 

@@ -31,6 +31,12 @@ export interface User {
   linkedinUrl?: string | null;
   /** @nullable */
   pinterestUrl?: string | null;
+  /** @nullable */
+  websiteUrl1?: string | null;
+  /** @nullable */
+  websiteUrl2?: string | null;
+  /** @nullable */
+  websiteUrl3?: string | null;
   role: UserRole;
   isActive?: boolean;
   isVerified?: boolean;

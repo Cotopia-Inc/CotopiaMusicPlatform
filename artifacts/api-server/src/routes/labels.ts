@@ -22,7 +22,17 @@ function releasedSongCondition() {
 
 async function getLabelRow(id: number, userId?: number) {
   const [label] = await db
-    .select({ id: labelsTable.id, userId: labelsTable.userId, name: labelsTable.name, bio: sql<string | null>`COALESCE(${labelsTable.bio}, ${usersTable.bio})`, logoUrl: sql<string | null>`COALESCE(${labelsTable.logoUrl}, ${usersTable.avatarUrl})`, bannerUrl: sql<string | null>`COALESCE(${labelsTable.bannerUrl}, ${usersTable.bannerUrl})`, profileVideoUrl: usersTable.profileVideoUrl, createdAt: labelsTable.createdAt, isVerified: usersTable.isVerified, userRole: usersTable.role, instagramUrl: usersTable.instagramUrl, xUrl: usersTable.xUrl, tiktokUrl: usersTable.tiktokUrl, linkedinUrl: usersTable.linkedinUrl, pinterestUrl: usersTable.pinterestUrl })
+    .select({
+      id: labelsTable.id, userId: labelsTable.userId, name: labelsTable.name,
+      bio: sql<string | null>`COALESCE(${labelsTable.bio}, ${usersTable.bio})`,
+      logoUrl: sql<string | null>`COALESCE(${labelsTable.logoUrl}, ${usersTable.avatarUrl})`,
+      bannerUrl: sql<string | null>`COALESCE(${labelsTable.bannerUrl}, ${usersTable.bannerUrl})`,
+      profileVideoUrl: usersTable.profileVideoUrl, createdAt: labelsTable.createdAt,
+      isVerified: usersTable.isVerified, userRole: usersTable.role,
+      instagramUrl: usersTable.instagramUrl, xUrl: usersTable.xUrl, tiktokUrl: usersTable.tiktokUrl,
+      linkedinUrl: usersTable.linkedinUrl, pinterestUrl: usersTable.pinterestUrl,
+      websiteUrl1: usersTable.websiteUrl1, websiteUrl2: usersTable.websiteUrl2, websiteUrl3: usersTable.websiteUrl3,
+    })
     .from(labelsTable)
     .innerJoin(usersTable, eq(labelsTable.userId, usersTable.id))
     .where(eq(labelsTable.id, id))

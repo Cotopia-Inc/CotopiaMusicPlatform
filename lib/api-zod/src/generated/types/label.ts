@@ -26,6 +26,12 @@ export interface Label {
   linkedinUrl?: string | null;
   /** @nullable */
   pinterestUrl?: string | null;
+  /** @nullable */
+  websiteUrl1?: string | null;
+  /** @nullable */
+  websiteUrl2?: string | null;
+  /** @nullable */
+  websiteUrl3?: string | null;
   followerCount?: number;
   artistCount?: number;
   isFollowed?: boolean;

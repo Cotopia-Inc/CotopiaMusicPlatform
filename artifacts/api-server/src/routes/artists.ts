@@ -45,6 +45,9 @@ async function getArtistRow(id: number, userId?: number) {
       tiktokUrl: usersTable.tiktokUrl,
       linkedinUrl: usersTable.linkedinUrl,
       pinterestUrl: usersTable.pinterestUrl,
+      websiteUrl1: usersTable.websiteUrl1,
+      websiteUrl2: usersTable.websiteUrl2,
+      websiteUrl3: usersTable.websiteUrl3,
     })
     .from(artistsTable)
     .leftJoin(usersTable, eq(artistsTable.userId, usersTable.id))

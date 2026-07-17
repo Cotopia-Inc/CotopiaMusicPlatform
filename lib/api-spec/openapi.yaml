@@ -3896,6 +3896,12 @@ components:
           type: ["string", "null"]
         pinterestUrl:
           type: ["string", "null"]
+        websiteUrl1:
+          type: ["string", "null"]
+        websiteUrl2:
+          type: ["string", "null"]
+        websiteUrl3:
+          type: ["string", "null"]
         role:
           type: string
           enum: [listener, artist, label, business, admin, moderator, editor, master_admin]
@@ -3931,6 +3937,12 @@ components:
         linkedinUrl:
           type: ["string", "null"]
         pinterestUrl:
+          type: ["string", "null"]
+        websiteUrl1:
+          type: ["string", "null"]
+        websiteUrl2:
+          type: ["string", "null"]
+        websiteUrl3:
           type: ["string", "null"]
         role:
           type: string
@@ -3969,6 +3981,12 @@ components:
         linkedinUrl:
           type: string
         pinterestUrl:
+          type: string
+        websiteUrl1:
+          type: string
+        websiteUrl2:
+          type: string
+        websiteUrl3:
           type: string
 
     SendOtpInput:
@@ -4300,6 +4318,12 @@ components:
           type: ["string", "null"]
         pinterestUrl:
           type: ["string", "null"]
+        websiteUrl1:
+          type: ["string", "null"]
+        websiteUrl2:
+          type: ["string", "null"]
+        websiteUrl3:
+          type: ["string", "null"]
         followerCount:
           type: integer
         songCount:
@@ -4369,6 +4393,12 @@ components:
         linkedinUrl:
           type: ["string", "null"]
         pinterestUrl:
+          type: ["string", "null"]
+        websiteUrl1:
+          type: ["string", "null"]
+        websiteUrl2:
+          type: ["string", "null"]
+        websiteUrl3:
           type: ["string", "null"]
         followerCount:
           type: integer

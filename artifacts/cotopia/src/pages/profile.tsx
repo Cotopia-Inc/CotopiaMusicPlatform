@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import React, { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Upload, X, Loader2, Lock, User, MailCheck, CheckCircle, Mail, RefreshCw, Film, Camera, Trash2, AlertTriangle, GripVertical, Instagram, Twitter, Linkedin } from "lucide-react";
+import { Upload, X, Loader2, Lock, User, MailCheck, CheckCircle, Mail, RefreshCw, Film, Camera, Trash2, AlertTriangle, GripVertical, Instagram, Twitter, Linkedin, ExternalLink } from "lucide-react";
 import { useUpload } from "@/lib/useUpload";
 import { RoleBadges, VerifiedBadge } from "@/components/role-badges";
 import { useQueryClient } from "@tanstack/react-query";
@@ -414,6 +414,9 @@ export default function Profile() {
   const [tiktokUrl, setTiktokUrl] = useState("");
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [pinterestUrl, setPinterestUrl] = useState("");
+  const [websiteUrl1, setWebsiteUrl1] = useState("");
+  const [websiteUrl2, setWebsiteUrl2] = useState("");
+  const [websiteUrl3, setWebsiteUrl3] = useState("");
   const [cropModal, setCropModal] = useState<{ url: string; mode: "avatar" | "banner" } | null>(null);
   const initialized = useRef(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -451,6 +454,9 @@ export default function Profile() {
       setTiktokUrl((profile as any).tiktokUrl || "");
       setLinkedinUrl((profile as any).linkedinUrl || "");
       setPinterestUrl((profile as any).pinterestUrl || "");
+      setWebsiteUrl1((profile as any).websiteUrl1 || "");
+      setWebsiteUrl2((profile as any).websiteUrl2 || "");
+      setWebsiteUrl3((profile as any).websiteUrl3 || "");
       setNewUsername(profile.username || "");
       initialized.current = true;
     }
@@ -559,7 +565,7 @@ export default function Profile() {
   };
 
   const handleSave = () => {
-    updateMutation.mutate({ data: { displayName, avatarUrl, bio, bannerUrl, profileVideoUrl, instagramUrl: instagramUrl || undefined, xUrl: xUrl || undefined, tiktokUrl: tiktokUrl || undefined, linkedinUrl: linkedinUrl || undefined, pinterestUrl: pinterestUrl || undefined } }, {
+    updateMutation.mutate({ data: { displayName, avatarUrl, bio, bannerUrl, profileVideoUrl, instagramUrl: instagramUrl || undefined, xUrl: xUrl || undefined, tiktokUrl: tiktokUrl || undefined, linkedinUrl: linkedinUrl || undefined, pinterestUrl: pinterestUrl || undefined, websiteUrl1: websiteUrl1 || undefined, websiteUrl2: websiteUrl2 || undefined, websiteUrl3: websiteUrl3 || undefined } }, {
       onSuccess: () => {
         qc.invalidateQueries({ queryKey: getGetMeQueryKey() });
         toast({ title: "Profile updated" });
@@ -802,6 +808,18 @@ export default function Profile() {
             <div className="flex items-center gap-2">
               <span className="w-4 h-4 flex-shrink-0 flex items-center justify-center text-[10px] font-black text-red-400">P</span>
               <Input value={pinterestUrl} onChange={e => setPinterestUrl(e.target.value)} placeholder="https://pinterest.com/yourprofile" className="bg-secondary/50 border-secondary text-sm h-9" />
+            </div>
+            <div className="flex items-center gap-2">
+              <ExternalLink className="w-4 h-4 text-primary flex-shrink-0" />
+              <Input value={websiteUrl1} onChange={e => setWebsiteUrl1(e.target.value)} placeholder="https://yourwebsite.com (Website 1)" className="bg-secondary/50 border-secondary text-sm h-9" />
+            </div>
+            <div className="flex items-center gap-2">
+              <ExternalLink className="w-4 h-4 text-primary flex-shrink-0" />
+              <Input value={websiteUrl2} onChange={e => setWebsiteUrl2(e.target.value)} placeholder="https://yourwebsite.com (Website 2)" className="bg-secondary/50 border-secondary text-sm h-9" />
+            </div>
+            <div className="flex items-center gap-2">
+              <ExternalLink className="w-4 h-4 text-primary flex-shrink-0" />
+              <Input value={websiteUrl3} onChange={e => setWebsiteUrl3(e.target.value)} placeholder="https://yourwebsite.com (Website 3)" className="bg-secondary/50 border-secondary text-sm h-9" />
             </div>
           </div>
         </div>

@@ -299,7 +299,7 @@ export default function UserProfile() {
           <p className="text-sm text-muted-foreground leading-relaxed"><LinkifiedText text={user.bio} /></p>
         )}
         {/* Social links */}
-        {(user.instagramUrl || user.xUrl || user.tiktokUrl || user.linkedinUrl || user.pinterestUrl) && (
+        {(user.instagramUrl || user.xUrl || user.tiktokUrl || user.linkedinUrl || user.pinterestUrl || user.websiteUrl1 || user.websiteUrl2 || user.websiteUrl3) && (
           <div className="flex items-center gap-3 flex-wrap">
             {user.instagramUrl && (
               <a href={user.instagramUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-pink-400 transition-colors" title="Instagram">
@@ -329,6 +329,24 @@ export default function UserProfile() {
               <a href={user.pinterestUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-red-400 transition-colors" title="Pinterest">
                 <ExternalLink className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Pinterest</span>
+              </a>
+            )}
+            {user.websiteUrl1 && (
+              <a href={user.websiteUrl1} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors" title={user.websiteUrl1}>
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline truncate max-w-[120px]">Website</span>
+              </a>
+            )}
+            {user.websiteUrl2 && (
+              <a href={user.websiteUrl2} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors" title={user.websiteUrl2}>
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline truncate max-w-[120px]">Website</span>
+              </a>
+            )}
+            {user.websiteUrl3 && (
+              <a href={user.websiteUrl3} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors" title={user.websiteUrl3}>
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline truncate max-w-[120px]">Website</span>
               </a>
             )}
           </div>

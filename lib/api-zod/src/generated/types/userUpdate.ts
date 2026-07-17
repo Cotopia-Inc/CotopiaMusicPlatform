@@ -17,4 +17,7 @@ export interface UserUpdate {
   tiktokUrl?: string;
   linkedinUrl?: string;
   pinterestUrl?: string;
+  websiteUrl1?: string;
+  websiteUrl2?: string;
+  websiteUrl3?: string;
 }

@@ -79,6 +79,9 @@ export async function ensureTables(): Promise<void> {
       ALTER TABLE users ADD COLUMN IF NOT EXISTS tiktok_url TEXT;
       ALTER TABLE users ADD COLUMN IF NOT EXISTS linkedin_url TEXT;
       ALTER TABLE users ADD COLUMN IF NOT EXISTS pinterest_url TEXT;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS website_url_1 TEXT;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS website_url_2 TEXT;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS website_url_3 TEXT;
 
       -- app_settings columns added after initial schema (safe to run every startup)
       ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS single_song_fee TEXT NOT NULL DEFAULT '9.99';

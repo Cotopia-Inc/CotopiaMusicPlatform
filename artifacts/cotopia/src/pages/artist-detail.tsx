@@ -289,7 +289,7 @@ export default function ArtistDetail() {
             {artistBadges && artistBadges.length > 0 && (
               <BadgeList userBadges={artistBadges as any} size="sm" />
             )}
-            {(artist.instagramUrl || artist.xUrl || artist.tiktokUrl || artist.linkedinUrl || artist.pinterestUrl) && (
+            {(artist.instagramUrl || artist.xUrl || artist.tiktokUrl || artist.linkedinUrl || artist.pinterestUrl || artist.websiteUrl1 || artist.websiteUrl2 || artist.websiteUrl3) && (
               <div className="flex items-center gap-3 flex-wrap">
                 {artist.instagramUrl && (
                   <a href={artist.instagramUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-pink-400 transition-colors" title="Instagram">
@@ -314,6 +314,21 @@ export default function ArtistDetail() {
                 {artist.pinterestUrl && (
                   <a href={artist.pinterestUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-red-400 transition-colors" title="Pinterest">
                     <ExternalLink className="w-3.5 h-3.5" /><span className="hidden sm:inline">Pinterest</span>
+                  </a>
+                )}
+                {artist.websiteUrl1 && (
+                  <a href={artist.websiteUrl1} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors" title={artist.websiteUrl1}>
+                    <ExternalLink className="w-3.5 h-3.5" /><span className="hidden sm:inline truncate max-w-[120px]">Website</span>
+                  </a>
+                )}
+                {artist.websiteUrl2 && (
+                  <a href={artist.websiteUrl2} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors" title={artist.websiteUrl2}>
+                    <ExternalLink className="w-3.5 h-3.5" /><span className="hidden sm:inline truncate max-w-[120px]">Website</span>
+                  </a>
+                )}
+                {artist.websiteUrl3 && (
+                  <a href={artist.websiteUrl3} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors" title={artist.websiteUrl3}>
+                    <ExternalLink className="w-3.5 h-3.5" /><span className="hidden sm:inline truncate max-w-[120px]">Website</span>
                   </a>
                 )}
               </div>
@@ -548,7 +563,7 @@ export default function ArtistDetail() {
               <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
                 {artist.bio ? <LinkifiedText text={artist.bio} /> : "No biography provided."}
               </p>
-              {(artist.instagramUrl || artist.xUrl || artist.tiktokUrl || artist.linkedinUrl || artist.pinterestUrl) && (
+              {(artist.instagramUrl || artist.xUrl || artist.tiktokUrl || artist.linkedinUrl || artist.pinterestUrl || artist.websiteUrl1 || artist.websiteUrl2 || artist.websiteUrl3) && (
                 <div className="flex items-center gap-3 flex-wrap pt-1">
                   {artist.instagramUrl && (
                     <a href={artist.instagramUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-pink-400 transition-colors" title="Instagram">
@@ -573,6 +588,21 @@ export default function ArtistDetail() {
                   {artist.pinterestUrl && (
                     <a href={artist.pinterestUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-red-400 transition-colors" title="Pinterest">
                       <ExternalLink className="w-3.5 h-3.5" /><span>Pinterest</span>
+                    </a>
+                  )}
+                  {artist.websiteUrl1 && (
+                    <a href={artist.websiteUrl1} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors" title={artist.websiteUrl1}>
+                      <ExternalLink className="w-3.5 h-3.5" /><span>Website</span>
+                    </a>
+                  )}
+                  {artist.websiteUrl2 && (
+                    <a href={artist.websiteUrl2} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors" title={artist.websiteUrl2}>
+                      <ExternalLink className="w-3.5 h-3.5" /><span>Website</span>
+                    </a>
+                  )}
+                  {artist.websiteUrl3 && (
+                    <a href={artist.websiteUrl3} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors" title={artist.websiteUrl3}>
+                      <ExternalLink className="w-3.5 h-3.5" /><span>Website</span>
                     </a>
                   )}
                 </div>

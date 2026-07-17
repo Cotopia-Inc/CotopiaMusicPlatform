@@ -190,6 +190,12 @@ export interface User {
   linkedinUrl?: string | null;
   /** @nullable */
   pinterestUrl?: string | null;
+  /** @nullable */
+  websiteUrl1?: string | null;
+  /** @nullable */
+  websiteUrl2?: string | null;
+  /** @nullable */
+  websiteUrl3?: string | null;
   role: UserRole;
   isActive?: boolean;
   isVerified?: boolean;
@@ -221,6 +227,12 @@ export interface PublicUser {
   linkedinUrl?: string | null;
   /** @nullable */
   pinterestUrl?: string | null;
+  /** @nullable */
+  websiteUrl1?: string | null;
+  /** @nullable */
+  websiteUrl2?: string | null;
+  /** @nullable */
+  websiteUrl3?: string | null;
   role: string;
   isVerified: boolean;
   /** @nullable */
@@ -243,6 +255,9 @@ export interface UserUpdate {
   tiktokUrl?: string;
   linkedinUrl?: string;
   pinterestUrl?: string;
+  websiteUrl1?: string;
+  websiteUrl2?: string;
+  websiteUrl3?: string;
 }
 
 export type SendOtpInputPurpose = typeof SendOtpInputPurpose[keyof typeof SendOtpInputPurpose];
@@ -511,6 +526,12 @@ export interface Artist {
   linkedinUrl?: string | null;
   /** @nullable */
   pinterestUrl?: string | null;
+  /** @nullable */
+  websiteUrl1?: string | null;
+  /** @nullable */
+  websiteUrl2?: string | null;
+  /** @nullable */
+  websiteUrl3?: string | null;
   followerCount?: number;
   songCount?: number;
   isFollowed?: boolean;
@@ -555,6 +576,12 @@ export interface Label {
   linkedinUrl?: string | null;
   /** @nullable */
   pinterestUrl?: string | null;
+  /** @nullable */
+  websiteUrl1?: string | null;
+  /** @nullable */
+  websiteUrl2?: string | null;
+  /** @nullable */
+  websiteUrl3?: string | null;
   followerCount?: number;
   artistCount?: number;
   isFollowed?: boolean;
