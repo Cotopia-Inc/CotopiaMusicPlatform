@@ -8,8 +8,15 @@ import { logger } from "./lib/logger";
 import { db, appSettingsTable } from "@workspace/db";
 import { verifyToken } from "./lib/auth";
 import { getMaintenanceCached, setMaintenanceCache } from "./lib/maintenance-cache";
+import { botDetection } from "./lib/bot-detection";
+import { apiRateLimit, authRateLimit } from "./lib/rate-limit";
 
 const app: Express = express();
+
+// Trust the first proxy hop (Render's edge / Replit's reverse proxy).
+// This makes req.ip resolve to the real client IP from X-Forwarded-For,
+// which express-rate-limit uses to key rate-limit buckets per client.
+app.set("trust proxy", 1);
 
 app.use(
   pinoHttp({
@@ -33,6 +40,21 @@ app.use(
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// ── Anti-scraping defenses ────────────────────────────────────────────────
+// Applied before every /api route — bot detection first (cheapest), then
+// rate limiting. Ordering matters: blocked bots never consume a rate-limit
+// slot, and the general limit fires before any route handler touches the DB.
+
+// 1. Block known automated User-Agents (scrapers, crawlers, headless clients)
+app.use("/api", botDetection);
+
+// 2. General API rate limit: 300 req / 15 min per IP — plenty for real users
+app.use("/api", apiRateLimit);
+
+// 3. Stricter auth-endpoint limit: 10 req / 15 min per IP — blocks brute-force
+//    on login, register, and password-reset mutations.
+app.use("/api/auth", authRateLimit);
 
 // ── Maintenance mode gate ─────────────────────────────────────────────────
 // 30-second in-memory cache so we don't hit the DB on every request.

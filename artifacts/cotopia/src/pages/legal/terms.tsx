@@ -114,7 +114,23 @@ export default function TermsOfService() {
         <p>Creators who enable Creator Support agree to the Creator Agreement and Creator Payments Addendum, both available in the Legal Center.</p>
       </Section>
 
-      <Section title="13. Changes to Terms">
+      <Section title="13. Prohibited Automated Access & Scraping">
+        <p><strong className="text-foreground">You may not use automated means to access, collect, or harvest data from the Platform without prior written permission from Cotopia.</strong></p>
+        <p>Prohibited activities include, but are not limited to:</p>
+        <ul className="list-disc list-inside space-y-1 pl-2">
+          <li>Web scraping, crawling, spidering, or indexing any part of the Platform or API</li>
+          <li>Using bots, scripts, or automated tools to access content, metadata, user profiles, or any API endpoint</li>
+          <li>Systematically downloading, mirroring, or reproducing Platform content</li>
+          <li>Bypassing, disabling, or circumventing any rate limit, bot-detection, or access-control mechanism</li>
+          <li>Using headless browsers, browser automation tools, or API clients that impersonate legitimate users</li>
+          <li>Harvesting creator content, artist metadata, catalog data, or user information for any commercial or competitive purpose</li>
+        </ul>
+        <p>Cotopia employs technical measures to detect and block automated access. Circumventing these protections is a violation of these Terms and may constitute unauthorized access under applicable computer fraud and abuse laws.</p>
+        <p>Violations may result in immediate IP blocking, account termination, and legal action. Cotopia reserves all rights to seek injunctive relief and damages for unauthorized scraping of Platform content.</p>
+        <p>If you are a researcher, developer, or data partner with a legitimate use case, contact <a href="mailto:api@cotopia.org" className="text-primary hover:underline">api@cotopia.org</a> to request authorized API access.</p>
+      </Section>
+
+      <Section title="14. Changes to Terms">
         <p>We may update these Terms at any time. Material changes will be announced on the Platform. Continued use after changes constitutes acceptance of the new Terms.</p>
       </Section>
 

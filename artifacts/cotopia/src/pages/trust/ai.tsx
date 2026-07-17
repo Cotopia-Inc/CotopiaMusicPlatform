@@ -51,15 +51,25 @@ export default function TrustAI() {
           <div className="p-6 rounded-xl bg-card border border-border space-y-3">
             <div className="flex items-center gap-2">
               <Shield className="w-4 h-4 text-green-400" />
-              <h2 className="font-semibold">Scraping Protection</h2>
+              <h2 className="font-semibold">Scraping & Bot Protection</h2>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Everyday Radio has temporary anti-scraping protections in place during Beta. These help
-              protect creator content and platform data from automated harvesting.
+              Everyday Radio actively protects creator content and platform data from automated
+              harvesting. These defenses are always on — not temporary.
             </p>
+            <ul className="text-sm text-muted-foreground space-y-1.5 pl-1">
+              <li className="flex items-start gap-2"><span className="text-green-400 mt-0.5">✓</span><span><strong className="text-foreground">Authentication gate</strong> — all catalog endpoints (songs, videos, artists, labels) require a valid account. Unauthenticated requests receive 401.</span></li>
+              <li className="flex items-start gap-2"><span className="text-green-400 mt-0.5">✓</span><span><strong className="text-foreground">Bot detection</strong> — automated clients (scrapers, crawlers, headless HTTP libraries) are identified and blocked before any data is returned.</span></li>
+              <li className="flex items-start gap-2"><span className="text-green-400 mt-0.5">✓</span><span><strong className="text-foreground">Rate limiting</strong> — all API endpoints enforce per-IP request limits. Sustained automated traffic is throttled and blocked.</span></li>
+              <li className="flex items-start gap-2"><span className="text-green-400 mt-0.5">✓</span><span><strong className="text-foreground">Brute-force protection</strong> — login, registration, and password-reset endpoints have a stricter limit to prevent credential attacks.</span></li>
+              <li className="flex items-start gap-2"><span className="text-green-400 mt-0.5">✓</span><span><strong className="text-foreground">robots.txt</strong> — the <code className="text-xs bg-muted px-1 py-0.5 rounded">/api/</code> path and all content paths are disallowed for web crawlers.</span></li>
+            </ul>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              We do not publish the implementation details of these protections, as doing so would
-              undermine their effectiveness.
+              Scraping Everyday Radio is a violation of our{" "}
+              <Link href="/legal/terms">
+                <span className="text-primary hover:underline cursor-pointer">Terms of Service</span>
+              </Link>
+              {" "}(Section 13). Unauthorized automated access may result in permanent blocking and legal action.
             </p>
           </div>
 

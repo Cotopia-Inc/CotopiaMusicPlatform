@@ -12,7 +12,22 @@ import app from "../app";
 import { signToken } from "../lib/auth";
 
 export { app };
-export const api = () => request(app);
+
+// All test requests carry a real browser User-Agent so the bot-detection
+// middleware lets them through. Individual anti-scraping tests that need to
+// probe bot blocking use `request(app)` directly and set their own UA.
+const TEST_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
+
+export const api = () => {
+  const agent = request(app);
+  return {
+    get:    (url: string) => agent.get(url).set("User-Agent", TEST_UA),
+    post:   (url: string) => agent.post(url).set("User-Agent", TEST_UA),
+    put:    (url: string) => agent.put(url).set("User-Agent", TEST_UA),
+    patch:  (url: string) => agent.patch(url).set("User-Agent", TEST_UA),
+    delete: (url: string) => agent.delete(url).set("User-Agent", TEST_UA),
+  };
+};
 
 let counter = 0;
 function unique(prefix: string): string {
