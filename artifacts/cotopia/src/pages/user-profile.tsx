@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { RoleBadges } from "@/components/role-badges";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
-import { ArrowLeft, CalendarDays, Music, MessageCircle, Volume2, VolumeX, Ban, UserPlus, UserCheck, Settings, LayoutDashboard, Users, Heart } from "lucide-react";
+import { ArrowLeft, CalendarDays, Music, MessageCircle, Volume2, VolumeX, Ban, UserPlus, UserCheck, Settings, LayoutDashboard, Users, Heart, Instagram, Twitter, Linkedin, ExternalLink } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { useAuth } from "@/lib/auth";
 import { ReportModal } from "@/components/report-modal";
@@ -296,6 +296,41 @@ export default function UserProfile() {
       <div className="px-6 pt-6 space-y-3 max-w-2xl">
         {user.bio && (
           <p className="text-sm text-muted-foreground leading-relaxed">{user.bio}</p>
+        )}
+        {/* Social links */}
+        {((user as any).instagramUrl || (user as any).xUrl || (user as any).tiktokUrl || (user as any).linkedinUrl || (user as any).pinterestUrl) && (
+          <div className="flex items-center gap-3 flex-wrap">
+            {(user as any).instagramUrl && (
+              <a href={(user as any).instagramUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-pink-400 transition-colors" title="Instagram">
+                <Instagram className="w-4 h-4" />
+                <span className="hidden sm:inline">Instagram</span>
+              </a>
+            )}
+            {(user as any).xUrl && (
+              <a href={(user as any).xUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors" title="X / Twitter">
+                <Twitter className="w-4 h-4" />
+                <span className="hidden sm:inline">X</span>
+              </a>
+            )}
+            {(user as any).tiktokUrl && (
+              <a href={(user as any).tiktokUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors" title="TikTok">
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">TikTok</span>
+              </a>
+            )}
+            {(user as any).linkedinUrl && (
+              <a href={(user as any).linkedinUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-blue-400 transition-colors" title="LinkedIn">
+                <Linkedin className="w-4 h-4" />
+                <span className="hidden sm:inline">LinkedIn</span>
+              </a>
+            )}
+            {(user as any).pinterestUrl && (
+              <a href={(user as any).pinterestUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-red-400 transition-colors" title="Pinterest">
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Pinterest</span>
+              </a>
+            )}
+          </div>
         )}
         <div className="flex items-center gap-4 flex-wrap">
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">

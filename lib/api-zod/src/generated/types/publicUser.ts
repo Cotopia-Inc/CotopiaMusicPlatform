@@ -15,6 +15,16 @@ export interface PublicUser {
   avatarUrl?: string | null;
   /** @nullable */
   bio?: string | null;
+  /** @nullable */
+  instagramUrl?: string | null;
+  /** @nullable */
+  xUrl?: string | null;
+  /** @nullable */
+  tiktokUrl?: string | null;
+  /** @nullable */
+  linkedinUrl?: string | null;
+  /** @nullable */
+  pinterestUrl?: string | null;
   role: string;
   isVerified: boolean;
   /** @nullable */

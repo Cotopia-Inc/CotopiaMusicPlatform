@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import React, { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Upload, X, Loader2, Lock, User, MailCheck, CheckCircle, Mail, RefreshCw, Film, Camera, Trash2, AlertTriangle, GripVertical } from "lucide-react";
+import { Upload, X, Loader2, Lock, User, MailCheck, CheckCircle, Mail, RefreshCw, Film, Camera, Trash2, AlertTriangle, GripVertical, Instagram, Twitter, Linkedin } from "lucide-react";
 import { useUpload } from "@/lib/useUpload";
 import { RoleBadges, VerifiedBadge } from "@/components/role-badges";
 import { useQueryClient } from "@tanstack/react-query";
@@ -408,6 +408,12 @@ export default function Profile() {
   const [bio, setBio] = useState("");
   const [bannerUrl, setBannerUrl] = useState("");
   const [profileVideoUrl, setProfileVideoUrl] = useState("");
+  // Social links
+  const [instagramUrl, setInstagramUrl] = useState("");
+  const [xUrl, setXUrl] = useState("");
+  const [tiktokUrl, setTiktokUrl] = useState("");
+  const [linkedinUrl, setLinkedinUrl] = useState("");
+  const [pinterestUrl, setPinterestUrl] = useState("");
   const [cropModal, setCropModal] = useState<{ url: string; mode: "avatar" | "banner" } | null>(null);
   const initialized = useRef(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -440,6 +446,11 @@ export default function Profile() {
       setBio((profile as any).bio || "");
       setBannerUrl((profile as any).bannerUrl || "");
       setProfileVideoUrl((profile as any).profileVideoUrl || "");
+      setInstagramUrl((profile as any).instagramUrl || "");
+      setXUrl((profile as any).xUrl || "");
+      setTiktokUrl((profile as any).tiktokUrl || "");
+      setLinkedinUrl((profile as any).linkedinUrl || "");
+      setPinterestUrl((profile as any).pinterestUrl || "");
       setNewUsername(profile.username || "");
       initialized.current = true;
     }
@@ -548,7 +559,7 @@ export default function Profile() {
   };
 
   const handleSave = () => {
-    updateMutation.mutate({ data: { displayName, avatarUrl, bio, bannerUrl, profileVideoUrl } }, {
+    updateMutation.mutate({ data: { displayName, avatarUrl, bio, bannerUrl, profileVideoUrl, instagramUrl: instagramUrl || undefined, xUrl: xUrl || undefined, tiktokUrl: tiktokUrl || undefined, linkedinUrl: linkedinUrl || undefined, pinterestUrl: pinterestUrl || undefined } }, {
       onSuccess: () => {
         qc.invalidateQueries({ queryKey: getGetMeQueryKey() });
         toast({ title: "Profile updated" });
@@ -763,6 +774,36 @@ export default function Profile() {
         <div className="space-y-2">
           <label className="text-sm font-medium">Bio <span className="text-muted-foreground text-xs">(optional)</span></label>
           <Textarea value={bio} onChange={e => setBio(e.target.value)} placeholder="Tell creators about yourself…" rows={4} className="bg-secondary/50 border-secondary resize-none" />
+        </div>
+
+        {/* Social Links */}
+        <div className="space-y-3">
+          <div>
+            <label className="text-sm font-medium">Social Links <span className="text-muted-foreground text-xs">(optional)</span></label>
+            <p className="text-xs text-muted-foreground mt-0.5">Add your social profiles — they'll appear on your public page.</p>
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Instagram className="w-4 h-4 text-pink-400 flex-shrink-0" />
+              <Input value={instagramUrl} onChange={e => setInstagramUrl(e.target.value)} placeholder="https://instagram.com/yourhandle" className="bg-secondary/50 border-secondary text-sm h-9" />
+            </div>
+            <div className="flex items-center gap-2">
+              <Twitter className="w-4 h-4 text-sky-400 flex-shrink-0" />
+              <Input value={xUrl} onChange={e => setXUrl(e.target.value)} placeholder="https://x.com/yourhandle" className="bg-secondary/50 border-secondary text-sm h-9" />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-4 h-4 flex-shrink-0 flex items-center justify-center text-[10px] font-black text-foreground/70">TT</span>
+              <Input value={tiktokUrl} onChange={e => setTiktokUrl(e.target.value)} placeholder="https://tiktok.com/@yourhandle" className="bg-secondary/50 border-secondary text-sm h-9" />
+            </div>
+            <div className="flex items-center gap-2">
+              <Linkedin className="w-4 h-4 text-blue-400 flex-shrink-0" />
+              <Input value={linkedinUrl} onChange={e => setLinkedinUrl(e.target.value)} placeholder="https://linkedin.com/in/yourprofile" className="bg-secondary/50 border-secondary text-sm h-9" />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-4 h-4 flex-shrink-0 flex items-center justify-center text-[10px] font-black text-red-400">P</span>
+              <Input value={pinterestUrl} onChange={e => setPinterestUrl(e.target.value)} placeholder="https://pinterest.com/yourprofile" className="bg-secondary/50 border-secondary text-sm h-9" />
+            </div>
+          </div>
         </div>
 
         {/* Featured Badges */}

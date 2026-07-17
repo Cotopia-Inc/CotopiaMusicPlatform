@@ -21,6 +21,16 @@ export interface User {
   bannerUrl?: string | null;
   /** @nullable */
   profileVideoUrl?: string | null;
+  /** @nullable */
+  instagramUrl?: string | null;
+  /** @nullable */
+  xUrl?: string | null;
+  /** @nullable */
+  tiktokUrl?: string | null;
+  /** @nullable */
+  linkedinUrl?: string | null;
+  /** @nullable */
+  pinterestUrl?: string | null;
   role: UserRole;
   isActive?: boolean;
   isVerified?: boolean;

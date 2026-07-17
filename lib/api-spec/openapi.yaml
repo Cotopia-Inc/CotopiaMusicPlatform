@@ -3886,6 +3886,16 @@ components:
           type: ["string", "null"]
         profileVideoUrl:
           type: ["string", "null"]
+        instagramUrl:
+          type: ["string", "null"]
+        xUrl:
+          type: ["string", "null"]
+        tiktokUrl:
+          type: ["string", "null"]
+        linkedinUrl:
+          type: ["string", "null"]
+        pinterestUrl:
+          type: ["string", "null"]
         role:
           type: string
           enum: [listener, artist, label, business, admin, moderator, editor, master_admin]
@@ -3911,6 +3921,16 @@ components:
         avatarUrl:
           type: ["string", "null"]
         bio:
+          type: ["string", "null"]
+        instagramUrl:
+          type: ["string", "null"]
+        xUrl:
+          type: ["string", "null"]
+        tiktokUrl:
+          type: ["string", "null"]
+        linkedinUrl:
+          type: ["string", "null"]
+        pinterestUrl:
           type: ["string", "null"]
         role:
           type: string
@@ -3939,6 +3959,16 @@ components:
         bannerUrl:
           type: string
         profileVideoUrl:
+          type: string
+        instagramUrl:
+          type: string
+        xUrl:
+          type: string
+        tiktokUrl:
+          type: string
+        linkedinUrl:
+          type: string
+        pinterestUrl:
           type: string
 
     SendOtpInput:

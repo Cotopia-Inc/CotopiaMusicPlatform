@@ -66,7 +66,7 @@ export function SupportWall({ userId, className }: SupportWallProps) {
           <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="max-h-80 overflow-y-auto pr-1 space-y-3 scrollbar-thin">
           {data?.items.map((item) => (
             <div key={item.id} className="flex items-start gap-3 p-3 rounded-lg bg-secondary/30 border border-border/50">
               <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -100,14 +100,13 @@ export function SupportWall({ userId, className }: SupportWallProps) {
               )}
             </div>
           ))}
-        </div>
-      )}
-
-      {data?.hasMore && (
-        <div className="flex justify-center">
-          <Button variant="outline" size="sm" onClick={() => setPageSize((p) => p + PAGE_SIZE)} disabled={isLoading}>
-            {isLoading ? "Loading…" : "Load More"}
-          </Button>
+          {data?.hasMore && (
+            <div className="flex justify-center pt-1">
+              <Button variant="outline" size="sm" onClick={() => setPageSize((p) => p + PAGE_SIZE)} disabled={isLoading}>
+                {isLoading ? "Loading…" : "Load More"}
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </div>

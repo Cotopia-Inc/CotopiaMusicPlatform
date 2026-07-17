@@ -12,4 +12,9 @@ export interface UserUpdate {
   bio?: string;
   bannerUrl?: string;
   profileVideoUrl?: string;
+  instagramUrl?: string;
+  xUrl?: string;
+  tiktokUrl?: string;
+  linkedinUrl?: string;
+  pinterestUrl?: string;
 }
