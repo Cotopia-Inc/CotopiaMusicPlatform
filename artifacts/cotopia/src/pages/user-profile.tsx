@@ -1,4 +1,5 @@
 import { useParams, Link, useLocation } from "wouter";
+import { LinkifiedText } from "@/components/linkified-text";
 import { displayRole } from "@/lib/display-role";
 import { useRef, useState } from "react";
 import { useGetPublicUser, useFollowUser, useUnfollowUser, useGetCreatorSupportStatus } from "@workspace/api-client-react";
@@ -295,37 +296,37 @@ export default function UserProfile() {
       {/* Bio + meta */}
       <div className="px-6 pt-6 space-y-3 max-w-2xl">
         {user.bio && (
-          <p className="text-sm text-muted-foreground leading-relaxed">{user.bio}</p>
+          <p className="text-sm text-muted-foreground leading-relaxed"><LinkifiedText text={user.bio} /></p>
         )}
         {/* Social links */}
-        {((user as any).instagramUrl || (user as any).xUrl || (user as any).tiktokUrl || (user as any).linkedinUrl || (user as any).pinterestUrl) && (
+        {(user.instagramUrl || user.xUrl || user.tiktokUrl || user.linkedinUrl || user.pinterestUrl) && (
           <div className="flex items-center gap-3 flex-wrap">
-            {(user as any).instagramUrl && (
-              <a href={(user as any).instagramUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-pink-400 transition-colors" title="Instagram">
+            {user.instagramUrl && (
+              <a href={user.instagramUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-pink-400 transition-colors" title="Instagram">
                 <Instagram className="w-4 h-4" />
                 <span className="hidden sm:inline">Instagram</span>
               </a>
             )}
-            {(user as any).xUrl && (
-              <a href={(user as any).xUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors" title="X / Twitter">
+            {user.xUrl && (
+              <a href={user.xUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors" title="X / Twitter">
                 <Twitter className="w-4 h-4" />
                 <span className="hidden sm:inline">X</span>
               </a>
             )}
-            {(user as any).tiktokUrl && (
-              <a href={(user as any).tiktokUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors" title="TikTok">
+            {user.tiktokUrl && (
+              <a href={user.tiktokUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors" title="TikTok">
                 <ExternalLink className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">TikTok</span>
               </a>
             )}
-            {(user as any).linkedinUrl && (
-              <a href={(user as any).linkedinUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-blue-400 transition-colors" title="LinkedIn">
+            {user.linkedinUrl && (
+              <a href={user.linkedinUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-blue-400 transition-colors" title="LinkedIn">
                 <Linkedin className="w-4 h-4" />
                 <span className="hidden sm:inline">LinkedIn</span>
               </a>
             )}
-            {(user as any).pinterestUrl && (
-              <a href={(user as any).pinterestUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-red-400 transition-colors" title="Pinterest">
+            {user.pinterestUrl && (
+              <a href={user.pinterestUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-red-400 transition-colors" title="Pinterest">
                 <ExternalLink className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Pinterest</span>
               </a>

@@ -1,5 +1,6 @@
 import { useParams, Link, useLocation } from "wouter";
 import { displayRole } from "@/lib/display-role";
+import { LinkifiedText } from "@/components/linkified-text";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useSeo } from "@/hooks/use-seo";
 import { useGetArtist, getGetArtistQueryKey, useFollowArtist, useUnfollowArtist, useTrackAnalyticsEvent, useUpdateArtist, useGetCreatorSupportStatus } from "@workspace/api-client-react";
@@ -516,7 +517,7 @@ export default function ArtistDetail() {
             <div className="max-w-3xl">
               <h3 className="text-xl font-bold mb-4">Biography</h3>
               <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                {artist.bio || "No biography provided."}
+                {artist.bio ? <LinkifiedText text={artist.bio} /> : "No biography provided."}
               </p>
             </div>
           </TabsContent>

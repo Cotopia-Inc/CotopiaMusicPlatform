@@ -1,5 +1,6 @@
 import { useParams, useLocation } from "wouter";
 import { useSeo } from "@/hooks/use-seo";
+import { LinkifiedText } from "@/components/linkified-text";
 import {
   useGetSong, getGetSongQueryKey,
   useGetChatMessages, getGetChatMessagesQueryKey, usePostChatMessage,
@@ -553,7 +554,7 @@ export default function SongDetail() {
                 <div className="px-5 py-4 bg-card/50">
                   <div className={`relative transition-all overflow-hidden ${isLong && !lyricsExpanded ? "max-h-64" : ""}`}>
                     <p className="text-sm leading-8 whitespace-pre-wrap text-foreground/85 font-light tracking-wide">
-                      {lyrics}
+                      <LinkifiedText text={lyrics} />
                     </p>
                     {isLong && !lyricsExpanded && (
                       <div className="absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-card/90 to-transparent pointer-events-none" />
@@ -604,7 +605,7 @@ export default function SongDetail() {
               </div>
               {credits ? (
                 <div className="px-5 py-4 bg-card/50">
-                  <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{credits}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap"><LinkifiedText text={credits} /></p>
                 </div>
               ) : (
                 <div className="px-5 py-6 text-center">

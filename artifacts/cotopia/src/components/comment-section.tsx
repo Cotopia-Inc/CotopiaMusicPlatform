@@ -8,6 +8,7 @@ import {
   useDeleteComment,
 } from "@workspace/api-client-react";
 import { UserLink } from "@/components/user-link";
+import { LinkifiedText } from "@/components/linkified-text";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ReportModal } from "@/components/report-modal";
@@ -92,7 +93,7 @@ function CommentItem({
           </span>
         </div>
 
-        <p className="text-sm text-foreground/80 leading-relaxed break-words">{comment.content}</p>
+        <p className="text-sm text-foreground/80 leading-relaxed break-words"><LinkifiedText text={comment.content} /></p>
 
         <div className="flex items-center gap-3 mt-1.5">
           {user && depth === 0 && (

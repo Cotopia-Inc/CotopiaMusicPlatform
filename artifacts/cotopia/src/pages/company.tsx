@@ -1,4 +1,5 @@
 import { useListCompanyPosts, getListCompanyPostsQueryKey, useGetCeoMessage, useSetCeoMessage, useDeleteCompanyPost } from "@workspace/api-client-react";
+import { LinkifiedText } from "@/components/linkified-text";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Megaphone, Quote, Crown, Save, Edit2, X, Trash2, ExternalLink, ArrowLeft, Home } from "lucide-react";
 import { Link } from "wouter";
@@ -142,7 +143,7 @@ export default function CompanyHub() {
             <Skeleton className="h-20 w-full rounded-lg" />
           ) : ceoMsg?.content ? (
             <div className="text-sm text-muted-foreground">
-              <p className="italic">"{ceoMsg.content}"</p>
+              <p className="italic">"{<LinkifiedText text={ceoMsg.content} />}"</p>
               <p className="mt-2 font-semibold text-foreground not-italic">{ceoMsg.authorName}</p>
               <p className="text-xs">{ceoMsg.authorTitle}</p>
               {!ceoMsg.isVisible && (
@@ -167,7 +168,7 @@ export default function CompanyHub() {
               <span className="text-xs font-bold uppercase tracking-wider text-amber-400">A Word from Our CEO</span>
             </div>
             <blockquote className="text-lg md:text-xl font-medium leading-relaxed text-foreground">
-              "{ceoMsg.content}"
+              "<LinkifiedText text={ceoMsg.content} />"
             </blockquote>
             <div className="flex items-center gap-3 pt-2">
               <div className="w-8 h-8 rounded-full bg-amber-400/20 flex items-center justify-center text-amber-400 font-bold text-sm">

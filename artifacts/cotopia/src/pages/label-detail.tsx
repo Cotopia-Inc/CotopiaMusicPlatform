@@ -1,5 +1,6 @@
 import { useParams, Link, useLocation } from "wouter";
 import { useRef, useState } from "react";
+import { LinkifiedText } from "@/components/linkified-text";
 import { useGetLabel, getGetLabelQueryKey, useFollowLabel, useUnfollowLabel, useGetCreatorSupportStatus } from "@workspace/api-client-react";
 import { SupportButton } from "@/components/support-modal";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -405,7 +406,7 @@ export default function LabelDetail() {
             <div className="max-w-3xl">
               <h3 className="text-xl font-bold mb-4">About Label</h3>
               <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                {label.bio || "No information provided."}
+                {label.bio ? <LinkifiedText text={label.bio} /> : "No information provided."}
               </p>
             </div>
           </TabsContent>

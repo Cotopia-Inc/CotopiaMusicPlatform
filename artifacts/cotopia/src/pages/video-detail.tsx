@@ -1,5 +1,6 @@
 import { useParams, useLocation } from "wouter";
 import { useSeo } from "@/hooks/use-seo";
+import { LinkifiedText } from "@/components/linkified-text";
 import {
   useGetVideo, getGetVideoQueryKey,
   useGetChatMessages, getGetChatMessagesQueryKey, usePostChatMessage,
@@ -572,7 +573,7 @@ export default function VideoDetail() {
                               className="text-[10px] font-semibold text-primary flex-shrink-0"
                             />
                             <span className={`text-[10px] break-words leading-relaxed flex-1 min-w-0 ${isDeleting ? "opacity-40" : "text-white/80"}`}>
-                              {isDeleting ? "Deleting…" : msg.message}
+                              {isDeleting ? "Deleting…" : <LinkifiedText text={msg.message} />}
                             </span>
                             {isOwn && !isDeleting && (
                               <span className="opacity-0 group-hover:opacity-100 transition-opacity ml-auto flex-shrink-0 flex gap-0.5">
@@ -873,7 +874,7 @@ export default function VideoDetail() {
               {desc ? (
                 <div className="px-5 py-4 bg-card/50">
                   <div className={`relative transition-all overflow-hidden ${isLong && !descExpanded ? "max-h-32" : ""}`}>
-                    <p className="text-sm leading-relaxed text-foreground/85 whitespace-pre-wrap">{desc}</p>
+                    <p className="text-sm leading-relaxed text-foreground/85 whitespace-pre-wrap"><LinkifiedText text={desc} /></p>
                     {isLong && !descExpanded && (
                       <div className="absolute bottom-0 inset-x-0 h-10 bg-gradient-to-t from-card/90 to-transparent pointer-events-none" />
                     )}
@@ -923,7 +924,7 @@ export default function VideoDetail() {
               </div>
               {credits ? (
                 <div className="px-5 py-4 bg-card/50">
-                  <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{credits}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap"><LinkifiedText text={credits} /></p>
                 </div>
               ) : (
                 <div className="px-5 py-6 text-center">

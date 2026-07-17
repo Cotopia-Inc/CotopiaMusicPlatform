@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { LinkifiedText } from "@/components/linkified-text";
 import { displayRole } from "@/lib/display-role";
 import { useAuth } from "@/lib/auth";
 import { usePlatformConfig } from "@/lib/platform-config";
@@ -580,7 +581,7 @@ export default function MessagesPage() {
                                 </div>
                               )}
                               <div className={cn("px-3 py-2 rounded-2xl text-sm leading-relaxed", isMe ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-secondary text-foreground rounded-bl-sm", isDeleting && "opacity-40")}>
-                                {isDeleting ? "Deleting…" : msg.body}
+                                {isDeleting ? "Deleting…" : <LinkifiedText text={msg.body} />}
                               </div>
                               {!isMe && !isDeleting && (
                                 <div className="hidden group-hover:flex items-center mb-1">
