@@ -4,7 +4,7 @@ import { LinkifiedText } from "@/components/linkified-text";
 import { useGetLabel, getGetLabelQueryKey, useFollowLabel, useUnfollowLabel, useGetCreatorSupportStatus } from "@workspace/api-client-react";
 import { SupportButton } from "@/components/support-modal";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, Music, Play, Volume2, VolumeX, UserPlus, X, Search, Loader2, ShieldCheck, Heart } from "lucide-react";
+import { Users, Music, Play, Volume2, VolumeX, UserPlus, X, Search, Loader2, ShieldCheck, Heart, Instagram, Twitter, Linkedin, ExternalLink } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { UserLink } from "@/components/user-link";
 import { RoleBadges } from "@/components/role-badges";
@@ -403,11 +403,40 @@ export default function LabelDetail() {
           </TabsContent>
 
           <TabsContent value="about" className="pt-6">
-            <div className="max-w-3xl">
-              <h3 className="text-xl font-bold mb-4">About Label</h3>
+            <div className="max-w-3xl space-y-4">
+              <h3 className="text-xl font-bold">About Label</h3>
               <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
                 {label.bio ? <LinkifiedText text={label.bio} /> : "No information provided."}
               </p>
+              {(label.instagramUrl || label.xUrl || label.tiktokUrl || label.linkedinUrl || label.pinterestUrl) && (
+                <div className="flex items-center gap-3 flex-wrap pt-1">
+                  {label.instagramUrl && (
+                    <a href={label.instagramUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-pink-400 transition-colors" title="Instagram">
+                      <Instagram className="w-4 h-4" /><span>Instagram</span>
+                    </a>
+                  )}
+                  {label.xUrl && (
+                    <a href={label.xUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors" title="X / Twitter">
+                      <Twitter className="w-4 h-4" /><span>X</span>
+                    </a>
+                  )}
+                  {label.tiktokUrl && (
+                    <a href={label.tiktokUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors" title="TikTok">
+                      <ExternalLink className="w-3.5 h-3.5" /><span>TikTok</span>
+                    </a>
+                  )}
+                  {label.linkedinUrl && (
+                    <a href={label.linkedinUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-blue-400 transition-colors" title="LinkedIn">
+                      <Linkedin className="w-4 h-4" /><span>LinkedIn</span>
+                    </a>
+                  )}
+                  {label.pinterestUrl && (
+                    <a href={label.pinterestUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-red-400 transition-colors" title="Pinterest">
+                      <ExternalLink className="w-3.5 h-3.5" /><span>Pinterest</span>
+                    </a>
+                  )}
+                </div>
+              )}
             </div>
           </TabsContent>
         </Tabs>

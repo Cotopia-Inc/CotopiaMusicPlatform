@@ -40,6 +40,11 @@ async function getArtistRow(id: number, userId?: number) {
       isVerified: sql<boolean>`COALESCE(${usersTable.isVerified}, false)`,
       profileVideoUrl: usersTable.profileVideoUrl,
       userRole: usersTable.role,
+      instagramUrl: usersTable.instagramUrl,
+      xUrl: usersTable.xUrl,
+      tiktokUrl: usersTable.tiktokUrl,
+      linkedinUrl: usersTable.linkedinUrl,
+      pinterestUrl: usersTable.pinterestUrl,
     })
     .from(artistsTable)
     .leftJoin(usersTable, eq(artistsTable.userId, usersTable.id))

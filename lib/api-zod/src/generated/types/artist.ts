@@ -18,6 +18,16 @@ export interface Artist {
   bannerUrl?: string | null;
   /** @nullable */
   genre?: string | null;
+  /** @nullable */
+  instagramUrl?: string | null;
+  /** @nullable */
+  xUrl?: string | null;
+  /** @nullable */
+  tiktokUrl?: string | null;
+  /** @nullable */
+  linkedinUrl?: string | null;
+  /** @nullable */
+  pinterestUrl?: string | null;
   followerCount?: number;
   songCount?: number;
   isFollowed?: boolean;

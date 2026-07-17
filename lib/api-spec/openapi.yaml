@@ -4290,6 +4290,16 @@ components:
           type: ["string", "null"]
         genre:
           type: ["string", "null"]
+        instagramUrl:
+          type: ["string", "null"]
+        xUrl:
+          type: ["string", "null"]
+        tiktokUrl:
+          type: ["string", "null"]
+        linkedinUrl:
+          type: ["string", "null"]
+        pinterestUrl:
+          type: ["string", "null"]
         followerCount:
           type: integer
         songCount:
@@ -4349,6 +4359,16 @@ components:
         logoUrl:
           type: ["string", "null"]
         bannerUrl:
+          type: ["string", "null"]
+        instagramUrl:
+          type: ["string", "null"]
+        xUrl:
+          type: ["string", "null"]
+        tiktokUrl:
+          type: ["string", "null"]
+        linkedinUrl:
+          type: ["string", "null"]
+        pinterestUrl:
           type: ["string", "null"]
         followerCount:
           type: integer

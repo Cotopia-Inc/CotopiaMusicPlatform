@@ -5,7 +5,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useSeo } from "@/hooks/use-seo";
 import { useGetArtist, getGetArtistQueryKey, useFollowArtist, useUnfollowArtist, useTrackAnalyticsEvent, useUpdateArtist, useGetCreatorSupportStatus } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Play, Users, Music, MessageCircle, ArrowLeft, Volume2, VolumeX, ShieldCheck, Loader2, UserCog, UserMinus, Search, Edit2, Save, X, Heart } from "lucide-react";
+import { Play, Users, Music, MessageCircle, ArrowLeft, Volume2, VolumeX, ShieldCheck, Loader2, UserCog, UserMinus, Search, Edit2, Save, X, Heart, Instagram, Twitter, Linkedin, ExternalLink } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { RoleBadges } from "@/components/role-badges";
 import { BadgeList } from "@/components/badge-chip";
@@ -514,11 +514,40 @@ export default function ArtistDetail() {
           </TabsContent>
           
           <TabsContent value="about" className="pt-6">
-            <div className="max-w-3xl">
-              <h3 className="text-xl font-bold mb-4">Biography</h3>
+            <div className="max-w-3xl space-y-4">
+              <h3 className="text-xl font-bold">Biography</h3>
               <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
                 {artist.bio ? <LinkifiedText text={artist.bio} /> : "No biography provided."}
               </p>
+              {(artist.instagramUrl || artist.xUrl || artist.tiktokUrl || artist.linkedinUrl || artist.pinterestUrl) && (
+                <div className="flex items-center gap-3 flex-wrap pt-1">
+                  {artist.instagramUrl && (
+                    <a href={artist.instagramUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-pink-400 transition-colors" title="Instagram">
+                      <Instagram className="w-4 h-4" /><span>Instagram</span>
+                    </a>
+                  )}
+                  {artist.xUrl && (
+                    <a href={artist.xUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors" title="X / Twitter">
+                      <Twitter className="w-4 h-4" /><span>X</span>
+                    </a>
+                  )}
+                  {artist.tiktokUrl && (
+                    <a href={artist.tiktokUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors" title="TikTok">
+                      <ExternalLink className="w-3.5 h-3.5" /><span>TikTok</span>
+                    </a>
+                  )}
+                  {artist.linkedinUrl && (
+                    <a href={artist.linkedinUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-blue-400 transition-colors" title="LinkedIn">
+                      <Linkedin className="w-4 h-4" /><span>LinkedIn</span>
+                    </a>
+                  )}
+                  {artist.pinterestUrl && (
+                    <a href={artist.pinterestUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-red-400 transition-colors" title="Pinterest">
+                      <ExternalLink className="w-3.5 h-3.5" /><span>Pinterest</span>
+                    </a>
+                  )}
+                </div>
+              )}
             </div>
           </TabsContent>
         </Tabs>

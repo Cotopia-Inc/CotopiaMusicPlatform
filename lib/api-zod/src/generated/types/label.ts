@@ -16,6 +16,16 @@ export interface Label {
   logoUrl?: string | null;
   /** @nullable */
   bannerUrl?: string | null;
+  /** @nullable */
+  instagramUrl?: string | null;
+  /** @nullable */
+  xUrl?: string | null;
+  /** @nullable */
+  tiktokUrl?: string | null;
+  /** @nullable */
+  linkedinUrl?: string | null;
+  /** @nullable */
+  pinterestUrl?: string | null;
   followerCount?: number;
   artistCount?: number;
   isFollowed?: boolean;
