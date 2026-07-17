@@ -74,6 +74,11 @@ export async function ensureTables(): Promise<void> {
       );
 
       ALTER TABLE users ADD COLUMN IF NOT EXISTS deletion_requested_at TIMESTAMP WITH TIME ZONE;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS instagram_url TEXT;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS x_url TEXT;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS tiktok_url TEXT;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS linkedin_url TEXT;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS pinterest_url TEXT;
 
       -- app_settings columns added after initial schema (safe to run every startup)
       ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS single_song_fee TEXT NOT NULL DEFAULT '9.99';
