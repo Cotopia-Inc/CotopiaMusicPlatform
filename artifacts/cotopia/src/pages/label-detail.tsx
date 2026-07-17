@@ -222,6 +222,35 @@ export default function LabelDetail() {
             {labelBadges && labelBadges.length > 0 && (
               <BadgeList userBadges={labelBadges as any} size="sm" />
             )}
+            {(label.instagramUrl || label.xUrl || label.tiktokUrl || label.linkedinUrl || label.pinterestUrl) && (
+              <div className="flex items-center gap-3 flex-wrap">
+                {label.instagramUrl && (
+                  <a href={label.instagramUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-pink-400 transition-colors" title="Instagram">
+                    <Instagram className="w-4 h-4" /><span className="hidden sm:inline">Instagram</span>
+                  </a>
+                )}
+                {label.xUrl && (
+                  <a href={label.xUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors" title="X / Twitter">
+                    <Twitter className="w-4 h-4" /><span className="hidden sm:inline">X</span>
+                  </a>
+                )}
+                {label.tiktokUrl && (
+                  <a href={label.tiktokUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors" title="TikTok">
+                    <ExternalLink className="w-3.5 h-3.5" /><span className="hidden sm:inline">TikTok</span>
+                  </a>
+                )}
+                {label.linkedinUrl && (
+                  <a href={label.linkedinUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-blue-400 transition-colors" title="LinkedIn">
+                    <Linkedin className="w-4 h-4" /><span className="hidden sm:inline">LinkedIn</span>
+                  </a>
+                )}
+                {label.pinterestUrl && (
+                  <a href={label.pinterestUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-red-400 transition-colors" title="Pinterest">
+                    <ExternalLink className="w-3.5 h-3.5" /><span className="hidden sm:inline">Pinterest</span>
+                  </a>
+                )}
+              </div>
+            )}
           </div>
           <div className="flex gap-3">
             {user && !isOwner && (

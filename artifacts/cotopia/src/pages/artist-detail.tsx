@@ -289,6 +289,35 @@ export default function ArtistDetail() {
             {artistBadges && artistBadges.length > 0 && (
               <BadgeList userBadges={artistBadges as any} size="sm" />
             )}
+            {(artist.instagramUrl || artist.xUrl || artist.tiktokUrl || artist.linkedinUrl || artist.pinterestUrl) && (
+              <div className="flex items-center gap-3 flex-wrap">
+                {artist.instagramUrl && (
+                  <a href={artist.instagramUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-pink-400 transition-colors" title="Instagram">
+                    <Instagram className="w-4 h-4" /><span className="hidden sm:inline">Instagram</span>
+                  </a>
+                )}
+                {artist.xUrl && (
+                  <a href={artist.xUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors" title="X / Twitter">
+                    <Twitter className="w-4 h-4" /><span className="hidden sm:inline">X</span>
+                  </a>
+                )}
+                {artist.tiktokUrl && (
+                  <a href={artist.tiktokUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors" title="TikTok">
+                    <ExternalLink className="w-3.5 h-3.5" /><span className="hidden sm:inline">TikTok</span>
+                  </a>
+                )}
+                {artist.linkedinUrl && (
+                  <a href={artist.linkedinUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-blue-400 transition-colors" title="LinkedIn">
+                    <Linkedin className="w-4 h-4" /><span className="hidden sm:inline">LinkedIn</span>
+                  </a>
+                )}
+                {artist.pinterestUrl && (
+                  <a href={artist.pinterestUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-red-400 transition-colors" title="Pinterest">
+                    <ExternalLink className="w-3.5 h-3.5" /><span className="hidden sm:inline">Pinterest</span>
+                  </a>
+                )}
+              </div>
+            )}
           </div>
           <div className="flex flex-wrap gap-2 md:gap-3">
             <Button size="sm" className="rounded-full px-5 md:px-8 font-bold md:text-base md:h-11" onClick={() => { if (artist.songs?.[0]) play({ id: artist.songs[0].id, title: artist.songs[0].title, artistName: artist.songs[0].artistName ?? "", artistId: artist.songs[0].artistId, artistUserRole: (artist.songs[0] as any).artistUserRole ?? (artist as any).userRole ?? null, artistIsVerified: (artist.songs[0] as any).artistIsVerified ?? (artist as any).isVerified ?? false, coverUrl: artist.songs[0].coverUrl, streamUrl: artist.songs[0].streamUrl, duration: artist.songs[0].duration }); }}>
