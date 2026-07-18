@@ -3192,6 +3192,38 @@ export const AdminDeleteBroadcastParams = zod.object({
 
 
 /**
+ * @summary Get current payment mode and credential status (master_admin only)
+ */
+export const AdminGetPaymentModeResponse = zod.object({
+  "paymentMode": zod.enum(['demo', 'paypal_sandbox', 'paypal_live']),
+  "canActivateSandbox": zod.boolean(),
+  "canActivateLive": zod.boolean(),
+  "credentialStatus": zod.object({
+  "sandbox": zod.object({
+  "clientId": zod.boolean().optional(),
+  "clientSecret": zod.boolean().optional()
+}).optional(),
+  "live": zod.object({
+  "clientId": zod.boolean().optional(),
+  "clientSecret": zod.boolean().optional()
+}).optional()
+})
+})
+
+
+/**
+ * @summary Update payment mode (master_admin only)
+ */
+export const AdminUpdatePaymentModeBody = zod.object({
+  "paymentMode": zod.enum(['demo', 'paypal_sandbox', 'paypal_live'])
+})
+
+export const AdminUpdatePaymentModeResponse = zod.object({
+  "paymentMode": zod.enum(['demo', 'paypal_sandbox', 'paypal_live']).optional()
+})
+
+
+/**
  * @summary Track an analytics event
  */
 export const TrackAnalyticsEventBody = zod.object({

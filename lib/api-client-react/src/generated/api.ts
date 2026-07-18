@@ -24,6 +24,7 @@ import type {
   AdminBulkUploadVideosInput,
   AdminChatMessage,
   AdminCreatorSupportOverview,
+  AdminGetPaymentMode200,
   AdminListBugReports200,
   AdminListBugReportsParams,
   AdminListChatMessagesParams,
@@ -39,6 +40,8 @@ import type {
   AdminRoleChangeInput,
   AdminUpdateBugReportBody,
   AdminUpdateFeatureSuggestionBody,
+  AdminUpdatePaymentMode200,
+  AdminUpdatePaymentModeBody,
   AdminUploadSongInput,
   AdminUploadVideoInput,
   AdminUserList,
@@ -8428,6 +8431,154 @@ export const useAdminDeleteBroadcast = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getAdminDeleteBroadcastMutationOptions(options));
+    }
+
+export const getAdminGetPaymentModeUrl = () => {
+
+
+
+
+  return `/api/admin/payment-mode`
+}
+
+/**
+ * @summary Get current payment mode and credential status (master_admin only)
+ */
+export const adminGetPaymentMode = async ( options?: RequestInit): Promise<AdminGetPaymentMode200> => {
+
+  return customFetch<AdminGetPaymentMode200>(getAdminGetPaymentModeUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getAdminGetPaymentModeQueryKey = () => {
+    return [
+    `/api/admin/payment-mode`
+    ] as const;
+    }
+
+
+export const getAdminGetPaymentModeQueryOptions = <TData = Awaited<ReturnType<typeof adminGetPaymentMode>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof adminGetPaymentMode>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminGetPaymentModeQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminGetPaymentMode>>> = ({ signal }) => adminGetPaymentMode({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminGetPaymentMode>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type AdminGetPaymentModeQueryResult = NonNullable<Awaited<ReturnType<typeof adminGetPaymentMode>>>
+export type AdminGetPaymentModeQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get current payment mode and credential status (master_admin only)
+ */
+
+export function useAdminGetPaymentMode<TData = Awaited<ReturnType<typeof adminGetPaymentMode>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof adminGetPaymentMode>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getAdminGetPaymentModeQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getAdminUpdatePaymentModeUrl = () => {
+
+
+
+
+  return `/api/admin/payment-mode`
+}
+
+/**
+ * @summary Update payment mode (master_admin only)
+ */
+export const adminUpdatePaymentMode = async (adminUpdatePaymentModeBody: AdminUpdatePaymentModeBody, options?: RequestInit): Promise<AdminUpdatePaymentMode200> => {
+
+  return customFetch<AdminUpdatePaymentMode200>(getAdminUpdatePaymentModeUrl(),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      adminUpdatePaymentModeBody,)
+  }
+);}
+
+
+
+
+export const getAdminUpdatePaymentModeMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminUpdatePaymentMode>>, TError,{data: BodyType<AdminUpdatePaymentModeBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminUpdatePaymentMode>>, TError,{data: BodyType<AdminUpdatePaymentModeBody>}, TContext> => {
+
+const mutationKey = ['adminUpdatePaymentMode'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminUpdatePaymentMode>>, {data: BodyType<AdminUpdatePaymentModeBody>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  adminUpdatePaymentMode(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminUpdatePaymentModeMutationResult = NonNullable<Awaited<ReturnType<typeof adminUpdatePaymentMode>>>
+    export type AdminUpdatePaymentModeMutationBody = BodyType<AdminUpdatePaymentModeBody>
+    export type AdminUpdatePaymentModeMutationError = ErrorType<void>
+
+    /**
+ * @summary Update payment mode (master_admin only)
+ */
+export const useAdminUpdatePaymentMode = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminUpdatePaymentMode>>, TError,{data: BodyType<AdminUpdatePaymentModeBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof adminUpdatePaymentMode>>,
+        TError,
+        {data: BodyType<AdminUpdatePaymentModeBody>},
+        TContext
+      > => {
+      return useMutation(getAdminUpdatePaymentModeMutationOptions(options));
     }
 
 export const getTrackAnalyticsEventUrl = () => {

@@ -2205,6 +2205,78 @@ paths:
         "404":
           description: Not found
 
+  # ── Admin Payment Mode ────────────────────────────────────────────────────
+  /admin/payment-mode:
+    get:
+      operationId: adminGetPaymentMode
+      tags: [admin]
+      summary: Get current payment mode and credential status (master_admin only)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Payment mode info
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [paymentMode, canActivateSandbox, canActivateLive, credentialStatus]
+                properties:
+                  paymentMode:
+                    type: string
+                    enum: [demo, paypal_sandbox, paypal_live]
+                  canActivateSandbox:
+                    type: boolean
+                  canActivateLive:
+                    type: boolean
+                  credentialStatus:
+                    type: object
+                    properties:
+                      sandbox:
+                        type: object
+                        properties:
+                          clientId: { type: boolean }
+                          clientSecret: { type: boolean }
+                      live:
+                        type: object
+                        properties:
+                          clientId: { type: boolean }
+                          clientSecret: { type: boolean }
+        "403":
+          description: Forbidden
+    patch:
+      operationId: adminUpdatePaymentMode
+      tags: [admin]
+      summary: Update payment mode (master_admin only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [paymentMode]
+              properties:
+                paymentMode:
+                  type: string
+                  enum: [demo, paypal_sandbox, paypal_live]
+      responses:
+        "200":
+          description: Updated payment mode
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  paymentMode:
+                    type: string
+                    enum: [demo, paypal_sandbox, paypal_live]
+        "400":
+          description: Invalid mode or missing credentials
+        "403":
+          description: Forbidden
+
   # ── Analytics Events ─────────────────────────────────────────────────────
   /analytics/events:
     post:

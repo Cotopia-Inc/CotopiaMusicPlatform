@@ -2604,6 +2604,63 @@ offset?: number;
 q?: string;
 };
 
+export type AdminGetPaymentMode200PaymentMode = typeof AdminGetPaymentMode200PaymentMode[keyof typeof AdminGetPaymentMode200PaymentMode];
+
+
+export const AdminGetPaymentMode200PaymentMode = {
+  demo: 'demo',
+  paypal_sandbox: 'paypal_sandbox',
+  paypal_live: 'paypal_live',
+} as const;
+
+export type AdminGetPaymentMode200CredentialStatusSandbox = {
+  clientId?: boolean;
+  clientSecret?: boolean;
+};
+
+export type AdminGetPaymentMode200CredentialStatusLive = {
+  clientId?: boolean;
+  clientSecret?: boolean;
+};
+
+export type AdminGetPaymentMode200CredentialStatus = {
+  sandbox?: AdminGetPaymentMode200CredentialStatusSandbox;
+  live?: AdminGetPaymentMode200CredentialStatusLive;
+};
+
+export type AdminGetPaymentMode200 = {
+  paymentMode: AdminGetPaymentMode200PaymentMode;
+  canActivateSandbox: boolean;
+  canActivateLive: boolean;
+  credentialStatus: AdminGetPaymentMode200CredentialStatus;
+};
+
+export type AdminUpdatePaymentModeBodyPaymentMode = typeof AdminUpdatePaymentModeBodyPaymentMode[keyof typeof AdminUpdatePaymentModeBodyPaymentMode];
+
+
+export const AdminUpdatePaymentModeBodyPaymentMode = {
+  demo: 'demo',
+  paypal_sandbox: 'paypal_sandbox',
+  paypal_live: 'paypal_live',
+} as const;
+
+export type AdminUpdatePaymentModeBody = {
+  paymentMode: AdminUpdatePaymentModeBodyPaymentMode;
+};
+
+export type AdminUpdatePaymentMode200PaymentMode = typeof AdminUpdatePaymentMode200PaymentMode[keyof typeof AdminUpdatePaymentMode200PaymentMode];
+
+
+export const AdminUpdatePaymentMode200PaymentMode = {
+  demo: 'demo',
+  paypal_sandbox: 'paypal_sandbox',
+  paypal_live: 'paypal_live',
+} as const;
+
+export type AdminUpdatePaymentMode200 = {
+  paymentMode?: AdminUpdatePaymentMode200PaymentMode;
+};
+
 export type ListNotificationsParams = {
 unreadOnly?: boolean;
 };

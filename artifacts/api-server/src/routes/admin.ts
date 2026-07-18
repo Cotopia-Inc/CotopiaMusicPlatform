@@ -1582,6 +1582,78 @@ router.delete("/admin/broadcasts", requireAuth, requireRole(...ADMIN_ROLES), asy
   res.status(204).end();
 });
 
+// ── Admin Payment Mode (master_admin only) ────────────────────────────────
+
+router.get("/admin/payment-mode", requireAuth, requireRole("admin", "master_admin"), async (_req, res): Promise<void> => {
+  const [settings] = await db
+    .select({ paymentMode: appSettingsTable.paymentMode })
+    .from(appSettingsTable)
+    .limit(1);
+
+  const paymentMode = settings?.paymentMode ?? "demo";
+
+  const sandboxClientId   = Boolean(process.env["PAYPAL_SANDBOX_CLIENT_ID"]);
+  const sandboxClientSecret = Boolean(process.env["PAYPAL_SANDBOX_CLIENT_SECRET"]);
+  const liveClientId      = Boolean(process.env["PAYPAL_CLIENT_ID"]);
+  const liveClientSecret  = Boolean(process.env["PAYPAL_CLIENT_SECRET"]);
+
+  res.json({
+    paymentMode,
+    canActivateSandbox: sandboxClientId && sandboxClientSecret,
+    canActivateLive:    liveClientId && liveClientSecret,
+    credentialStatus: {
+      sandbox: { clientId: sandboxClientId, clientSecret: sandboxClientSecret },
+      live:    { clientId: liveClientId,    clientSecret: liveClientSecret },
+    },
+  });
+});
+
+router.patch("/admin/payment-mode", requireAuth, requireRole("master_admin"), async (req: AuthRequest, res): Promise<void> => {
+  const { paymentMode } = req.body as { paymentMode?: string };
+
+  const VALID_MODES = ["demo", "paypal_sandbox", "paypal_live"] as const;
+  type ValidMode = typeof VALID_MODES[number];
+
+  if (!paymentMode || !VALID_MODES.includes(paymentMode as ValidMode)) {
+    res.status(400).json({ error: "paymentMode must be one of: demo, paypal_sandbox, paypal_live" });
+    return;
+  }
+
+  if (paymentMode === "paypal_sandbox") {
+    if (!process.env["PAYPAL_SANDBOX_CLIENT_ID"] || !process.env["PAYPAL_SANDBOX_CLIENT_SECRET"]) {
+      res.status(422).json({ error: "Cannot activate PayPal Sandbox: PAYPAL_SANDBOX_CLIENT_ID and PAYPAL_SANDBOX_CLIENT_SECRET environment variables are required." });
+      return;
+    }
+  }
+
+  if (paymentMode === "paypal_live") {
+    if (!process.env["PAYPAL_CLIENT_ID"] || !process.env["PAYPAL_CLIENT_SECRET"]) {
+      res.status(422).json({ error: "Cannot activate PayPal Live: PAYPAL_CLIENT_ID and PAYPAL_CLIENT_SECRET environment variables are required." });
+      return;
+    }
+  }
+
+  const [current] = await db
+    .select({ paymentMode: appSettingsTable.paymentMode })
+    .from(appSettingsTable)
+    .limit(1);
+  const oldMode = current?.paymentMode ?? "demo";
+
+  await db.update(appSettingsTable).set({ paymentMode: paymentMode as ValidMode });
+
+  if (req.user) {
+    await db.insert(adminAuditLogsTable).values({
+      adminUserId: req.user.userId,
+      action: "update_payment_mode",
+      targetType: "app_settings",
+      description: `Payment mode changed from ${oldMode} to ${paymentMode}`,
+      metadata: { oldMode, newMode: paymentMode },
+    });
+  }
+
+  res.json({ paymentMode });
+});
+
 // ── Admin Payments List ───────────────────────────────────────────────────
 router.get("/admin/payments", requireAuth, requireRole("admin", "master_admin"), async (_req, res): Promise<void> => {
   const rows = await db
