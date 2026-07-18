@@ -34,7 +34,7 @@ import eventsRouter from "./events";
 import creatorSupportRouter from "./creator-support";
 import trustRouter from "./trust";
 import pushRouter from "./push";
-import exportsRouter from "./exports";
+
 
 const router: IRouter = Router();
 
@@ -73,6 +73,5 @@ router.use(eventsRouter);
 router.use(creatorSupportRouter);
 router.use(trustRouter);
 router.use(pushRouter);
-router.use(exportsRouter);
 
 export default router;
