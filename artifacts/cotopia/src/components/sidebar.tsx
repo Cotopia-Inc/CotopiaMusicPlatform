@@ -5,7 +5,7 @@ import {
   LayoutDashboard, LogIn, LogOut, Settings, Send, Bell,
   BarChart3, Upload, ListMusic, Shield, Mail, Sparkles,
   MessageSquare, FileText, Eye, BookOpen, MessageCircle,
-  AlertOctagon, ScrollText, Scale, ShieldOff, Search, X,
+  AlertOctagon, ScrollText, Scale, ShieldOff, Search, X, FileDown,
   Megaphone, ShieldCheck, Flag, Lightbulb, Bug, Star, Award, CreditCard, Heart,
 } from "lucide-react";
 import { RoleBadges } from "@/components/role-badges";
@@ -517,6 +517,19 @@ export function Sidebar({ onMobileClose }: SidebarProps = {}) {
                     </Button>
                   </Link>
                 )}
+                {/* Data Exports */}
+                <Link href="/admin/exports">
+                  <Button
+                    variant={isAdminActive("/admin/exports") ? "secondary" : "ghost"}
+                    className={cn(
+                      "w-full justify-start gap-3 text-sm h-9",
+                      isAdminActive("/admin/exports") ? "font-semibold text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <FileDown className="w-4 h-4 flex-shrink-0" />
+                    Data Exports
+                  </Button>
+                </Link>
                 {/* Audit Logs — master_admin only */}
                 {isMasterAdmin && (
                   <Link href="/admin/audit-logs">
