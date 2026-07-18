@@ -3,7 +3,10 @@ import type { Request, Response, NextFunction } from "express";
 import { db, usersTable, appSettingsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 
-const JWT_SECRET = process.env.SESSION_SECRET ?? "cotopia-dev-secret-change-in-production";
+const DEV_FALLBACK_SECRET = "cotopia-dev-secret-change-in-production";
+// In production, index.ts validates SESSION_SECRET is set and not the dev default before
+// the server starts — so this fallback only ever activates in local development.
+const JWT_SECRET = process.env.SESSION_SECRET ?? DEV_FALLBACK_SECRET;
 
 export interface JwtPayload {
   userId: number;

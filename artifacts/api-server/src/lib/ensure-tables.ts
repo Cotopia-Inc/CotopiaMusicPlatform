@@ -95,6 +95,20 @@ export async function ensureTables(): Promise<void> {
       ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS refund_policy_text TEXT;
       ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS ai_policy_text TEXT;
       ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS community_rules_text TEXT;
+
+      -- Payment mode configuration (added Jul 2026)
+      ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS payment_mode TEXT NOT NULL DEFAULT 'demo';
+
+      -- Payments table — enriched payment audit fields (added Jul 2026)
+      ALTER TABLE payments ADD COLUMN IF NOT EXISTS provider TEXT NOT NULL DEFAULT 'demo';
+      ALTER TABLE payments ADD COLUMN IF NOT EXISTS payment_mode TEXT NOT NULL DEFAULT 'demo';
+      ALTER TABLE payments ADD COLUMN IF NOT EXISTS is_demo BOOLEAN NOT NULL DEFAULT true;
+      ALTER TABLE payments ADD COLUMN IF NOT EXISTS external_transaction_id TEXT;
+      ALTER TABLE payments ADD COLUMN IF NOT EXISTS demo_confirmation_number TEXT;
+
+      -- Normalize existing "pending/completed" statuses to new vocabulary
+      UPDATE payments SET status = 'initiated' WHERE status = 'pending';
+      UPDATE payments SET status = 'completed' WHERE status = 'completed';
     `);
     logger.info("ensureTables: schema up to date");
   } catch (err) {

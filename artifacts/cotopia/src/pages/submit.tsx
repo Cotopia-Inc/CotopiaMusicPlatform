@@ -448,6 +448,8 @@ export default function Submit() {
   const [videoMeta, setVideoMeta] = useState<SharedMeta>({ ...defaultMeta });
 
   const [paypalOrderId, setPaypalOrderId] = useState<string | null>(null);
+  const [demoConfirmationNumber, setDemoConfirmationNumber] = useState<string | null>(null);
+  const [paymentMode, setPaymentMode] = useState<string>("demo");
   const [paymentInitiated, setPaymentInitiated] = useState(false);
   const [submissionIds, setSubmissionIds] = useState<number[]>([]);
   const [successTitles, setSuccessTitles] = useState<string[]>([]);
@@ -690,7 +692,11 @@ export default function Submit() {
 
       // Initiate payment using the first submission id (represents the batch)
       initiateMutation.mutate({ data: { submissionId: ids[0] } }, {
-        onSuccess: (payment: any) => { setPaypalOrderId(payment.paypalOrderId); setPaymentInitiated(true); },
+        onSuccess: (payment: any) => {
+          setPaypalOrderId(payment.orderId ?? payment.paypalOrderId);
+          setPaymentMode(payment.paymentMode ?? "demo");
+          setPaymentInitiated(true);
+        },
         onError: () => toast({ variant: "destructive", title: "Payment initiation failed" }),
       });
     } catch (err: any) {
@@ -701,7 +707,10 @@ export default function Submit() {
   function handleCapturePayment() {
     if (!submissionIds[0] || !paypalOrderId) return;
     captureMutation.mutate({ data: { submissionId: submissionIds[0], paypalOrderId } }, {
-      onSuccess: () => setStep(3),
+      onSuccess: (result: any) => {
+        if (result?.demoConfirmationNumber) setDemoConfirmationNumber(result.demoConfirmationNumber);
+        setStep(3);
+      },
       onError: () => toast({ variant: "destructive", title: "Payment capture failed" }),
     });
   }
@@ -1139,40 +1148,46 @@ export default function Submit() {
           </div>
 
           <div className="bg-card rounded-xl border border-border shadow-sm p-6 space-y-4">
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
-              <AlertCircle className="w-4 h-4 text-blue-400 flex-shrink-0" />
-              <p className="text-xs text-blue-300"><strong>Demo Mode:</strong> This is a simulated PayPal payment. No real charges.</p>
-            </div>
-
+            {/* Demo mode — always clearly labeled */}
             <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
               <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
-              <p className="text-xs text-amber-300 leading-relaxed">
+              <div>
+                <p className="text-xs font-semibold text-amber-300">Demo transaction — no money will be charged</p>
+                <p className="text-xs text-amber-300/70 mt-0.5">
+                  This is a simulated Creator Service payment for demonstration. A real persisted record will be created, but no payment is processed.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/40 border border-border">
+              <AlertCircle className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-muted-foreground leading-relaxed">
                 <strong>Important Notice:</strong> Approval is based on Everyday Radio's publishing guidelines. Purchasing a Creator Service does not guarantee publication or featured placement.
               </p>
             </div>
 
             {!paymentInitiated ? (
-              <Button className="w-full h-12 text-base gap-3 bg-[#0070ba] hover:bg-[#005ea6] text-white" onClick={handleCreateAndInitiate} disabled={!allLegalChecked || isCreating}>
-                {isCreating ? <><Loader2 className="w-4 h-4 animate-spin" />Processing…</> : <><CreditCard className="w-5 h-5" />Continue to Secure Checkout — ${price.toFixed(2)}</>}
+              <Button className="w-full h-12 text-base gap-3" onClick={handleCreateAndInitiate} disabled={!allLegalChecked || isCreating}>
+                {isCreating ? <><Loader2 className="w-4 h-4 animate-spin" />Processing…</> : <><CreditCard className="w-5 h-5" />Complete Demo Payment — ${price.toFixed(2)}</>}
               </Button>
             ) : (
               <div className="space-y-3">
                 <div className="flex items-center gap-3 p-4 rounded-lg bg-green-500/10 border border-green-500/20">
                   <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
                   <div>
-                    <p className="text-sm font-semibold text-green-400">PayPal order created!</p>
+                    <p className="text-sm font-semibold text-green-400">Demo order created</p>
                     <p className="text-xs text-muted-foreground font-mono mt-0.5">{paypalOrderId}</p>
                   </div>
                 </div>
                 <Button className="w-full h-12 text-base gap-3" onClick={handleCapturePayment} disabled={captureMutation.isPending}>
-                  {captureMutation.isPending ? <><Loader2 className="w-4 h-4 animate-spin" />Confirming…</> : <><CheckCircle className="w-5 h-5" />Confirm Payment — Complete Submission</>}
+                  {captureMutation.isPending ? <><Loader2 className="w-4 h-4 animate-spin" />Confirming…</> : <><CheckCircle className="w-5 h-5" />Confirm Demo Payment — Complete Submission</>}
                 </Button>
               </div>
             )}
           </div>
 
           <div className="flex justify-start">
-            <Button type="button" variant="outline" onClick={() => { setStep(1); setPaymentInitiated(false); setPaypalOrderId(null); }} className="gap-2">
+            <Button type="button" variant="outline" onClick={() => { setStep(1); setPaymentInitiated(false); setPaypalOrderId(null); setDemoConfirmationNumber(null); }} className="gap-2">
               <ChevronLeft className="w-4 h-4" />Back
             </Button>
           </div>
@@ -1205,6 +1220,14 @@ export default function Submit() {
             <img src="/logo.jpg" alt="Cotopia" className="w-4 h-4 rounded-sm object-cover flex-shrink-0" />
             <p className="text-sm font-medium">Status: <span className="text-primary">Received</span></p>
           </div>
+          {/* Demo confirmation number — always shown after a demo payment */}
+          {demoConfirmationNumber && (
+            <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 max-w-xs mx-auto space-y-1 text-center">
+              <p className="text-[10px] font-semibold text-amber-400 uppercase tracking-wide">Demo Confirmation</p>
+              <p className="font-mono font-bold text-amber-300 text-lg tracking-widest">{demoConfirmationNumber}</p>
+              <p className="text-[10px] text-amber-400/70">Demo transaction — no money was charged</p>
+            </div>
+          )}
           {(() => {
             const inactiveCount = tab === "song" ? videoFiles.length : songFiles.length;
             const inactiveType  = tab === "song" ? "video" : "song";

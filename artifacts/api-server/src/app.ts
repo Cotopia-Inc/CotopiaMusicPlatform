@@ -2,6 +2,7 @@ import path from "path";
 import fs from "fs";
 import express, { type Express } from "express";
 import cors from "cors";
+import helmet from "helmet";
 import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
@@ -17,6 +18,45 @@ const app: Express = express();
 // This makes req.ip resolve to the real client IP from X-Forwarded-For,
 // which express-rate-limit uses to key rate-limit buckets per client.
 app.set("trust proxy", 1);
+
+// ── Security headers ──────────────────────────────────────────────────────
+// helmet sets a safe baseline of HTTP security headers.
+// contentSecurityPolicy is disabled here because the SPA's Vite build
+// already inlines styles and uses hashed chunk filenames — a CSP would need
+// to enumerate every chunk hash and would break on every build. This can be
+// re-enabled with a nonce-based policy in a future pass.
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+  }),
+);
+
+// ── CORS ──────────────────────────────────────────────────────────────────
+// In production, restrict to known origins from the ALLOWED_ORIGINS env var
+// (comma-separated list). In development, allow all origins for convenience.
+const isProduction = process.env.NODE_ENV === "production";
+const allowedOriginsList = (process.env.ALLOWED_ORIGINS ?? "")
+  .split(",")
+  .map((o) => o.trim())
+  .filter(Boolean);
+
+app.use(
+  cors({
+    origin: isProduction && allowedOriginsList.length > 0
+      ? (origin, callback) => {
+          // Allow requests with no origin (e.g. server-to-server, mobile apps)
+          if (!origin) { callback(null, true); return; }
+          if (allowedOriginsList.includes(origin)) {
+            callback(null, true);
+          } else {
+            callback(new Error(`CORS: origin ${origin} not allowed`));
+          }
+        }
+      : true,
+    credentials: true,
+  }),
+);
 
 app.use(
   pinoHttp({
@@ -37,7 +77,6 @@ app.use(
     },
   }),
 );
-app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

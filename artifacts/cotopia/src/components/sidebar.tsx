@@ -547,6 +547,21 @@ export function Sidebar({ onMobileClose }: SidebarProps = {}) {
                     </Button>
                   </Link>
                 )}
+                {/* Payment Settings — master_admin only */}
+                {isMasterAdmin && (
+                  <Link href="/admin/payments/settings">
+                    <Button
+                      variant={isAdminActive("/admin/payments/settings") ? "secondary" : "ghost"}
+                      className={cn(
+                        "w-full justify-start gap-3 text-sm h-9",
+                        isAdminActive("/admin/payments/settings") ? "font-semibold text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      <CreditCard className="w-4 h-4 flex-shrink-0" />
+                      Payment Settings
+                    </Button>
+                  </Link>
+                )}
               </>
             )}
           </>

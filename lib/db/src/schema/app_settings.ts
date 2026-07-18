@@ -39,6 +39,11 @@ export const appSettingsTable = pgTable("app_settings", {
   communityRulesText: text("community_rules_text"),
   showTopRated: boolean("show_top_rated").notNull().default(true),
   topRatedMinRatings: integer("top_rated_min_ratings").notNull().default(1),
+  // Payment mode configuration — demo | paypal_sandbox | paypal_live
+  // Default: demo — the app operates without any payment credentials.
+  // Only master_admin may change this. Changing to sandbox/live requires
+  // the corresponding PayPal env vars to be present.
+  paymentMode: text("payment_mode").notNull().default("demo"),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
 

@@ -109,6 +109,7 @@ import AdminCreatorSupport from "@/pages/admin-creator-support";
 import AdminBroadcast from "@/pages/admin-broadcast";
 import AdminDiscover from "@/pages/admin-discover";
 import AdminCopyrightConcerns from "@/pages/admin-copyright-concerns";
+import AdminPaymentSettings from "@/pages/admin-payment-settings";
 
 import EditorDashboard from "@/pages/editor-dashboard";
 import EditorPlaylists from "@/pages/editor-playlists";
@@ -372,6 +373,7 @@ function Router() {
       <Route path="/admin/upload-song"><RoleRoute roles={ADMIN_ROLES}><AdminUploadSong /></RoleRoute></Route>
       <Route path="/admin/upload-video"><RoleRoute roles={ADMIN_ROLES}><AdminUploadVideo /></RoleRoute></Route>
       <Route path="/admin/submissions"><RoleRoute roles={ADMIN_ROLES}><AdminSubmissions /></RoleRoute></Route>
+      <Route path="/admin/payments/settings"><RoleRoute roles={MASTER_ROLES}><AdminPaymentSettings /></RoleRoute></Route>
       <Route path="/admin/payments"><RoleRoute roles={ADMIN_ROLES}><AdminPayments /></RoleRoute></Route>
       <Route path="/admin/songs"><RoleRoute roles={ADMIN_ROLES}><AdminSongs /></RoleRoute></Route>
       <Route path="/admin/videos"><RoleRoute roles={ADMIN_ROLES}><AdminVideos /></RoleRoute></Route>

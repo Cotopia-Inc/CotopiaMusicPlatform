@@ -1588,9 +1588,14 @@ router.get("/admin/payments", requireAuth, requireRole("admin", "master_admin"),
     .select({
       id: paymentsTable.id,
       paypalOrderId: paymentsTable.paypalOrderId,
+      externalTransactionId: paymentsTable.externalTransactionId,
+      demoConfirmationNumber: paymentsTable.demoConfirmationNumber,
       amount: paymentsTable.amount,
       currency: paymentsTable.currency,
       status: paymentsTable.status,
+      provider: paymentsTable.provider,
+      paymentMode: paymentsTable.paymentMode,
+      isDemo: paymentsTable.isDemo,
       createdAt: paymentsTable.createdAt,
       userId: paymentsTable.userId,
       submissionId: paymentsTable.submissionId,
@@ -1606,7 +1611,7 @@ router.get("/admin/payments", requireAuth, requireRole("admin", "master_admin"),
     .orderBy(desc(paymentsTable.createdAt))
     .limit(500);
 
-  res.json(rows.map(r => ({ ...r, paymentMode: "demo" })));
+  res.json(rows);
 });
 
 export default router;

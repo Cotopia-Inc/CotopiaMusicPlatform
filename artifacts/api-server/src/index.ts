@@ -3,12 +3,68 @@ import { logger } from "./lib/logger";
 import { startReleaseScheduler } from "./lib/publisher";
 import { ensureTables } from "./lib/ensure-tables";
 
+// ── Startup environment validation ────────────────────────────────────────
+// Log the status of every required / optional env var at startup so operators
+// can diagnose misconfigured deployments quickly without exposing values.
+const isProduction = process.env.NODE_ENV === "production";
+
+const DEV_FALLBACK_SECRET = "cotopia-dev-secret-change-in-production";
+
+const envChecks: Array<{ key: string; required: boolean; note?: string }> = [
+  { key: "PORT", required: true },
+  { key: "DATABASE_URL", required: true },
+  {
+    key: "SESSION_SECRET",
+    required: isProduction,
+    note: isProduction ? "REQUIRED in production — app will not start without it" : "optional in dev (insecure fallback used)",
+  },
+  { key: "RESEND_API_KEY", required: false, note: "email sending disabled without this" },
+  { key: "ALLOWED_ORIGINS", required: false, note: "CORS allows all origins when missing (dev only)" },
+  { key: "PAYPAL_CLIENT_ID", required: false, note: "needed only for paypal_sandbox / paypal_live modes" },
+  { key: "PAYPAL_CLIENT_SECRET", required: false, note: "needed only for paypal_sandbox / paypal_live modes" },
+  { key: "GCS_BUCKET", required: false, note: "Google Cloud Storage (Replit dev file storage)" },
+  { key: "R2_ACCOUNT_ID", required: false, note: "Cloudflare R2 storage (Render prod)" },
+  { key: "R2_API_TOKEN", required: false, note: "Cloudflare R2 storage (Render prod)" },
+  { key: "R2_BUCKET_NAME", required: false, note: "Cloudflare R2 storage (Render prod)" },
+  { key: "R2_PUBLIC_URL", required: false, note: "Cloudflare R2 public base URL" },
+];
+
+const missing: string[] = [];
+for (const check of envChecks) {
+  const value = process.env[check.key];
+  const present = Boolean(value);
+  if (!present && check.required) {
+    missing.push(check.key);
+    logger.error({ key: check.key, note: check.note }, `STARTUP: required env var missing — ${check.key}`);
+  } else if (!present) {
+    logger.warn({ key: check.key, note: check.note }, `STARTUP: optional env var not set — ${check.key}`);
+  } else {
+    logger.info({ key: check.key }, `STARTUP: env var present — ${check.key}`);
+  }
+}
+
+// In production, reject insecure fallback JWT secret
+if (isProduction) {
+  const secret = process.env["SESSION_SECRET"];
+  if (!secret || secret === DEV_FALLBACK_SECRET) {
+    logger.error(
+      "STARTUP: SESSION_SECRET is missing or set to the development default. " +
+      "Set a strong random secret in production. Refusing to start.",
+    );
+    process.exit(1);
+  }
+}
+
+if (missing.length > 0) {
+  logger.error({ missing }, "STARTUP: required environment variables missing — refusing to start");
+  process.exit(1);
+}
+
+// ── Port validation ───────────────────────────────────────────────────────
 const rawPort = process.env["PORT"];
 
 if (!rawPort) {
-  throw new Error(
-    "PORT environment variable is required but was not provided.",
-  );
+  throw new Error("PORT environment variable is required but was not provided.");
 }
 
 const port = Number(rawPort);
