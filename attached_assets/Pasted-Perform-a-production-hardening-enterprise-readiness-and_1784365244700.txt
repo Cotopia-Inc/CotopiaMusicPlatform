@@ -1,0 +1,749 @@
+Perform a production-hardening, enterprise-readiness, and buyer-due-diligence pass on Everyday Radio Powered by Cotopia.
+
+Do not redesign the application. Do not remove existing features, branding, creator workflows, community features, submissions, chats, analytics, moderation, legal systems, or admin tools.
+
+PRIMARY GOAL
+
+Prepare the application for:
+
+* Real creator and listener use
+* Public beta testing
+* Licensing
+* White-label opportunities
+* Source-code licensing
+* Buyer due diligence
+* Future transfer or sale
+
+The application must use real persisted data and real backend authorization.
+
+SPECIAL DEMO REQUIREMENT
+
+Keep these two payment-related systems operational in demonstration mode:
+
+1. Content submission payments
+2. Creator tips
+
+Artists and labels must still be able to complete submissions during demonstrations without a live PayPal account.
+
+Users must still be able to demonstrate the tip process without sending real money.
+
+Do not require PayPal to be connected for the application to work.
+
+Add a configurable payment mode:
+
+* demo
+* paypal_sandbox
+* paypal_live
+
+Default mode for the current deployment:
+
+demo
+
+The master admin must be able to view the current payment mode but should not be able to accidentally activate live payments without all required credentials.
+
+DEMO PAYMENT RULES
+
+In demo mode:
+
+* The user can choose a submission plan.
+* The user can click a clearly labeled “Complete Demo Payment” button.
+* The system creates a real persisted demo order record.
+* The system creates a real persisted demo payment record.
+* The submission proceeds through the normal review workflow.
+* The submission status becomes pending review after the demo transaction succeeds.
+* The user receives a demo confirmation number.
+* No real money is charged.
+* The interface must clearly state “Demo transaction — no money was charged.”
+* Admin dashboards must label demo revenue separately from actual revenue.
+* Demo payments must never be counted as real income.
+* Demo payment records must be searchable and auditable.
+
+For tips in demo mode:
+
+* Users can select or enter a tip amount.
+* The tip flow can be completed for demonstration.
+* The system creates a persisted demo tip record.
+* The creator dashboard may show the demonstration tip under “Demo Tips.”
+* The tip must not be included in real earnings, payouts, taxes, revenue, or financial totals.
+* Display “Demo tip — no money was transferred.”
+
+Add fields where appropriate:
+
+* payment_mode
+* is_demo
+* provider
+* external_transaction_id nullable
+* demo_confirmation_number nullable
+* payment_status
+* amount
+* currency
+* user_id
+* creator_id nullable
+* submission_id nullable
+* created_at
+* updated_at
+
+Use values such as:
+
+payment_mode:
+
+* demo
+* paypal_sandbox
+* paypal_live
+
+payment_status:
+
+* initiated
+* completed
+* failed
+* refunded
+* disputed
+* canceled
+
+Do not use fake browser-only success states. Demo transactions must be saved through the backend and database.
+
+1. DEMO AND PLACEHOLDER AUDIT
+
+Search the entire codebase for:
+
+* mock
+* fake
+* placeholder
+* sample
+* simulated
+* temporary
+* hardcoded
+* TODO
+* FIXME
+* local-only
+* test data
+
+Create an Enterprise Readiness report listing every occurrence.
+
+Remove or replace demo behavior from all systems except:
+
+* Submission payment demonstration
+* Tip demonstration
+* Review/support demonstration features explicitly approved by the master admin
+
+The following must use real persisted data:
+
+* Registration
+* Authentication
+* Password reset
+* Email verification
+* User profiles
+* Artist profiles
+* Label profiles
+* Business profiles
+* Music uploads
+* Video uploads
+* Cover and image uploads
+* Playback
+* Playlists
+* Favorites
+* Ratings
+* Follows
+* Comments
+* Song and video chats
+* Private messaging
+* Blocking
+* Reporting
+* Moderation
+* Submission review
+* Publishing
+* Legal acceptance records
+* Analytics
+* Audit logs
+* DMCA records
+* Copyright strikes
+* Company Hub posts
+* App settings
+
+2. CENTRALIZED SERVER-SIDE AUTHORIZATION
+
+Create one centralized role and permission system.
+
+Roles:
+
+* master_admin
+* admin
+* moderator
+* editor
+* artist
+* label
+* business
+* listener
+
+Every protected page, API route, database action, upload action, export, and admin operation must verify authorization on the server.
+
+Do not rely only on:
+
+* Hidden navigation links
+* Disabled buttons
+* Frontend route checks
+* Client-provided roles
+
+Only master_admin can:
+
+* Assign or remove staff roles
+* Change legal settings
+* Access complete audit logs
+* Change payment mode
+* Configure payment credentials
+* Export highly sensitive records
+* Override administrative decisions
+
+Prevent users from escalating their own roles.
+
+3. ROLE PERMISSION MATRIX
+
+Document and enforce these responsibilities:
+
+Master Admin:
+
+* Full platform control
+* Assign roles
+* Configure legal and payment systems
+* View all records
+* Override decisions
+* Manage licensing and white-label settings
+
+Admin:
+
+* Final submission approval
+* Publish and unpublish content
+* Manage users and content
+* Handle DMCA and copyright actions
+* Review payments and demo transactions
+* Access platform analytics
+
+Moderator:
+
+* Review submissions for compliance
+* Moderate comments, chats, profiles, and reports
+* Approve submissions for admin final review
+* Reject obvious spam or policy violations
+* Escalate legal and copyright concerns
+* Cannot publish final content
+* Cannot issue final copyright strikes
+* Cannot assign roles
+
+Editor:
+
+* Listen to songs and watch videos
+* Create editorial playlists
+* Recommend creators and content
+* Suggest featured placement
+* Promote discovery
+* Cannot moderate users
+* Cannot issue strikes
+* Cannot access legal tools
+* Cannot publish final content
+
+Artist/Label:
+
+* Manage their own profiles and content
+* Submit media
+* View only their own analytics
+* Receive demonstration tips
+* Cannot access staff tools
+
+Listener:
+
+* Stream, watch, follow, rate, comment, chat, message, save, report, block, and create playlists
+* Cannot access submission or staff functions unless granted another approved role
+
+Add automated authorization tests for every role.
+
+4. REAL FILE UPLOAD SECURITY
+
+For music, videos, artwork, avatars, banners, screenshots, reports, and attachments:
+
+* Upload files from the user’s device
+* Validate file extension
+* Validate MIME type
+* Validate file signature where possible
+* Use server-generated random storage names
+* Preserve the original filename only as metadata
+* Enforce configurable size limits
+* Enforce configurable duration limits where appropriate
+* Reject executables and unsupported formats
+* Prevent path traversal
+* Prevent filename collisions
+* Add upload scan status
+* Add quarantine support
+* Keep unpublished files private
+* Make files public only after authorization or publication
+* Prevent unauthorized access to private files
+
+Upload scan statuses:
+
+* pending_scan
+* clean
+* rejected
+* quarantined
+* scan_failed
+
+Files must not be stored as database blobs.
+
+The database should store:
+
+* storage key
+* original filename
+* generated filename
+* MIME type
+* file size
+* owner
+* visibility
+* scan status
+* upload status
+* created date
+
+5. PAYMENT MODE CONFIGURATION
+
+Create master admin payment settings at:
+
+/admin/payments/settings
+
+Show:
+
+* Current payment mode
+* Demo
+* PayPal Sandbox
+* PayPal Live
+
+Requirements:
+
+* Demo mode works without external credentials.
+* Sandbox mode requires sandbox credentials.
+* Live mode requires live credentials.
+* The application must refuse to activate sandbox or live mode if required credentials are missing.
+* Never display secret credentials after they are saved.
+* Store secrets only in environment variables or a secure secret store.
+* Record every payment-mode change in the audit log.
+* Show a strong warning before activating PayPal Live.
+* Require master_admin confirmation to activate PayPal Live.
+
+When PayPal is not connected, all nonpayment platform features must remain operational.
+
+6. FUTURE PAYPAL-READY ARCHITECTURE
+
+Prepare, but do not require, support for:
+
+* Server-created PayPal orders
+* Server-side amount verification
+* Currency verification
+* Capture verification
+* Webhook endpoint
+* Webhook signature verification
+* Duplicate-event prevention
+* Idempotency
+* Refund states
+* Dispute states
+* Chargeback states
+* Payment reconciliation
+* CSV export
+
+In demo mode, do not contact PayPal.
+
+7. PAYMENT RECONCILIATION
+
+Create a payment reconciliation dashboard.
+
+Separate:
+
+* Demo submissions
+* Demo tips
+* PayPal sandbox transactions
+* PayPal live transactions
+* Refunds
+* Failed transactions
+* Disputes
+* Canceled transactions
+
+Every record should connect to:
+
+* User
+* Creator
+* Submission or tip
+* Plan
+* Amount
+* Currency
+* Payment mode
+* Payment status
+* Confirmation or provider transaction number
+* Date/time
+
+Never mix demo totals with real financial totals.
+
+8. SECURITY CONFIGURATION
+
+Verify and improve:
+
+* Secure password hashing
+* Secure password reset
+* Email verification
+* Session expiration
+* Session revocation
+* HttpOnly cookies
+* Secure cookies in production
+* Appropriate SameSite settings
+* Strict CORS allowlist
+* CSRF protection where applicable
+* Input validation
+* Output encoding
+* SQL injection protection
+* XSS protection
+* Rate limiting
+* Bot detection
+* Security headers
+* Safe error handling
+* No exposed stack traces
+* No hardcoded secrets
+* Separate development and production configuration
+
+Add startup validation for required environment variables.
+
+The app must fail safely and explain missing configuration in server logs without exposing secret values to users.
+
+9. PRIVATE MESSAGING AND COMMUNITY SAFETY
+
+Make messaging and community systems production-ready.
+
+Include:
+
+* Block/unblock
+* Report user
+* Report message
+* Report comment
+* Report chat message
+* Report song
+* Report video
+* Mute conversation
+* Delete own message where allowed
+* Moderator hide/remove tools
+* Spam/flood controls
+* Link abuse controls
+* Message permission settings
+
+Default private-message setting:
+
+Followers Only
+
+Blocked users must not be able to:
+
+* Send private messages
+* Follow each other
+* Tag each other
+* Initiate new private interactions
+
+10. AUDIT LOGS
+
+Make audit logs append-only for normal staff.
+
+Track:
+
+* Login security events
+* Failed login patterns
+* Role changes
+* Payment-mode changes
+* Legal version changes
+* Submission creation
+* Submission review
+* Moderator decisions
+* Admin decisions
+* Publishing
+* Unpublishing
+* Content removal
+* Copyright concerns
+* Copyright strikes
+* DMCA actions
+* Reports
+* Moderation actions
+* Suspensions
+* Restorations
+* Demo transactions
+* Sandbox transactions
+* Live transaction state changes
+* Refunds
+* Disputes
+* Settings changes
+* Data exports
+
+Audit fields:
+
+* actor_user_id
+* actor_role
+* action
+* target_type
+* target_id
+* before_data JSON
+* after_data JSON
+* ip_address
+* user_agent
+* request_id
+* created_at
+
+11. ANALYTICS ACCURACY
+
+Remove hardcoded analytics.
+
+Calculate metrics from real persisted events.
+
+Track:
+
+* Unique listeners
+* Valid streams
+* Repeat listeners
+* Plays per listener
+* Song completion
+* Song skips
+* Video views
+* Watch time
+* Likes
+* Favorites
+* Ratings
+* Shares
+* Playlist adds
+* Playlist removals
+* Follows
+* Unfollows
+* Comments
+* Chat participation
+* Private-message activity
+* Uploads
+* Submissions
+* Approval rates
+* Creator retention
+* Listener retention
+* Demo payment conversion
+* Demo tip activity
+
+Prevent obvious inflation using:
+
+* Session rules
+* Minimum listening thresholds
+* Duplicate-event controls
+* Rate limits
+* Bot detection
+* Suspicious activity flags
+
+Clearly label estimates and demonstration financial metrics.
+
+12. HEALTH, MONITORING, AND LOGGING
+
+Create:
+
+* /health
+* /ready
+
+Check:
+
+* App process
+* Database connection
+* Storage connection
+* Background jobs
+* Email configuration
+* Payment mode configuration
+
+Create an admin system-health page using real checks.
+
+Add:
+
+* Structured logs
+* Request IDs
+* Error tracking hooks
+* Storage-usage alerts
+* Database-usage alerts
+* Failed upload alerts
+* Failed email alerts
+* Failed payment alerts
+* Suspicious login alerts
+
+Do not show hardcoded “healthy” status.
+
+13. BACKUP AND RESTORE
+
+Create documentation and scripts for:
+
+* Database backup
+* Media metadata backup
+* Media file backup
+* Environment-variable inventory
+* Restore into a clean environment
+* Backup verification
+* Restore testing
+
+Create an admin backup-status page showing:
+
+* Last database backup
+* Last media backup
+* Last verified restore test
+* Retention period
+* Status
+* Error details
+
+Do not claim a backup or restore succeeded unless it was actually verified.
+
+14. DATA LIFECYCLE
+
+Implement or document:
+
+* User data export
+* Account deletion request
+* Content removal request
+* Retention states
+* Legal hold
+* Copyright evidence preservation
+* Deleted-but-retained status
+* Anonymization where appropriate
+
+Define retention rules for:
+
+* Accounts
+* Uploads
+* Chats
+* Private messages
+* Reports
+* Payments
+* Demo payments
+* Tips
+* Legal acceptances
+* Audit logs
+* DMCA records
+* Copyright-strike records
+
+15. LEGAL ACCEPTANCE
+
+Confirm that registration and submission require legal acceptance.
+
+Registration must require:
+
+* Adult age confirmation
+* Terms acceptance
+* Privacy Policy acceptance
+* Community Guidelines acceptance
+* AI Policy acceptance
+* Content License acceptance
+
+Submission must require the approved six legal checks, plus the conditional AI-content check when applicable.
+
+Store:
+
+* User ID
+* Agreement type
+* Agreement version
+* IP address
+* User agent
+* Submission ID
+* Payment ID where applicable
+* Accepted timestamp
+* Checkbox values
+
+16. EXPORTS
+
+Add permission-controlled CSV exports for:
+
+* Users
+* Creators
+* Songs
+* Videos
+* Submissions
+* Demo payments
+* Demo tips
+* Real payments
+* Analytics
+* Reports
+* Moderation records
+* Copyright records
+* Audit logs
+
+Every export must create an audit-log entry.
+
+17. BUYER AND LICENSEE DOCUMENTATION
+
+Create repository documentation containing:
+
+* Product overview
+* Architecture diagram
+* Database schema
+* Setup instructions
+* Deployment instructions
+* Environment-variable inventory
+* Permission matrix
+* API documentation
+* Upload flow
+* Storage flow
+* Submission workflow
+* Demo payment workflow
+* Future PayPal workflow
+* Tip workflow
+* Moderation workflow
+* DMCA workflow
+* Backup and restore procedure
+* Incident response
+* Known limitations
+* Dependency inventory
+* Third-party licenses
+* White-label readiness notes
+* Source-code licensing notes
+* Transfer checklist
+
+18. AUTOMATED TESTS
+
+Add tests for:
+
+* Registration
+* Authentication
+* Password reset
+* Email verification
+* Server-side role permissions
+* Role escalation prevention
+* Upload validation
+* Storage authorization
+* Submission creation
+* Demo submission payment
+* Demo tip transaction
+* Submission review
+* Final publishing
+* Chat
+* Private messaging
+* Blocking
+* Reporting
+* Legal acceptance
+* Copyright workflow
+* Analytics deduplication
+* Health checks
+* Backup script validation
+* Export authorization
+
+19. FINAL ENTERPRISE READINESS REPORT
+
+After implementation, provide:
+
+* Completed items
+* Unresolved risks
+* Remaining intentional demo systems
+* Required environment variables
+* Required production secrets
+* Database migrations
+* Manual configuration steps
+* Test results
+* Failed tests
+* Known limitations
+* Rollback plan
+* Recommended independent security review
+* Recommended final steps before a sale, license, or public production launch
+
+IMPORTANT FINAL RULES
+
+* Do not remove demonstration submissions.
+* Do not remove demonstration tips.
+* Demo submissions must proceed through the real persisted submission and review workflow.
+* Demo tips must create real persisted demo records.
+* Demo transactions must be clearly labeled and separated from real money.
+* PayPal must remain optional.
+* The application must operate without PayPal credentials while in demo mode.
+* Do not mark the application enterprise-ready based only on completed UI.
+* Verify persistence, authorization, security, auditability, recovery, documentation, and automated tests.
