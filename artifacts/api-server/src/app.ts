@@ -86,7 +86,13 @@ app.use(express.urlencoded({ extended: true }));
 // slot, and the general limit fires before any route handler touches the DB.
 
 // 1. Block known automated User-Agents (scrapers, crawlers, headless clients)
-app.use("/api", botDetection);
+//    Health probe paths bypass bot-detection so load balancers (Render, Replit)
+//    can check liveness without needing a browser user-agent.
+app.use("/api", (req, res, next) => {
+  const p = req.path;
+  if (p === "/healthz" || p === "/health" || p === "/ready") { next(); return; }
+  botDetection(req, res, next);
+});
 
 // 2. General API rate limit: 300 req / 15 min per IP — plenty for real users
 app.use("/api", apiRateLimit);

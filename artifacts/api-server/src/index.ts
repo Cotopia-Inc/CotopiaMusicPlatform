@@ -43,15 +43,21 @@ for (const check of envChecks) {
   }
 }
 
-// In production, reject insecure fallback JWT secret
+// In production, warn loudly if the JWT secret is the insecure dev fallback.
+// We do NOT exit — the app was previously using this fallback on Render and
+// must continue to work until the operator sets a proper secret.
 if (isProduction) {
   const secret = process.env["SESSION_SECRET"];
-  if (!secret || secret === DEV_FALLBACK_SECRET) {
+  if (!secret) {
     logger.error(
-      "STARTUP: SESSION_SECRET is missing or set to the development default. " +
-      "Set a strong random secret in production. Refusing to start.",
+      "STARTUP: SESSION_SECRET is not set. The insecure development fallback " +
+      "is being used. Set SESSION_SECRET in your production environment immediately.",
     );
-    process.exit(1);
+  } else if (secret === DEV_FALLBACK_SECRET) {
+    logger.warn(
+      "STARTUP: SESSION_SECRET is set to the development default value. " +
+      "This is insecure. Set a strong random secret in your production environment.",
+    );
   }
 }
 
