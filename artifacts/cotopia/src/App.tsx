@@ -107,6 +107,7 @@ import AdminMembers from "@/pages/admin-members";
 import AdminBadges from "@/pages/admin-badges";
 import AdminCreatorSupport from "@/pages/admin-creator-support";
 import AdminBroadcast from "@/pages/admin-broadcast";
+import AdminExports from "@/pages/admin-exports";
 import AdminDiscover from "@/pages/admin-discover";
 import AdminCopyrightConcerns from "@/pages/admin-copyright-concerns";
 import AdminPaymentSettings from "@/pages/admin-payment-settings";
@@ -400,6 +401,7 @@ function Router() {
       <Route path="/admin/discover"><RoleRoute roles={EDITOR_ROLES}><AdminDiscover /></RoleRoute></Route>
       <Route path="/admin/copyright-concerns"><RoleRoute roles={ADMIN_ROLES}><AdminCopyrightConcerns /></RoleRoute></Route>
       <Route path="/admin/trust"><RoleRoute roles={ADMIN_ROLES}><AdminTrust /></RoleRoute></Route>
+      <Route path="/admin/exports"><RoleRoute roles={ADMIN_ROLES}><AdminExports /></RoleRoute></Route>
 
       <Route path="/editor"><RoleRoute roles={EDITOR_ROLES}><EditorDashboard /></RoleRoute></Route>
       <Route path="/editor/playlists"><RoleRoute roles={EDITOR_ROLES}><EditorPlaylists /></RoleRoute></Route>
