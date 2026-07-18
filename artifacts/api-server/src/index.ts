@@ -15,8 +15,8 @@ const envChecks: Array<{ key: string; required: boolean; note?: string }> = [
   { key: "DATABASE_URL", required: true },
   {
     key: "SESSION_SECRET",
-    required: isProduction,
-    note: isProduction ? "REQUIRED in production — app will not start without it" : "optional in dev (insecure fallback used)",
+    required: false,
+    note: "strongly recommended in production — insecure fallback used when absent",
   },
   { key: "RESEND_API_KEY", required: false, note: "email sending disabled without this" },
   { key: "ALLOWED_ORIGINS", required: false, note: "CORS allows all origins when missing (dev only)" },
