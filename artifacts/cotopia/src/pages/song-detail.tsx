@@ -31,6 +31,7 @@ import { ReportModal } from "@/components/report-modal";
 import { SupportButton } from "@/components/support-modal";
 import { VerifyEmailBanner } from "@/components/verify-email-banner";
 import { CommentSection } from "@/components/comment-section";
+import { AiOriginBadge, type CreationMethod } from "@/components/ai-origin-badge";
 
 function formatTime(iso: string) {
   const d = new Date(iso);
@@ -336,6 +337,9 @@ export default function SongDetail() {
               {song.releaseType === "ep" ? "EP" : song.releaseType === "album" ? "Album" : "Single"}
             </Badge>
             <h1 className="text-3xl md:text-5xl font-extrabold tracking-tighter leading-none">{song.title}</h1>
+            {(song as any).effectiveDisplayTag && (song as any).effectiveDisplayTag !== "unclassified" && (
+              <AiOriginBadge method={(song as any).effectiveDisplayTag as CreationMethod} variant="title" />
+            )}
             <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
               <UserLink
                 username={song.artistName}

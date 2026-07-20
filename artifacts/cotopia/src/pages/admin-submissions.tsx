@@ -315,7 +315,7 @@ function SubmissionCard({
           )}
 
           {/* ── AI Authorship Review ── */}
-          {(mode === "admin" || mode === "moderator") && sub.creationMethod && (
+          {(mode === "admin" || mode === "moderator") && (
             <AiReviewCard
               contentType={(sub.type as "song" | "video") ?? "song"}
               contentId={sub.contentId ?? sub.id}

@@ -30,6 +30,7 @@ import { UserLink } from "@/components/user-link";
 import { useUpload } from "@/lib/useUpload";
 import { usePlayer } from "@/lib/player";
 import { CommentSection } from "@/components/comment-section";
+import { AiOriginBadge, type CreationMethod } from "@/components/ai-origin-badge";
 
 function formatTime(iso: string) {
   const d = new Date(iso);
@@ -657,6 +658,9 @@ export default function VideoDetail() {
         {/* Title + metadata */}
         <div className="space-y-1.5">
           <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight leading-tight">{video.title}</h1>
+          {(video as any).effectiveDisplayTag && (video as any).effectiveDisplayTag !== "unclassified" && (
+            <AiOriginBadge method={(video as any).effectiveDisplayTag as CreationMethod} variant="title" />
+          )}
           <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
             <UserLink
               username={video.artistName}

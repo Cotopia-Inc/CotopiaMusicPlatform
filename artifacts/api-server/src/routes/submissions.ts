@@ -21,20 +21,73 @@ async function enrichSubmission(s: typeof submissionsTable.$inferSelect) {
   let title = "";
   let mediaUrl: string | null = null;
   let coverUrl: string | null = null;
+  const extra: Record<string, unknown> = {};
   if (s.contentId) {
     if (s.type === "song") {
-      const [song] = await db.select({ title: songsTable.title, streamUrl: songsTable.streamUrl, coverUrl: songsTable.coverUrl }).from(songsTable).where(eq(songsTable.id, s.contentId)).limit(1);
+      const [song] = await db.select({
+        title: songsTable.title,
+        streamUrl: songsTable.streamUrl,
+        coverUrl: songsTable.coverUrl,
+        creationMethod: songsTable.creationMethod,
+        effectiveDisplayTag: songsTable.effectiveDisplayTag,
+        tagLocked: songsTable.tagLocked,
+        aiEstimatePercent: songsTable.aiEstimatePercent,
+        aiConfidenceLevel: songsTable.aiConfidenceLevel,
+        aiRiskLevel: songsTable.aiRiskLevel,
+        aiDetectionReasons: songsTable.aiDetectionReasons,
+        aiReviewStatus: songsTable.aiReviewStatus,
+        aiOverrideReason: songsTable.aiOverrideReason,
+      }).from(songsTable).where(eq(songsTable.id, s.contentId)).limit(1);
       title = song?.title ?? "";
       mediaUrl = song?.streamUrl ?? null;
       coverUrl = song?.coverUrl ?? null;
+      if (song) {
+        Object.assign(extra, {
+          creationMethod: song.creationMethod,
+          effectiveDisplayTag: song.effectiveDisplayTag,
+          tagLocked: song.tagLocked,
+          aiEstimatePercent: song.aiEstimatePercent,
+          aiConfidenceLevel: song.aiConfidenceLevel,
+          aiRiskLevel: song.aiRiskLevel,
+          aiDetectionReasons: song.aiDetectionReasons,
+          aiReviewStatus: song.aiReviewStatus,
+          aiOverrideReason: song.aiOverrideReason,
+        });
+      }
     } else {
-      const [video] = await db.select({ title: videosTable.title, videoUrl: videosTable.videoUrl, thumbnailUrl: videosTable.thumbnailUrl }).from(videosTable).where(eq(videosTable.id, s.contentId)).limit(1);
+      const [video] = await db.select({
+        title: videosTable.title,
+        videoUrl: videosTable.videoUrl,
+        thumbnailUrl: videosTable.thumbnailUrl,
+        creationMethod: videosTable.creationMethod,
+        effectiveDisplayTag: videosTable.effectiveDisplayTag,
+        tagLocked: videosTable.tagLocked,
+        aiEstimatePercent: videosTable.aiEstimatePercent,
+        aiConfidenceLevel: videosTable.aiConfidenceLevel,
+        aiRiskLevel: videosTable.aiRiskLevel,
+        aiDetectionReasons: videosTable.aiDetectionReasons,
+        aiReviewStatus: videosTable.aiReviewStatus,
+        aiOverrideReason: videosTable.aiOverrideReason,
+      }).from(videosTable).where(eq(videosTable.id, s.contentId)).limit(1);
       title = video?.title ?? "";
       mediaUrl = video?.videoUrl ?? null;
       coverUrl = video?.thumbnailUrl ?? null;
+      if (video) {
+        Object.assign(extra, {
+          creationMethod: video.creationMethod,
+          effectiveDisplayTag: video.effectiveDisplayTag,
+          tagLocked: video.tagLocked,
+          aiEstimatePercent: video.aiEstimatePercent,
+          aiConfidenceLevel: video.aiConfidenceLevel,
+          aiRiskLevel: video.aiRiskLevel,
+          aiDetectionReasons: video.aiDetectionReasons,
+          aiReviewStatus: video.aiReviewStatus,
+          aiOverrideReason: video.aiOverrideReason,
+        });
+      }
     }
   }
-  return { ...s, submitterName: user?.username ?? "", submitterRole: user?.role ?? "", title, mediaUrl, coverUrl };
+  return { ...s, submitterName: user?.username ?? "", submitterRole: user?.role ?? "", title, mediaUrl, coverUrl, ...extra };
 }
 
 router.get("/submissions", requireAuth, async (req: AuthRequest, res): Promise<void> => {
