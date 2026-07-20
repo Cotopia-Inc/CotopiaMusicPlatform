@@ -79,7 +79,7 @@ const creatorTagBody = z.object({
 });
 
 /** POST /api/songs/:id/creation-tag — creator declares origin of their song */
-router.post("/api/songs/:id/creation-tag", requireAuth, async (req: AuthRequest, res): Promise<void> => {
+router.post("/songs/:id/creation-tag", requireAuth, async (req: AuthRequest, res): Promise<void> => {
   const songId = Number(req.params.id);
   const userId = req.user!.userId;
 
@@ -146,7 +146,7 @@ router.post("/api/songs/:id/creation-tag", requireAuth, async (req: AuthRequest,
 });
 
 /** POST /api/videos/:id/creation-tag — creator declares origin of their video */
-router.post("/api/videos/:id/creation-tag", requireAuth, async (req: AuthRequest, res): Promise<void> => {
+router.post("/videos/:id/creation-tag", requireAuth, async (req: AuthRequest, res): Promise<void> => {
   const videoId = Number(req.params.id);
   const userId = req.user!.userId;
 
@@ -329,7 +329,7 @@ async function applyAdminReview(
 }
 
 router.patch(
-  "/api/admin/ai-review/song/:id",
+  "/admin/ai-review/song/:id",
   requireAuth, requireRole(...STAFF_ROLES),
   async (req: AuthRequest, res): Promise<void> => {
     const parsed = adminReviewBody.safeParse(req.body);
@@ -342,7 +342,7 @@ router.patch(
 );
 
 router.patch(
-  "/api/admin/ai-review/video/:id",
+  "/admin/ai-review/video/:id",
   requireAuth, requireRole(...STAFF_ROLES),
   async (req: AuthRequest, res): Promise<void> => {
     const parsed = adminReviewBody.safeParse(req.body);
@@ -357,7 +357,7 @@ router.patch(
 // ── Hive detection scan ───────────────────────────────────────────────────────
 
 router.post(
-  "/api/admin/ai-review/scan",
+  "/admin/ai-review/scan",
   requireAuth, requireRole(...STAFF_ROLES),
   async (req: AuthRequest, res): Promise<void> => {
     const body = z.object({
@@ -450,7 +450,7 @@ router.post(
 // ── Get scan history for content ──────────────────────────────────────────────
 
 router.get(
-  "/api/admin/ai-scans/:contentType/:contentId",
+  "/admin/ai-scans/:contentType/:contentId",
   requireAuth, requireRole(...STAFF_ROLES),
   async (req: AuthRequest, res): Promise<void> => {
     const contentType = String(req.params.contentType);
@@ -479,7 +479,7 @@ router.get(
 
 // ── AI settings (subset) for the client ──────────────────────────────────────
 
-router.get("/api/ai-settings", async (_req, res): Promise<void> => {
+router.get("/ai-settings", async (_req, res): Promise<void> => {
   const settings = await getSettings();
   if (!settings) { res.json({}); return; }
   res.json({
@@ -501,7 +501,7 @@ router.get("/api/ai-settings", async (_req, res): Promise<void> => {
 // ── AI analytics ─────────────────────────────────────────────────────────────
 
 router.get(
-  "/api/admin/ai-analytics",
+  "/admin/ai-analytics",
   requireAuth, requireRole(...STAFF_ROLES),
   async (_req, res): Promise<void> => {
     const [songCounts, videoCounts, scanStats] = await Promise.all([

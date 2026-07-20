@@ -109,6 +109,77 @@ export async function ensureTables(): Promise<void> {
       -- Normalize existing "pending/completed" statuses to new vocabulary
       UPDATE payments SET status = 'initiated' WHERE status = 'pending';
       UPDATE payments SET status = 'completed' WHERE status = 'completed';
+
+      -- AI / human-origin tagging columns on songs (added Jul 2026)
+      ALTER TABLE songs ADD COLUMN IF NOT EXISTS creation_method TEXT NOT NULL DEFAULT 'unclassified';
+      ALTER TABLE songs ADD COLUMN IF NOT EXISTS creator_selected_tag TEXT;
+      ALTER TABLE songs ADD COLUMN IF NOT EXISTS platform_assigned_tag TEXT;
+      ALTER TABLE songs ADD COLUMN IF NOT EXISTS effective_display_tag TEXT NOT NULL DEFAULT 'unclassified';
+      ALTER TABLE songs ADD COLUMN IF NOT EXISTS tag_source TEXT;
+      ALTER TABLE songs ADD COLUMN IF NOT EXISTS tag_locked BOOLEAN NOT NULL DEFAULT false;
+      ALTER TABLE songs ADD COLUMN IF NOT EXISTS ai_estimate_percent REAL;
+      ALTER TABLE songs ADD COLUMN IF NOT EXISTS ai_confidence_level TEXT;
+      ALTER TABLE songs ADD COLUMN IF NOT EXISTS ai_risk_level TEXT;
+      ALTER TABLE songs ADD COLUMN IF NOT EXISTS ai_detection_reasons JSONB;
+      ALTER TABLE songs ADD COLUMN IF NOT EXISTS ai_review_status TEXT NOT NULL DEFAULT 'not_scanned';
+      ALTER TABLE songs ADD COLUMN IF NOT EXISTS ai_reviewed_by INTEGER;
+      ALTER TABLE songs ADD COLUMN IF NOT EXISTS ai_reviewed_at TIMESTAMP WITH TIME ZONE;
+      ALTER TABLE songs ADD COLUMN IF NOT EXISTS ai_override_reason TEXT;
+
+      -- AI / human-origin tagging columns on videos (added Jul 2026)
+      ALTER TABLE videos ADD COLUMN IF NOT EXISTS creation_method TEXT NOT NULL DEFAULT 'unclassified';
+      ALTER TABLE videos ADD COLUMN IF NOT EXISTS creator_selected_tag TEXT;
+      ALTER TABLE videos ADD COLUMN IF NOT EXISTS platform_assigned_tag TEXT;
+      ALTER TABLE videos ADD COLUMN IF NOT EXISTS effective_display_tag TEXT NOT NULL DEFAULT 'unclassified';
+      ALTER TABLE videos ADD COLUMN IF NOT EXISTS tag_source TEXT;
+      ALTER TABLE videos ADD COLUMN IF NOT EXISTS tag_locked BOOLEAN NOT NULL DEFAULT false;
+      ALTER TABLE videos ADD COLUMN IF NOT EXISTS ai_estimate_percent REAL;
+      ALTER TABLE videos ADD COLUMN IF NOT EXISTS ai_confidence_level TEXT;
+      ALTER TABLE videos ADD COLUMN IF NOT EXISTS ai_risk_level TEXT;
+      ALTER TABLE videos ADD COLUMN IF NOT EXISTS ai_detection_reasons JSONB;
+      ALTER TABLE videos ADD COLUMN IF NOT EXISTS ai_review_status TEXT NOT NULL DEFAULT 'not_scanned';
+      ALTER TABLE videos ADD COLUMN IF NOT EXISTS ai_reviewed_by INTEGER;
+      ALTER TABLE videos ADD COLUMN IF NOT EXISTS ai_reviewed_at TIMESTAMP WITH TIME ZONE;
+      ALTER TABLE videos ADD COLUMN IF NOT EXISTS ai_override_reason TEXT;
+
+      -- AI columns on submissions (added Jul 2026)
+      ALTER TABLE submissions ADD COLUMN IF NOT EXISTS creation_method TEXT NOT NULL DEFAULT 'unclassified';
+      ALTER TABLE submissions ADD COLUMN IF NOT EXISTS ai_review_status TEXT NOT NULL DEFAULT 'not_scanned';
+
+      -- AI badge visibility & review settings on app_settings (added Jul 2026)
+      ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS show_human_badge BOOLEAN NOT NULL DEFAULT true;
+      ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS show_ai_badge BOOLEAN NOT NULL DEFAULT true;
+      ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS show_hybrid_badge BOOLEAN NOT NULL DEFAULT true;
+      ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS show_fully_ai_badge BOOLEAN NOT NULL DEFAULT false;
+      ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS show_title_icons BOOLEAN NOT NULL DEFAULT true;
+      ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS show_cover_overlays BOOLEAN NOT NULL DEFAULT true;
+      ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS allow_creator_self_tagging BOOLEAN NOT NULL DEFAULT true;
+      ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS enable_ai_review BOOLEAN NOT NULL DEFAULT true;
+      ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS auto_reject_fully_ai BOOLEAN NOT NULL DEFAULT false;
+      ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS auto_reject_detection_threshold INTEGER NOT NULL DEFAULT 95;
+      ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS ai_low_threshold INTEGER NOT NULL DEFAULT 25;
+      ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS ai_high_threshold INTEGER NOT NULL DEFAULT 60;
+      ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS ai_critical_threshold INTEGER NOT NULL DEFAULT 90;
+
+      -- AI detection scans table (added Jul 2026)
+      CREATE TABLE IF NOT EXISTS ai_detection_scans (
+        id SERIAL PRIMARY KEY,
+        content_type TEXT NOT NULL,
+        content_id INTEGER NOT NULL,
+        provider TEXT NOT NULL DEFAULT 'hive',
+        model_version TEXT,
+        file_hash TEXT,
+        scan_status TEXT NOT NULL DEFAULT 'pending',
+        raw_result JSONB,
+        ai_likelihood_percent REAL,
+        confidence_level TEXT,
+        risk_level TEXT,
+        detection_indicators JSONB,
+        error_message TEXT,
+        requested_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        scanned_at TIMESTAMP WITH TIME ZONE,
+        created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+      );
     `);
     logger.info("ensureTables: schema up to date");
   } catch (err) {
