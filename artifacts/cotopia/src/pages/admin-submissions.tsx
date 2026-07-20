@@ -22,6 +22,8 @@ import {
 } from "lucide-react";
 import { CopyrightStrikeModal, type StrikeTarget } from "@/components/copyright-strike-modal";
 import { RoleTag } from "@/components/role-badges";
+import { AiReviewCard } from "@/components/ai-review-card";
+import type { CreationMethod } from "@/components/ai-origin-badge";
 
 type Mode = "moderator" | "admin" | "editor";
 
@@ -101,6 +103,7 @@ function VideoPreview({ url, coverUrl, title }: { url: string; coverUrl?: string
 
 interface Sub {
   id: number;
+  contentId?: number | null;
   type: string;
   title: string;
   submitterName?: string;
@@ -114,6 +117,19 @@ interface Sub {
   moderatorNotes?: string | null;
   submitterNotes?: string | null;
   createdAt: string;
+  creationMethod?: string | null;
+  creatorSelectedTag?: string | null;
+  platformAssignedTag?: string | null;
+  effectiveDisplayTag?: string | null;
+  tagSource?: string | null;
+  tagLocked?: boolean | null;
+  aiEstimatePercent?: number | null;
+  aiConfidenceLevel?: string | null;
+  aiRiskLevel?: string | null;
+  aiDetectionReasons?: string[] | null;
+  aiReviewStatus?: string | null;
+  aiOverrideReason?: string | null;
+  appealStatus?: string | null;
 }
 
 const TERMINAL = ["published", "rejected", "moderator_rejected"];
@@ -296,6 +312,47 @@ function SubmissionCard({
           )}
           {sub.mediaUrl && sub.type === "video" && (
             <VideoPreview url={sub.mediaUrl} coverUrl={sub.coverUrl} title={sub.title} />
+          )}
+
+          {/* ── AI Authorship Review ── */}
+          {(mode === "admin" || mode === "moderator") && sub.creationMethod && (
+            <AiReviewCard
+              contentType={(sub.type as "song" | "video") ?? "song"}
+              contentId={sub.contentId ?? sub.id}
+              data={{
+                creationMethod: (sub.creationMethod ?? "unclassified") as CreationMethod,
+                creatorSelectedTag: sub.creatorSelectedTag ?? null,
+                platformAssignedTag: sub.platformAssignedTag ?? null,
+                effectiveDisplayTag: sub.effectiveDisplayTag ?? null,
+                tagSource: sub.tagSource ?? null,
+                tagLocked: sub.tagLocked ?? false,
+                aiEstimatePercent: sub.aiEstimatePercent ?? null,
+                aiConfidenceLevel: sub.aiConfidenceLevel ?? null,
+                aiRiskLevel: sub.aiRiskLevel ?? null,
+                aiDetectionReasons: sub.aiDetectionReasons ?? null,
+                aiReviewStatus: sub.aiReviewStatus ?? "not_scanned",
+                aiOverrideReason: sub.aiOverrideReason ?? null,
+                appealStatus: sub.appealStatus ?? null,
+              }}
+              isAdmin={mode === "admin"}
+              isModerator={mode === "moderator"}
+              onAction={async (action, params) => {
+                const token = localStorage.getItem("cotopia_token");
+                await fetch(`${import.meta.env.BASE_URL}api/admin/ai-review/${sub.type}/${sub.contentId ?? sub.id}`, {
+                  method: "PATCH",
+                  headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+                  body: JSON.stringify({ action, ...params }),
+                });
+              }}
+              onScanRequest={async () => {
+                const token = localStorage.getItem("cotopia_token");
+                await fetch(`${import.meta.env.BASE_URL}api/admin/ai-review/scan`, {
+                  method: "POST",
+                  headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+                  body: JSON.stringify({ contentType: sub.type, contentId: sub.contentId ?? sub.id }),
+                });
+              }}
+            />
           )}
 
           {sub.submitterNotes && (

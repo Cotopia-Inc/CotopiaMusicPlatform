@@ -13,6 +13,7 @@ const ACTION_OPTIONS = [
   "Badge removal",
   "Verification denial",
   "Support Wall moderation",
+  "AI authorship tag dispute",
   "Copyright action",
   "Other",
 ];

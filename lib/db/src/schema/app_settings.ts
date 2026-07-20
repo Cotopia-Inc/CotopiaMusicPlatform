@@ -29,7 +29,7 @@ export const appSettingsTable = pgTable("app_settings", {
   privacyVersion: text("privacy_version").default("1.0"),
   submissionAgreementVersion: text("submission_agreement_version").default("1.0"),
   contentLicenseVersion: text("content_license_version").default("1.0"),
-  aiPolicyVersion: text("ai_policy_version").default("1.0"),
+  aiPolicyVersion: text("ai_policy_version").default("2.0"),
   communityGuidelinesVersion: text("community_guidelines_version").default("1.0"),
   refundPolicyVersion: text("refund_policy_version").default("1.0"),
   dmcaContactEmail: text("dmca_contact_email").default("legal@cotopia.org"),
@@ -44,6 +44,25 @@ export const appSettingsTable = pgTable("app_settings", {
   // Only master_admin may change this. Changing to sandbox/live requires
   // the corresponding PayPal env vars to be present.
   paymentMode: text("payment_mode").notNull().default("demo"),
+  // ── AI / Human content tagging global settings ────────────────────────────
+  // Badge visibility — master_admin controls which origin badges appear publicly
+  showHumanBadge: boolean("show_human_badge").notNull().default(true),
+  showAiBadge: boolean("show_ai_badge").notNull().default(true),
+  showHybridBadge: boolean("show_hybrid_badge").notNull().default(true),
+  showFullyAiBadge: boolean("show_fully_ai_badge").notNull().default(false), // fully AI not accepted; badge hidden by default
+  showTitleIcons: boolean("show_title_icons").notNull().default(true),
+  showCoverOverlays: boolean("show_cover_overlays").notNull().default(true),
+  // Feature flags
+  allowCreatorSelfTagging: boolean("allow_creator_self_tagging").notNull().default(true),
+  enableAiReview: boolean("enable_ai_review").notNull().default(true),
+  // Auto-rejection — disabled by default until a real provider+threshold are vetted
+  autoRejectFullyAi: boolean("auto_reject_fully_ai").notNull().default(false),
+  allowAdminOverride: boolean("allow_admin_override").notNull().default(true),
+  // Thresholds for AI risk meter (workflow signals only, not scientific proof)
+  autoRejectDetectionThreshold: integer("auto_reject_detection_threshold").notNull().default(95),
+  aiLowThreshold: integer("ai_low_threshold").notNull().default(25),
+  aiHighThreshold: integer("ai_high_threshold").notNull().default(60),
+  aiCriticalThreshold: integer("ai_critical_threshold").notNull().default(90),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
 

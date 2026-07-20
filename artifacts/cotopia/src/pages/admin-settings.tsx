@@ -6,8 +6,27 @@ import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect, useRef } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Upload, Loader2 } from "lucide-react";
+import { Upload, Loader2, Brain } from "lucide-react";
 import { useUpload } from "@/lib/useUpload";
+
+const DEFAULT_AI = {
+  showHumanBadge: true,
+  showAiBadge: true,
+  showHybridBadge: true,
+  showFullyAiBadge: true,
+  showTitleIcons: true,
+  showCoverOverlays: true,
+  allowCreatorSelfTagging: true,
+  enableAiReview: false,
+  autoRejectFullyAi: false,
+  allowAdminOverride: true,
+  autoRejectDetectionThreshold: 95,
+  aiLowThreshold: 30,
+  aiHighThreshold: 70,
+  aiCriticalThreshold: 90,
+};
+
+type AiSettings = typeof DEFAULT_AI;
 
 export default function AdminSettings() {
   const { data: settings, isLoading } = useGetAppSettings({
@@ -16,6 +35,42 @@ export default function AdminSettings() {
 
   const updateMutation = useUpdateAppSettings();
   const { toast } = useToast();
+
+  const [aiSettings, setAiSettings] = useState<AiSettings>(DEFAULT_AI);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiSaving, setAiSaving] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem("cotopia_token");
+    setAiLoading(true);
+    fetch(`${import.meta.env.BASE_URL}api/admin/ai-settings`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => r.json())
+      .then((data: Partial<AiSettings>) => {
+        setAiSettings(prev => ({ ...prev, ...data }));
+      })
+      .catch(() => {})
+      .finally(() => setAiLoading(false));
+  }, []);
+
+  async function saveAiSettings() {
+    setAiSaving(true);
+    try {
+      const token = localStorage.getItem("cotopia_token");
+      const res = await fetch(`${import.meta.env.BASE_URL}api/admin/ai-settings`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify(aiSettings),
+      });
+      if (!res.ok) throw new Error("Failed");
+      toast({ title: "AI settings saved" });
+    } catch {
+      toast({ variant: "destructive", title: "Failed to save AI settings" });
+    } finally {
+      setAiSaving(false);
+    }
+  }
   const logoInputRef = useRef<HTMLInputElement>(null);
   const [logoFilename, setLogoFilename] = useState("");
 
@@ -395,6 +450,93 @@ export default function AdminSettings() {
         <div className="pt-4 flex justify-end">
           <Button onClick={handleSave} disabled={updateMutation.isPending} size="lg">
             {updateMutation.isPending ? "Saving..." : "Save Configuration"}
+          </Button>
+        </div>
+      </div>
+
+      {/* ── AI Content Origin Settings ── */}
+      <div className="bg-card p-4 md:p-8 rounded-xl border border-border shadow-lg space-y-6">
+        <div className="flex items-center gap-3 border-b border-border pb-4">
+          <div className="w-8 h-8 rounded-lg bg-violet-400/10 flex items-center justify-center flex-shrink-0">
+            <Brain className="w-4 h-4 text-violet-400" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold">AI Content Origin Policy</h3>
+            <p className="text-sm text-muted-foreground">Control how AI authorship badges are shown and how AI detection is enforced.</p>
+          </div>
+          {aiLoading && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground ml-auto" />}
+        </div>
+
+        <div className="space-y-4">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Badge Visibility</p>
+          {([
+            { key: "showHumanBadge", label: "Show Human Created badge", desc: "Display the 'Human' badge on qualifying tracks and videos." },
+            { key: "showAiBadge", label: "Show AI Assisted badge", desc: "Display the 'AI Assisted' badge." },
+            { key: "showHybridBadge", label: "Show Human + AI badge", desc: "Display the 'Human + AI' hybrid badge." },
+            { key: "showFullyAiBadge", label: "Show Fully AI badge", desc: "Display the 'Fully AI' badge (for any approved exceptions)." },
+            { key: "showTitleIcons", label: "Show icons in content titles", desc: "Show small AI origin icons next to track/video titles in listings." },
+            { key: "showCoverOverlays", label: "Show cover art overlay badges", desc: "Overlay AI origin badge on artwork thumbnails." },
+          ] as { key: keyof AiSettings; label: string; desc: string }[]).map(({ key, label, desc }) => (
+            <div key={key} className="flex items-center justify-between p-4 bg-secondary/30 rounded-lg border border-border">
+              <div className="space-y-1">
+                <Label className="font-medium text-sm">{label}</Label>
+                <p className="text-xs text-muted-foreground">{desc}</p>
+              </div>
+              <Switch
+                checked={Boolean(aiSettings[key])}
+                onCheckedChange={(v) => setAiSettings(prev => ({ ...prev, [key]: v }))}
+              />
+            </div>
+          ))}
+        </div>
+
+        <div className="space-y-4">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Creator & Detection Policy</p>
+          {([
+            { key: "allowCreatorSelfTagging", label: "Allow creator self-tagging", desc: "Creators can declare their content's AI origin at submission time." },
+            { key: "enableAiReview", label: "Enable AI detection scans", desc: "Trigger Hive Moderation scans on submitted content for automated AI likelihood scoring." },
+            { key: "autoRejectFullyAi", label: "Auto-reject fully AI submissions", desc: "Automatically reject submissions where the creator declares fully AI-generated content." },
+            { key: "allowAdminOverride", label: "Allow admin tag override", desc: "Admins and editors can override or lock the effective display tag." },
+          ] as { key: keyof AiSettings; label: string; desc: string }[]).map(({ key, label, desc }) => (
+            <div key={key} className="flex items-center justify-between p-4 bg-secondary/30 rounded-lg border border-border">
+              <div className="space-y-1">
+                <Label className="font-medium text-sm">{label}</Label>
+                <p className="text-xs text-muted-foreground">{desc}</p>
+              </div>
+              <Switch
+                checked={Boolean(aiSettings[key])}
+                onCheckedChange={(v) => setAiSettings(prev => ({ ...prev, [key]: v }))}
+              />
+            </div>
+          ))}
+        </div>
+
+        <div className="space-y-4">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Detection Thresholds (%)</p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {([
+              { key: "aiLowThreshold", label: "Low risk cutoff" },
+              { key: "aiHighThreshold", label: "High risk cutoff" },
+              { key: "aiCriticalThreshold", label: "Critical risk cutoff" },
+              { key: "autoRejectDetectionThreshold", label: "Auto-reject at" },
+            ] as { key: keyof AiSettings; label: string }[]).map(({ key, label }) => (
+              <div key={key} className="space-y-2">
+                <Label className="text-xs text-muted-foreground">{label}</Label>
+                <Input
+                  type="number" min={0} max={100} step={1}
+                  value={Number(aiSettings[key])}
+                  onChange={(e) => setAiSettings(prev => ({ ...prev, [key]: Math.min(100, Math.max(0, Number(e.target.value))) }))}
+                  className="bg-secondary/50 border-secondary"
+                />
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground">Scores below Low are shown as Low risk. Between Low and High is Medium. Between High and Critical is High. Above Critical is flagged as Critical.</p>
+        </div>
+
+        <div className="pt-4 flex justify-end">
+          <Button onClick={saveAiSettings} disabled={aiSaving} size="lg">
+            {aiSaving ? "Saving..." : "Save AI Settings"}
           </Button>
         </div>
       </div>

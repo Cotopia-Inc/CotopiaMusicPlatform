@@ -35,7 +35,7 @@ import creatorSupportRouter from "./creator-support";
 import trustRouter from "./trust";
 import pushRouter from "./push";
 import exportsRouter from "./exports";
-
+import aiReviewRouter from "./ai-review";
 
 const router: IRouter = Router();
 
@@ -75,5 +75,6 @@ router.use(creatorSupportRouter);
 router.use(trustRouter);
 router.use(pushRouter);
 router.use(exportsRouter);
+router.use(aiReviewRouter);
 
 export default router;

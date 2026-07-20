@@ -1014,6 +1014,47 @@ router.patch("/admin/legal-settings", requireAuth, requireRole("master_admin"), 
   });
 });
 
+// ── AI Badge / Policy Settings (master_admin only) ───────────────────────────
+
+const AI_SETTINGS_FIELDS = [
+  "showHumanBadge", "showAiBadge", "showHybridBadge", "showFullyAiBadge",
+  "showTitleIcons", "showCoverOverlays", "allowCreatorSelfTagging",
+  "enableAiReview", "autoRejectFullyAi", "allowAdminOverride",
+  "autoRejectDetectionThreshold", "aiLowThreshold", "aiHighThreshold", "aiCriticalThreshold",
+] as const;
+
+router.get("/admin/ai-settings", requireAuth, requireRole("master_admin"), async (_req, res): Promise<void> => {
+  let [settings] = await db.select().from(appSettingsTable).limit(1);
+  if (!settings) [settings] = await db.insert(appSettingsTable).values({}).returning();
+  const result: Record<string, unknown> = {};
+  for (const key of AI_SETTINGS_FIELDS) result[key] = settings[key];
+  res.json(result);
+});
+
+router.patch("/admin/ai-settings", requireAuth, requireRole("master_admin"), async (req: AuthRequest, res): Promise<void> => {
+  const data: Record<string, unknown> = {};
+  for (const key of AI_SETTINGS_FIELDS) {
+    if (key in (req.body as Record<string, unknown>)) data[key] = (req.body as Record<string, unknown>)[key];
+  }
+
+  let [existing] = await db.select().from(appSettingsTable).limit(1);
+  if (!existing) [existing] = await db.insert(appSettingsTable).values({}).returning();
+  const [updated] = await db.update(appSettingsTable).set(data).where(eq(appSettingsTable.id, existing.id)).returning();
+
+  await db.insert(adminAuditLogsTable).values({
+    adminUserId: req.user!.userId,
+    action: "ai_settings_updated",
+    targetType: "app_settings",
+    targetId: existing.id,
+    description: `AI badge/policy settings updated (fields: ${Object.keys(data).join(", ")})`,
+    metadata: { updatedFields: Object.keys(data), before: Object.fromEntries(AI_SETTINGS_FIELDS.map(k => [k, (existing as Record<string, unknown>)[k]])) } as unknown,
+  });
+
+  const result: Record<string, unknown> = {};
+  for (const key of AI_SETTINGS_FIELDS) result[key] = (updated as Record<string, unknown>)[key];
+  res.json(result);
+});
+
 // ── Copyright Strikes ─────────────────────────────────────────────────────────
 
 router.get("/admin/strikes", requireAuth, requireRole(...ADMIN_ROLES), async (req: AuthRequest, res): Promise<void> => {

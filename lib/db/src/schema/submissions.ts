@@ -17,6 +17,13 @@ export const submissionsTable = pgTable("submissions", {
   moderatorNotes: text("moderator_notes"),
   adminNotes: text("admin_notes"),
   plan: text("plan").notNull().default("basic"),
+  // ── AI / Human origin (declared at submission time) ───────────────────────
+  // unclassified | human_created | ai_assisted | hybrid_human_ai | fully_ai_generated
+  creationMethod: text("creation_method").notNull().default("unclassified"),
+  // not_scanned | scan_pending | scan_complete | moderator_review | escalated_to_admin
+  // | evidence_requested | admin_approved | admin_rejected | auto_rejected | appealed | appeal_resolved
+  aiReviewStatus: text("ai_review_status").notNull().default("not_scanned"),
+  aiOverrideReason: text("ai_override_reason"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

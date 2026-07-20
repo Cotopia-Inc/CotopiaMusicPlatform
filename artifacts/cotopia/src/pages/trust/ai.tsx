@@ -50,6 +50,33 @@ export default function TrustAI() {
 
           <div className="p-6 rounded-xl bg-card border border-border space-y-3">
             <div className="flex items-center gap-2">
+              <Brain className="w-4 h-4 text-violet-400" />
+              <h2 className="font-semibold">AI Content Origin Tagging</h2>
+            </div>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Everyday Radio uses a transparent content origin tagging system so listeners always know whether tracks and videos are human-created, AI-assisted, hybrid, or (where permitted) fully AI-generated.
+            </p>
+            <div className="space-y-2">
+              {[
+                { label: "Human Created", desc: "Minimal or no AI involvement — written, performed, and produced by human artists." },
+                { label: "AI Assisted", desc: "AI tools were used in part of the creative process (mixing, mastering assistance, lyric suggestions) but the core creative work is human." },
+                { label: "Human + AI Collaboration", desc: "Meaningful human and AI contributions are both present throughout the work." },
+                { label: "Fully AI Generated", desc: "Content generated entirely by AI with no meaningful human creative authorship. Not accepted under current platform policy." },
+              ].map(({ label, desc }) => (
+                <div key={label} className="rounded-lg bg-secondary/30 px-4 py-3 space-y-0.5">
+                  <p className="text-sm font-medium">{label}</p>
+                  <p className="text-xs text-muted-foreground">{desc}</p>
+                </div>
+              ))}
+            </div>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Origin tags are set by creators at submission time and may be supplemented by automated detection scans. Platform staff may adjust or lock tags after review. If you believe your content tag is incorrect, you can{" "}
+              <Link href="/trust/appeals"><span className="text-primary hover:underline font-medium cursor-pointer">file an AI authorship tag dispute</span></Link>.
+            </p>
+          </div>
+
+          <div className="p-6 rounded-xl bg-card border border-border space-y-3">
+            <div className="flex items-center gap-2">
               <Shield className="w-4 h-4 text-green-400" />
               <h2 className="font-semibold">Scraping & Bot Protection</h2>
             </div>
