@@ -495,6 +495,7 @@ router.get("/ai-settings", async (_req, res): Promise<void> => {
     aiLowThreshold: settings.aiLowThreshold,
     aiHighThreshold: settings.aiHighThreshold,
     aiCriticalThreshold: settings.aiCriticalThreshold,
+    hiveConfigured: !!process.env.HIVE_API_KEY,
   });
 });
 

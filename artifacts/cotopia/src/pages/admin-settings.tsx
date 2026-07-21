@@ -57,6 +57,7 @@ export default function AdminSettings() {
 
   const [aiSettings, setAiSettings] = useState<AiSettings>(DEFAULT_AI);
   const [aiLoading, setAiLoading] = useState(false);
+  const [hiveConfigured, setHiveConfigured] = useState<boolean | null>(null);
   const [formSaveStatus, setFormSaveStatus] = useState<SaveStatus>("idle");
   const [aiSaveStatus, setAiSaveStatus] = useState<SaveStatus>("idle");
 
@@ -72,8 +73,10 @@ export default function AdminSettings() {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(r => r.json())
-      .then((data: Partial<AiSettings>) => {
-        setAiSettings(prev => ({ ...prev, ...data }));
+      .then((data: Partial<AiSettings> & { hiveConfigured?: boolean }) => {
+        const { hiveConfigured: hc, ...rest } = data;
+        setAiSettings(prev => ({ ...prev, ...rest }));
+        if (hc !== undefined) setHiveConfigured(hc);
         setTimeout(() => { aiHydrated.current = true; }, 50);
       })
       .catch(() => { aiHydrated.current = true; })
@@ -523,7 +526,21 @@ export default function AdminSettings() {
             <Brain className="w-4 h-4 text-violet-400" />
           </div>
           <div className="flex-1">
-            <h3 className="text-lg font-bold">AI Content Origin Policy</h3>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-lg font-bold">AI Content Origin Policy</h3>
+              {hiveConfigured === true && (
+                <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-green-500/15 text-green-400 border border-green-500/30">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block" />
+                  Hive Connected
+                </span>
+              )}
+              {hiveConfigured === false && (
+                <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" />
+                  Hive Not Configured
+                </span>
+              )}
+            </div>
             <p className="text-sm text-muted-foreground">Control how AI authorship badges are shown and how AI detection is enforced.</p>
           </div>
           <SaveIndicator status={aiSaveStatus} />
