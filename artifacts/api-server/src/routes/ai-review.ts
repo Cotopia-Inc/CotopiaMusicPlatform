@@ -555,4 +555,45 @@ router.get(
   },
 );
 
+// ── Hive connectivity check ───────────────────────────────────────────────────
+// Returns whether the HIVE_API_KEY env var is set. Does not attempt a real
+// scan (no media URL available here); use the manual scan button for a live test.
+
+router.get(
+  "/admin/ai-review/hive-status",
+  requireAuth, requireRole(...STAFF_ROLES),
+  async (_req, res): Promise<void> => {
+    const configured = !!process.env.HIVE_API_KEY;
+    if (!configured) {
+      res.json({ configured: false, status: "not_configured", message: "HIVE_API_KEY is not set in environment variables." });
+      return;
+    }
+
+    // Attempt a lightweight auth-check against the Hive API.
+    // Hive returns 401 for invalid keys, anything else means the key is accepted.
+    try {
+      const probe = await fetch("https://api.thehive.ai/api/v2/task/sync", {
+        method: "POST",
+        headers: {
+          Authorization: `Token ${process.env.HIVE_API_KEY}`,
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({ url: "https://example.com/__hive_key_check__" }),
+        signal: AbortSignal.timeout(10_000),
+      });
+
+      if (probe.status === 401) {
+        res.json({ configured: true, status: "invalid_key", message: "HIVE_API_KEY is set but was rejected by Hive (401 Unauthorized). Check that the key is correct." });
+        return;
+      }
+
+      // Any non-401 response (even 4xx for bad URL) means the key is accepted.
+      res.json({ configured: true, status: "ok", message: `Hive API key accepted (HTTP ${probe.status}).` });
+    } catch (err) {
+      res.json({ configured: true, status: "unreachable", message: `HIVE_API_KEY is set but Hive API could not be reached: ${err instanceof Error ? err.message : "network error"}` });
+    }
+  },
+);
+
 export default router;

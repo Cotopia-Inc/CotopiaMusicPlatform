@@ -60,6 +60,8 @@ export default function AdminSettings() {
   const [hiveConfigured, setHiveConfigured] = useState<boolean | null>(null);
   const [formSaveStatus, setFormSaveStatus] = useState<SaveStatus>("idle");
   const [aiSaveStatus, setAiSaveStatus] = useState<SaveStatus>("idle");
+  const [hiveTesting, setHiveTesting] = useState(false);
+  const [hiveTestResult, setHiveTestResult] = useState<{ status: string; message: string } | null>(null);
 
   const formHydrated = useRef(false);
   const aiHydrated = useRef(false);
@@ -209,6 +211,26 @@ export default function AdminSettings() {
   const saveAiSettings = () => {
     if (aiDebounce.current) clearTimeout(aiDebounce.current);
     void doSaveAi(aiSettings);
+  };
+
+  const testHiveConnection = async () => {
+    setHiveTesting(true);
+    setHiveTestResult(null);
+    try {
+      const token = localStorage.getItem("cotopia_token");
+      const res = await fetch(`${import.meta.env.BASE_URL}api/admin/ai-review/hive-status`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json() as { status: string; message: string };
+      setHiveTestResult(data);
+      // Auto-update the pill based on result
+      if (data.status === "not_configured") setHiveConfigured(false);
+      else setHiveConfigured(true);
+    } catch {
+      setHiveTestResult({ status: "unreachable", message: "Could not reach the server." });
+    } finally {
+      setHiveTesting(false);
+    }
   };
 
   if (isLoading) {
@@ -521,29 +543,67 @@ export default function AdminSettings() {
 
       {/* ── AI Content Origin Settings ── */}
       <div className="bg-card p-4 md:p-8 rounded-xl border border-border shadow-lg space-y-6">
-        <div className="flex items-center gap-3 border-b border-border pb-4">
-          <div className="w-8 h-8 rounded-lg bg-violet-400/10 flex items-center justify-center flex-shrink-0">
-            <Brain className="w-4 h-4 text-violet-400" />
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="text-lg font-bold">AI Content Origin Policy</h3>
-              {hiveConfigured === true && (
-                <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-green-500/15 text-green-400 border border-green-500/30">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block" />
-                  Hive Connected
-                </span>
-              )}
-              {hiveConfigured === false && (
-                <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" />
-                  Hive Not Configured
-                </span>
-              )}
+        <div className="border-b border-border pb-4 space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-violet-400/10 flex items-center justify-center flex-shrink-0">
+              <Brain className="w-4 h-4 text-violet-400" />
             </div>
-            <p className="text-sm text-muted-foreground">Control how AI authorship badges are shown and how AI detection is enforced.</p>
+            <div className="flex-1">
+              <h3 className="text-lg font-bold">AI Content Origin Policy</h3>
+              <p className="text-sm text-muted-foreground">Control how AI authorship badges are shown and how AI detection is enforced.</p>
+            </div>
+            <SaveIndicator status={aiSaveStatus} />
           </div>
-          <SaveIndicator status={aiSaveStatus} />
+
+          {/* Hive provider status row */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs text-muted-foreground font-medium">Hive provider:</span>
+
+            {hiveConfigured === null && (
+              <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-secondary text-muted-foreground border border-border">
+                <Loader2 className="w-3 h-3 animate-spin" /> Checking…
+              </span>
+            )}
+            {hiveConfigured === true && (
+              <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-green-500/15 text-green-400 border border-green-500/30">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block" />
+                API Key Configured
+              </span>
+            )}
+            {hiveConfigured === false && (
+              <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" />
+                Not Configured
+              </span>
+            )}
+
+            <button
+              onClick={() => void testHiveConnection()}
+              disabled={hiveTesting}
+              className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border border-border bg-secondary/50 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+            >
+              {hiveTesting ? <><Loader2 className="w-3 h-3 animate-spin" /> Testing…</> : "Test Connection"}
+            </button>
+
+            {hiveTestResult && (
+              <span className={`text-xs px-2 py-0.5 rounded-full border ${
+                hiveTestResult.status === "ok"
+                  ? "bg-green-500/10 text-green-400 border-green-500/20"
+                  : hiveTestResult.status === "not_configured"
+                    ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                    : "bg-destructive/10 text-destructive border-destructive/20"
+              }`}>
+                {hiveTestResult.status === "ok" && "✓ Key accepted by Hive"}
+                {hiveTestResult.status === "not_configured" && "HIVE_API_KEY not set"}
+                {hiveTestResult.status === "invalid_key" && "✗ Key rejected (401)"}
+                {hiveTestResult.status === "unreachable" && "✗ Hive unreachable"}
+              </span>
+            )}
+
+            {hiveTestResult && hiveTestResult.status !== "ok" && (
+              <p className="w-full text-xs text-muted-foreground mt-0.5">{hiveTestResult.message}</p>
+            )}
+          </div>
         </div>
 
         <div className="space-y-4">

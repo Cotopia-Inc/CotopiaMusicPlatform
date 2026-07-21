@@ -1028,6 +1028,7 @@ router.get("/admin/ai-settings", requireAuth, requireRole("master_admin"), async
   if (!settings) [settings] = await db.insert(appSettingsTable).values({}).returning();
   const result: Record<string, unknown> = {};
   for (const key of AI_SETTINGS_FIELDS) result[key] = settings[key];
+  result.hiveConfigured = !!process.env.HIVE_API_KEY;
   res.json(result);
 });
 
