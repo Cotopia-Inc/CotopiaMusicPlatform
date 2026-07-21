@@ -383,7 +383,7 @@ function Router() {
       <Route path="/admin/comments"><RoleRoute roles={ADMIN_ROLES}><AdminComments /></RoleRoute></Route>
       <Route path="/admin/messages"><RoleRoute roles={ADMIN_ROLES}><AdminMessages /></RoleRoute></Route>
       <Route path="/admin/broadcast"><RoleRoute roles={ADMIN_ROLES}><AdminBroadcast /></RoleRoute></Route>
-      <Route path="/admin/settings"><RoleRoute roles={ADMIN_ROLES}><AdminSettings /></RoleRoute></Route>
+      <Route path="/admin/settings"><RoleRoute roles={MASTER_ROLES}><AdminSettings /></RoleRoute></Route>
       <Route path="/admin/dmca/:id"><RoleRoute roles={ADMIN_ROLES}><AdminDmcaDetail /></RoleRoute></Route>
       <Route path="/admin/dmca"><RoleRoute roles={ADMIN_ROLES}><AdminDmca /></RoleRoute></Route>
       <Route path="/admin/audit-logs"><RoleRoute roles={MASTER_ROLES}><AdminAuditLogs /></RoleRoute></Route>

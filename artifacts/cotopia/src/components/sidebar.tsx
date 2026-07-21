@@ -212,7 +212,6 @@ export function Sidebar({ onMobileClose }: SidebarProps = {}) {
     { href: "/admin/creator-support", label: "Creator Support", icon: Heart },
     { href: "/admin/trust", label: "Trust Center", icon: ShieldCheck },
     { href: "/admin/beta-analytics", label: "Beta Analytics", icon: BarChart3 },
-    { href: "/admin/settings", label: "Settings", icon: Settings },
   ];
 
   const editorLinks = [
@@ -572,6 +571,21 @@ export function Sidebar({ onMobileClose }: SidebarProps = {}) {
                     >
                       <CreditCard className="w-4 h-4 flex-shrink-0" />
                       Payment Settings
+                    </Button>
+                  </Link>
+                )}
+                {/* App Settings — master_admin only */}
+                {isMasterAdmin && (
+                  <Link href="/admin/settings">
+                    <Button
+                      variant={isAdminActive("/admin/settings") ? "secondary" : "ghost"}
+                      className={cn(
+                        "w-full justify-start gap-3 text-sm h-9",
+                        isAdminActive("/admin/settings") ? "font-semibold text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      <Settings className="w-4 h-4 flex-shrink-0" />
+                      App Settings
                     </Button>
                   </Link>
                 )}

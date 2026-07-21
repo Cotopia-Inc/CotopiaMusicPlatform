@@ -5,8 +5,12 @@ import { Users, Music, Video, PlayCircle, Eye, MessageSquare, AlertCircle, Mic2,
 import { RoleTag } from "@/components/role-badges";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/lib/auth";
 
 export default function AdminDashboard() {
+  const { user } = useAuth();
+  const isMasterAdmin = user?.role === "master_admin";
+
   const { data: stats, isLoading } = useGetAdminAnalytics({
     query: { queryKey: getGetAdminAnalyticsQueryKey() }
   });
@@ -32,7 +36,7 @@ export default function AdminDashboard() {
     { href: "/admin/company", label: "Company Hub", desc: "Create and manage announcements and articles", icon: Megaphone },
     { href: "/admin/creator-support", label: "Creator Support", desc: "Overview, moderation, and demo tip transactions", icon: Heart },
     { href: "/admin/comments", label: "Comments", desc: "Moderate and delete comments", icon: MessageSquare },
-    { href: "/admin/settings", label: "App Settings", desc: "Platform name, branding, and settings", icon: "logo" as const },
+    ...(isMasterAdmin ? [{ href: "/admin/settings", label: "App Settings", desc: "Platform name, branding, and settings", icon: "logo" as const }] : []),
   ];
 
   return (

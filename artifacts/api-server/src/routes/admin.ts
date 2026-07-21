@@ -643,13 +643,13 @@ function parseSettingsFees(s: typeof import("@workspace/db").appSettingsTable.$i
   };
 }
 
-router.get("/admin/settings", requireAuth, requireRole(...ADMIN_ROLES), async (_req, res): Promise<void> => {
+router.get("/admin/settings", requireAuth, requireRole("master_admin"), async (_req, res): Promise<void> => {
   let [settings] = await db.select().from(appSettingsTable).limit(1);
   if (!settings) [settings] = await db.insert(appSettingsTable).values({}).returning();
   res.json(parseSettingsFees(settings));
 });
 
-router.patch("/admin/settings", requireAuth, requireRole(...ADMIN_ROLES), async (req: AuthRequest, res): Promise<void> => {
+router.patch("/admin/settings", requireAuth, requireRole("master_admin"), async (req: AuthRequest, res): Promise<void> => {
   const parsed = UpdateAppSettingsBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
 

@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect, useRef } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { Upload, Loader2, Brain, Check, X } from "lucide-react";
 import { useUpload } from "@/lib/useUpload";
 
@@ -55,25 +56,22 @@ export default function AdminSettings() {
   const { toast } = useToast();
 
   const [aiSettings, setAiSettings] = useState<AiSettings>(DEFAULT_AI);
+  const [aiLoading, setAiLoading] = useState(false);
   const [formSaveStatus, setFormSaveStatus] = useState<SaveStatus>("idle");
   const [aiSaveStatus, setAiSaveStatus] = useState<SaveStatus>("idle");
 
-  const formHydrated = useRef(false);
-  const aiHydrated = useRef(false);
-  const formDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const aiDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   useEffect(() => {
     const token = localStorage.getItem("cotopia_token");
+    setAiLoading(true);
     fetch(`${import.meta.env.BASE_URL}api/admin/ai-settings`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(r => r.json())
       .then((data: Partial<AiSettings>) => {
         setAiSettings(prev => ({ ...prev, ...data }));
-        setTimeout(() => { aiHydrated.current = true; }, 50);
       })
-      .catch(() => { aiHydrated.current = true; });
+      .catch(() => {})
+      .finally(() => setAiLoading(false));
   }, []);
 
   const logoInputRef = useRef<HTMLInputElement>(null);
@@ -115,7 +113,6 @@ export default function AdminSettings() {
 
   useEffect(() => {
     if (!settings) return;
-    formHydrated.current = false;
     setFormData({
       appName: settings.appName || "",
       logoUrl: settings.logoUrl || "",
@@ -136,54 +133,42 @@ export default function AdminSettings() {
       showTopRated: settings.showTopRated ?? true,
       topRatedMinRatings: settings.topRatedMinRatings ?? 1,
     });
-    const t = setTimeout(() => { formHydrated.current = true; }, 50);
-    return () => clearTimeout(t);
   }, [settings]);
 
-  useEffect(() => {
-    if (!formHydrated.current) return;
+  const handleSave = async () => {
     setFormSaveStatus("pending");
-    if (formDebounce.current) clearTimeout(formDebounce.current);
-    formDebounce.current = setTimeout(async () => {
-      try {
-        await updateMutation.mutateAsync({ data: formData });
-        setFormSaveStatus("saved");
-        setTimeout(() => setFormSaveStatus("idle"), 2500);
-      } catch (error) {
-        setFormSaveStatus("error");
-        const err = error as { data?: { error?: string }; message?: string };
-        toast({
-          variant: "destructive",
-          title: "Failed to save settings",
-          description: err?.data?.error || err?.message || "Something went wrong",
-        });
-      }
-    }, 700);
-    return () => { if (formDebounce.current) clearTimeout(formDebounce.current); };
-  }, [formData]);
+    try {
+      await updateMutation.mutateAsync({ data: formData });
+      setFormSaveStatus("saved");
+      setTimeout(() => setFormSaveStatus("idle"), 3000);
+    } catch (error) {
+      setFormSaveStatus("error");
+      const err = error as { data?: { error?: string }; message?: string };
+      toast({
+        variant: "destructive",
+        title: "Failed to save settings",
+        description: err?.data?.error || err?.message || "Something went wrong",
+      });
+    }
+  };
 
-  useEffect(() => {
-    if (!aiHydrated.current) return;
+  const saveAiSettings = async () => {
     setAiSaveStatus("pending");
-    if (aiDebounce.current) clearTimeout(aiDebounce.current);
-    aiDebounce.current = setTimeout(async () => {
-      try {
-        const token = localStorage.getItem("cotopia_token");
-        const res = await fetch(`${import.meta.env.BASE_URL}api/admin/ai-settings`, {
-          method: "PATCH",
-          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-          body: JSON.stringify(aiSettings),
-        });
-        if (!res.ok) throw new Error("Failed");
-        setAiSaveStatus("saved");
-        setTimeout(() => setAiSaveStatus("idle"), 2500);
-      } catch {
-        setAiSaveStatus("error");
-        toast({ variant: "destructive", title: "Failed to save AI settings" });
-      }
-    }, 700);
-    return () => { if (aiDebounce.current) clearTimeout(aiDebounce.current); };
-  }, [aiSettings]);
+    try {
+      const token = localStorage.getItem("cotopia_token");
+      const res = await fetch(`${import.meta.env.BASE_URL}api/admin/ai-settings`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify(aiSettings),
+      });
+      if (!res.ok) throw new Error("Failed");
+      setAiSaveStatus("saved");
+      setTimeout(() => setAiSaveStatus("idle"), 3000);
+    } catch {
+      setAiSaveStatus("error");
+      toast({ variant: "destructive", title: "Failed to save AI settings" });
+    }
+  };
 
   if (isLoading) {
     return (
@@ -485,8 +470,11 @@ export default function AdminSettings() {
           </div>
         </div>
 
-        <div className="pt-2 flex justify-end h-6">
+        <div className="pt-4 flex items-center justify-end gap-3">
           <SaveIndicator status={formSaveStatus} />
+          <Button onClick={handleSave} disabled={updateMutation.isPending} size="lg">
+            {updateMutation.isPending ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving…</> : "Save Configuration"}
+          </Button>
         </div>
       </div>
 
@@ -567,6 +555,13 @@ export default function AdminSettings() {
             ))}
           </div>
           <p className="text-xs text-muted-foreground">Scores below Low are shown as Low risk. Between Low and High is Medium. Between High and Critical is High. Above Critical is flagged as Critical.</p>
+        </div>
+
+        <div className="pt-4 flex items-center justify-end gap-3">
+          <SaveIndicator status={aiSaveStatus} />
+          <Button onClick={saveAiSettings} disabled={aiSaveStatus === "pending"} size="lg">
+            {aiSaveStatus === "pending" ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving…</> : "Save AI Settings"}
+          </Button>
         </div>
       </div>
     </div>
