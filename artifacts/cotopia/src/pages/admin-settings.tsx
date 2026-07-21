@@ -60,6 +60,11 @@ export default function AdminSettings() {
   const [formSaveStatus, setFormSaveStatus] = useState<SaveStatus>("idle");
   const [aiSaveStatus, setAiSaveStatus] = useState<SaveStatus>("idle");
 
+  const formHydrated = useRef(false);
+  const aiHydrated = useRef(false);
+  const formDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const aiDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
     const token = localStorage.getItem("cotopia_token");
     setAiLoading(true);
@@ -69,8 +74,9 @@ export default function AdminSettings() {
       .then(r => r.json())
       .then((data: Partial<AiSettings>) => {
         setAiSettings(prev => ({ ...prev, ...data }));
+        setTimeout(() => { aiHydrated.current = true; }, 50);
       })
-      .catch(() => {})
+      .catch(() => { aiHydrated.current = true; })
       .finally(() => setAiLoading(false));
   }, []);
 
@@ -113,6 +119,7 @@ export default function AdminSettings() {
 
   useEffect(() => {
     if (!settings) return;
+    formHydrated.current = false;
     setFormData({
       appName: settings.appName || "",
       logoUrl: settings.logoUrl || "",
@@ -133,12 +140,32 @@ export default function AdminSettings() {
       showTopRated: settings.showTopRated ?? true,
       topRatedMinRatings: settings.topRatedMinRatings ?? 1,
     });
+    const t = setTimeout(() => { formHydrated.current = true; }, 50);
+    return () => clearTimeout(t);
   }, [settings]);
 
-  const handleSave = async () => {
+  // ── Auto-save (debounced 800ms) ──────────────────────────────────────────
+  useEffect(() => {
+    if (!formHydrated.current) return;
+    setFormSaveStatus("pending");
+    if (formDebounce.current) clearTimeout(formDebounce.current);
+    formDebounce.current = setTimeout(() => { void doSaveForm(formData); }, 800);
+    return () => { if (formDebounce.current) clearTimeout(formDebounce.current); };
+  }, [formData]);
+
+  useEffect(() => {
+    if (!aiHydrated.current) return;
+    setAiSaveStatus("pending");
+    if (aiDebounce.current) clearTimeout(aiDebounce.current);
+    aiDebounce.current = setTimeout(() => { void doSaveAi(aiSettings); }, 800);
+    return () => { if (aiDebounce.current) clearTimeout(aiDebounce.current); };
+  }, [aiSettings]);
+
+  // ── Core save helpers (shared by auto-save + manual button) ─────────────
+  const doSaveForm = async (data: typeof formData) => {
     setFormSaveStatus("pending");
     try {
-      await updateMutation.mutateAsync({ data: formData });
+      await updateMutation.mutateAsync({ data });
       setFormSaveStatus("saved");
       setTimeout(() => setFormSaveStatus("idle"), 3000);
     } catch (error) {
@@ -152,14 +179,14 @@ export default function AdminSettings() {
     }
   };
 
-  const saveAiSettings = async () => {
+  const doSaveAi = async (data: AiSettings) => {
     setAiSaveStatus("pending");
     try {
       const token = localStorage.getItem("cotopia_token");
       const res = await fetch(`${import.meta.env.BASE_URL}api/admin/ai-settings`, {
         method: "PATCH",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify(aiSettings),
+        body: JSON.stringify(data),
       });
       if (!res.ok) throw new Error("Failed");
       setAiSaveStatus("saved");
@@ -168,6 +195,17 @@ export default function AdminSettings() {
       setAiSaveStatus("error");
       toast({ variant: "destructive", title: "Failed to save AI settings" });
     }
+  };
+
+  // ── Manual save (cancels pending debounce, saves immediately) ────────────
+  const handleSave = () => {
+    if (formDebounce.current) clearTimeout(formDebounce.current);
+    void doSaveForm(formData);
+  };
+
+  const saveAiSettings = () => {
+    if (aiDebounce.current) clearTimeout(aiDebounce.current);
+    void doSaveAi(aiSettings);
   };
 
   if (isLoading) {
