@@ -1,5 +1,5 @@
 /**
- * Hive Moderation AI-detection provider adapter.
+ * Hive Moderation AI-detection provider adapter — V3 API.
  *
  * All results are ADVISORY ESTIMATES — they must never be treated as conclusive
  * proof that content is AI-generated. Moderators and admins must evaluate
@@ -7,6 +7,33 @@
  *
  * If HIVE_API_KEY is not set, all methods return a graceful "unavailable" result
  * and never fabricate scores.
+ *
+ * V3 API endpoint: POST https://api.thehive.ai/api/v3/hive/ai-generated-and-deepfake-content-detection
+ * Auth: Bearer <key>
+ * Body: { input: [{ media_url: "<public URL>" }] }
+ * Size limits: 200 MB via public URL, 20 MB via base64, 60-second video clip max.
+ *
+ * Representative V3 response shape (for reference / offline testing):
+ * {
+ *   "id": "task_abc123",
+ *   "model": "ai-generated-and-deepfake-content-detection",
+ *   "status": [
+ *     {
+ *       "response": {
+ *         "output": [
+ *           {
+ *             "time": 0,
+ *             "duration": null,
+ *             "classes": [
+ *               { "class": "ai_generated",     "score": 0.987 },
+ *               { "class": "not_ai_generated", "score": 0.013 }
+ *             ]
+ *           }
+ *         ]
+ *       }
+ *     }
+ *   ]
+ * }
  */
 
 export interface HiveScanResult {
@@ -48,11 +75,11 @@ const UNAVAILABLE: HiveScanResult = {
 };
 
 /**
- * Scan a publicly-accessible media URL using the Hive AI-generated content
+ * Scan a publicly-accessible media URL using the Hive V3 AI-generated content
  * detection API.
  *
- * Hive endpoint: POST https://api.thehive.ai/api/v2/task/sync
- * Docs: https://docs.thehive.ai/reference/ai-generated-content-detection
+ * Supports files up to 200 MB via public URL (our R2/GCS URLs qualify).
+ * Timeout is 120 seconds to accommodate Hive fetching and processing large files.
  *
  * Returns UNAVAILABLE when no API key is configured instead of fabricating data.
  */
@@ -64,34 +91,45 @@ export async function scanWithHive(
   if (!apiKey) return UNAVAILABLE;
 
   try {
-    const response = await fetch("https://api.thehive.ai/api/v2/task/sync", {
-      method: "POST",
-      headers: {
-        Authorization: `Token ${apiKey}`,
-        "Content-Type": "application/json",
-        Accept: "application/json",
+    const response = await fetch(
+      "https://api.thehive.ai/api/v3/hive/ai-generated-and-deepfake-content-detection",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({ input: [{ media_url: mediaUrl }] }),
+        // 120 s: Hive must fetch + process files up to 200 MB on their end.
+        signal: AbortSignal.timeout(120_000),
       },
-      body: JSON.stringify({ url: mediaUrl }),
-      signal: AbortSignal.timeout(30_000),
-    });
+    );
 
     if (!response.ok) {
+      const errText = await response.text().catch(() => response.statusText);
       return {
         ...UNAVAILABLE,
         available: false,
-        error: `Hive API error ${response.status}: ${response.statusText}`,
+        error: `Hive API error ${response.status}: ${errText}`,
       };
     }
 
     const raw = (await response.json()) as Record<string, unknown>;
 
-    // Parse Hive response — structure: { status: [{ response: { output: [...] } }] }
+    // Extract model version from top-level "model" field if present.
+    const modelVersion =
+      typeof raw["model"] === "string"
+        ? raw["model"]
+        : "ai-generated-and-deepfake-content-detection-v3";
+
+    // Parse V3 response — structure: { status: [{ response: { output: [...] } }] }
+    // Each output item has a "classes" array of { class: string, score: number }.
     const statusArr = raw["status"] as Array<Record<string, unknown>> | undefined;
     const firstStatus = statusArr?.[0];
     const responseObj = firstStatus?.["response"] as Record<string, unknown> | undefined;
     const outputArr = responseObj?.["output"] as Array<Record<string, unknown>> | undefined;
 
-    // Hive AI-generated content classes include "ai_generated"
     let aiScore: number | null = null;
     const indicators: string[] = [];
 
@@ -126,7 +164,7 @@ export async function scanWithHive(
     return {
       available: true,
       provider: "hive",
-      modelVersion: "ai_generated_v1",
+      modelVersion,
       aiLikelihoodPercent: aiScore,
       confidenceLevel: confidence,
       riskLevel: risk,
