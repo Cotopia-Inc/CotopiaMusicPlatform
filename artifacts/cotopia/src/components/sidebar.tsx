@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { RoleBadges } from "@/components/role-badges";
 import { useAuth } from "@/lib/auth";
+import { usePlatformConfig } from "@/lib/platform-config";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -134,6 +135,7 @@ interface SidebarProps {
 export function Sidebar({ onMobileClose }: SidebarProps = {}) {
   const [location, navigate] = useLocation();
   const { user, logout } = useAuth();
+  const { appName, logoUrl } = usePlatformConfig();
 
   // Auto-close on navigation (mobile drawer)
   const prevLocation = useRef(location);
@@ -253,8 +255,8 @@ export function Sidebar({ onMobileClose }: SidebarProps = {}) {
         <Link href="/">
           <div className="cursor-pointer space-y-0.5">
             <div className="flex items-center gap-2">
-              <img src="/logo.jpg" alt="Cotopia" className="w-7 h-7 rounded-md object-cover flex-shrink-0" />
-              <h1 className="text-xl font-extrabold tracking-tighter text-foreground">Everyday Radio</h1>
+              <img src={logoUrl || "/logo.jpg"} alt={appName || "Everyday Radio"} className="w-7 h-7 rounded-md object-cover flex-shrink-0" />
+              <h1 className="text-xl font-extrabold tracking-tighter text-foreground">{appName || "Everyday Radio"}</h1>
             </div>
             <p className="text-[10px] text-muted-foreground tracking-widest uppercase pl-9">Powered by Cotopia</p>
           </div>
@@ -305,7 +307,7 @@ export function Sidebar({ onMobileClose }: SidebarProps = {}) {
                       active ? "font-semibold text-primary bg-primary/10 hover:bg-primary/15" : "text-muted-foreground hover:text-foreground"
                     )}
                   >
-                    {Icon ? <Icon className="w-4 h-4 flex-shrink-0" /> : <img src="/logo.jpg" alt="Cotopia" className="w-4 h-4 rounded-sm object-cover flex-shrink-0" />}
+                    {Icon ? <Icon className="w-4 h-4 flex-shrink-0" /> : <img src={logoUrl || "/logo.jpg"} alt={appName || "Everyday Radio"} className="w-4 h-4 rounded-sm object-cover flex-shrink-0" />}
                     {link.label}
                   </Button>
                 </Link>

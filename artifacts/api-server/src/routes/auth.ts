@@ -409,6 +409,9 @@ router.get("/platform-config", async (_req, res): Promise<void> => {
       batchVideoFee: appSettingsTable.batchVideoFee,
       premiumVideoFee: appSettingsTable.premiumVideoFee,
       maintenanceMode: appSettingsTable.maintenanceMode,
+      appName: appSettingsTable.appName,
+      logoUrl: appSettingsTable.logoUrl,
+      primaryColor: appSettingsTable.primaryColor,
     })
     .from(appSettingsTable)
     .limit(1);
@@ -421,6 +424,9 @@ router.get("/platform-config", async (_req, res): Promise<void> => {
     batchVideoFee: parseFloat(s?.batchVideoFee ?? "29.99"),
     premiumVideoFee: parseFloat(s?.premiumVideoFee ?? "79.99"),
     maintenanceMode: s?.maintenanceMode ?? false,
+    appName: s?.appName ?? "",
+    logoUrl: s?.logoUrl ?? "",
+    primaryColor: s?.primaryColor ?? "#7c3aed",
   });
 });
 

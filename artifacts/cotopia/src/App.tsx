@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-quer
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/lib/auth";
+import { hexToHsl } from "@/lib/platform-config";
 import { PlayerProvider } from "@/lib/player";
 import { Layout } from "@/components/layout";
 import { ErrorBoundary } from "@/components/error-boundary";
@@ -199,7 +200,7 @@ function MaintenanceGate({ children }: { children: React.ReactNode }) {
     role === "admin" || role === "master_admin";
 
   // ── Poll every 15 s so idle users get kicked eventually ──────────────────
-  const { data: config } = useQuery<{ maintenanceMode: boolean } | null>({
+  const { data: config } = useQuery<{ maintenanceMode: boolean; primaryColor?: string } | null>({
     queryKey: ["platform-config"],
     queryFn: async () => {
       try {
@@ -209,7 +210,7 @@ function MaintenanceGate({ children }: { children: React.ReactNode }) {
           : `${base}/api/platform-config`;
         const res = await fetch(url);
         if (!res.ok) return null;
-        return res.json() as Promise<{ maintenanceMode: boolean }>;
+        return res.json() as Promise<{ maintenanceMode: boolean; primaryColor?: string }>;
       } catch {
         return null;
       }
@@ -217,6 +218,16 @@ function MaintenanceGate({ children }: { children: React.ReactNode }) {
     refetchInterval: 15_000,
     staleTime: 0,
   });
+
+  // Apply branding colour from settings to CSS vars whenever config loads/changes
+  useEffect(() => {
+    const hex = config?.primaryColor;
+    if (!hex || !/^#[0-9a-fA-F]{6}$/.test(hex)) return;
+    const hsl = hexToHsl(hex);
+    document.documentElement.style.setProperty("--primary", hsl);
+    document.documentElement.style.setProperty("--accent", hsl);
+    document.documentElement.style.setProperty("--ring", hsl);
+  }, [config?.primaryColor]);
 
   // React to polling results
   useEffect(() => {
