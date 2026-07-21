@@ -416,13 +416,29 @@ router.post(
     }).returning();
 
     if (result.available && result.aiLikelihoodPercent !== null) {
+      const score = result.aiLikelihoodPercent;
+      const threshold = settings?.autoRejectDetectionThreshold ?? 95;
+      const autoFlagged = score >= threshold;
+
       await db.update(table as typeof songsTable).set({
-        aiEstimatePercent: result.aiLikelihoodPercent,
+        aiEstimatePercent: score,
         aiConfidenceLevel: result.confidenceLevel,
         aiRiskLevel: result.riskLevel ?? undefined,
         aiDetectionReasons: result.detectionIndicators,
-        aiReviewStatus: "scan_complete",
+        aiReviewStatus: autoFlagged ? "auto_flagged" : "scan_complete",
       }).where(eq((table as typeof songsTable).id, contentId));
+
+      if (autoFlagged) {
+        await db
+          .update(submissionsTable)
+          .set({ aiReviewStatus: "auto_flagged" })
+          .where(
+            and(
+              eq(submissionsTable.contentId, contentId),
+              eq(submissionsTable.type, contentType),
+            ),
+          );
+      }
     } else {
       await db.update(table as typeof songsTable).set({
         aiReviewStatus: result.error ? "scan_complete" : "not_scanned",
