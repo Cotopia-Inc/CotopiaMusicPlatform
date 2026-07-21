@@ -57,7 +57,6 @@ export const appSettingsTable = pgTable("app_settings", {
   enableAiReview: boolean("enable_ai_review").notNull().default(true),
   // Auto-rejection — disabled by default until a real provider+threshold are vetted
   autoRejectFullyAi: boolean("auto_reject_fully_ai").notNull().default(false),
-  allowAdminOverride: boolean("allow_admin_override").notNull().default(true),
   // Thresholds for AI risk meter (workflow signals only, not scientific proof)
   autoRejectDetectionThreshold: integer("auto_reject_detection_threshold").notNull().default(95),
   aiLowThreshold: integer("ai_low_threshold").notNull().default(25),

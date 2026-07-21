@@ -1,12 +1,11 @@
 import { useGetAppSettings, getGetAppSettingsQueryKey, useUpdateAppSettings } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect, useRef } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Upload, Loader2, Brain } from "lucide-react";
+import { Upload, Loader2, Brain, Check, X } from "lucide-react";
 import { useUpload } from "@/lib/useUpload";
 
 const DEFAULT_AI = {
@@ -26,6 +25,26 @@ const DEFAULT_AI = {
 };
 
 type AiSettings = typeof DEFAULT_AI;
+type SaveStatus = "idle" | "pending" | "saved" | "error";
+
+function SaveIndicator({ status }: { status: SaveStatus }) {
+  if (status === "idle") return null;
+  if (status === "pending") return (
+    <span className="text-xs text-muted-foreground flex items-center gap-1.5">
+      <Loader2 className="w-3 h-3 animate-spin" /> Saving…
+    </span>
+  );
+  if (status === "saved") return (
+    <span className="text-xs text-green-400 flex items-center gap-1.5">
+      <Check className="w-3 h-3" /> Saved
+    </span>
+  );
+  return (
+    <span className="text-xs text-destructive flex items-center gap-1.5">
+      <X className="w-3 h-3" /> Failed to save
+    </span>
+  );
+}
 
 export default function AdminSettings() {
   const { data: settings, isLoading } = useGetAppSettings({
@@ -36,40 +55,27 @@ export default function AdminSettings() {
   const { toast } = useToast();
 
   const [aiSettings, setAiSettings] = useState<AiSettings>(DEFAULT_AI);
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiSaving, setAiSaving] = useState(false);
+  const [formSaveStatus, setFormSaveStatus] = useState<SaveStatus>("idle");
+  const [aiSaveStatus, setAiSaveStatus] = useState<SaveStatus>("idle");
+
+  const formHydrated = useRef(false);
+  const aiHydrated = useRef(false);
+  const formDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const aiDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem("cotopia_token");
-    setAiLoading(true);
     fetch(`${import.meta.env.BASE_URL}api/admin/ai-settings`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(r => r.json())
       .then((data: Partial<AiSettings>) => {
         setAiSettings(prev => ({ ...prev, ...data }));
+        setTimeout(() => { aiHydrated.current = true; }, 50);
       })
-      .catch(() => {})
-      .finally(() => setAiLoading(false));
+      .catch(() => { aiHydrated.current = true; });
   }, []);
 
-  async function saveAiSettings() {
-    setAiSaving(true);
-    try {
-      const token = localStorage.getItem("cotopia_token");
-      const res = await fetch(`${import.meta.env.BASE_URL}api/admin/ai-settings`, {
-        method: "PATCH",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify(aiSettings),
-      });
-      if (!res.ok) throw new Error("Failed");
-      toast({ title: "AI settings saved" });
-    } catch {
-      toast({ variant: "destructive", title: "Failed to save AI settings" });
-    } finally {
-      setAiSaving(false);
-    }
-  }
   const logoInputRef = useRef<HTMLInputElement>(null);
   const [logoFilename, setLogoFilename] = useState("");
 
@@ -108,43 +114,76 @@ export default function AdminSettings() {
   });
 
   useEffect(() => {
-    if (settings) {
-      setFormData({
-        appName: settings.appName || "",
-        logoUrl: settings.logoUrl || "",
-        primaryColor: settings.primaryColor || "#7c3aed",
-        singleSongFee: settings.singleSongFee ?? 9.99,
-        batchSongFee: settings.batchSongFee ?? 19.99,
-        premiumSongFee: settings.premiumSongFee ?? 49.99,
-        singleVideoFee: settings.singleVideoFee ?? 14.99,
-        batchVideoFee: settings.batchVideoFee ?? 29.99,
-        premiumVideoFee: settings.premiumVideoFee ?? 79.99,
-        maintenanceMode: settings.maintenanceMode || false,
-        requireEmailVerification: settings.requireEmailVerification ?? true,
-        featureRotation: settings.featureRotation ?? true,
-        autoEscalationEnabled: settings.autoEscalationEnabled ?? true,
-        strikesUntilSuspension: settings.strikesUntilSuspension ?? 3,
-        autoSuspensionDays: settings.autoSuspensionDays ?? 7,
-        suspensionsUntilBanReview: settings.suspensionsUntilBanReview ?? 3,
-        showTopRated: settings.showTopRated ?? true,
-        topRatedMinRatings: settings.topRatedMinRatings ?? 1,
-      });
-    }
+    if (!settings) return;
+    formHydrated.current = false;
+    setFormData({
+      appName: settings.appName || "",
+      logoUrl: settings.logoUrl || "",
+      primaryColor: settings.primaryColor || "#7c3aed",
+      singleSongFee: settings.singleSongFee ?? 9.99,
+      batchSongFee: settings.batchSongFee ?? 19.99,
+      premiumSongFee: settings.premiumSongFee ?? 49.99,
+      singleVideoFee: settings.singleVideoFee ?? 14.99,
+      batchVideoFee: settings.batchVideoFee ?? 29.99,
+      premiumVideoFee: settings.premiumVideoFee ?? 79.99,
+      maintenanceMode: settings.maintenanceMode || false,
+      requireEmailVerification: settings.requireEmailVerification ?? true,
+      featureRotation: settings.featureRotation ?? true,
+      autoEscalationEnabled: settings.autoEscalationEnabled ?? true,
+      strikesUntilSuspension: settings.strikesUntilSuspension ?? 3,
+      autoSuspensionDays: settings.autoSuspensionDays ?? 7,
+      suspensionsUntilBanReview: settings.suspensionsUntilBanReview ?? 3,
+      showTopRated: settings.showTopRated ?? true,
+      topRatedMinRatings: settings.topRatedMinRatings ?? 1,
+    });
+    const t = setTimeout(() => { formHydrated.current = true; }, 50);
+    return () => clearTimeout(t);
   }, [settings]);
 
-  const handleSave = async () => {
-    try {
-      await updateMutation.mutateAsync({ data: formData });
-      toast({ title: "Settings updated successfully" });
-    } catch (error) {
-      const err = error as { data?: { error?: string }; message?: string };
-      toast({
-        title: "Failed to save settings",
-        description: err?.data?.error || err?.message || "Something went wrong",
-        variant: "destructive",
-      });
-    }
-  };
+  useEffect(() => {
+    if (!formHydrated.current) return;
+    setFormSaveStatus("pending");
+    if (formDebounce.current) clearTimeout(formDebounce.current);
+    formDebounce.current = setTimeout(async () => {
+      try {
+        await updateMutation.mutateAsync({ data: formData });
+        setFormSaveStatus("saved");
+        setTimeout(() => setFormSaveStatus("idle"), 2500);
+      } catch (error) {
+        setFormSaveStatus("error");
+        const err = error as { data?: { error?: string }; message?: string };
+        toast({
+          variant: "destructive",
+          title: "Failed to save settings",
+          description: err?.data?.error || err?.message || "Something went wrong",
+        });
+      }
+    }, 700);
+    return () => { if (formDebounce.current) clearTimeout(formDebounce.current); };
+  }, [formData]);
+
+  useEffect(() => {
+    if (!aiHydrated.current) return;
+    setAiSaveStatus("pending");
+    if (aiDebounce.current) clearTimeout(aiDebounce.current);
+    aiDebounce.current = setTimeout(async () => {
+      try {
+        const token = localStorage.getItem("cotopia_token");
+        const res = await fetch(`${import.meta.env.BASE_URL}api/admin/ai-settings`, {
+          method: "PATCH",
+          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+          body: JSON.stringify(aiSettings),
+        });
+        if (!res.ok) throw new Error("Failed");
+        setAiSaveStatus("saved");
+        setTimeout(() => setAiSaveStatus("idle"), 2500);
+      } catch {
+        setAiSaveStatus("error");
+        toast({ variant: "destructive", title: "Failed to save AI settings" });
+      }
+    }, 700);
+    return () => { if (aiDebounce.current) clearTimeout(aiDebounce.current); };
+  }, [aiSettings]);
 
   if (isLoading) {
     return (
@@ -159,7 +198,7 @@ export default function AdminSettings() {
     <div className="space-y-8 pb-24 max-w-3xl mx-auto">
       <div>
         <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-2">Platform Settings</h1>
-        <p className="text-muted-foreground">Configure global application settings and parameters.</p>
+        <p className="text-muted-foreground">Configure global application settings. All changes save automatically.</p>
       </div>
 
       <div className="bg-card p-4 md:p-8 rounded-xl border border-border shadow-lg space-y-8">
@@ -446,10 +485,8 @@ export default function AdminSettings() {
           </div>
         </div>
 
-        <div className="pt-4 flex justify-end">
-          <Button onClick={handleSave} disabled={updateMutation.isPending} size="lg">
-            {updateMutation.isPending ? "Saving..." : "Save Configuration"}
-          </Button>
+        <div className="pt-2 flex justify-end h-6">
+          <SaveIndicator status={formSaveStatus} />
         </div>
       </div>
 
@@ -459,11 +496,11 @@ export default function AdminSettings() {
           <div className="w-8 h-8 rounded-lg bg-violet-400/10 flex items-center justify-center flex-shrink-0">
             <Brain className="w-4 h-4 text-violet-400" />
           </div>
-          <div>
+          <div className="flex-1">
             <h3 className="text-lg font-bold">AI Content Origin Policy</h3>
             <p className="text-sm text-muted-foreground">Control how AI authorship badges are shown and how AI detection is enforced.</p>
           </div>
-          {aiLoading && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground ml-auto" />}
+          <SaveIndicator status={aiSaveStatus} />
         </div>
 
         <div className="space-y-4">
@@ -530,12 +567,6 @@ export default function AdminSettings() {
             ))}
           </div>
           <p className="text-xs text-muted-foreground">Scores below Low are shown as Low risk. Between Low and High is Medium. Between High and Critical is High. Above Critical is flagged as Critical.</p>
-        </div>
-
-        <div className="pt-4 flex justify-end">
-          <Button onClick={saveAiSettings} disabled={aiSaving} size="lg">
-            {aiSaving ? "Saving..." : "Save AI Settings"}
-          </Button>
         </div>
       </div>
     </div>
