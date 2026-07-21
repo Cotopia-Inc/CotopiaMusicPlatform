@@ -190,7 +190,7 @@ function PostFormDialog({
               <p className="text-sm font-medium flex items-center gap-2"><Pin className="w-3.5 h-3.5" />Pin to top</p>
               <p className="text-xs text-muted-foreground">Pinned posts always appear first</p>
             </div>
-            <Switch checked={form.isPinned} onCheckedChange={v => set({ isPinned: v })} />
+            <Switch aria-label="Pin to top" checked={form.isPinned} onCheckedChange={v => set({ isPinned: v })} />
           </div>
         </div>
 

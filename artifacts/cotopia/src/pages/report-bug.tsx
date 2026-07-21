@@ -121,9 +121,9 @@ export default function ReportBug() {
         </div>
 
         <div className="space-y-1.5">
-          <Label>How severe is this?</Label>
+          <Label htmlFor="bug-severity">How severe is this?</Label>
           <Select value={form.severity} onValueChange={set("severity")}>
-            <SelectTrigger>
+            <SelectTrigger id="bug-severity">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

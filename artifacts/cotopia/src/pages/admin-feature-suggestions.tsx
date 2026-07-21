@@ -93,9 +93,9 @@ export default function AdminFeatureSuggestions() {
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-4">
         <div className="space-y-1.5">
-          <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Status</label>
+          <label htmlFor="suggestion-status-filter" className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Status</label>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-44 bg-secondary/50 border-secondary">
+            <SelectTrigger id="suggestion-status-filter" className="w-44 bg-secondary/50 border-secondary">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -105,9 +105,9 @@ export default function AdminFeatureSuggestions() {
           </Select>
         </div>
         <div className="space-y-1.5">
-          <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Category</label>
+          <label htmlFor="suggestion-category-filter" className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Category</label>
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="w-44 bg-secondary/50 border-secondary">
+            <SelectTrigger id="suggestion-category-filter" className="w-44 bg-secondary/50 border-secondary">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -213,12 +213,12 @@ function SuggestionCard({ item, statusFilter, categoryFilter }: {
       <div className="border-t border-border/50 pt-3 space-y-3">
         <div className="flex flex-wrap items-end gap-3">
           <div className="space-y-1.5">
-            <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Status</label>
+            <label htmlFor={`suggestion-card-status-${item.id}`} className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Status</label>
             <Select
               value={item.status}
               onValueChange={(v) => mutation.mutate({ status: v })}
             >
-              <SelectTrigger className="w-44 bg-secondary/50 border-secondary">
+              <SelectTrigger id={`suggestion-card-status-${item.id}`} className="w-44 bg-secondary/50 border-secondary">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -228,8 +228,9 @@ function SuggestionCard({ item, statusFilter, categoryFilter }: {
           </div>
         </div>
         <div className="space-y-1.5">
-          <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Admin notes</label>
+          <label htmlFor={`suggestion-card-notes-${item.id}`} className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Admin notes</label>
           <Textarea
+            id={`suggestion-card-notes-${item.id}`}
             placeholder="Internal notes or response…"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}

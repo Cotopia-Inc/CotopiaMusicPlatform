@@ -105,9 +105,9 @@ export default function AdminExperienceFeedback() {
       {/* Filter */}
       <div className="flex flex-wrap items-center gap-4">
         <div className="space-y-1.5">
-          <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Trigger</label>
+          <label htmlFor="trigger-filter" className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Trigger</label>
           <Select value={triggerFilter} onValueChange={setTriggerFilter}>
-            <SelectTrigger className="w-48 bg-secondary/50 border-secondary">
+            <SelectTrigger id="trigger-filter" className="w-48 bg-secondary/50 border-secondary">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

@@ -118,7 +118,7 @@ export default function Register() {
                   <FormLabel>I am a...</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <SelectTrigger className="bg-secondary/50 border-secondary h-11">
+                      <SelectTrigger aria-label="Select your role" className="bg-secondary/50 border-secondary h-11">
                         <SelectValue placeholder="Select your role" />
                       </SelectTrigger>
                     </FormControl>

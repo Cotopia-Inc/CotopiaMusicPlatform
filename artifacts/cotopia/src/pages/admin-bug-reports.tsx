@@ -86,9 +86,9 @@ export default function AdminBugReports() {
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-4">
         <div className="space-y-1.5">
-          <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Status</label>
+          <label htmlFor="bug-status-filter" className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Status</label>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-44 bg-secondary/50 border-secondary">
+            <SelectTrigger id="bug-status-filter" className="w-44 bg-secondary/50 border-secondary">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -98,9 +98,9 @@ export default function AdminBugReports() {
           </Select>
         </div>
         <div className="space-y-1.5">
-          <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Severity</label>
+          <label htmlFor="bug-severity-filter" className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Severity</label>
           <Select value={severityFilter} onValueChange={setSeverityFilter}>
-            <SelectTrigger className="w-44 bg-secondary/50 border-secondary">
+            <SelectTrigger id="bug-severity-filter" className="w-44 bg-secondary/50 border-secondary">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -219,12 +219,12 @@ function BugReportCard({ item, statusFilter, severityFilter }: {
       <div className="border-t border-border/50 pt-3 space-y-3">
         <div className="flex flex-wrap items-end gap-3">
           <div className="space-y-1.5">
-            <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Status</label>
+            <label htmlFor={`bug-card-status-${item.id}`} className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Status</label>
             <Select
               value={item.status}
               onValueChange={(v) => mutation.mutate({ status: v })}
             >
-              <SelectTrigger className="w-44 bg-secondary/50 border-secondary">
+              <SelectTrigger id={`bug-card-status-${item.id}`} className="w-44 bg-secondary/50 border-secondary">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -234,8 +234,9 @@ function BugReportCard({ item, statusFilter, severityFilter }: {
           </div>
         </div>
         <div className="space-y-1.5">
-          <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Admin notes</label>
+          <label htmlFor={`bug-card-notes-${item.id}`} className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Admin notes</label>
           <Textarea
+            id={`bug-card-notes-${item.id}`}
             placeholder="Internal notes or response…"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}

@@ -406,9 +406,9 @@ export default function AdminEnforcement() {
 
             {/* Action type */}
             <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Action type *</label>
+              <label htmlFor="enforcement-action-type" className="text-xs font-medium text-muted-foreground mb-1.5 block">Action type *</label>
               <Select value={actionType} onValueChange={v => setActionType(v as ActionType)}>
-                <SelectTrigger className="text-sm">
+                <SelectTrigger id="enforcement-action-type" className="text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

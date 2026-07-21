@@ -81,7 +81,7 @@ export default function AdminComments() {
           />
         </div>
         <Select value={contentTypeFilter} onValueChange={(v) => setContentTypeFilter(v as typeof contentTypeFilter)}>
-          <SelectTrigger className="w-36 bg-secondary/50 border-secondary">
+          <SelectTrigger aria-label="Filter by content type" className="w-36 bg-secondary/50 border-secondary">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

@@ -118,9 +118,9 @@ export default function ModeratorCopyrightConcerns() {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1.5">
-              <Label>Content Type</Label>
+              <Label htmlFor="cc-content-type">Content Type</Label>
               <Select value={form.contentType} onValueChange={(v) => setForm(f => ({ ...f, contentType: v }))}>
-                <SelectTrigger>
+                <SelectTrigger id="cc-content-type">
                   <SelectValue placeholder="Select type…" />
                 </SelectTrigger>
                 <SelectContent>
@@ -132,9 +132,9 @@ export default function ModeratorCopyrightConcerns() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>User Name <span className="text-muted-foreground">(optional)</span></Label>
+              <Label htmlFor="cc-user-name">User Name <span className="text-muted-foreground">(optional)</span></Label>
               <Select value={form.contentId} onValueChange={(v) => setForm(f => ({ ...f, contentId: v }))}>
-                <SelectTrigger>
+                <SelectTrigger id="cc-user-name">
                   <SelectValue placeholder="Select user…" />
                 </SelectTrigger>
                 <SelectContent>

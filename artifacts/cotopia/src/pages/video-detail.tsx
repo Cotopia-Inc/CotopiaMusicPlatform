@@ -790,16 +790,16 @@ export default function VideoDetail() {
                   <button onClick={() => setEditOpen(false)}><X className="w-3.5 h-3.5 text-muted-foreground" /></button>
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">Stage Name</label>
-                  <Input value={editStageName} onChange={e => setEditStageName(e.target.value)} placeholder="Your artist name…" className="h-8 text-sm bg-secondary/50" />
+                  <label htmlFor="edit-video-stage-name" className="text-xs text-muted-foreground mb-1 block">Stage Name</label>
+                  <Input id="edit-video-stage-name" value={editStageName} onChange={e => setEditStageName(e.target.value)} placeholder="Your artist name…" className="h-8 text-sm bg-secondary/50" />
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">Title</label>
-                  <Input value={editTitle} onChange={e => setEditTitle(e.target.value)} className="h-8 text-sm bg-secondary/50" />
+                  <label htmlFor="edit-video-title" className="text-xs text-muted-foreground mb-1 block">Title</label>
+                  <Input id="edit-video-title" value={editTitle} onChange={e => setEditTitle(e.target.value)} className="h-8 text-sm bg-secondary/50" />
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">Genre</label>
-                  <Input value={editGenre} onChange={e => setEditGenre(e.target.value)} placeholder="e.g. Hip-Hop, Pop…" className="h-8 text-sm bg-secondary/50" />
+                  <label htmlFor="edit-video-genre" className="text-xs text-muted-foreground mb-1 block">Genre</label>
+                  <Input id="edit-video-genre" value={editGenre} onChange={e => setEditGenre(e.target.value)} placeholder="e.g. Hip-Hop, Pop…" className="h-8 text-sm bg-secondary/50" />
                 </div>
                 <div>
                   <label className="text-xs text-muted-foreground mb-1 block">Thumbnail</label>
@@ -823,12 +823,12 @@ export default function VideoDetail() {
                   </div>
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">Description</label>
-                  <Textarea value={editDescription} onChange={e => setEditDescription(e.target.value)} placeholder="What's this video about…" className="text-sm bg-secondary/50 min-h-[80px] resize-y" />
+                  <label htmlFor="edit-video-description" className="text-xs text-muted-foreground mb-1 block">Description</label>
+                  <Textarea id="edit-video-description" value={editDescription} onChange={e => setEditDescription(e.target.value)} placeholder="What's this video about…" className="text-sm bg-secondary/50 min-h-[80px] resize-y" />
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">Credits</label>
-                  <Textarea value={editCredits} onChange={e => setEditCredits(e.target.value)} placeholder="Directed by, produced by…" className="text-sm bg-secondary/50 min-h-[60px] resize-y" />
+                  <label htmlFor="edit-video-credits" className="text-xs text-muted-foreground mb-1 block">Credits</label>
+                  <Textarea id="edit-video-credits" value={editCredits} onChange={e => setEditCredits(e.target.value)} placeholder="Directed by, produced by…" className="text-sm bg-secondary/50 min-h-[60px] resize-y" />
                 </div>
                 <div className="flex justify-end gap-2">
                   <Button variant="ghost" size="sm" onClick={() => setEditOpen(false)} className="h-7 text-xs">Cancel</Button>

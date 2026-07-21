@@ -454,7 +454,7 @@ export default function AdminUploadSong() {
                 <p className="text-sm font-medium">Featured</p>
                 <p className="text-xs text-muted-foreground">Show on homepage featured section</p>
               </div>
-              <Switch checked={form.isFeatured} onCheckedChange={v => setForm(f => ({ ...f, isFeatured: v }))} />
+              <Switch aria-label="Featured" checked={form.isFeatured} onCheckedChange={v => setForm(f => ({ ...f, isFeatured: v }))} />
             </div>
 
             <div className="flex items-center justify-between p-4 rounded-lg border border-border">
@@ -462,7 +462,7 @@ export default function AdminUploadSong() {
                 <p className="text-sm font-medium">Explicit Content</p>
                 <p className="text-xs text-muted-foreground">Mark this song as containing explicit lyrics</p>
               </div>
-              <Switch checked={form.isExplicit} onCheckedChange={v => setForm(f => ({ ...f, isExplicit: v }))} />
+              <Switch aria-label="Explicit content" checked={form.isExplicit} onCheckedChange={v => setForm(f => ({ ...f, isExplicit: v }))} />
             </div>
 
             <div className="space-y-2">
@@ -548,7 +548,7 @@ export default function AdminUploadSong() {
                   <div className="space-y-1 pt-6">
                     <div className="flex items-center justify-between p-3 rounded-lg border border-border">
                       <p className="text-sm font-medium">Featured</p>
-                      <Switch checked={bulkShared.isFeatured} onCheckedChange={v => setBulkShared(f => ({ ...f, isFeatured: v }))} />
+                      <Switch aria-label="Featured" checked={bulkShared.isFeatured} onCheckedChange={v => setBulkShared(f => ({ ...f, isFeatured: v }))} />
                     </div>
                   </div>
                 </div>
@@ -558,7 +558,7 @@ export default function AdminUploadSong() {
                     <p className="text-sm font-medium">Explicit Content</p>
                     <p className="text-xs text-muted-foreground">Mark all songs in this release as explicit</p>
                   </div>
-                  <Switch checked={bulkShared.isExplicit} onCheckedChange={v => setBulkShared(f => ({ ...f, isExplicit: v }))} />
+                  <Switch aria-label="Explicit content" checked={bulkShared.isExplicit} onCheckedChange={v => setBulkShared(f => ({ ...f, isExplicit: v }))} />
                 </div>
 
                 {/* Shared cover art */}

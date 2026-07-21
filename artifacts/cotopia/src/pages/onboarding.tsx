@@ -143,17 +143,17 @@ export default function Onboarding() {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Sex <span className="text-destructive">*</span></Label>
+              <Label htmlFor="onboarding-sex">Sex <span className="text-destructive">*</span></Label>
               <Select value={form.sex} onValueChange={v => set("sex", v)}>
-                <SelectTrigger className={triggerClass("sex")}><SelectValue placeholder="Select" /></SelectTrigger>
+                <SelectTrigger id="onboarding-sex" className={triggerClass("sex")}><SelectValue placeholder="Select" /></SelectTrigger>
                 <SelectContent>{SEX_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
               </Select>
               {errors.sex && <p className="text-xs text-destructive">{errors.sex}</p>}
             </div>
             <div className="space-y-2">
-              <Label>Race / Ethnicity <span className="text-destructive">*</span></Label>
+              <Label htmlFor="onboarding-race">Race / Ethnicity <span className="text-destructive">*</span></Label>
               <Select value={form.race} onValueChange={v => set("race", v)}>
-                <SelectTrigger className={triggerClass("race")}><SelectValue placeholder="Select" /></SelectTrigger>
+                <SelectTrigger id="onboarding-race" className={triggerClass("race")}><SelectValue placeholder="Select" /></SelectTrigger>
                 <SelectContent>{RACE_OPTIONS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
               </Select>
               {errors.race && <p className="text-xs text-destructive">{errors.race}</p>}
@@ -177,9 +177,9 @@ export default function Onboarding() {
               {errors.city && <p className="text-xs text-destructive">{errors.city}</p>}
             </div>
             <div className="space-y-2">
-              <Label>State <span className="text-destructive">*</span></Label>
+              <Label htmlFor="onboarding-state">State <span className="text-destructive">*</span></Label>
               <Select value={form.state} onValueChange={v => set("state", v)}>
-                <SelectTrigger className={triggerClass("state")}><SelectValue placeholder="Select" /></SelectTrigger>
+                <SelectTrigger id="onboarding-state" className={triggerClass("state")}><SelectValue placeholder="Select" /></SelectTrigger>
                 <SelectContent>{US_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
               </Select>
               {errors.state && <p className="text-xs text-destructive">{errors.state}</p>}

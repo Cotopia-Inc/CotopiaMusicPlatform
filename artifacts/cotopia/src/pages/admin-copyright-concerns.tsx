@@ -92,7 +92,7 @@ export default function AdminCopyrightConcerns() {
           </div>
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-40">
+          <SelectTrigger aria-label="Filter by status" className="w-40">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

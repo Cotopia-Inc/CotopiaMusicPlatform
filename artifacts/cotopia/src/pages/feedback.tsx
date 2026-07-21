@@ -89,9 +89,9 @@ export default function Feedback() {
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Type</label>
+          <label htmlFor="feedback-type" className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Type</label>
           <Select value={type} onValueChange={(v) => setType(v as "bug" | "feature" | "general")}>
-            <SelectTrigger className="bg-secondary/50 border-secondary">
+            <SelectTrigger id="feedback-type" className="bg-secondary/50 border-secondary">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

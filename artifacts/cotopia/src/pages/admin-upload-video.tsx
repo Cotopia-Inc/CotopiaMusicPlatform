@@ -379,12 +379,12 @@ export default function AdminUploadVideo() {
 
             <div className="flex items-center justify-between p-4 rounded-lg border border-border">
               <div><p className="text-sm font-medium">Featured</p><p className="text-xs text-muted-foreground">Show on homepage featured section</p></div>
-              <Switch checked={form.isFeatured} onCheckedChange={v => setForm(f => ({ ...f, isFeatured: v }))} />
+              <Switch aria-label="Featured" checked={form.isFeatured} onCheckedChange={v => setForm(f => ({ ...f, isFeatured: v }))} />
             </div>
 
             <div className="flex items-center justify-between p-4 rounded-lg border border-border">
               <div><p className="text-sm font-medium">Explicit Content</p><p className="text-xs text-muted-foreground">Mark this video as containing explicit content</p></div>
-              <Switch checked={form.isExplicit} onCheckedChange={v => setForm(f => ({ ...f, isExplicit: v }))} />
+              <Switch aria-label="Explicit content" checked={form.isExplicit} onCheckedChange={v => setForm(f => ({ ...f, isExplicit: v }))} />
             </div>
 
             <Button type="submit" className="w-full gap-2" disabled={uploadVideo.isPending || videoUpload.isUploading}>
@@ -441,7 +441,7 @@ export default function AdminUploadVideo() {
                   <div className="space-y-1 pt-6">
                     <div className="flex items-center justify-between p-3 rounded-lg border border-border">
                       <p className="text-sm font-medium">Featured</p>
-                      <Switch checked={bulkShared.isFeatured} onCheckedChange={v => setBulkShared(f => ({ ...f, isFeatured: v }))} />
+                      <Switch aria-label="Featured" checked={bulkShared.isFeatured} onCheckedChange={v => setBulkShared(f => ({ ...f, isFeatured: v }))} />
                     </div>
                   </div>
                 </div>
@@ -451,7 +451,7 @@ export default function AdminUploadVideo() {
                     <p className="text-sm font-medium">Explicit Content</p>
                     <p className="text-xs text-muted-foreground">Mark all videos in this batch as explicit</p>
                   </div>
-                  <Switch checked={bulkShared.isExplicit} onCheckedChange={v => setBulkShared(f => ({ ...f, isExplicit: v }))} />
+                  <Switch aria-label="Explicit content" checked={bulkShared.isExplicit} onCheckedChange={v => setBulkShared(f => ({ ...f, isExplicit: v }))} />
                 </div>
 
                 {/* Shared thumbnail */}

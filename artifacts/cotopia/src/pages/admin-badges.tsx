@@ -212,6 +212,7 @@ function BadgesTab() {
                     <div className="flex flex-col gap-1 text-xs text-muted-foreground">
                       <label className="flex items-center gap-1.5 cursor-pointer">
                         <Switch
+                          aria-label="Badge active"
                           checked={badge.isActive}
                           onCheckedChange={(v) => toggleMutation.mutate({ id: badge.id, field: "isActive", value: v })}
                           className="scale-75"
@@ -220,6 +221,7 @@ function BadgesTab() {
                       </label>
                       <label className="flex items-center gap-1.5 cursor-pointer">
                         <Switch
+                          aria-label="Badge visible"
                           checked={badge.isVisible}
                           onCheckedChange={(v) => toggleMutation.mutate({ id: badge.id, field: "isVisible", value: v })}
                           className="scale-75"
@@ -378,11 +380,11 @@ function BadgeForm({ initial, onSave, onCancel }: {
         </div>
         <div className="flex items-center gap-6">
           <label className="flex items-center gap-2 cursor-pointer text-sm">
-            <Switch checked={isActive} onCheckedChange={setIsActive} />
+            <Switch aria-label="Badge active" checked={isActive} onCheckedChange={setIsActive} />
             Active
           </label>
           <label className="flex items-center gap-2 cursor-pointer text-sm">
-            <Switch checked={isVisible} onCheckedChange={setIsVisible} />
+            <Switch aria-label="Badge visible" checked={isVisible} onCheckedChange={setIsVisible} />
             Visible
           </label>
         </div>

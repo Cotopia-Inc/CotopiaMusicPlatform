@@ -949,9 +949,9 @@ export default function Profile() {
           </div>
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium">Who can message me</label>
+          <label htmlFor="profile-message-policy" className="text-sm font-medium">Who can message me</label>
           <Select value={messagePolicy} onValueChange={setMessagePolicy}>
-            <SelectTrigger>
+            <SelectTrigger id="profile-message-policy">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

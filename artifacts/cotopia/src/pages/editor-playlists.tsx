@@ -250,9 +250,9 @@ export default function EditorPlaylists() {
               <Input placeholder="Short description" value={newForm.description} onChange={e => setNewForm(f => ({ ...f, description: e.target.value }))} />
             </div>
             <div className="space-y-2">
-              <Label>Type <span className="text-destructive">*</span></Label>
+              <Label htmlFor="new-playlist-type">Type <span className="text-destructive">*</span></Label>
               <Select value={newForm.playlistType} onValueChange={v => setNewForm(f => ({ ...f, playlistType: v }))}>
-                <SelectTrigger>
+                <SelectTrigger id="new-playlist-type">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -265,7 +265,7 @@ export default function EditorPlaylists() {
                 <p className="text-sm font-medium">Public</p>
                 <p className="text-xs text-muted-foreground">Visible to all creators</p>
               </div>
-              <Switch checked={newForm.isPublic} onCheckedChange={v => setNewForm(f => ({ ...f, isPublic: v }))} />
+              <Switch aria-label="Make playlist public" checked={newForm.isPublic} onCheckedChange={v => setNewForm(f => ({ ...f, isPublic: v }))} />
             </div>
           </div>
           <DialogFooter>
@@ -293,9 +293,9 @@ export default function EditorPlaylists() {
               <Input value={editForm.description} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))} />
             </div>
             <div className="space-y-2">
-              <Label>Type</Label>
+              <Label htmlFor="edit-playlist-type">Type</Label>
               <Select value={editForm.playlistType} onValueChange={v => setEditForm(f => ({ ...f, playlistType: v }))}>
-                <SelectTrigger>
+                <SelectTrigger id="edit-playlist-type">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -308,7 +308,7 @@ export default function EditorPlaylists() {
                 <p className="text-sm font-medium">Public</p>
                 <p className="text-xs text-muted-foreground">Visible to all creators</p>
               </div>
-              <Switch checked={editForm.isPublic} onCheckedChange={v => setEditForm(f => ({ ...f, isPublic: v }))} />
+              <Switch aria-label="Make playlist public" checked={editForm.isPublic} onCheckedChange={v => setEditForm(f => ({ ...f, isPublic: v }))} />
             </div>
           </div>
           <DialogFooter>

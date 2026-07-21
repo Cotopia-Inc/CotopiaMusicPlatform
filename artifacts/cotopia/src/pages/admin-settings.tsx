@@ -255,8 +255,9 @@ export default function AdminSettings() {
           
           <div className="grid gap-4">
             <div className="space-y-2">
-              <Label>App Name</Label>
-              <Input 
+              <Label htmlFor="settings-app-name">App Name</Label>
+              <Input
+                id="settings-app-name"
                 value={formData.appName}
                 onChange={(e) => setFormData({...formData, appName: e.target.value})}
                 className="bg-secondary/50 border-secondary"
@@ -304,7 +305,7 @@ export default function AdminSettings() {
                   </button>
                 )}
               </div>
-              <input ref={logoInputRef} type="file" accept="image/*" onChange={handleLogoFile} className="hidden" disabled={isUploadingLogo} />
+              <input ref={logoInputRef} type="file" accept="image/*" onChange={handleLogoFile} className="hidden" disabled={isUploadingLogo} id="logo-file-upload" name="logo-file-upload" aria-label="Upload logo image" />
             </div>
 
             {/* ── Color picker ── */}
@@ -331,6 +332,8 @@ export default function AdminSettings() {
                   </label>
                 </div>
                 <Input
+                  id="primary-color-hex"
+                  aria-label="Primary color hex value"
                   value={formData.primaryColor}
                   onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
                   placeholder="#7c3aed"
@@ -353,8 +356,9 @@ export default function AdminSettings() {
               <p className="text-sm font-semibold">Single Submission</p>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">Song ($)</Label>
+                  <Label htmlFor="fee-single-song" className="text-xs text-muted-foreground">Song ($)</Label>
                   <Input
+                    id="fee-single-song"
                     type="number" min={0} step={0.01}
                     value={formData.singleSongFee}
                     onChange={(e) => setFormData({ ...formData, singleSongFee: Number(e.target.value) })}
@@ -362,8 +366,9 @@ export default function AdminSettings() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">Video ($)</Label>
+                  <Label htmlFor="fee-single-video" className="text-xs text-muted-foreground">Video ($)</Label>
                   <Input
+                    id="fee-single-video"
                     type="number" min={0} step={0.01}
                     value={formData.singleVideoFee}
                     onChange={(e) => setFormData({ ...formData, singleVideoFee: Number(e.target.value) })}
@@ -377,8 +382,9 @@ export default function AdminSettings() {
               <p className="text-sm font-semibold">Batch Submission</p>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">Song ($)</Label>
+                  <Label htmlFor="fee-batch-song" className="text-xs text-muted-foreground">Song ($)</Label>
                   <Input
+                    id="fee-batch-song"
                     type="number" min={0} step={0.01}
                     value={formData.batchSongFee}
                     onChange={(e) => setFormData({ ...formData, batchSongFee: Number(e.target.value) })}
@@ -386,8 +392,9 @@ export default function AdminSettings() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">Video ($)</Label>
+                  <Label htmlFor="fee-batch-video" className="text-xs text-muted-foreground">Video ($)</Label>
                   <Input
+                    id="fee-batch-video"
                     type="number" min={0} step={0.01}
                     value={formData.batchVideoFee}
                     onChange={(e) => setFormData({ ...formData, batchVideoFee: Number(e.target.value) })}
@@ -401,8 +408,9 @@ export default function AdminSettings() {
               <p className="text-sm font-semibold">Featured Placement</p>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">Song ($)</Label>
+                  <Label htmlFor="fee-premium-song" className="text-xs text-muted-foreground">Song ($)</Label>
                   <Input
+                    id="fee-premium-song"
                     type="number" min={0} step={0.01}
                     value={formData.premiumSongFee}
                     onChange={(e) => setFormData({ ...formData, premiumSongFee: Number(e.target.value) })}
@@ -410,8 +418,9 @@ export default function AdminSettings() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">Video ($)</Label>
+                  <Label htmlFor="fee-premium-video" className="text-xs text-muted-foreground">Video ($)</Label>
                   <Input
+                    id="fee-premium-video"
                     type="number" min={0} step={0.01}
                     value={formData.premiumVideoFee}
                     onChange={(e) => setFormData({ ...formData, premiumVideoFee: Number(e.target.value) })}
@@ -427,10 +436,11 @@ export default function AdminSettings() {
           <h3 className="text-lg font-bold border-b border-border pb-2">System</h3>
           <div className="flex items-center justify-between p-4 bg-secondary/30 rounded-lg border border-border">
             <div className="space-y-1">
-              <Label className="font-bold text-base text-destructive">Maintenance Mode</Label>
+              <Label htmlFor="switch-maintenance" className="font-bold text-base text-destructive">Maintenance Mode</Label>
               <p className="text-sm text-muted-foreground">Display maintenance screen to all non-admin users.</p>
             </div>
-            <Switch 
+            <Switch
+              id="switch-maintenance"
               checked={formData.maintenanceMode}
               onCheckedChange={(checked) => setFormData({...formData, maintenanceMode: checked})}
             />
@@ -438,10 +448,11 @@ export default function AdminSettings() {
 
           <div className="flex items-center justify-between p-4 bg-secondary/30 rounded-lg border border-border">
             <div className="space-y-1">
-              <Label className="font-bold text-base">Email Verification</Label>
+              <Label htmlFor="switch-email-verify" className="font-bold text-base">Email Verification</Label>
               <p className="text-sm text-muted-foreground">Require new users to verify their email address after registering. When off, accounts are activated instantly.</p>
             </div>
             <Switch
+              id="switch-email-verify"
               checked={formData.requireEmailVerification}
               onCheckedChange={(checked) => setFormData({...formData, requireEmailVerification: checked})}
             />
@@ -449,10 +460,11 @@ export default function AdminSettings() {
 
           <div className="flex items-center justify-between p-4 bg-secondary/30 rounded-lg border border-border">
             <div className="space-y-1">
-              <Label className="font-bold text-base">Featured Rotation</Label>
+              <Label htmlFor="switch-feature-rotation" className="font-bold text-base">Featured Rotation</Label>
               <p className="text-sm text-muted-foreground">Automatically rotate featured songs and videos across the home and discover pages over time. When off, the most recent featured items stay fixed.</p>
             </div>
             <Switch
+              id="switch-feature-rotation"
               checked={formData.featureRotation}
               onCheckedChange={(checked) => setFormData({...formData, featureRotation: checked})}
             />
@@ -460,18 +472,20 @@ export default function AdminSettings() {
 
           <div className="flex items-center justify-between p-4 bg-secondary/30 rounded-lg border border-border">
             <div className="space-y-1">
-              <Label className="font-bold text-base">Top Rated Board</Label>
+              <Label htmlFor="switch-top-rated" className="font-bold text-base">Top Rated Board</Label>
               <p className="text-sm text-muted-foreground">Show the Top Rated section on the Discover page, ranking songs by average creator rating. When off, the section is hidden from all users.</p>
             </div>
             <Switch
+              id="switch-top-rated"
               checked={formData.showTopRated}
               onCheckedChange={(checked) => setFormData({...formData, showTopRated: checked})}
             />
           </div>
 
           <div className={`space-y-2 ${formData.showTopRated ? "" : "opacity-50 pointer-events-none"}`}>
-            <Label>Minimum Ratings Required</Label>
+            <Label htmlFor="top-rated-min-ratings">Minimum Ratings Required</Label>
             <Input
+              id="top-rated-min-ratings"
               type="number"
               min={1}
               value={formData.topRatedMinRatings}
@@ -487,10 +501,11 @@ export default function AdminSettings() {
 
           <div className="flex items-center justify-between p-4 bg-secondary/30 rounded-lg border border-border">
             <div className="space-y-1">
-              <Label className="font-bold text-base">Auto-Escalation</Label>
+              <Label htmlFor="switch-auto-escalation" className="font-bold text-base">Auto-Escalation</Label>
               <p className="text-sm text-muted-foreground">Automatically suspend users who accumulate enough active strikes, and flag repeat offenders for ban review. When off, all enforcement stays manual.</p>
             </div>
             <Switch
+              id="switch-auto-escalation"
               checked={formData.autoEscalationEnabled}
               onCheckedChange={(checked) => setFormData({...formData, autoEscalationEnabled: checked})}
             />
@@ -498,8 +513,9 @@ export default function AdminSettings() {
 
           <div className={`grid sm:grid-cols-3 gap-4 ${formData.autoEscalationEnabled ? "" : "opacity-50 pointer-events-none"}`}>
             <div className="space-y-2">
-              <Label>Strikes → Suspension</Label>
+              <Label htmlFor="enf-strikes-suspension">Strikes → Suspension</Label>
               <Input
+                id="enf-strikes-suspension"
                 type="number"
                 min={1}
                 value={formData.strikesUntilSuspension}
@@ -509,8 +525,9 @@ export default function AdminSettings() {
               <p className="text-xs text-muted-foreground">Active strikes that trigger an automatic suspension.</p>
             </div>
             <div className="space-y-2">
-              <Label>Suspension Length (days)</Label>
+              <Label htmlFor="enf-suspension-days">Suspension Length (days)</Label>
               <Input
+                id="enf-suspension-days"
                 type="number"
                 min={1}
                 value={formData.autoSuspensionDays}
@@ -520,8 +537,9 @@ export default function AdminSettings() {
               <p className="text-xs text-muted-foreground">Duration of each automatic suspension.</p>
             </div>
             <div className="space-y-2">
-              <Label>Suspensions → Ban Review</Label>
+              <Label htmlFor="enf-suspensions-ban">Suspensions → Ban Review</Label>
               <Input
+                id="enf-suspensions-ban"
                 type="number"
                 min={1}
                 value={formData.suspensionsUntilBanReview}
@@ -618,10 +636,11 @@ export default function AdminSettings() {
           ] as { key: keyof AiSettings; label: string; desc: string }[]).map(({ key, label, desc }) => (
             <div key={key} className="flex items-center justify-between p-4 bg-secondary/30 rounded-lg border border-border">
               <div className="space-y-1">
-                <Label className="font-medium text-sm">{label}</Label>
+                <Label htmlFor={`ai-badge-${key}`} className="font-medium text-sm">{label}</Label>
                 <p className="text-xs text-muted-foreground">{desc}</p>
               </div>
               <Switch
+                id={`ai-badge-${key}`}
                 checked={Boolean(aiSettings[key])}
                 onCheckedChange={(v) => setAiSettings(prev => ({ ...prev, [key]: v }))}
               />
@@ -638,10 +657,11 @@ export default function AdminSettings() {
           ] as { key: keyof AiSettings; label: string; desc: string }[]).map(({ key, label, desc }) => (
             <div key={key} className="flex items-center justify-between p-4 bg-secondary/30 rounded-lg border border-border">
               <div className="space-y-1">
-                <Label className="font-medium text-sm">{label}</Label>
+                <Label htmlFor={`ai-policy-${key}`} className="font-medium text-sm">{label}</Label>
                 <p className="text-xs text-muted-foreground">{desc}</p>
               </div>
               <Switch
+                id={`ai-policy-${key}`}
                 checked={Boolean(aiSettings[key])}
                 onCheckedChange={(v) => setAiSettings(prev => ({ ...prev, [key]: v }))}
               />
@@ -659,8 +679,9 @@ export default function AdminSettings() {
               { key: "autoRejectDetectionThreshold", label: "Auto-reject at" },
             ] as { key: keyof AiSettings; label: string }[]).map(({ key, label }) => (
               <div key={key} className="space-y-2">
-                <Label className="text-xs text-muted-foreground">{label}</Label>
+                <Label htmlFor={`ai-threshold-${key}`} className="text-xs text-muted-foreground">{label}</Label>
                 <Input
+                  id={`ai-threshold-${key}`}
                   type="number" min={0} max={100} step={1}
                   value={Number(aiSettings[key])}
                   onChange={(e) => setAiSettings(prev => ({ ...prev, [key]: Math.min(100, Math.max(0, Number(e.target.value))) }))}

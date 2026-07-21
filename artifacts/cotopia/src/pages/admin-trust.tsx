@@ -74,16 +74,16 @@ function KnownIssuesTab() {
     const set = (k: string, v: unknown) => setD(p => ({ ...p, [k]: v }));
     return (
       <div className="p-5 rounded-xl bg-secondary/30 border border-border space-y-3">
-        <input className="w-full bg-card border border-border rounded-lg px-3 py-2 text-sm" placeholder="Title *" value={d["title"] as string} onChange={e => set("title", e.target.value)} />
-        <Textarea className="text-sm" rows={3} placeholder="Description *" value={d["description"] as string} onChange={e => set("description", e.target.value)} />
+        <input aria-label="Title" className="w-full bg-card border border-border rounded-lg px-3 py-2 text-sm" placeholder="Title *" value={d["title"] as string} onChange={e => set("title", e.target.value)} />
+        <Textarea aria-label="Description" className="text-sm" rows={3} placeholder="Description *" value={d["description"] as string} onChange={e => set("description", e.target.value)} />
         <div className="grid sm:grid-cols-2 gap-3">
           <Select value={d["status"] as string} onValueChange={v => set("status", v)}>
-            <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
+            <SelectTrigger aria-label="Status" className="text-sm"><SelectValue /></SelectTrigger>
             <SelectContent>{Object.entries(ISSUE_STATUS_MAP).map(([v, m]) => <SelectItem key={v} value={v}>{m.label}</SelectItem>)}</SelectContent>
           </Select>
-          <input className="bg-card border border-border rounded-lg px-3 py-2 text-sm" placeholder="Affected area" value={d["affectedArea"] as string} onChange={e => set("affectedArea", e.target.value)} />
+          <input aria-label="Affected area" className="bg-card border border-border rounded-lg px-3 py-2 text-sm" placeholder="Affected area" value={d["affectedArea"] as string} onChange={e => set("affectedArea", e.target.value)} />
         </div>
-        <Textarea className="text-sm" rows={2} placeholder="Workaround (optional)" value={d["workaround"] as string} onChange={e => set("workaround", e.target.value)} />
+        <Textarea aria-label="Workaround" className="text-sm" rows={2} placeholder="Workaround (optional)" value={d["workaround"] as string} onChange={e => set("workaround", e.target.value)} />
         <div className="flex items-center gap-3 flex-wrap">
           <label className="flex items-center gap-2 text-sm cursor-pointer">
             <input type="checkbox" checked={d["isPublic"] as boolean} onChange={e => set("isPublic", e.target.checked)} />
@@ -168,17 +168,17 @@ function ReleaseNotesTab() {
     return (
       <div className="p-5 rounded-xl bg-secondary/30 border border-border space-y-3">
         <div className="grid sm:grid-cols-2 gap-3">
-          <input className="bg-card border border-border rounded-lg px-3 py-2 text-sm" placeholder="Version (e.g. 0.9.4) *" value={d["version"] as string} onChange={e => set("version", e.target.value)} />
-          <input type="date" className="bg-card border border-border rounded-lg px-3 py-2 text-sm" value={d["releaseDate"] as string} onChange={e => set("releaseDate", e.target.value)} />
+          <input aria-label="Version" className="bg-card border border-border rounded-lg px-3 py-2 text-sm" placeholder="Version (e.g. 0.9.4) *" value={d["version"] as string} onChange={e => set("version", e.target.value)} />
+          <input type="date" aria-label="Release date" className="bg-card border border-border rounded-lg px-3 py-2 text-sm" value={d["releaseDate"] as string} onChange={e => set("releaseDate", e.target.value)} />
         </div>
-        <Textarea className="text-sm" rows={2} placeholder="Summary *" value={d["summary"] as string} onChange={e => set("summary", e.target.value)} />
-        <Textarea className="text-sm" rows={3} placeholder="New Features (one per line)" value={d["newFeatures"] as string} onChange={e => set("newFeatures", e.target.value)} />
-        <Textarea className="text-sm" rows={2} placeholder="Improvements (one per line)" value={d["improvements"] as string} onChange={e => set("improvements", e.target.value)} />
-        <Textarea className="text-sm" rows={2} placeholder="Bug Fixes (one per line)" value={d["bugFixes"] as string} onChange={e => set("bugFixes", e.target.value)} />
-        <Textarea className="text-sm" rows={2} placeholder="Policy Updates (one per line)" value={d["policyUpdates"] as string} onChange={e => set("policyUpdates", e.target.value)} />
+        <Textarea aria-label="Summary" className="text-sm" rows={2} placeholder="Summary *" value={d["summary"] as string} onChange={e => set("summary", e.target.value)} />
+        <Textarea aria-label="New features" className="text-sm" rows={3} placeholder="New Features (one per line)" value={d["newFeatures"] as string} onChange={e => set("newFeatures", e.target.value)} />
+        <Textarea aria-label="Improvements" className="text-sm" rows={2} placeholder="Improvements (one per line)" value={d["improvements"] as string} onChange={e => set("improvements", e.target.value)} />
+        <Textarea aria-label="Bug fixes" className="text-sm" rows={2} placeholder="Bug Fixes (one per line)" value={d["bugFixes"] as string} onChange={e => set("bugFixes", e.target.value)} />
+        <Textarea aria-label="Policy updates" className="text-sm" rows={2} placeholder="Policy Updates (one per line)" value={d["policyUpdates"] as string} onChange={e => set("policyUpdates", e.target.value)} />
         <div className="flex items-center gap-3 flex-wrap">
           <Select value={d["status"] as string} onValueChange={v => set("status", v)}>
-            <SelectTrigger className="text-sm w-36"><SelectValue /></SelectTrigger>
+            <SelectTrigger aria-label="Status" className="text-sm w-36"><SelectValue /></SelectTrigger>
             <SelectContent><SelectItem value="draft">Draft</SelectItem><SelectItem value="published">Published</SelectItem><SelectItem value="archived">Archived</SelectItem></SelectContent>
           </Select>
           <label className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" checked={d["isPublic"] as boolean} onChange={e => set("isPublic", e.target.checked)} />Publish publicly</label>
@@ -269,18 +269,18 @@ function WeHeardYouTab() {
     const set = (k: string, v: unknown) => setD(p => ({ ...p, [k]: v }));
     return (
       <div className="p-5 rounded-xl bg-secondary/30 border border-border space-y-3">
-        <Textarea className="text-sm" rows={3} placeholder="You Asked *" value={d["youAsked"] as string} onChange={e => set("youAsked", e.target.value)} />
-        <Textarea className="text-sm" rows={3} placeholder="We Did *" value={d["weDid"] as string} onChange={e => set("weDid", e.target.value)} />
+        <Textarea aria-label="You asked" className="text-sm" rows={3} placeholder="You Asked *" value={d["youAsked"] as string} onChange={e => set("youAsked", e.target.value)} />
+        <Textarea aria-label="We did" className="text-sm" rows={3} placeholder="We Did *" value={d["weDid"] as string} onChange={e => set("weDid", e.target.value)} />
         <div className="grid sm:grid-cols-3 gap-3">
           <Select value={d["status"] as string} onValueChange={v => set("status", v)}>
-            <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
+            <SelectTrigger aria-label="Status" className="text-sm"><SelectValue /></SelectTrigger>
             <SelectContent>{Object.entries(WHY_STATUS_MAP).map(([v, m]) => <SelectItem key={v} value={v}>{m.label}</SelectItem>)}</SelectContent>
           </Select>
-          <input type="date" className="bg-card border border-border rounded-lg px-3 py-2 text-sm" placeholder="Date Requested" value={d["dateRequested"] as string} onChange={e => set("dateRequested", e.target.value)} />
-          <input type="date" className="bg-card border border-border rounded-lg px-3 py-2 text-sm" placeholder="Date Released" value={d["dateReleased"] as string} onChange={e => set("dateReleased", e.target.value)} />
+          <input type="date" aria-label="Date requested" className="bg-card border border-border rounded-lg px-3 py-2 text-sm" placeholder="Date Requested" value={d["dateRequested"] as string} onChange={e => set("dateRequested", e.target.value)} />
+          <input type="date" aria-label="Date released" className="bg-card border border-border rounded-lg px-3 py-2 text-sm" placeholder="Date Released" value={d["dateReleased"] as string} onChange={e => set("dateReleased", e.target.value)} />
         </div>
-        <input className="w-full bg-card border border-border rounded-lg px-3 py-2 text-sm" placeholder="Related Feature" value={d["relatedFeature"] as string} onChange={e => set("relatedFeature", e.target.value)} />
-        <input className="w-full bg-card border border-border rounded-lg px-3 py-2 text-sm" placeholder="Link (optional)" value={d["link"] as string} onChange={e => set("link", e.target.value)} />
+        <input aria-label="Related feature" className="w-full bg-card border border-border rounded-lg px-3 py-2 text-sm" placeholder="Related Feature" value={d["relatedFeature"] as string} onChange={e => set("relatedFeature", e.target.value)} />
+        <input aria-label="Link" className="w-full bg-card border border-border rounded-lg px-3 py-2 text-sm" placeholder="Link (optional)" value={d["link"] as string} onChange={e => set("link", e.target.value)} />
         <div className="flex items-center gap-3 flex-wrap">
           <label className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" checked={d["isPublic"] as boolean} onChange={e => set("isPublic", e.target.checked)} />Publish publicly</label>
           <div className="flex gap-2 ml-auto">
@@ -364,14 +364,14 @@ function TimelineTab() {
     return (
       <div className="p-5 rounded-xl bg-secondary/30 border border-border space-y-3">
         <div className="grid sm:grid-cols-2 gap-3">
-          <input type="date" className="bg-card border border-border rounded-lg px-3 py-2 text-sm" value={d["eventDate"] as string} onChange={e => set("eventDate", e.target.value)} />
+          <input type="date" aria-label="Event date" className="bg-card border border-border rounded-lg px-3 py-2 text-sm" value={d["eventDate"] as string} onChange={e => set("eventDate", e.target.value)} />
           <Select value={d["category"] as string} onValueChange={v => set("category", v)}>
-            <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
+            <SelectTrigger aria-label="Category" className="text-sm"><SelectValue /></SelectTrigger>
             <SelectContent>{CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
           </Select>
         </div>
-        <input className="w-full bg-card border border-border rounded-lg px-3 py-2 text-sm" placeholder="Title *" value={d["title"] as string} onChange={e => set("title", e.target.value)} />
-        <Textarea className="text-sm" rows={3} placeholder="Description *" value={d["description"] as string} onChange={e => set("description", e.target.value)} />
+        <input aria-label="Title" className="w-full bg-card border border-border rounded-lg px-3 py-2 text-sm" placeholder="Title *" value={d["title"] as string} onChange={e => set("title", e.target.value)} />
+        <Textarea aria-label="Description" className="text-sm" rows={3} placeholder="Description *" value={d["description"] as string} onChange={e => set("description", e.target.value)} />
         <div className="flex items-center gap-3 flex-wrap">
           <label className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" checked={d["isPublic"] as boolean} onChange={e => set("isPublic", e.target.checked)} />Publish publicly</label>
           <div className="flex gap-2 ml-auto">
@@ -452,7 +452,7 @@ function AppealsTab() {
     <div className="space-y-4">
       <div className="flex items-center gap-3 flex-wrap">
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="text-sm w-44"><SelectValue /></SelectTrigger>
+          <SelectTrigger aria-label="Filter by status" className="text-sm w-44"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
             {Object.entries(APPEAL_STATUS_MAP).map(([v, m]) => <SelectItem key={v} value={v}>{m.label}</SelectItem>)}
@@ -496,11 +496,11 @@ function AppealsTab() {
                 <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Update Status</p>
                 <div className="flex gap-2 flex-wrap">
                   <Select value={editStatus[appeal["id"] as number] ?? (appeal["status"] as string)} onValueChange={v => setEditStatus(p => ({ ...p, [appeal["id"] as number]: v }))}>
-                    <SelectTrigger className="text-sm w-44"><SelectValue /></SelectTrigger>
+                    <SelectTrigger aria-label="Update appeal status" className="text-sm w-44"><SelectValue /></SelectTrigger>
                     <SelectContent>{Object.entries(APPEAL_STATUS_MAP).map(([v, m]) => <SelectItem key={v} value={v}>{m.label}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-                <Textarea rows={2} placeholder="Admin notes (optional)" className="text-sm" value={editNotes[appeal["id"] as number] ?? (appeal["adminNotes"] as string ?? "")} onChange={e => setEditNotes(p => ({ ...p, [appeal["id"] as number]: e.target.value }))} />
+                <Textarea aria-label="Admin notes" rows={2} placeholder="Admin notes (optional)" className="text-sm" value={editNotes[appeal["id"] as number] ?? (appeal["adminNotes"] as string ?? "")} onChange={e => setEditNotes(p => ({ ...p, [appeal["id"] as number]: e.target.value }))} />
                 <Button size="sm" disabled={updateMutation.isPending} onClick={() => updateMutation.mutate({ id: appeal["id"] as number, status: editStatus[appeal["id"] as number] ?? (appeal["status"] as string), adminNotes: editNotes[appeal["id"] as number] ?? (appeal["adminNotes"] as string ?? undefined) })}>
                   {updateMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : <Save className="w-3.5 h-3.5 mr-1" />}Save
                 </Button>

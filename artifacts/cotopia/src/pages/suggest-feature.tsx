@@ -144,9 +144,9 @@ export default function SuggestFeature() {
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <Label>Category</Label>
+            <Label htmlFor="suggestion-category">Category</Label>
             <Select value={form.category} onValueChange={set("category")}>
-              <SelectTrigger>
+              <SelectTrigger id="suggestion-category" aria-label="Category">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -157,9 +157,9 @@ export default function SuggestFeature() {
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label>How important is this?</Label>
+            <Label htmlFor="suggestion-priority">How important is this?</Label>
             <Select value={form.priority} onValueChange={set("priority")}>
-              <SelectTrigger>
+              <SelectTrigger id="suggestion-priority" aria-label="Priority">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

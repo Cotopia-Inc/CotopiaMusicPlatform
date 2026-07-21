@@ -233,9 +233,9 @@ export default function AdminMembers() {
               <UserPicker users={directory} value={enforceUserId} onChange={setEnforceUserId} />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs text-muted-foreground">Action Type <span className="text-red-400">*</span></label>
+              <label htmlFor="members-action-type" className="text-xs text-muted-foreground">Action Type <span className="text-red-400">*</span></label>
               <Select value={actionType} onValueChange={v => setActionType(v as ActionType)}>
-                <SelectTrigger className="bg-secondary/50 border-secondary text-sm">
+                <SelectTrigger id="members-action-type" className="bg-secondary/50 border-secondary text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -248,8 +248,9 @@ export default function AdminMembers() {
             </div>
             {actionType === "suspension" && (
               <div className="space-y-1.5">
-                <label className="text-xs text-muted-foreground">Duration (days)</label>
+                <label htmlFor="members-duration-days" className="text-xs text-muted-foreground">Duration (days)</label>
                 <Input
+                  id="members-duration-days"
                   type="number"
                   min={1}
                   placeholder="e.g. 7"
@@ -260,8 +261,9 @@ export default function AdminMembers() {
               </div>
             )}
             <div className="space-y-1.5">
-              <label className="text-xs text-muted-foreground">Reason <span className="text-red-400">*</span></label>
+              <label htmlFor="members-reason" className="text-xs text-muted-foreground">Reason <span className="text-red-400">*</span></label>
               <Textarea
+                id="members-reason"
                 placeholder="Explain why this action is being taken…"
                 value={reason}
                 onChange={e => setReason(e.target.value)}
@@ -269,8 +271,9 @@ export default function AdminMembers() {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs text-muted-foreground">Internal notes (optional)</label>
+              <label htmlFor="members-notes" className="text-xs text-muted-foreground">Internal notes (optional)</label>
               <Textarea
+                id="members-notes"
                 placeholder="Notes visible only to staff…"
                 value={notes}
                 onChange={e => setNotes(e.target.value)}
@@ -306,9 +309,9 @@ export default function AdminMembers() {
                 <UserPicker users={directory} value={verifyUserId} onChange={setVerifyUserId} />
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs text-muted-foreground">Verification Type</label>
+                <label htmlFor="members-verification-type" className="text-xs text-muted-foreground">Verification Type</label>
                 <Select value={verificationType} onValueChange={v => setVerificationType(v as VerificationType)}>
-                  <SelectTrigger className="bg-secondary/50 border-secondary text-sm">
+                  <SelectTrigger id="members-verification-type" className="bg-secondary/50 border-secondary text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

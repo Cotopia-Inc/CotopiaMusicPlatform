@@ -139,6 +139,7 @@ function FileRow({
     <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/30 border border-border/50">
       <span className="text-xs text-muted-foreground w-5 text-center font-bold flex-shrink-0">{index + 1}</span>
       <Input
+        aria-label="Track title"
         value={title}
         onChange={e => onTitleChange(index, e.target.value)}
         className="flex-1 h-8 text-sm bg-background/50"
@@ -216,46 +217,46 @@ function MetadataSection({ meta, onChange, type }: { meta: SharedMeta; onChange:
           <p className="text-[11px] text-muted-foreground/60">Your registered artist name — set from your account</p>
         </div>
         <div className="space-y-2">
-          <Label>Label Name <span className="text-muted-foreground text-xs">(optional)</span></Label>
-          <Input placeholder="e.g. Neon Records" value={meta.labelName} onChange={e => set({ labelName: e.target.value })} className="bg-secondary/50 border-secondary" />
+          <Label htmlFor="meta-label-name">Label Name <span className="text-muted-foreground text-xs">(optional)</span></Label>
+          <Input id="meta-label-name" placeholder="e.g. Neon Records" value={meta.labelName} onChange={e => set({ labelName: e.target.value })} className="bg-secondary/50 border-secondary" />
         </div>
         <div className="space-y-2">
           <Label>Genre</Label>
           <Select value={meta.genre} onValueChange={v => set({ genre: v })}>
-            <SelectTrigger className="bg-secondary/50 border-secondary"><SelectValue placeholder="Select genre" /></SelectTrigger>
+            <SelectTrigger aria-label="Genre" className="bg-secondary/50 border-secondary"><SelectValue placeholder="Select genre" /></SelectTrigger>
             <SelectContent>{GENRES.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}</SelectContent>
           </Select>
         </div>
         <div className="space-y-2">
           <Label>Mood</Label>
           <Select value={meta.mood} onValueChange={v => set({ mood: v })}>
-            <SelectTrigger className="bg-secondary/50 border-secondary"><SelectValue placeholder="Select mood" /></SelectTrigger>
+            <SelectTrigger aria-label="Mood" className="bg-secondary/50 border-secondary"><SelectValue placeholder="Select mood" /></SelectTrigger>
             <SelectContent>{MOODS.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
           </Select>
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label>Description <span className="text-muted-foreground text-xs">(optional, shared across all tracks)</span></Label>
-        <Textarea placeholder="Tell us about this release — the story, the inspiration, the vibe..." rows={2} value={meta.description} onChange={e => set({ description: e.target.value })} className="bg-secondary/50 border-secondary resize-none" />
+        <Label htmlFor="meta-description">Description <span className="text-muted-foreground text-xs">(optional, shared across all tracks)</span></Label>
+        <Textarea id="meta-description" placeholder="Tell us about this release — the story, the inspiration, the vibe..." rows={2} value={meta.description} onChange={e => set({ description: e.target.value })} className="bg-secondary/50 border-secondary resize-none" />
       </div>
 
       {type === "song" && (
         <div className="space-y-2">
-          <Label>Lyrics <span className="text-muted-foreground text-xs">(optional, shared across all tracks)</span></Label>
-          <Textarea placeholder="Paste your song lyrics here..." rows={4} value={meta.lyrics} onChange={e => set({ lyrics: e.target.value })} className="bg-secondary/50 border-secondary resize-none font-mono text-sm" />
+          <Label htmlFor="meta-lyrics">Lyrics <span className="text-muted-foreground text-xs">(optional, shared across all tracks)</span></Label>
+          <Textarea id="meta-lyrics" placeholder="Paste your song lyrics here..." rows={4} value={meta.lyrics} onChange={e => set({ lyrics: e.target.value })} className="bg-secondary/50 border-secondary resize-none font-mono text-sm" />
         </div>
       )}
 
       <div className="space-y-2">
-        <Label>Credits <span className="text-muted-foreground text-xs">(optional, shared across all tracks)</span></Label>
-        <Textarea placeholder="e.g. Written by Jane Doe · Produced by John Smith · Mastered at Studio A" rows={2} value={meta.credits} onChange={e => set({ credits: e.target.value })} className="bg-secondary/50 border-secondary resize-none" />
+        <Label htmlFor="meta-credits">Credits <span className="text-muted-foreground text-xs">(optional, shared across all tracks)</span></Label>
+        <Textarea id="meta-credits" placeholder="e.g. Written by Jane Doe · Produced by John Smith · Mastered at Studio A" rows={2} value={meta.credits} onChange={e => set({ credits: e.target.value })} className="bg-secondary/50 border-secondary resize-none" />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label className="flex items-center gap-2"><Calendar className="w-3.5 h-3.5" />Release Date <span className="text-muted-foreground text-xs">(optional)</span></Label>
-          <Input type="date" value={meta.releaseDate} onChange={e => set({ releaseDate: e.target.value })} className="bg-secondary/50 border-secondary" />
+          <Label htmlFor="meta-release-date" className="flex items-center gap-2"><Calendar className="w-3.5 h-3.5" />Release Date <span className="text-muted-foreground text-xs">(optional)</span></Label>
+          <Input id="meta-release-date" type="date" value={meta.releaseDate} onChange={e => set({ releaseDate: e.target.value })} className="bg-secondary/50 border-secondary" />
           <p className="text-xs text-muted-foreground">
             If set, your content will stay hidden after approval and go live automatically at 12:00 AM Eastern Time (ET) on this date — even if it's already been approved. Leave blank to publish immediately upon approval.
           </p>
@@ -269,7 +270,7 @@ function MetadataSection({ meta, onChange, type }: { meta: SharedMeta; onChange:
               </p>
               <p className="text-xs text-muted-foreground">Mature language or themes</p>
             </div>
-            <Switch checked={meta.isExplicit} onCheckedChange={v => set({ isExplicit: v })} className="ml-auto" />
+            <Switch aria-label="Explicit content" checked={meta.isExplicit} onCheckedChange={v => set({ isExplicit: v })} className="ml-auto" />
           </div>
         </div>
       </div>
@@ -826,7 +827,7 @@ export default function Submit() {
                     <Badge className={`${releaseTypeBadgeClass(effectiveSongType)} text-xs px-2 py-0.5`}>{effectiveSongType}</Badge>
                     <div className="ml-auto flex-shrink-0">
                       <Select value={songReleaseType || effectiveSongType} onValueChange={setSongReleaseType}>
-                        <SelectTrigger className="h-7 text-xs w-36 bg-background/50"><SelectValue /></SelectTrigger>
+                        <SelectTrigger aria-label="Music release type" className="h-7 text-xs w-36 bg-background/50"><SelectValue /></SelectTrigger>
                         <SelectContent>{MUSIC_RELEASE_TYPES.map(t => <SelectItem key={t} value={t} className="text-xs">{t}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
@@ -835,6 +836,7 @@ export default function Submit() {
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-muted-foreground w-24 flex-shrink-0">{effectiveSongType} Title</span>
                       <Input
+                        aria-label="Release name"
                         placeholder={effectiveSongType === "EP" ? `e.g. "Midnight Dreams EP"` : `e.g. "Echoes of Tomorrow"`}
                         value={songReleaseName}
                         onChange={e => setSongReleaseName(e.target.value)}
@@ -876,7 +878,7 @@ export default function Submit() {
                     <Badge className={`${releaseTypeBadgeClass(effectiveVideoType)} text-xs px-2 py-0.5`}>{effectiveVideoType}</Badge>
                     <div className="ml-auto flex-shrink-0">
                       <Select value={videoReleaseType || effectiveVideoType} onValueChange={setVideoReleaseType}>
-                        <SelectTrigger className="h-7 text-xs w-44 bg-background/50"><SelectValue /></SelectTrigger>
+                        <SelectTrigger aria-label="Video release type" className="h-7 text-xs w-44 bg-background/50"><SelectValue /></SelectTrigger>
                         <SelectContent>{VIDEO_RELEASE_TYPES.map(t => <SelectItem key={t} value={t} className="text-xs">{t}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
@@ -885,6 +887,7 @@ export default function Submit() {
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-muted-foreground w-24 flex-shrink-0">Collection Title</span>
                       <Input
+                        aria-label="Collection title"
                         placeholder={`e.g. "Live at The Venue"`}
                         value={videoReleaseName}
                         onChange={e => setVideoReleaseName(e.target.value)}
