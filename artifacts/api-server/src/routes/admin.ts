@@ -1019,7 +1019,7 @@ router.patch("/admin/legal-settings", requireAuth, requireRole("master_admin"), 
 const AI_SETTINGS_FIELDS = [
   "showHumanBadge", "showAiBadge", "showHybridBadge", "showFullyAiBadge",
   "showTitleIcons", "showCoverOverlays", "allowCreatorSelfTagging",
-  "enableAiReview", "autoRejectFullyAi", "allowAdminOverride",
+  "enableAiReview", "autoRejectFullyAi",
   "autoRejectDetectionThreshold", "aiLowThreshold", "aiHighThreshold", "aiCriticalThreshold",
 ] as const;
 

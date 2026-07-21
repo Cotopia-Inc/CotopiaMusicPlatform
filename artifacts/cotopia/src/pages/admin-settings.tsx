@@ -19,7 +19,6 @@ const DEFAULT_AI = {
   allowCreatorSelfTagging: true,
   enableAiReview: false,
   autoRejectFullyAi: false,
-  allowAdminOverride: true,
   autoRejectDetectionThreshold: 95,
   aiLowThreshold: 30,
   aiHighThreshold: 70,
@@ -496,7 +495,6 @@ export default function AdminSettings() {
             { key: "allowCreatorSelfTagging", label: "Allow creator self-tagging", desc: "Creators can declare their content's AI origin at submission time." },
             { key: "enableAiReview", label: "Enable AI detection scans", desc: "Trigger Hive Moderation scans on submitted content for automated AI likelihood scoring." },
             { key: "autoRejectFullyAi", label: "Auto-reject fully AI submissions", desc: "Automatically reject submissions where the creator declares fully AI-generated content." },
-            { key: "allowAdminOverride", label: "Allow admin tag override", desc: "Admins and editors can override or lock the effective display tag." },
           ] as { key: keyof AiSettings; label: string; desc: string }[]).map(({ key, label, desc }) => (
             <div key={key} className="flex items-center justify-between p-4 bg-secondary/30 rounded-lg border border-border">
               <div className="space-y-1">

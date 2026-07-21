@@ -32,6 +32,7 @@ import { SupportButton } from "@/components/support-modal";
 import { VerifyEmailBanner } from "@/components/verify-email-banner";
 import { CommentSection } from "@/components/comment-section";
 import { AiOriginBadge, type CreationMethod } from "@/components/ai-origin-badge";
+import { AiReviewCard } from "@/components/ai-review-card";
 
 function formatTime(iso: string) {
   const d = new Date(iso);
@@ -620,6 +621,60 @@ export default function SongDetail() {
             </div>
           );
         })()}
+
+        {/* AI Authorship Review — staff only */}
+        {user && ["admin", "master_admin", "editor", "moderator"].includes(user.role) && (
+          <AiReviewCard
+            contentType="song"
+            contentId={song.id}
+            data={{
+              creationMethod: ((song as any).creationMethod ?? "unclassified") as CreationMethod,
+              creatorSelectedTag: (song as any).creatorSelectedTag ?? null,
+              platformAssignedTag: (song as any).platformAssignedTag ?? null,
+              effectiveDisplayTag: (song as any).effectiveDisplayTag ?? null,
+              tagSource: (song as any).tagSource ?? null,
+              tagLocked: (song as any).tagLocked ?? false,
+              aiEstimatePercent: (song as any).aiEstimatePercent ?? null,
+              aiConfidenceLevel: (song as any).aiConfidenceLevel ?? null,
+              aiRiskLevel: (song as any).aiRiskLevel ?? null,
+              aiDetectionReasons: (song as any).aiDetectionReasons ?? null,
+              aiReviewStatus: (song as any).aiReviewStatus ?? "not_scanned",
+              aiReviewedAt: (song as any).aiReviewedAt ?? null,
+              aiOverrideReason: (song as any).aiOverrideReason ?? null,
+            }}
+            isAdmin={["admin", "master_admin"].includes(user.role)}
+            isModerator={user.role === "moderator"}
+            onAction={async (action, params) => {
+              const token = localStorage.getItem("cotopia_token");
+              const res = await fetch(`/api/admin/ai-review/song/${song.id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ action, ...params }),
+              });
+              if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                toast({ variant: "destructive", title: "Action failed", description: (err as any).error ?? "Could not apply action" });
+                return;
+              }
+              toast({ title: "Classification updated" });
+              queryClient.invalidateQueries({ queryKey: getGetSongQueryKey(songId) });
+            }}
+            onScanRequest={async () => {
+              const token = localStorage.getItem("cotopia_token");
+              const res = await fetch(`/api/admin/ai-review/scan`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ contentType: "song", contentId: song.id }),
+              });
+              if (!res.ok) {
+                toast({ variant: "destructive", title: "Scan request failed" });
+                return;
+              }
+              toast({ title: "Scan queued", description: "Results will appear once the scan completes." });
+              setTimeout(() => queryClient.invalidateQueries({ queryKey: getGetSongQueryKey(songId) }), 3000);
+            }}
+          />
+        )}
 
         {/* Comments */}
         <div className="bg-card border border-border rounded-xl p-5">
