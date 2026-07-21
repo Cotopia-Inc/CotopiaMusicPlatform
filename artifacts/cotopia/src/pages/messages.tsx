@@ -322,7 +322,7 @@ export default function MessagesPage() {
             <div className="p-4">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input autoFocus placeholder="Search by name or username..." className="pl-10" value={userSearch} onChange={e => setUserSearch(e.target.value)} />
+                <Input autoFocus aria-label="Search by name or username" placeholder="Search by name or username..." className="pl-10" value={userSearch} onChange={e => setUserSearch(e.target.value)} />
               </div>
               <div className="mt-3 max-h-72 overflow-y-auto space-y-1">
                 {searchLoading ? (
@@ -371,7 +371,7 @@ export default function MessagesPage() {
           </div>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-            <Input placeholder="Search conversations..." className="pl-8 h-8 text-sm" value={convSearch} onChange={e => setConvSearch(e.target.value)} />
+            <Input aria-label="Search conversations" placeholder="Search conversations..." className="pl-8 h-8 text-sm" value={convSearch} onChange={e => setConvSearch(e.target.value)} />
           </div>
         </div>
 
@@ -616,6 +616,7 @@ export default function MessagesPage() {
             ) : (
               <form onSubmit={handleSend} className="flex items-center gap-2 p-4 border-t border-border flex-shrink-0">
                 <Input
+                  aria-label="Message"
                   placeholder={newConvUser ? `Message ${newConvUser.displayName ?? newConvUser.username}...` : "Type a message..."}
                   value={newMsgBody} onChange={e => setNewMsgBody(e.target.value)} className="flex-1"
                   onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(e as any); } }}

@@ -169,6 +169,7 @@ export default function EditorPicksPage() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
+              aria-label={`Search ${selectedType}s`}
               placeholder={`Search ${selectedType}s…`}
               value={search}
               onChange={e => setSearch(e.target.value)}
@@ -366,6 +367,7 @@ export default function EditorPicksPage() {
                 {editingNoteId === pick.id && (
                   <div className="px-4 pb-3 pt-0 flex gap-2 border-t border-border/40">
                     <Textarea
+                      aria-label="Editorial note"
                       value={noteText}
                       onChange={e => setNoteText(e.target.value)}
                       placeholder="Add an editorial note (shown on Home page)…"

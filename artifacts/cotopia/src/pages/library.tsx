@@ -85,6 +85,7 @@ export default function Library() {
               </button>
             </div>
             <Input
+              aria-label="New playlist name"
               placeholder="Playlist name"
               value={newPlaylistName}
               onChange={(e) => setNewPlaylistName(e.target.value)}

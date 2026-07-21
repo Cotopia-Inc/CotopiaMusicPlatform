@@ -380,10 +380,11 @@ function SubmissionCard({
           {hasActions && (
             <div className="space-y-3">
               <div>
-                <label className="text-[10px] uppercase tracking-widest text-muted-foreground block mb-1.5">
+                <label htmlFor="submission-note" className="text-[10px] uppercase tracking-widest text-muted-foreground block mb-1.5">
                   {mode === "moderator" ? "Moderator note" : mode === "editor" ? "Editorial note" : "Admin note"} (optional)
                 </label>
                 <Input
+                  id="submission-note"
                   placeholder="Add a note for this submission..."
                   className="bg-secondary/50 border-secondary text-sm"
                   value={notes}

@@ -376,6 +376,7 @@ export function AiReviewCard({
 
                   {["assign_tag", "lock", "reject"].includes(selectedAction) && (
                     <Textarea
+                      aria-label="Reason for action"
                       placeholder="Required: written reason for this action…"
                       className="text-xs min-h-[70px]"
                       value={reason}

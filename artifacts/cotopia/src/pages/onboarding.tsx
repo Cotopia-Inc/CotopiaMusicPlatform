@@ -123,20 +123,20 @@ export default function Onboarding() {
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Personal Information</h2>
 
           <div className="space-y-2">
-            <Label>Full Legal Name <span className="text-destructive">*</span></Label>
-            <Input placeholder="Jane Smith" value={form.realName} onChange={e => set("realName", e.target.value)} className={fieldClass("realName")} />
+            <Label htmlFor="onboarding-real-name">Full Legal Name <span className="text-destructive">*</span></Label>
+            <Input id="onboarding-real-name" placeholder="Jane Smith" value={form.realName} onChange={e => set("realName", e.target.value)} className={fieldClass("realName")} />
             {errors.realName && <p className="text-xs text-destructive">{errors.realName}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Date of Birth <span className="text-destructive">*</span></Label>
-              <Input type="date" value={form.dateOfBirth} onChange={e => set("dateOfBirth", e.target.value)} className={fieldClass("dateOfBirth")} />
+              <Label htmlFor="onboarding-dob">Date of Birth <span className="text-destructive">*</span></Label>
+              <Input id="onboarding-dob" type="date" value={form.dateOfBirth} onChange={e => set("dateOfBirth", e.target.value)} className={fieldClass("dateOfBirth")} />
               {errors.dateOfBirth && <p className="text-xs text-destructive">{errors.dateOfBirth}</p>}
             </div>
             <div className="space-y-2">
-              <Label>Phone <span className="text-destructive">*</span></Label>
-              <Input placeholder="+1 (555) 000-0000" value={form.phone} onChange={e => set("phone", e.target.value)} className={fieldClass("phone")} />
+              <Label htmlFor="onboarding-phone">Phone <span className="text-destructive">*</span></Label>
+              <Input id="onboarding-phone" placeholder="+1 (555) 000-0000" value={form.phone} onChange={e => set("phone", e.target.value)} className={fieldClass("phone")} />
               {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
             </div>
           </div>
@@ -165,15 +165,15 @@ export default function Onboarding() {
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Address</h2>
 
           <div className="space-y-2">
-            <Label>Street Address <span className="text-destructive">*</span></Label>
-            <Input placeholder="123 Main St, Apt 4B" value={form.address} onChange={e => set("address", e.target.value)} className={fieldClass("address")} />
+            <Label htmlFor="onboarding-address">Street Address <span className="text-destructive">*</span></Label>
+            <Input id="onboarding-address" placeholder="123 Main St, Apt 4B" value={form.address} onChange={e => set("address", e.target.value)} className={fieldClass("address")} />
             {errors.address && <p className="text-xs text-destructive">{errors.address}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>City <span className="text-destructive">*</span></Label>
-              <Input placeholder="New York" value={form.city} onChange={e => set("city", e.target.value)} className={fieldClass("city")} />
+              <Label htmlFor="onboarding-city">City <span className="text-destructive">*</span></Label>
+              <Input id="onboarding-city" placeholder="New York" value={form.city} onChange={e => set("city", e.target.value)} className={fieldClass("city")} />
               {errors.city && <p className="text-xs text-destructive">{errors.city}</p>}
             </div>
             <div className="space-y-2">
@@ -188,13 +188,13 @@ export default function Onboarding() {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>ZIP / Postal Code <span className="text-destructive">*</span></Label>
-              <Input placeholder="10001" value={form.postalCode} onChange={e => set("postalCode", e.target.value)} className={fieldClass("postalCode")} />
+              <Label htmlFor="onboarding-postal">ZIP / Postal Code <span className="text-destructive">*</span></Label>
+              <Input id="onboarding-postal" placeholder="10001" value={form.postalCode} onChange={e => set("postalCode", e.target.value)} className={fieldClass("postalCode")} />
               {errors.postalCode && <p className="text-xs text-destructive">{errors.postalCode}</p>}
             </div>
             <div className="space-y-2">
-              <Label>Country <span className="text-destructive">*</span></Label>
-              <Input placeholder="United States" value={form.country} onChange={e => set("country", e.target.value)} className={fieldClass("country")} />
+              <Label htmlFor="onboarding-country">Country <span className="text-destructive">*</span></Label>
+              <Input id="onboarding-country" placeholder="United States" value={form.country} onChange={e => set("country", e.target.value)} className={fieldClass("country")} />
               {errors.country && <p className="text-xs text-destructive">{errors.country}</p>}
             </div>
           </div>

@@ -234,6 +234,7 @@ export function SupportModal({ open, onOpenChange, creatorUserId, creatorName, c
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-muted-foreground">Custom:</span>
                   <Input
+                    aria-label="Custom tip amount"
                     type="number"
                     min="0.01"
                     step="0.01"
@@ -246,8 +247,9 @@ export function SupportModal({ open, onOpenChange, creatorUserId, creatorName, c
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Message <span className="text-muted-foreground font-normal">(optional)</span></label>
+                <label htmlFor="support-message" className="text-sm font-medium">Message <span className="text-muted-foreground font-normal">(optional)</span></label>
                 <Textarea
+                  id="support-message"
                   value={message}
                   onChange={(e) => setMessage(e.target.value.slice(0, MESSAGE_MAX))}
                   placeholder={`Say something nice to ${creatorName}...`}

@@ -215,6 +215,7 @@ export function CommentSection({ contentType, contentId }: CommentSectionProps) 
                   </div>}
             </div>
             <Textarea
+              aria-label="Add a comment"
               value={text}
               onChange={e => setText(e.target.value)}
               placeholder="Add a comment…"

@@ -154,13 +154,14 @@ function PostFormDialog({
 
         <div className="space-y-4 py-2">
           <div className="space-y-2">
-            <Label>Title *</Label>
-            <Input placeholder="Article title" value={form.title} onChange={e => set({ title: e.target.value })} />
+            <Label htmlFor="article-title">Title *</Label>
+            <Input id="article-title" placeholder="Article title" value={form.title} onChange={e => set({ title: e.target.value })} />
           </div>
 
           <div className="space-y-2">
-            <Label>Type</Label>
+            <Label htmlFor="company-post-type">Type</Label>
             <select
+              id="company-post-type"
               className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
               value={form.type}
               onChange={e => set({ type: e.target.value })}
@@ -175,8 +176,9 @@ function PostFormDialog({
           </div>
 
           <div className="space-y-2">
-            <Label>Content * <span className="text-muted-foreground text-xs">(HTML supported)</span></Label>
+            <Label htmlFor="article-content">Content * <span className="text-muted-foreground text-xs">(HTML supported)</span></Label>
             <Textarea
+              id="article-content"
               placeholder="Write your article content here. Basic HTML tags like <b>, <i>, <p>, <ul>, <li>, <a> are supported."
               rows={10}
               value={form.content}

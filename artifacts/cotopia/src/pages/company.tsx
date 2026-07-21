@@ -101,17 +101,18 @@ export default function CompanyHub() {
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">Author name</label>
-                  <Input value={form.authorName} onChange={e => setForm(f => ({ ...f, authorName: e.target.value }))} className="h-8 text-sm" />
+                  <label htmlFor="ceo-author-name" className="text-xs text-muted-foreground mb-1 block">Author name</label>
+                  <Input id="ceo-author-name" value={form.authorName} onChange={e => setForm(f => ({ ...f, authorName: e.target.value }))} className="h-8 text-sm" />
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">Title</label>
-                  <Input value={form.authorTitle} onChange={e => setForm(f => ({ ...f, authorTitle: e.target.value }))} className="h-8 text-sm" />
+                  <label htmlFor="ceo-author-title" className="text-xs text-muted-foreground mb-1 block">Title</label>
+                  <Input id="ceo-author-title" value={form.authorTitle} onChange={e => setForm(f => ({ ...f, authorTitle: e.target.value }))} className="h-8 text-sm" />
                 </div>
               </div>
               <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Message</label>
+                <label htmlFor="ceo-message" className="text-xs text-muted-foreground mb-1 block">Message</label>
                 <Textarea
+                  id="ceo-message"
                   value={form.content}
                   onChange={e => setForm(f => ({ ...f, content: e.target.value }))}
                   placeholder="Write your message to the community…"

@@ -234,8 +234,9 @@ export default function LabelDashboard() {
             <h2 className="text-base font-semibold">Label Profile</h2>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Label Name</label>
+              <label htmlFor="label-name" className="text-sm font-medium">Label Name</label>
               <Input
+                id="label-name"
                 value={name}
                 onChange={e => setName(e.target.value)}
                 placeholder="Your label name"
@@ -244,8 +245,9 @@ export default function LabelDashboard() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Bio <span className="text-muted-foreground text-xs">(optional)</span></label>
+              <label htmlFor="label-bio" className="text-sm font-medium">Bio <span className="text-muted-foreground text-xs">(optional)</span></label>
               <Textarea
+                id="label-bio"
                 value={bio}
                 onChange={e => setBio(e.target.value)}
                 placeholder="Tell artists and creators about your label…"
@@ -356,6 +358,7 @@ export default function LabelDashboard() {
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
+                    aria-label="Search by artist name"
                     value={searchQuery}
                     onChange={e => { setSearchQuery(e.target.value); searchArtists(e.target.value); }}
                     placeholder="Search by artist name…"

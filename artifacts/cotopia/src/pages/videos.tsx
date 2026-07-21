@@ -125,6 +125,7 @@ export default function Videos() {
         <div className="relative w-full sm:w-64">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
+            aria-label="Search videos"
             placeholder="Search videos..."
             className="pl-9 bg-secondary/50 border-secondary"
             value={search}

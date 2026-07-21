@@ -103,8 +103,9 @@ export default function Feedback() {
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Title</label>
+          <label htmlFor="feedback-title" className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Title</label>
           <Input
+            id="feedback-title"
             placeholder="A short summary…"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -113,8 +114,9 @@ export default function Feedback() {
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Description</label>
+          <label htmlFor="feedback-description" className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Description</label>
           <Textarea
+            id="feedback-description"
             placeholder="Tell us what happened or what you'd like to see. Include steps to reproduce if it's a bug."
             value={description}
             onChange={(e) => setDescription(e.target.value)}

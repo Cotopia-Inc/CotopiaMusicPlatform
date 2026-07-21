@@ -136,7 +136,7 @@ export default function AdminDiscover() {
         <div className="space-y-4">
           <div className="relative max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input placeholder="Search songs..." value={songSearch} onChange={e => setSongSearch(e.target.value)} className="pl-9 bg-secondary/50 border-secondary" />
+            <Input aria-label="Search songs" placeholder="Search songs..." value={songSearch} onChange={e => setSongSearch(e.target.value)} className="pl-9 bg-secondary/50 border-secondary" />
           </div>
           <div className="rounded-xl border border-border overflow-hidden">
             <Table>
@@ -202,7 +202,7 @@ export default function AdminDiscover() {
         <div className="space-y-4">
           <div className="relative max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input placeholder="Search videos..." value={videoSearch} onChange={e => setVideoSearch(e.target.value)} className="pl-9 bg-secondary/50 border-secondary" />
+            <Input aria-label="Search videos" placeholder="Search videos..." value={videoSearch} onChange={e => setVideoSearch(e.target.value)} className="pl-9 bg-secondary/50 border-secondary" />
           </div>
           <div className="rounded-xl border border-border overflow-hidden">
             <Table>

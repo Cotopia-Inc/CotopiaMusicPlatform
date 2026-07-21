@@ -148,6 +148,7 @@ export default function AdminStrikes() {
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
+          aria-label="Filter strikes"
           placeholder="Filter by user, content, or reason…"
           value={search}
           onChange={e => setSearch(e.target.value)}
@@ -296,6 +297,7 @@ export default function AdminStrikes() {
           </DialogHeader>
           <div className="space-y-3">
             <Input
+              aria-label="Reason for revoking"
               placeholder="Reason for revoking (optional)"
               value={resolveReason}
               onChange={e => setResolveReason(e.target.value)}
@@ -372,30 +374,30 @@ function ManualStrikeForm({ onClose, onSuccess }: { onClose: () => void; onSucce
         </DialogHeader>
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <label className="text-xs text-muted-foreground">User ID, username, or email <span className="text-red-400">*</span></label>
-            <Input placeholder="e.g. nova@example.com or nova_sounds" value={userId} onChange={e => setUserId(e.target.value)} className="bg-secondary/50 border-secondary text-sm" />
+            <label htmlFor="strike-user-id" className="text-xs text-muted-foreground">User ID, username, or email <span className="text-red-400">*</span></label>
+            <Input id="strike-user-id" placeholder="e.g. nova@example.com or nova_sounds" value={userId} onChange={e => setUserId(e.target.value)} className="bg-secondary/50 border-secondary text-sm" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="text-xs text-muted-foreground">Content Type</label>
-              <select value={contentType} onChange={e => setContentType(e.target.value)} className="w-full h-9 rounded-md border border-secondary bg-secondary/50 px-2 text-sm text-foreground">
+              <label htmlFor="strike-content-type" className="text-xs text-muted-foreground">Content Type</label>
+              <select id="strike-content-type" value={contentType} onChange={e => setContentType(e.target.value)} className="w-full h-9 rounded-md border border-secondary bg-secondary/50 px-2 text-sm text-foreground">
                 {["song","video","submission","comment","chat_message","company_post"].map(t => (
                   <option key={t} value={t}>{t.replace(/_/g," ")}</option>
                 ))}
               </select>
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs text-muted-foreground">Content Title</label>
-              <Input placeholder="Optional" value={contentTitle} onChange={e => setContentTitle(e.target.value)} className="bg-secondary/50 border-secondary text-sm" />
+              <label htmlFor="strike-content-title" className="text-xs text-muted-foreground">Content Title</label>
+              <Input id="strike-content-title" placeholder="Optional" value={contentTitle} onChange={e => setContentTitle(e.target.value)} className="bg-secondary/50 border-secondary text-sm" />
             </div>
           </div>
           <div className="space-y-1.5">
-            <label className="text-xs text-muted-foreground">Reason <span className="text-red-400">*</span></label>
-            <Input placeholder="Strike reason" value={reason} onChange={e => setReason(e.target.value)} className="bg-secondary/50 border-secondary text-sm" />
+            <label htmlFor="strike-reason" className="text-xs text-muted-foreground">Reason <span className="text-red-400">*</span></label>
+            <Input id="strike-reason" placeholder="Strike reason" value={reason} onChange={e => setReason(e.target.value)} className="bg-secondary/50 border-secondary text-sm" />
           </div>
           <div className="space-y-1.5">
-            <label className="text-xs text-muted-foreground">Internal notes</label>
-            <Input placeholder="Optional" value={notes} onChange={e => setNotes(e.target.value)} className="bg-secondary/50 border-secondary text-sm" />
+            <label htmlFor="strike-notes" className="text-xs text-muted-foreground">Internal notes</label>
+            <Input id="strike-notes" placeholder="Optional" value={notes} onChange={e => setNotes(e.target.value)} className="bg-secondary/50 border-secondary text-sm" />
           </div>
           <div className="flex gap-2 justify-end">
             <Button variant="outline" size="sm" onClick={onClose}>Cancel</Button>

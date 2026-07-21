@@ -440,16 +440,16 @@ export default function ArtistDetail() {
             <button onClick={() => setEditProfileOpen(false)}><X className="w-3.5 h-3.5 text-muted-foreground" /></button>
           </div>
           <div>
-            <label className="text-xs text-muted-foreground mb-1 block">Stage Name</label>
-            <Input value={editStageName} onChange={e => setEditStageName(e.target.value)} placeholder="Your artist name…" className="h-8 text-sm bg-secondary/50" />
+            <label htmlFor="artist-stage-name" className="text-xs text-muted-foreground mb-1 block">Stage Name</label>
+            <Input id="artist-stage-name" value={editStageName} onChange={e => setEditStageName(e.target.value)} placeholder="Your artist name…" className="h-8 text-sm bg-secondary/50" />
           </div>
           <div>
-            <label className="text-xs text-muted-foreground mb-1 block">Genre</label>
-            <Input value={editGenre} onChange={e => setEditGenre(e.target.value)} placeholder="e.g. Hip-Hop, Electronic…" className="h-8 text-sm bg-secondary/50" />
+            <label htmlFor="artist-genre" className="text-xs text-muted-foreground mb-1 block">Genre</label>
+            <Input id="artist-genre" value={editGenre} onChange={e => setEditGenre(e.target.value)} placeholder="e.g. Hip-Hop, Electronic…" className="h-8 text-sm bg-secondary/50" />
           </div>
           <div>
-            <label className="text-xs text-muted-foreground mb-1 block">Bio</label>
-            <Textarea value={editBio} onChange={e => setEditBio(e.target.value)} placeholder="Tell your fans about yourself…" className="text-sm bg-secondary/50 min-h-[80px] resize-y" />
+            <label htmlFor="artist-bio" className="text-xs text-muted-foreground mb-1 block">Bio</label>
+            <Textarea id="artist-bio" value={editBio} onChange={e => setEditBio(e.target.value)} placeholder="Tell your fans about yourself…" className="text-sm bg-secondary/50 min-h-[80px] resize-y" />
           </div>
           <div className="flex justify-end gap-2">
             <Button variant="ghost" size="sm" onClick={() => setEditProfileOpen(false)} className="h-7 text-xs">Cancel</Button>
@@ -632,6 +632,7 @@ export default function ArtistDetail() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
+              aria-label="Search by username"
               className="pl-9"
               placeholder="Search by username…"
               value={assignSearch}

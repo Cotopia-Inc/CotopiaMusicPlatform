@@ -145,8 +145,9 @@ export default function ModeratorCopyrightConcerns() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Content Title <span className="text-muted-foreground">(optional)</span></Label>
+              <Label htmlFor="concern-content-title">Content Title <span className="text-muted-foreground">(optional)</span></Label>
               <Input
+                id="concern-content-title"
                 placeholder="e.g. Song or artist name"
                 value={form.contentTitle}
                 onChange={(e) => setForm(f => ({ ...f, contentTitle: e.target.value }))}
@@ -154,8 +155,9 @@ export default function ModeratorCopyrightConcerns() {
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label>Concern Description <span className="text-red-400">*</span></Label>
+            <Label htmlFor="concern-description">Concern Description <span className="text-red-400">*</span></Label>
             <Textarea
+              id="concern-description"
               placeholder="Describe the copyright concern in detail — include what content appears infringing, why you believe it's a violation, and any supporting context…"
               className="min-h-[120px]"
               value={form.concern}

@@ -125,8 +125,9 @@ export function ReportModal({ targetType, targetId, trigger, variant = "icon", c
             </Select>
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium">Details <span className="text-muted-foreground font-normal">(optional)</span></label>
+            <label htmlFor="report-details" className="text-sm font-medium">Details <span className="text-muted-foreground font-normal">(optional)</span></label>
             <Textarea
+              id="report-details"
               value={details}
               onChange={(e) => setDetails(e.target.value)}
               placeholder="Add any context that will help us review this report."

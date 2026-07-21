@@ -55,6 +55,7 @@ function VideoUploadRow({
     <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border/50">
       <span className="text-xs text-muted-foreground w-5 text-center font-bold flex-shrink-0">{index + 1}</span>
       <Input
+        aria-label={`Video ${index + 1} title`}
         value={title}
         onChange={e => onTitleChange(index, e.target.value)}
         className="flex-1 h-8 text-sm"
@@ -288,8 +289,8 @@ export default function AdminUploadVideo() {
             </div>
 
             <div className="space-y-2">
-              <Label>Account *</Label>
-              <select className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.userId} onChange={e => setForm(f => ({ ...f, userId: parseInt(e.target.value) }))} required>
+              <Label htmlFor="video-account">Account *</Label>
+              <select id="video-account" className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.userId} onChange={e => setForm(f => ({ ...f, userId: parseInt(e.target.value) }))} required>
                 <option value={0}>Select account...</option>
                 {accounts.map((a) => <option key={a.userId} value={a.userId}>{a.artistStageName ?? a.displayName ?? a.username} ({a.role})</option>)}
               </select>
@@ -297,15 +298,15 @@ export default function AdminUploadVideo() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Genre</Label>
-                <select className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.genre} onChange={e => setForm(f => ({ ...f, genre: e.target.value }))}>
+                <Label htmlFor="video-genre">Genre</Label>
+                <select id="video-genre" className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.genre} onChange={e => setForm(f => ({ ...f, genre: e.target.value }))}>
                   <option value="">Select genre...</option>
                   {GENRES.map(g => <option key={g} value={g}>{g}</option>)}
                 </select>
               </div>
               <div className="space-y-2">
-                <Label>Mood</Label>
-                <select className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.mood} onChange={e => setForm(f => ({ ...f, mood: e.target.value }))}>
+                <Label htmlFor="video-mood">Mood</Label>
+                <select id="video-mood" className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.mood} onChange={e => setForm(f => ({ ...f, mood: e.target.value }))}>
                   <option value="">Select mood...</option>
                   {MOODS.map(m => <option key={m} value={m}>{m}</option>)}
                 </select>
@@ -403,8 +404,8 @@ export default function AdminUploadVideo() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Artist *</Label>
-                  <select className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" value={bulkShared.userId} onChange={e => setBulkShared(f => ({ ...f, userId: parseInt(e.target.value) }))} required>
+                  <Label htmlFor="bulk-video-account">Artist *</Label>
+                  <select id="bulk-video-account" className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" value={bulkShared.userId} onChange={e => setBulkShared(f => ({ ...f, userId: parseInt(e.target.value) }))} required>
                     <option value={0}>Select account...</option>
                     {accounts.map((a) => <option key={a.userId} value={a.userId}>{a.artistStageName ?? a.displayName ?? a.username} ({a.role})</option>)}
                   </select>
@@ -412,15 +413,15 @@ export default function AdminUploadVideo() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Genre</Label>
-                    <select className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" value={bulkShared.genre} onChange={e => setBulkShared(f => ({ ...f, genre: e.target.value }))}>
+                    <Label htmlFor="bulk-video-genre">Genre</Label>
+                    <select id="bulk-video-genre" className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" value={bulkShared.genre} onChange={e => setBulkShared(f => ({ ...f, genre: e.target.value }))}>
                       <option value="">Select genre...</option>
                       {GENRES.map(g => <option key={g} value={g}>{g}</option>)}
                     </select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Mood</Label>
-                    <select className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" value={bulkShared.mood} onChange={e => setBulkShared(f => ({ ...f, mood: e.target.value }))}>
+                    <Label htmlFor="bulk-video-mood">Mood</Label>
+                    <select id="bulk-video-mood" className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm" value={bulkShared.mood} onChange={e => setBulkShared(f => ({ ...f, mood: e.target.value }))}>
                       <option value="">Select mood...</option>
                       {MOODS.map(m => <option key={m} value={m}>{m}</option>)}
                     </select>
@@ -434,8 +435,8 @@ export default function AdminUploadVideo() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Release Date</Label>
-                    <Input type="date" value={bulkShared.releaseDate} onChange={e => setBulkShared(f => ({ ...f, releaseDate: e.target.value }))} />
+                    <Label htmlFor="bulk-video-release-date">Release Date</Label>
+                    <Input id="bulk-video-release-date" type="date" value={bulkShared.releaseDate} onChange={e => setBulkShared(f => ({ ...f, releaseDate: e.target.value }))} />
                     <p className="text-xs text-muted-foreground">Goes live at 12:00 AM Eastern Time (ET) on this date.</p>
                   </div>
                   <div className="space-y-1 pt-6">

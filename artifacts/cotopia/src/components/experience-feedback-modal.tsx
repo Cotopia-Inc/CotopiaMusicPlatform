@@ -126,8 +126,9 @@ export function ExperienceFeedbackModal({ open, onClose, trigger = "general" }: 
             </DialogHeader>
             <div className="py-2 space-y-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">What worked well?</label>
+                <label htmlFor="feedback-worked-well" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">What worked well?</label>
                 <Textarea
+                  id="feedback-worked-well"
                   placeholder="What did you enjoy or find easy?"
                   value={form.whatWorkedWell}
                   onChange={(e) => setForm(f => ({ ...f, whatWorkedWell: e.target.value }))}
@@ -137,8 +138,9 @@ export function ExperienceFeedbackModal({ open, onClose, trigger = "general" }: 
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">What was confusing?</label>
+                <label htmlFor="feedback-confusing" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">What was confusing?</label>
                 <Textarea
+                  id="feedback-confusing"
                   placeholder="Anything that felt unclear or hard to find?"
                   value={form.whatWasConfusing}
                   onChange={(e) => setForm(f => ({ ...f, whatWasConfusing: e.target.value }))}
@@ -148,8 +150,9 @@ export function ExperienceFeedbackModal({ open, onClose, trigger = "general" }: 
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Did anything break?</label>
+                <label htmlFor="feedback-broke" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Did anything break?</label>
                 <Textarea
+                  id="feedback-broke"
                   placeholder="Any errors or things that didn't work as expected?"
                   value={form.didAnythingBreak}
                   onChange={(e) => setForm(f => ({ ...f, didAnythingBreak: e.target.value }))}

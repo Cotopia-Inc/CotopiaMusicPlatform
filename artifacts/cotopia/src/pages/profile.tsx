@@ -744,8 +744,8 @@ export default function Profile() {
         <h2 className="text-xl font-bold">Profile Settings</h2>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium">Display Name</label>
-          <Input value={displayName} onChange={e => setDisplayName(e.target.value)} className="bg-secondary/50 border-secondary" />
+          <label htmlFor="profile-display-name" className="text-sm font-medium">Display Name</label>
+          <Input id="profile-display-name" value={displayName} onChange={e => setDisplayName(e.target.value)} className="bg-secondary/50 border-secondary" />
         </div>
 
         {/* Avatar upload */}
@@ -778,8 +778,8 @@ export default function Profile() {
 
         {/* Bio */}
         <div className="space-y-2">
-          <label className="text-sm font-medium">Bio <span className="text-muted-foreground text-xs">(optional)</span></label>
-          <Textarea value={bio} onChange={e => setBio(e.target.value)} placeholder="Tell creators about yourself…" rows={4} className="bg-secondary/50 border-secondary resize-none" />
+          <label htmlFor="profile-bio" className="text-sm font-medium">Bio <span className="text-muted-foreground text-xs">(optional)</span></label>
+          <Textarea id="profile-bio" value={bio} onChange={e => setBio(e.target.value)} placeholder="Tell creators about yourself…" rows={4} className="bg-secondary/50 border-secondary resize-none" />
         </div>
 
         {/* Social Links */}
@@ -791,35 +791,35 @@ export default function Profile() {
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <Instagram className="w-4 h-4 text-pink-400 flex-shrink-0" />
-              <Input value={instagramUrl} onChange={e => setInstagramUrl(e.target.value)} placeholder="https://instagram.com/yourhandle" className="bg-secondary/50 border-secondary text-sm h-9" />
+              <Input aria-label="Instagram URL" value={instagramUrl} onChange={e => setInstagramUrl(e.target.value)} placeholder="https://instagram.com/yourhandle" className="bg-secondary/50 border-secondary text-sm h-9" />
             </div>
             <div className="flex items-center gap-2">
               <Twitter className="w-4 h-4 text-sky-400 flex-shrink-0" />
-              <Input value={xUrl} onChange={e => setXUrl(e.target.value)} placeholder="https://x.com/yourhandle" className="bg-secondary/50 border-secondary text-sm h-9" />
+              <Input aria-label="X (Twitter) URL" value={xUrl} onChange={e => setXUrl(e.target.value)} placeholder="https://x.com/yourhandle" className="bg-secondary/50 border-secondary text-sm h-9" />
             </div>
             <div className="flex items-center gap-2">
               <span className="w-4 h-4 flex-shrink-0 flex items-center justify-center text-[10px] font-black text-foreground/70">TT</span>
-              <Input value={tiktokUrl} onChange={e => setTiktokUrl(e.target.value)} placeholder="https://tiktok.com/@yourhandle" className="bg-secondary/50 border-secondary text-sm h-9" />
+              <Input aria-label="TikTok URL" value={tiktokUrl} onChange={e => setTiktokUrl(e.target.value)} placeholder="https://tiktok.com/@yourhandle" className="bg-secondary/50 border-secondary text-sm h-9" />
             </div>
             <div className="flex items-center gap-2">
               <Linkedin className="w-4 h-4 text-blue-400 flex-shrink-0" />
-              <Input value={linkedinUrl} onChange={e => setLinkedinUrl(e.target.value)} placeholder="https://linkedin.com/in/yourprofile" className="bg-secondary/50 border-secondary text-sm h-9" />
+              <Input aria-label="LinkedIn URL" value={linkedinUrl} onChange={e => setLinkedinUrl(e.target.value)} placeholder="https://linkedin.com/in/yourprofile" className="bg-secondary/50 border-secondary text-sm h-9" />
             </div>
             <div className="flex items-center gap-2">
               <span className="w-4 h-4 flex-shrink-0 flex items-center justify-center text-[10px] font-black text-red-400">P</span>
-              <Input value={pinterestUrl} onChange={e => setPinterestUrl(e.target.value)} placeholder="https://pinterest.com/yourprofile" className="bg-secondary/50 border-secondary text-sm h-9" />
+              <Input aria-label="Pinterest URL" value={pinterestUrl} onChange={e => setPinterestUrl(e.target.value)} placeholder="https://pinterest.com/yourprofile" className="bg-secondary/50 border-secondary text-sm h-9" />
             </div>
             <div className="flex items-center gap-2">
               <ExternalLink className="w-4 h-4 text-primary flex-shrink-0" />
-              <Input value={websiteUrl1} onChange={e => setWebsiteUrl1(e.target.value)} placeholder="https://yourwebsite.com (Website 1)" className="bg-secondary/50 border-secondary text-sm h-9" />
+              <Input aria-label="Website 1 URL" value={websiteUrl1} onChange={e => setWebsiteUrl1(e.target.value)} placeholder="https://yourwebsite.com (Website 1)" className="bg-secondary/50 border-secondary text-sm h-9" />
             </div>
             <div className="flex items-center gap-2">
               <ExternalLink className="w-4 h-4 text-primary flex-shrink-0" />
-              <Input value={websiteUrl2} onChange={e => setWebsiteUrl2(e.target.value)} placeholder="https://yourwebsite.com (Website 2)" className="bg-secondary/50 border-secondary text-sm h-9" />
+              <Input aria-label="Website 2 URL" value={websiteUrl2} onChange={e => setWebsiteUrl2(e.target.value)} placeholder="https://yourwebsite.com (Website 2)" className="bg-secondary/50 border-secondary text-sm h-9" />
             </div>
             <div className="flex items-center gap-2">
               <ExternalLink className="w-4 h-4 text-primary flex-shrink-0" />
-              <Input value={websiteUrl3} onChange={e => setWebsiteUrl3(e.target.value)} placeholder="https://yourwebsite.com (Website 3)" className="bg-secondary/50 border-secondary text-sm h-9" />
+              <Input aria-label="Website 3 URL" value={websiteUrl3} onChange={e => setWebsiteUrl3(e.target.value)} placeholder="https://yourwebsite.com (Website 3)" className="bg-secondary/50 border-secondary text-sm h-9" />
             </div>
           </div>
         </div>
@@ -893,7 +893,7 @@ export default function Profile() {
           </div>
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground">or paste URL:</span>
-            <Input value={profileVideoUrl} onChange={e => setProfileVideoUrl(e.target.value)} placeholder="https://... (YouTube, Vimeo, or MP4)" className="bg-secondary/50 border-secondary h-8 text-xs flex-1" />
+            <Input aria-label="Profile video URL" value={profileVideoUrl} onChange={e => setProfileVideoUrl(e.target.value)} placeholder="https://... (YouTube, Vimeo, or MP4)" className="bg-secondary/50 border-secondary h-8 text-xs flex-1" />
           </div>
           {/* Video preview */}
           {profileVideoUrl && (
@@ -922,14 +922,14 @@ export default function Profile() {
 
         {/* Email (read-only with verification status) */}
         <div className="space-y-2">
-          <label className="text-sm font-medium flex items-center gap-2">
+          <label htmlFor="profile-email" className="text-sm font-medium flex items-center gap-2">
             Email
             {emailVerified
               ? <Badge className="text-[10px] bg-green-500/20 text-green-400 border-green-500/30"><CheckCircle className="w-2.5 h-2.5 mr-1" />Verified</Badge>
               : <Badge className="text-[10px] bg-amber-500/20 text-amber-400 border-amber-500/30">Unverified</Badge>
             }
           </label>
-          <Input value={profile.email} disabled className="bg-secondary/20 border-secondary text-muted-foreground" />
+          <Input id="profile-email" value={profile.email} disabled className="bg-secondary/20 border-secondary text-muted-foreground" />
         </div>
 
         <Button onClick={handleSave} disabled={updateMutation.isPending} className="w-full">
@@ -987,8 +987,9 @@ export default function Profile() {
         {showUsernameForm && (
           <div className="space-y-3 pt-2 border-t border-border">
             <div className="space-y-2">
-              <label className="text-sm font-medium">New Username</label>
+              <label htmlFor="profile-new-username" className="text-sm font-medium">New Username</label>
               <Input
+                id="profile-new-username"
                 value={newUsername}
                 onChange={e => setNewUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_.-]/g, ""))}
                 placeholder="new_username"
@@ -1023,16 +1024,16 @@ export default function Profile() {
         {showPasswordForm && (
           <div className="space-y-3 pt-2 border-t border-border">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Current Password</label>
-              <Input type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} placeholder="••••••••" className="bg-secondary/50 border-secondary" />
+              <label htmlFor="profile-current-password" className="text-sm font-medium">Current Password</label>
+              <Input id="profile-current-password" type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} placeholder="••••••••" className="bg-secondary/50 border-secondary" />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">New Password</label>
-              <Input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="••••••••" className="bg-secondary/50 border-secondary" />
+              <label htmlFor="profile-new-password" className="text-sm font-medium">New Password</label>
+              <Input id="profile-new-password" type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="••••••••" className="bg-secondary/50 border-secondary" />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Confirm New Password</label>
-              <Input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="••••••••" className="bg-secondary/50 border-secondary" onKeyDown={e => e.key === "Enter" && handleChangePassword()} />
+              <label htmlFor="profile-confirm-password" className="text-sm font-medium">Confirm New Password</label>
+              <Input id="profile-confirm-password" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="••••••••" className="bg-secondary/50 border-secondary" onKeyDown={e => e.key === "Enter" && handleChangePassword()} />
             </div>
             <Button onClick={handleChangePassword} disabled={changePasswordMutation.isPending || !currentPassword || !newPassword} size="sm">
               {changePasswordMutation.isPending ? "Updating…" : "Update Password"}
@@ -1061,8 +1062,9 @@ export default function Profile() {
         {showEmailForm && emailStep === 1 && (
           <div className="space-y-3 pt-2 border-t border-border">
             <div className="space-y-2">
-              <label className="text-sm font-medium">New Email Address</label>
+              <label htmlFor="profile-new-email" className="text-sm font-medium">New Email Address</label>
               <Input
+                id="profile-new-email"
                 type="email"
                 value={newEmail}
                 onChange={e => setNewEmail(e.target.value)}
@@ -1084,8 +1086,9 @@ export default function Profile() {
               Enter the 6-digit code sent to <span className="font-semibold text-foreground">{newEmail}</span>
             </p>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Verification Code</label>
+              <label htmlFor="profile-email-code" className="text-sm font-medium">Verification Code</label>
               <Input
+                id="profile-email-code"
                 value={emailCode}
                 onChange={e => setEmailCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
                 placeholder="123456"

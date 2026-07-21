@@ -314,14 +314,15 @@ function BadgeForm({ initial, onSave, onCancel }: {
       <p className="font-semibold text-sm">{initial ? "Edit Badge" : "New Badge"}</p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Name</label>
-          <Input value={name} onChange={e => setName(e.target.value)} placeholder="Badge name" className="bg-secondary/50 border-secondary" />
+          <label htmlFor="badge-name" className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Name</label>
+          <Input id="badge-name" value={name} onChange={e => setName(e.target.value)} placeholder="Badge name" className="bg-secondary/50 border-secondary" />
         </div>
         <div className="space-y-1.5 md:col-span-2">
-          <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Icon</label>
+          <label htmlFor="badge-icon" className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Icon</label>
           <div className="flex items-center gap-3">
             <span className="text-3xl w-10 h-10 flex items-center justify-center bg-secondary/50 border border-secondary rounded-md flex-shrink-0">{icon || "🏆"}</span>
             <Input
+              id="badge-icon"
               value={icon}
               onChange={e => setIcon(e.target.value)}
               placeholder="🏆"
@@ -344,12 +345,13 @@ function BadgeForm({ initial, onSave, onCancel }: {
           <p className="text-[11px] text-muted-foreground">Click to pick, or type/paste any emoji in the field above.</p>
         </div>
         <div className="space-y-1.5 md:col-span-2">
-          <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Description</label>
-          <Textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="What this badge represents…" rows={2} className="bg-secondary/50 border-secondary resize-none" />
+          <label htmlFor="badge-description" className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Description</label>
+          <Textarea id="badge-description" value={description} onChange={e => setDescription(e.target.value)} placeholder="What this badge represents…" rows={2} className="bg-secondary/50 border-secondary resize-none" />
         </div>
         <div className="space-y-1.5">
-          <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Category</label>
+          <label htmlFor="badge-category" className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Category</label>
           <select
+            id="badge-category"
             value={category}
             onChange={e => setCategory(e.target.value)}
             className="w-full h-9 rounded-md border border-secondary bg-secondary/50 px-3 text-sm text-foreground"
@@ -358,7 +360,7 @@ function BadgeForm({ initial, onSave, onCancel }: {
           </select>
         </div>
         <div className="space-y-1.5">
-          <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Color</label>
+          <label htmlFor="badge-color" className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Color</label>
           <div className="flex items-center gap-2">
             <input
               type="color"
@@ -366,9 +368,11 @@ function BadgeForm({ initial, onSave, onCancel }: {
               onChange={e => setColor(e.target.value)}
               className="w-9 h-9 rounded cursor-pointer border border-secondary bg-transparent flex-shrink-0"
               title="Click to pick a color"
+              aria-label="Color picker"
             />
             <div className="flex-1 space-y-1">
               <Input
+                id="badge-color"
                 value={color}
                 onChange={e => setColor(e.target.value)}
                 placeholder="e.g. gold, #762af8"
@@ -509,6 +513,7 @@ function AssignTab() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
             <Input
+              aria-label="Search by username or display name"
               value={userQuery}
               onChange={e => setUserQuery(e.target.value)}
               placeholder="Search by username or display name…"
@@ -574,8 +579,9 @@ function AssignTab() {
 
       {/* Reason */}
       <div className="space-y-1.5">
-        <label className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Reason (optional)</label>
+        <label htmlFor="badge-award-reason" className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Reason (optional)</label>
         <Textarea
+          id="badge-award-reason"
           value={reason}
           onChange={e => setReason(e.target.value)}
           placeholder="Why is this badge being awarded?"
@@ -667,6 +673,7 @@ function HistoryTab() {
       <div className="relative">
         <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
         <Input
+          aria-label="Search badge awards"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by username, display name, badge, category, reason, or awarded by..."

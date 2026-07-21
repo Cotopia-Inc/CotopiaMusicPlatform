@@ -248,9 +248,10 @@ export default function AdminDmcaDetail() {
         </p>
 
         <div className="space-y-3">
-          <Label className="text-xs text-muted-foreground">Search for the infringing uploader</Label>
+          <Label htmlFor="dmca-user-search" className="text-xs text-muted-foreground">Search for the infringing uploader</Label>
           <div className="flex gap-2">
             <Input
+              id="dmca-user-search"
               placeholder="Enter username or email of the accused uploader…"
               value={userSearch}
               onChange={e => { setUserSearch(e.target.value); setFoundUser(null); setSearchError(""); }}

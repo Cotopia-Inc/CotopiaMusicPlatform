@@ -133,8 +133,9 @@ export default function AdminBroadcastPage() {
         {/* Compose */}
         <div className="lg:col-span-3 space-y-5 bg-card border border-border rounded-2xl p-6">
           <div className="space-y-2">
-            <label className="text-sm font-semibold">Title</label>
+            <label htmlFor="broadcast-title" className="text-sm font-semibold">Title</label>
             <Input
+              id="broadcast-title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Scheduled maintenance tonight"
@@ -144,8 +145,9 @@ export default function AdminBroadcastPage() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-semibold">Message</label>
+            <label htmlFor="broadcast-message" className="text-sm font-semibold">Message</label>
             <Textarea
+              id="broadcast-message"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Write your announcement…"
@@ -164,6 +166,7 @@ export default function AdminBroadcastPage() {
             <div className="relative">
               <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
               <Input
+                aria-label="Search users to exclude"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search users by name, username or email…"

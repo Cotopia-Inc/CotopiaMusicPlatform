@@ -68,6 +68,7 @@ function UserPicker({
   return (
     <div className="space-y-1.5">
       <Input
+        aria-label={placeholder ?? "Search by @username"}
         list="cotopia-user-directory"
         placeholder={placeholder ?? "Search by @username…"}
         value={display}

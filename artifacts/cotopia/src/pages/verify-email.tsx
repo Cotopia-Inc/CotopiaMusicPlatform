@@ -93,8 +93,9 @@ export default function VerifyEmail() {
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium">6-digit code</label>
+            <label htmlFor="verify-code" className="text-sm font-medium">6-digit code</label>
             <Input
+              id="verify-code"
               value={code}
               onChange={e => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
               placeholder="123456"

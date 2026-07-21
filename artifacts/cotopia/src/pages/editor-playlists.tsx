@@ -242,12 +242,12 @@ export default function EditorPlaylists() {
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <Label>Name <span className="text-destructive">*</span></Label>
-              <Input placeholder="Playlist name" value={newForm.name} onChange={e => setNewForm(f => ({ ...f, name: e.target.value }))} />
+              <Label htmlFor="new-playlist-name">Name <span className="text-destructive">*</span></Label>
+              <Input id="new-playlist-name" placeholder="Playlist name" value={newForm.name} onChange={e => setNewForm(f => ({ ...f, name: e.target.value }))} />
             </div>
             <div className="space-y-2">
-              <Label>Description</Label>
-              <Input placeholder="Short description" value={newForm.description} onChange={e => setNewForm(f => ({ ...f, description: e.target.value }))} />
+              <Label htmlFor="new-playlist-description">Description</Label>
+              <Input id="new-playlist-description" placeholder="Short description" value={newForm.description} onChange={e => setNewForm(f => ({ ...f, description: e.target.value }))} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="new-playlist-type">Type <span className="text-destructive">*</span></Label>
@@ -285,12 +285,12 @@ export default function EditorPlaylists() {
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <Label>Name</Label>
-              <Input value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} />
+              <Label htmlFor="edit-playlist-name">Name</Label>
+              <Input id="edit-playlist-name" value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} />
             </div>
             <div className="space-y-2">
-              <Label>Description</Label>
-              <Input value={editForm.description} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))} />
+              <Label htmlFor="edit-playlist-description">Description</Label>
+              <Input id="edit-playlist-description" value={editForm.description} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-playlist-type">Type</Label>

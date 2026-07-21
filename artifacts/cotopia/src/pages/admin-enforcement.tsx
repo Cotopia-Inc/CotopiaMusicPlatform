@@ -241,6 +241,7 @@ export default function AdminEnforcement() {
           <div className="relative">
             <UserSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
             <Input
+              aria-label="Filter by user ID"
               placeholder="Filter by user ID…"
               value={filterUserId}
               onChange={e => setFilterUserId(e.target.value)}
@@ -377,6 +378,7 @@ export default function AdminEnforcement() {
               ) : (
                 <div className="space-y-1.5">
                   <Input
+                    aria-label="Search by username"
                     placeholder="Search by username…"
                     value={userSearch}
                     onChange={e => { setUserSearch(e.target.value); searchUsers(e.target.value); }}
@@ -431,8 +433,9 @@ export default function AdminEnforcement() {
             {/* Duration (suspension only) */}
             {actionType === "suspension" && (
               <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Duration (days)</label>
+                <label htmlFor="enforcement-duration" className="text-xs font-medium text-muted-foreground mb-1.5 block">Duration (days)</label>
                 <Input
+                  id="enforcement-duration"
                   type="number"
                   min={1}
                   max={365}
@@ -447,8 +450,9 @@ export default function AdminEnforcement() {
 
             {/* Reason */}
             <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Reason (visible to user) *</label>
+              <label htmlFor="enforcement-reason" className="text-xs font-medium text-muted-foreground mb-1.5 block">Reason (visible to user) *</label>
               <Textarea
+                id="enforcement-reason"
                 placeholder="State why this action is being taken…"
                 value={reason}
                 onChange={e => setReason(e.target.value)}
@@ -459,8 +463,9 @@ export default function AdminEnforcement() {
 
             {/* Notes */}
             <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Internal notes (optional)</label>
+              <label htmlFor="enforcement-notes" className="text-xs font-medium text-muted-foreground mb-1.5 block">Internal notes (optional)</label>
               <Textarea
+                id="enforcement-notes"
                 placeholder="Staff-only context…"
                 value={notes}
                 onChange={e => setNotes(e.target.value)}

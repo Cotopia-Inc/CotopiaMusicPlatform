@@ -72,12 +72,13 @@ export function CreatorSupportSettings() {
           <p className="text-sm font-medium">Accept Support</p>
           <p className="text-xs text-muted-foreground">Show a Support button on your content and profile.</p>
         </div>
-        <Switch checked={supportEnabled} onCheckedChange={setSupportEnabled} />
+        <Switch aria-label="Accept support" checked={supportEnabled} onCheckedChange={setSupportEnabled} />
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium">PayPal email <span className="text-muted-foreground font-normal">(optional)</span></label>
+        <label htmlFor="creator-paypal-email" className="text-sm font-medium">PayPal email <span className="text-muted-foreground font-normal">(optional)</span></label>
         <Input
+          id="creator-paypal-email"
           type="email"
           value={paypalEmail}
           onChange={(e) => setPaypalEmail(e.target.value)}
@@ -86,8 +87,9 @@ export function CreatorSupportSettings() {
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium">PayPal.me link <span className="text-muted-foreground font-normal">(optional)</span></label>
+        <label htmlFor="creator-paypal-link" className="text-sm font-medium">PayPal.me link <span className="text-muted-foreground font-normal">(optional)</span></label>
         <Input
+          id="creator-paypal-link"
           type="text"
           value={paypalMeLink}
           onChange={(e) => setPaypalMeLink(e.target.value)}
@@ -96,8 +98,9 @@ export function CreatorSupportSettings() {
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium">Thank-you message <span className="text-muted-foreground font-normal">(optional)</span></label>
+        <label htmlFor="creator-thank-you-message" className="text-sm font-medium">Thank-you message <span className="text-muted-foreground font-normal">(optional)</span></label>
         <Textarea
+          id="creator-thank-you-message"
           value={thankYouMessage}
           onChange={(e) => setThankYouMessage(e.target.value.slice(0, THANK_YOU_MAX))}
           placeholder="Thanks so much for supporting me!"
@@ -112,7 +115,7 @@ export function CreatorSupportSettings() {
           <p className="text-sm font-medium">Support Wall</p>
           <p className="text-xs text-muted-foreground">Show public/anonymous supporter messages on your profile.</p>
         </div>
-        <Switch checked={supportWallEnabled} onCheckedChange={setSupportWallEnabled} />
+        <Switch aria-label="Support wall" checked={supportWallEnabled} onCheckedChange={setSupportWallEnabled} />
       </div>
 
       {supportWallEnabled && (
@@ -121,7 +124,7 @@ export function CreatorSupportSettings() {
             <p className="text-sm font-medium">Require approval</p>
             <p className="text-xs text-muted-foreground">Review public/anonymous messages before they appear on your wall.</p>
           </div>
-          <Switch checked={supportWallRequiresApproval} onCheckedChange={setSupportWallRequiresApproval} />
+          <Switch aria-label="Require approval" checked={supportWallRequiresApproval} onCheckedChange={setSupportWallRequiresApproval} />
         </div>
       )}
 

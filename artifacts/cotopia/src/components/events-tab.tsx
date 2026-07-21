@@ -177,8 +177,8 @@ function EventFormDialog({
         </DialogHeader>
         <div className="space-y-3 py-1">
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground">Title</label>
-            <Input value={form.title} onChange={(e) => setForm(f => ({ ...f, title: e.target.value }))} placeholder="e.g. Album listening party" />
+            <label htmlFor="event-title" className="text-xs font-medium text-muted-foreground">Title</label>
+            <Input id="event-title" value={form.title} onChange={(e) => setForm(f => ({ ...f, title: e.target.value }))} placeholder="e.g. Album listening party" />
           </div>
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5"><ImageIcon className="w-3.5 h-3.5" />Image (optional)</label>
@@ -210,9 +210,9 @@ function EventFormDialog({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Type</label>
+              <label htmlFor="event-type" className="text-xs font-medium text-muted-foreground">Type</label>
               <Select value={form.type} onValueChange={(v) => setForm(f => ({ ...f, type: v as EventInputType }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger id="event-type"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {Object.entries(EVENT_TYPE_LABELS).filter(([k]) => k !== "release" || initial.type === "release").map(([k, label]) => (
                     <SelectItem key={k} value={k}>{label}</SelectItem>
@@ -221,27 +221,27 @@ function EventFormDialog({
               </Select>
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Date</label>
-              <Input type="date" value={form.eventDate} onChange={(e) => setForm(f => ({ ...f, eventDate: e.target.value }))} />
+              <label htmlFor="event-date" className="text-xs font-medium text-muted-foreground">Date</label>
+              <Input id="event-date" type="date" value={form.eventDate} onChange={(e) => setForm(f => ({ ...f, eventDate: e.target.value }))} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">End date (optional)</label>
-              <Input type="date" value={form.endDate} onChange={(e) => setForm(f => ({ ...f, endDate: e.target.value }))} />
+              <label htmlFor="event-end-date" className="text-xs font-medium text-muted-foreground">End date (optional)</label>
+              <Input id="event-end-date" type="date" value={form.endDate} onChange={(e) => setForm(f => ({ ...f, endDate: e.target.value }))} />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Location (optional)</label>
-              <Input value={form.location} onChange={(e) => setForm(f => ({ ...f, location: e.target.value }))} placeholder="City, venue…" />
+              <label htmlFor="event-location" className="text-xs font-medium text-muted-foreground">Location (optional)</label>
+              <Input id="event-location" value={form.location} onChange={(e) => setForm(f => ({ ...f, location: e.target.value }))} placeholder="City, venue…" />
             </div>
           </div>
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground">Link (optional)</label>
-            <Input value={form.link} onChange={(e) => setForm(f => ({ ...f, link: e.target.value }))} placeholder="https://…" />
+            <label htmlFor="event-link" className="text-xs font-medium text-muted-foreground">Link (optional)</label>
+            <Input id="event-link" value={form.link} onChange={(e) => setForm(f => ({ ...f, link: e.target.value }))} placeholder="https://…" />
           </div>
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground">Description (optional)</label>
-            <Textarea value={form.description} onChange={(e) => setForm(f => ({ ...f, description: e.target.value }))} rows={3} />
+            <label htmlFor="event-description" className="text-xs font-medium text-muted-foreground">Description (optional)</label>
+            <Textarea id="event-description" value={form.description} onChange={(e) => setForm(f => ({ ...f, description: e.target.value }))} rows={3} />
           </div>
         </div>
         <DialogFooter>
@@ -329,12 +329,12 @@ function CreatorMessageCard({ userId, isOwner }: { userId: number; isOwner: bool
           </DialogHeader>
           <div className="space-y-3 py-1">
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Signed as</label>
-              <Input value={authorTitle} onChange={(e) => setAuthorTitle(e.target.value)} placeholder="Creator" />
+              <label htmlFor="creator-word-signed-as" className="text-xs font-medium text-muted-foreground">Signed as</label>
+              <Input id="creator-word-signed-as" value={authorTitle} onChange={(e) => setAuthorTitle(e.target.value)} placeholder="Creator" />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Message</label>
-              <Textarea value={content} onChange={(e) => setContent(e.target.value)} rows={5} placeholder="Share an update with your fans…" />
+              <label htmlFor="creator-word-message" className="text-xs font-medium text-muted-foreground">Message</label>
+              <Textarea id="creator-word-message" value={content} onChange={(e) => setContent(e.target.value)} rows={5} placeholder="Share an update with your fans…" />
             </div>
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" checked={isVisible} onChange={(e) => setIsVisible(e.target.checked)} className="accent-primary" />

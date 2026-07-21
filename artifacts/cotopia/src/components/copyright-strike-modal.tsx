@@ -179,8 +179,9 @@ export function CopyrightStrikeModal({ target, onClose, onSuccess }: CopyrightSt
 
           {reason === "Other" && (
             <div className="space-y-1.5">
-              <label className="text-xs text-muted-foreground">Custom reason <span className="text-red-400">*</span></label>
+              <label htmlFor="strike-custom-reason" className="text-xs text-muted-foreground">Custom reason <span className="text-red-400">*</span></label>
               <Input
+                id="strike-custom-reason"
                 placeholder="Describe the infringement…"
                 value={customReason}
                 onChange={e => setCustomReason(e.target.value)}
@@ -191,8 +192,9 @@ export function CopyrightStrikeModal({ target, onClose, onSuccess }: CopyrightSt
 
           {/* Internal notes */}
           <div className="space-y-1.5">
-            <label className="text-xs text-muted-foreground">Internal notes <span className="text-muted-foreground/50">(optional, not shown to user)</span></label>
+            <label htmlFor="strike-internal-notes" className="text-xs text-muted-foreground">Internal notes <span className="text-muted-foreground/50">(optional, not shown to user)</span></label>
             <Textarea
+              id="strike-internal-notes"
               placeholder="Add any internal context or reference…"
               value={internalNotes}
               onChange={e => setInternalNotes(e.target.value)}
