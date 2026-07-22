@@ -213,6 +213,7 @@ router.post("/videos/:id/creation-tag", requireAuth, async (req: AuthRequest, re
 const adminReviewBody = z.object({
   action: z.enum([
     "assign_tag",     // set platformAssignedTag
+    "untag",          // clear platformAssignedTag, restore creator tag
     "lock",           // lock tag
     "unlock",         // unlock tag
     "flag",           // moderator flag for admin review
@@ -243,6 +244,7 @@ async function applyAdminReview(
       id: table.id,
       tagLocked: table.tagLocked,
       creationMethod: table.creationMethod,
+      creatorSelectedTag: table.creatorSelectedTag,
       platformAssignedTag: table.platformAssignedTag,
       aiReviewStatus: table.aiReviewStatus,
     })
@@ -268,6 +270,16 @@ async function applyAdminReview(
       updates.tagLocked = true;
       updates.aiOverrideReason = body.aiOverrideReason;
       updates.aiReviewStatus = "admin_approved";
+      updates.aiReviewedBy = adminId;
+      updates.aiReviewedAt = new Date();
+      break;
+    }
+    case "untag": {
+      if (!isAdmin) return { error: "Only admins may remove a platform tag.", statusCode: 403 };
+      updates.platformAssignedTag = null;
+      updates.tagSource = content.creatorSelectedTag ? "creator" : null;
+      updates.effectiveDisplayTag = content.creatorSelectedTag ?? content.creationMethod;
+      updates.tagLocked = false;
       updates.aiReviewedBy = adminId;
       updates.aiReviewedAt = new Date();
       break;
