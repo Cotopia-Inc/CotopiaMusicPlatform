@@ -1808,39 +1808,46 @@ const NOT_FLAGGED_STATUSES = ["not_scanned", "scan_complete", "admin_approved"];
 
 router.get("/admin/analytics/ai-classification", requireAuth, requireRole(...ADMIN_ROLES), async (_req, res): Promise<void> => {
   const [
-    songsByMethod,
-    videosByMethod,
-    [songsFlagged], [videosFlagged],
-    [songsEscalated], [videosEscalated],
+    // Creator-declared types + submission pipeline counts come from submissionsTable —
+    // it is the authoritative record of what creators declared and what the review
+    // pipeline decided. auto_rejected is written to submissions.aiReviewStatus (not to
+    // songs/videos) so these must be sourced here.
+    submissionsByMethod,
+    [subsFlagged],
+    [subsEscalated],
+    // Admin-assigned tags and tag-locked counts come from songs/videos — these are
+    // content-level properties set by moderators/admins after publication.
     [songsAdminTagged], [videosAdminTagged],
     [songsLocked], [videosLocked],
-    [songsRejected], [videosRejected],
+    // AI policy rejections come from submissions (auto_rejected + admin_rejected both
+    // live on submissions.aiReviewStatus in this codebase).
+    [subsRejected],
     [appealsTotal], [appealsReversed],
     [scansTotal], [scansFailed],
+    // Reversed AI tag dispute appeals linked to content for false-positive calc.
+    // tagSource is NOT reset during reversal (trust.ts only updates effectiveDisplayTag
+    // + tagLocked), so we can verify tagSource = 'detection_system' post-reversal.
     reversedAiAppeals,
   ] = await Promise.all([
-    db.select({ method: songsTable.creationMethod, count: count() }).from(songsTable).groupBy(songsTable.creationMethod),
-    db.select({ method: videosTable.creationMethod, count: count() }).from(videosTable).groupBy(videosTable.creationMethod),
-    db.select({ count: count() }).from(songsTable).where(notInArray(songsTable.aiReviewStatus, NOT_FLAGGED_STATUSES)),
-    db.select({ count: count() }).from(videosTable).where(notInArray(videosTable.aiReviewStatus, NOT_FLAGGED_STATUSES)),
-    db.select({ count: count() }).from(songsTable).where(eq(songsTable.aiReviewStatus, "escalated_to_admin")),
-    db.select({ count: count() }).from(videosTable).where(eq(videosTable.aiReviewStatus, "escalated_to_admin")),
+    db.select({ method: submissionsTable.creationMethod, count: count() })
+      .from(submissionsTable).groupBy(submissionsTable.creationMethod),
+    db.select({ count: count() }).from(submissionsTable)
+      .where(notInArray(submissionsTable.aiReviewStatus, NOT_FLAGGED_STATUSES)),
+    db.select({ count: count() }).from(submissionsTable)
+      .where(eq(submissionsTable.aiReviewStatus, "escalated_to_admin")),
     db.select({ count: count() }).from(songsTable).where(eq(songsTable.tagSource, "admin")),
     db.select({ count: count() }).from(videosTable).where(eq(videosTable.tagSource, "admin")),
     db.select({ count: count() }).from(songsTable).where(eq(songsTable.tagLocked, true)),
     db.select({ count: count() }).from(videosTable).where(eq(videosTable.tagLocked, true)),
-    // auto_rejected = fully_ai_generated policy violation (submissions.ts only path).
-    // admin_rejected = explicit admin AI-policy rejection (ai-review.ts only path).
-    // Both are exclusively AI-policy outcomes in this codebase.
-    db.select({ count: count() }).from(songsTable).where(or(eq(songsTable.aiReviewStatus, "admin_rejected"), eq(songsTable.aiReviewStatus, "auto_rejected"))),
-    db.select({ count: count() }).from(videosTable).where(or(eq(videosTable.aiReviewStatus, "admin_rejected"), eq(videosTable.aiReviewStatus, "auto_rejected"))),
-    db.select({ count: count() }).from(trustAppealsTable).where(eq(trustAppealsTable.actionType, "ai_authorship_tag_dispute")),
-    db.select({ count: count() }).from(trustAppealsTable).where(and(eq(trustAppealsTable.actionType, "ai_authorship_tag_dispute"), eq(trustAppealsTable.status, "reversed"))),
+    db.select({ count: count() }).from(submissionsTable)
+      .where(or(eq(submissionsTable.aiReviewStatus, "admin_rejected"), eq(submissionsTable.aiReviewStatus, "auto_rejected"))),
+    db.select({ count: count() }).from(trustAppealsTable)
+      .where(eq(trustAppealsTable.actionType, "ai_authorship_tag_dispute")),
+    db.select({ count: count() }).from(trustAppealsTable)
+      .where(and(eq(trustAppealsTable.actionType, "ai_authorship_tag_dispute"), eq(trustAppealsTable.status, "reversed"))),
     db.select({ count: count() }).from(aiDetectionScansTable),
-    db.select({ count: count() }).from(aiDetectionScansTable).where(eq(aiDetectionScansTable.scanStatus, "failed")),
-    // Fetch reversed AI tag dispute appeals linked to specific content.
-    // tagSource is NOT reset during reversal (trust.ts only sets effectiveDisplayTag + tagLocked),
-    // so we can join to songs/videos to check if tagSource is still 'detection_system'.
+    db.select({ count: count() }).from(aiDetectionScansTable)
+      .where(eq(aiDetectionScansTable.scanStatus, "failed")),
     db.select({ contentType: trustAppealsTable.contentType, contentId: trustAppealsTable.contentId })
       .from(trustAppealsTable)
       .where(and(
@@ -1854,16 +1861,15 @@ router.get("/admin/analytics/ai-classification", requireAuth, requireRole(...ADM
   const methodCount = (rows: { method: string | null; count: number }[], key: string) =>
     rows.filter(r => r.method === key).reduce((s, r) => s + r.count, 0);
 
-  const allMethods = [...songsByMethod, ...videosByMethod];
-  const declaredHumanCreated = methodCount(allMethods, "human_created");
-  const declaredAiAssisted = methodCount(allMethods, "ai_assisted");
-  // Canonical DB value for hybrid is "hybrid_human_ai" (matches creation-method-selector.tsx)
-  const declaredHybrid = methodCount(allMethods, "hybrid_human_ai");
-  const declaredFullyAi = methodCount(allMethods, "fully_ai_generated");
-  const declaredUnclassified = methodCount(allMethods, "unclassified");
+  // hybrid_human_ai is the canonical DB enum value (see lib/db/src/schema/submissions.ts)
+  const declaredHumanCreated = methodCount(submissionsByMethod, "human_created");
+  const declaredAiAssisted = methodCount(submissionsByMethod, "ai_assisted");
+  const declaredHybrid = methodCount(submissionsByMethod, "hybrid_human_ai");
+  const declaredFullyAi = methodCount(submissionsByMethod, "fully_ai_generated");
+  const declaredUnclassified = methodCount(submissionsByMethod, "unclassified");
 
-  // False-positive reversals: reversed AI tag disputes where the content's tagSource
-  // is 'detection_system' (i.e., the platform's detector was wrong, not a human flag).
+  // False-positive reversals: reversed AI tag disputes where the linked content's
+  // tagSource is still 'detection_system' (i.e., platform detector was wrong).
   const reversedSongIds = reversedAiAppeals
     .filter(a => a.contentType === "song" && a.contentId != null)
     .map(a => a.contentId!);
@@ -1882,11 +1888,11 @@ router.get("/admin/analytics/ai-classification", requireAuth, requireRole(...ADM
     falsePositiveReversalsCount += videoFP?.count ?? 0;
   }
 
-  const flaggedCount = (songsFlagged?.count ?? 0) + (videosFlagged?.count ?? 0);
-  const escalatedCount = (songsEscalated?.count ?? 0) + (videosEscalated?.count ?? 0);
+  const flaggedCount = subsFlagged?.count ?? 0;
+  const escalatedCount = subsEscalated?.count ?? 0;
   const adminTaggedCount = (songsAdminTagged?.count ?? 0) + (videosAdminTagged?.count ?? 0);
   const lockedTagCount = (songsLocked?.count ?? 0) + (videosLocked?.count ?? 0);
-  const aiPolicyRejections = (songsRejected?.count ?? 0) + (videosRejected?.count ?? 0);
+  const aiPolicyRejections = subsRejected?.count ?? 0;
   const appealsFiled = appealsTotal?.count ?? 0;
   const appealsReversedCount = appealsReversed?.count ?? 0;
   const scanTotal = scansTotal?.count ?? 0;
