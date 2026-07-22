@@ -125,6 +125,7 @@ export async function ensureTables(): Promise<void> {
       ALTER TABLE songs ADD COLUMN IF NOT EXISTS ai_reviewed_by INTEGER;
       ALTER TABLE songs ADD COLUMN IF NOT EXISTS ai_reviewed_at TIMESTAMP WITH TIME ZONE;
       ALTER TABLE songs ADD COLUMN IF NOT EXISTS ai_override_reason TEXT;
+      ALTER TABLE songs ADD COLUMN IF NOT EXISTS appeal_status TEXT;
 
       -- AI / human-origin tagging columns on videos (added Jul 2026)
       ALTER TABLE videos ADD COLUMN IF NOT EXISTS creation_method TEXT NOT NULL DEFAULT 'unclassified';
@@ -141,10 +142,12 @@ export async function ensureTables(): Promise<void> {
       ALTER TABLE videos ADD COLUMN IF NOT EXISTS ai_reviewed_by INTEGER;
       ALTER TABLE videos ADD COLUMN IF NOT EXISTS ai_reviewed_at TIMESTAMP WITH TIME ZONE;
       ALTER TABLE videos ADD COLUMN IF NOT EXISTS ai_override_reason TEXT;
+      ALTER TABLE videos ADD COLUMN IF NOT EXISTS appeal_status TEXT;
 
       -- AI columns on submissions (added Jul 2026)
       ALTER TABLE submissions ADD COLUMN IF NOT EXISTS creation_method TEXT NOT NULL DEFAULT 'unclassified';
       ALTER TABLE submissions ADD COLUMN IF NOT EXISTS ai_review_status TEXT NOT NULL DEFAULT 'not_scanned';
+      ALTER TABLE submissions ADD COLUMN IF NOT EXISTS ai_override_reason TEXT;
 
       -- AI badge visibility & review settings on app_settings (added Jul 2026)
       ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS show_human_badge BOOLEAN NOT NULL DEFAULT true;
@@ -179,6 +182,52 @@ export async function ensureTables(): Promise<void> {
         requested_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
         scanned_at TIMESTAMP WITH TIME ZONE,
         created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+      );
+
+      -- Web Push subscriptions table (added Jul 2026; NOT covered by Drizzle push — must live here)
+      CREATE TABLE IF NOT EXISTS push_subscriptions (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        endpoint TEXT NOT NULL UNIQUE,
+        p256dh TEXT NOT NULL,
+        auth TEXT NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+      );
+
+      -- Creator Support: per-creator payment config (added Jul 2026)
+      CREATE TABLE IF NOT EXISTS creator_payment_settings (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        support_enabled BOOLEAN NOT NULL DEFAULT false,
+        provider TEXT NOT NULL DEFAULT 'paypal',
+        paypal_email TEXT,
+        paypal_me_link TEXT,
+        thank_you_message TEXT,
+        support_wall_enabled BOOLEAN NOT NULL DEFAULT true,
+        support_wall_requires_approval BOOLEAN NOT NULL DEFAULT false,
+        created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+        CONSTRAINT creator_payment_settings_user_unique UNIQUE (user_id)
+      );
+
+      -- Creator Support: demo tip / activity ledger (added Jul 2026)
+      CREATE TABLE IF NOT EXISTS support_transactions (
+        id SERIAL PRIMARY KEY,
+        supporter_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        recipient_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        content_type TEXT NOT NULL,
+        content_id INTEGER,
+        amount TEXT NOT NULL,
+        currency TEXT NOT NULL DEFAULT 'USD',
+        message TEXT,
+        message_visibility TEXT NOT NULL DEFAULT 'private',
+        moderation_status TEXT NOT NULL DEFAULT 'approved',
+        transaction_ref TEXT NOT NULL,
+        provider TEXT NOT NULL DEFAULT 'paypal',
+        mode TEXT NOT NULL DEFAULT 'demo',
+        status TEXT NOT NULL DEFAULT 'completed',
+        created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+        CONSTRAINT support_transactions_ref_unique UNIQUE (transaction_ref)
       );
     `);
     logger.info("ensureTables: schema up to date");
