@@ -216,7 +216,7 @@ router.get("/artists/:id", requireAuth, async (req: AuthRequest, res): Promise<v
   }
 
   const songs = await db
-    .select({ id: songsTable.id, title: songsTable.title, artistId: songsTable.artistId, artistName: artistsTable.stageName, artistUserRole: usersTable.role, artistIsVerified: usersTable.isVerified, albumId: songsTable.albumId, albumName: albumsTable.title, genre: songsTable.genre, duration: songsTable.duration, coverUrl: songsTable.coverUrl, streamUrl: songsTable.streamUrl, playCount: songsTable.playCount, status: songsTable.status, createdAt: songsTable.createdAt })
+    .select({ id: songsTable.id, title: songsTable.title, artistId: songsTable.artistId, artistName: artistsTable.stageName, artistUserRole: usersTable.role, artistIsVerified: usersTable.isVerified, albumId: songsTable.albumId, albumName: albumsTable.title, genre: songsTable.genre, duration: songsTable.duration, coverUrl: songsTable.coverUrl, streamUrl: songsTable.streamUrl, playCount: songsTable.playCount, status: songsTable.status, createdAt: songsTable.createdAt, effectiveDisplayTag: songsTable.effectiveDisplayTag })
     .from(songsTable)
     .leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id))
     .leftJoin(usersTable, eq(artistsTable.userId, usersTable.id))
@@ -226,7 +226,7 @@ router.get("/artists/:id", requireAuth, async (req: AuthRequest, res): Promise<v
     .limit(10);
 
   const videos = await db
-    .select({ id: videosTable.id, title: videosTable.title, artistId: videosTable.artistId, artistName: artistsTable.stageName, artistUserRole: usersTable.role, artistIsVerified: usersTable.isVerified, genre: videosTable.genre, duration: videosTable.duration, thumbnailUrl: videosTable.thumbnailUrl, videoUrl: videosTable.videoUrl, viewCount: videosTable.viewCount, status: videosTable.status, createdAt: videosTable.createdAt })
+    .select({ id: videosTable.id, title: videosTable.title, artistId: videosTable.artistId, artistName: artistsTable.stageName, artistUserRole: usersTable.role, artistIsVerified: usersTable.isVerified, genre: videosTable.genre, duration: videosTable.duration, thumbnailUrl: videosTable.thumbnailUrl, videoUrl: videosTable.videoUrl, viewCount: videosTable.viewCount, status: videosTable.status, createdAt: videosTable.createdAt, effectiveDisplayTag: videosTable.effectiveDisplayTag })
     .from(videosTable)
     .leftJoin(artistsTable, eq(videosTable.artistId, artistsTable.id))
     .leftJoin(usersTable, eq(artistsTable.userId, usersTable.id))

@@ -83,6 +83,7 @@ router.get("/playlists/:id", requireAuth, async (req: AuthRequest, res): Promise
       status: songsTable.status,
       releaseDate: songsTable.releaseDate,
       createdAt: songsTable.createdAt,
+      effectiveDisplayTag: songsTable.effectiveDisplayTag,
     })
     .from(playlistItemsTable)
     .leftJoin(songsTable, eq(playlistItemsTable.songId, songsTable.id))

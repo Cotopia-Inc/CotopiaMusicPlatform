@@ -178,9 +178,23 @@ export default function Videos() {
                 />
               </Link>
               <div>
-                <Link href={`/videos/${video.id}`}>
-                  <h4 className="font-semibold text-sm truncate hover:text-primary transition-colors">{video.title}</h4>
-                </Link>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <Link href={`/videos/${video.id}`} className="min-w-0">
+                    <h4 className="font-semibold text-sm truncate hover:text-primary transition-colors">{video.title}</h4>
+                  </Link>
+                  {video.effectiveDisplayTag && (
+                    <AiOriginBadge
+                      method={video.effectiveDisplayTag as CreationMethod}
+                      variant="title"
+                      showHumanBadge={config.showHumanBadge}
+                      showAiBadge={config.showAiBadge}
+                      showHybridBadge={config.showHybridBadge}
+                      showFullyAiBadge={config.showFullyAiBadge}
+                      showTitleIcons={config.showTitleIcons}
+                      className="flex-shrink-0"
+                    />
+                  )}
+                </div>
                 <UserLink username={video.artistName ?? ""} artistId={video.artistId} role={video.artistUserRole} isVerified={video.artistIsVerified ?? false} className="text-xs text-muted-foreground" />
               </div>
             </div>

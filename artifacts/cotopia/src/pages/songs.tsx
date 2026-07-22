@@ -91,9 +91,23 @@ export default function Songs() {
               </Link>
               <div>
                 <div className="flex items-start justify-between gap-1">
-                  <Link href={`/songs/${song.id}`}>
-                    <h4 className="font-semibold text-sm truncate hover:text-primary transition-colors">{song.title}</h4>
-                  </Link>
+                  <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                    <Link href={`/songs/${song.id}`} className="min-w-0">
+                      <h4 className="font-semibold text-sm truncate hover:text-primary transition-colors">{song.title}</h4>
+                    </Link>
+                    {song.effectiveDisplayTag && (
+                      <AiOriginBadge
+                        method={song.effectiveDisplayTag as CreationMethod}
+                        variant="title"
+                        showHumanBadge={config.showHumanBadge}
+                        showAiBadge={config.showAiBadge}
+                        showHybridBadge={config.showHybridBadge}
+                        showFullyAiBadge={config.showFullyAiBadge}
+                        showTitleIcons={config.showTitleIcons}
+                        className="flex-shrink-0"
+                      />
+                    )}
+                  </div>
                   <SongMenu song={song} className="flex-shrink-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition-opacity" />
                 </div>
                 <UserLink

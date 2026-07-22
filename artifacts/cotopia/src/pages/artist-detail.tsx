@@ -499,8 +499,19 @@ export default function ArtistDetail() {
                   >
                     <span className="w-6 text-center text-muted-foreground text-sm group-hover:hidden">{idx + 1}</span>
                     <Play className="w-4 h-4 fill-current text-primary hidden group-hover:block ml-1 mr-1" />
-                    <div className="w-10 h-10 rounded bg-secondary overflow-hidden flex-shrink-0">
+                    <div className="w-10 h-10 rounded bg-secondary overflow-hidden flex-shrink-0 relative">
                       {song.coverUrl && <img src={song.coverUrl} alt={song.title} className="w-full h-full object-cover" />}
+                      {(song as any).effectiveDisplayTag && (
+                        <AiOriginBadge
+                          method={(song as any).effectiveDisplayTag as CreationMethod}
+                          variant="cover"
+                          showHumanBadge={config.showHumanBadge}
+                          showAiBadge={config.showAiBadge}
+                          showHybridBadge={config.showHybridBadge}
+                          showFullyAiBadge={config.showFullyAiBadge}
+                          showCoverOverlays={config.showCoverOverlays}
+                        />
+                      )}
                     </div>
                     <div className="flex-1 font-medium flex items-center gap-2 min-w-0">
                       <span className="truncate">{song.title}</span>
@@ -512,18 +523,6 @@ export default function ArtistDetail() {
                         }`}>
                           {(song as any).releaseType === "ep" ? "EP" : "Album"}
                         </span>
-                      )}
-                      {(song as any).effectiveDisplayTag && (song as any).effectiveDisplayTag !== "unclassified" && (
-                        <AiOriginBadge
-                          method={(song as any).effectiveDisplayTag as CreationMethod}
-                          variant="title"
-                          showHumanBadge={config.showHumanBadge}
-                          showAiBadge={config.showAiBadge}
-                          showHybridBadge={config.showHybridBadge}
-                          showFullyAiBadge={config.showFullyAiBadge}
-                          showTitleIcons={config.showTitleIcons}
-                          className="flex-shrink-0"
-                        />
                       )}
                     </div>
                     <div className="text-muted-foreground text-sm w-32">{song.playCount?.toLocaleString() || 0} plays</div>

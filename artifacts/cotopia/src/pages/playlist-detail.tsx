@@ -13,6 +13,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { usePlayer } from "@/lib/player";
 import { useAuth } from "@/lib/auth";
+import { AiOriginBadge, type CreationMethod } from "@/components/ai-origin-badge";
+import { usePlatformConfig } from "@/lib/platform-config";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -41,6 +43,7 @@ interface SortableSongRowProps {
     coverUrl?: string | null;
     streamUrl?: string;
     duration: number;
+    effectiveDisplayTag?: string | null;
   };
   index: number;
   isOwner: boolean;
@@ -53,6 +56,7 @@ interface SortableSongRowProps {
 function SortableSongRow({
   song, index, isOwner, editMode, isRemoving, onPlay, onRemove,
 }: SortableSongRowProps) {
+  const config = usePlatformConfig();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: song.id });
 
@@ -90,10 +94,21 @@ function SortableSongRow({
       )}
 
       <div
-        className="w-10 h-10 rounded bg-secondary overflow-hidden flex-shrink-0"
+        className="w-10 h-10 rounded bg-secondary overflow-hidden flex-shrink-0 relative"
         onClick={editMode ? undefined : onPlay}
       >
         {song.coverUrl && <img src={song.coverUrl} alt={song.title} className="w-full h-full object-cover" />}
+        {song.effectiveDisplayTag && (
+          <AiOriginBadge
+            method={song.effectiveDisplayTag as CreationMethod}
+            variant="cover"
+            showHumanBadge={config.showHumanBadge}
+            showAiBadge={config.showAiBadge}
+            showHybridBadge={config.showHybridBadge}
+            showFullyAiBadge={config.showFullyAiBadge}
+            showCoverOverlays={config.showCoverOverlays}
+          />
+        )}
       </div>
 
       <div className="flex-1 min-w-0" onClick={editMode ? undefined : onPlay}>
