@@ -4740,7 +4740,9 @@ export const SubmitTrustAppealBody = zod.object({
   "actionType": zod.string(),
   "relatedContent": zod.string().optional(),
   "reason": zod.string(),
-  "supportingInfo": zod.string().optional()
+  "supportingInfo": zod.string().optional(),
+  "contentType": zod.enum(['song', 'video']).optional(),
+  "contentId": zod.number().optional()
 })
 
 

@@ -6821,6 +6821,11 @@ components:
           type: string
         supportingInfo:
           type: string
+        contentType:
+          type: string
+          enum: [song, video]
+        contentId:
+          type: integer
 
     TrustAppeal:
       type: object
@@ -6846,6 +6851,21 @@ components:
           type: string
         adminNotes:
           type: ["string", "null"]
+        contentType:
+          type: ["string", "null"]
+        contentId:
+          type: ["integer", "null"]
+        classificationContext:
+          type: ["object", "null"]
+          properties:
+            title:
+              type: string
+            effectiveDisplayTag:
+              type: string
+            tagLocked:
+              type: boolean
+            aiOverrideReason:
+              type: ["string", "null"]
         createdAt:
           type: string
         updatedAt:

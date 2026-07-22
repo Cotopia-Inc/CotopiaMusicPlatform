@@ -2499,6 +2499,14 @@ export interface TrustTimelineItem {
   updatedAt: string;
 }
 
+export type TrustAppealInputContentType = typeof TrustAppealInputContentType[keyof typeof TrustAppealInputContentType];
+
+
+export const TrustAppealInputContentType = {
+  song: 'song',
+  video: 'video',
+} as const;
+
 export interface TrustAppealInput {
   submitterEmail?: string;
   submitterName?: string;
@@ -2506,7 +2514,20 @@ export interface TrustAppealInput {
   relatedContent?: string;
   reason: string;
   supportingInfo?: string;
+  contentType?: TrustAppealInputContentType;
+  contentId?: number;
 }
+
+/**
+ * @nullable
+ */
+export type TrustAppealClassificationContext = {
+  title?: string;
+  effectiveDisplayTag?: string;
+  tagLocked?: boolean;
+  /** @nullable */
+  aiOverrideReason?: string | null;
+} | null;
 
 export interface TrustAppeal {
   id: number;
@@ -2525,6 +2546,12 @@ export interface TrustAppeal {
   status: string;
   /** @nullable */
   adminNotes?: string | null;
+  /** @nullable */
+  contentType?: string | null;
+  /** @nullable */
+  contentId?: number | null;
+  /** @nullable */
+  classificationContext?: TrustAppealClassificationContext;
   createdAt: string;
   updatedAt: string;
 }

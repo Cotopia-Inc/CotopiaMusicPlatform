@@ -5,6 +5,7 @@
  * Cotopia Streaming Platform API
  * OpenAPI spec version: 0.1.0
  */
+import type { TrustAppealInputContentType } from './trustAppealInputContentType';
 
 export interface TrustAppealInput {
   submitterEmail?: string;
@@ -13,4 +14,6 @@ export interface TrustAppealInput {
   relatedContent?: string;
   reason: string;
   supportingInfo?: string;
+  contentType?: TrustAppealInputContentType;
+  contentId?: number;
 }

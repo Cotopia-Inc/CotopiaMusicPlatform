@@ -1,10 +1,11 @@
 import { Router } from "express";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, inArray } from "drizzle-orm";
 import { z } from "zod/v4";
 import {
   db,
   trustKnownIssuesTable, trustReleaseNotesTable, trustWeHeardYouTable,
   trustTimelineTable, trustAppealsTable, adminAuditLogsTable,
+  songsTable, videosTable,
 } from "@workspace/db";
 import { requireAuth, requireRole, optionalAuth, type AuthRequest } from "../lib/auth";
 
@@ -60,6 +61,8 @@ const AppealBody = z.object({
   relatedContent: z.string().max(500).nullish(),
   reason: z.string().min(10).max(5000),
   supportingInfo: z.string().max(5000).nullish(),
+  contentType: z.enum(["song", "video"]).nullish(),
+  contentId: z.number().int().positive().nullish(),
 });
 
 router.post("/trust/appeals", optionalAuth, async (req: AuthRequest, res): Promise<void> => {
@@ -78,11 +81,12 @@ router.post("/trust/appeals", optionalAuth, async (req: AuthRequest, res): Promi
       relatedContent: parsed.data.relatedContent ?? null,
       reason: parsed.data.reason,
       supportingInfo: parsed.data.supportingInfo ?? null,
-      status: "received",
+      status: "submitted",
+      contentType: parsed.data.contentType ?? null,
+      contentId: parsed.data.contentId ?? null,
     })
     .returning();
 
-  // Log audit entry for authenticated submitters (adminUserId is NOT nullable)
   if (req.user?.userId) {
     await db.insert(adminAuditLogsTable).values({
       adminUserId: req.user.userId,
@@ -92,9 +96,11 @@ router.post("/trust/appeals", optionalAuth, async (req: AuthRequest, res): Promi
       description: `Appeal submitted: actionType=${parsed.data.actionType}, relatedContent=${parsed.data.relatedContent ?? ""}`,
       metadata: {
         before: null,
-        after: "received",
+        after: "submitted",
         actionType: parsed.data.actionType,
         relatedContent: parsed.data.relatedContent ?? null,
+        contentType: parsed.data.contentType ?? null,
+        contentId: parsed.data.contentId ?? null,
       },
     });
   }
@@ -147,7 +153,7 @@ const TimelineBody = z.object({
 });
 
 const AppealUpdateBody = z.object({
-  status: z.enum(["received", "under_review", "more_info_needed", "upheld", "reversed", "closed"]),
+  status: z.enum(["submitted", "under_review", "evidence_requested", "upheld", "reversed", "modified", "closed"]),
   adminNotes: z.string().nullish(),
 });
 
@@ -296,7 +302,46 @@ router.get("/admin/trust/appeals", requireAuth, requireRole(...ADMIN_ROLES), asy
   const rows = await db.select().from(trustAppealsTable)
     .where(where)
     .orderBy(desc(trustAppealsTable.createdAt));
-  res.json(rows);
+
+  // Batch-fetch classification context for appeals that have a contentId
+  const songIds = rows
+    .filter(r => r.contentType === "song" && r.contentId != null)
+    .map(r => r.contentId as number);
+  const videoIds = rows
+    .filter(r => r.contentType === "video" && r.contentId != null)
+    .map(r => r.contentId as number);
+
+  const songMap: Record<number, { title: string; effectiveDisplayTag: string; tagLocked: boolean; aiOverrideReason: string | null }> = {};
+  const videoMap: Record<number, { title: string; effectiveDisplayTag: string; tagLocked: boolean; aiOverrideReason: string | null }> = {};
+
+  if (songIds.length) {
+    const songs = await db.select({
+      id: songsTable.id,
+      title: songsTable.title,
+      effectiveDisplayTag: songsTable.effectiveDisplayTag,
+      tagLocked: songsTable.tagLocked,
+      aiOverrideReason: songsTable.aiOverrideReason,
+    }).from(songsTable).where(inArray(songsTable.id, songIds));
+    for (const s of songs) songMap[s.id] = s;
+  }
+  if (videoIds.length) {
+    const videos = await db.select({
+      id: videosTable.id,
+      title: videosTable.title,
+      effectiveDisplayTag: videosTable.effectiveDisplayTag,
+      tagLocked: videosTable.tagLocked,
+      aiOverrideReason: videosTable.aiOverrideReason,
+    }).from(videosTable).where(inArray(videosTable.id, videoIds));
+    for (const v of videos) videoMap[v.id] = v;
+  }
+
+  const enriched = rows.map(r => ({
+    ...r,
+    classificationContext: r.contentId != null && r.contentType
+      ? (r.contentType === "song" ? songMap[r.contentId] : videoMap[r.contentId]) ?? null
+      : null,
+  }));
+  res.json(enriched);
 });
 
 router.patch("/admin/trust/appeals/:id", requireAuth, requireRole(...ADMIN_ROLES), async (req: AuthRequest, res): Promise<void> => {
@@ -304,11 +349,12 @@ router.patch("/admin/trust/appeals/:id", requireAuth, requireRole(...ADMIN_ROLES
   const parsed = AppealUpdateBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
 
-  // Fetch the current appeal to capture the before status
   const [existing] = await db.select({
     status: trustAppealsTable.status,
     actionType: trustAppealsTable.actionType,
     relatedContent: trustAppealsTable.relatedContent,
+    contentType: trustAppealsTable.contentType,
+    contentId: trustAppealsTable.contentId,
   }).from(trustAppealsTable).where(eq(trustAppealsTable.id, id)).limit(1);
   if (!existing) { res.status(404).json({ error: "Not found" }); return; }
 
@@ -333,9 +379,70 @@ router.patch("/admin/trust/appeals/:id", requireAuth, requireRole(...ADMIN_ROLES
     },
   });
 
-  // When an appeal is reversed, log a separate classification_reversed entry
-  // so the audit trail explicitly captures that a content classification was overturned.
-  if (parsed.data.status === "reversed") {
+  // When reversed with a linked contentId, auto-update the content classification
+  if (parsed.data.status === "reversed" && existing.contentId != null && existing.contentType) {
+    const cid = existing.contentId;
+    if (existing.contentType === "song") {
+      const [song] = await db.select({
+        effectiveDisplayTag: songsTable.effectiveDisplayTag,
+        creatorSelectedTag: songsTable.creatorSelectedTag,
+      }).from(songsTable).where(eq(songsTable.id, cid)).limit(1);
+      if (song) {
+        const restoredTag = song.creatorSelectedTag ?? "human_created";
+        await db.update(songsTable).set({
+          effectiveDisplayTag: restoredTag,
+          tagLocked: false,
+          appealStatus: "reversed",
+          aiReviewStatus: "appeal_resolved",
+        }).where(eq(songsTable.id, cid));
+        await db.insert(adminAuditLogsTable).values({
+          adminUserId: req.user!.userId,
+          action: "classification_reversed",
+          targetType: "song",
+          targetId: cid,
+          description: `Song ${cid} classification reversed via appeal ${id}: ${song.effectiveDisplayTag} → ${restoredTag}`,
+          metadata: {
+            before: song.effectiveDisplayTag,
+            after: restoredTag,
+            appealId: id,
+            contentType: "song",
+            contentId: cid,
+            adminNotes: parsed.data.adminNotes ?? null,
+          },
+        });
+      }
+    } else if (existing.contentType === "video") {
+      const [video] = await db.select({
+        effectiveDisplayTag: videosTable.effectiveDisplayTag,
+        creatorSelectedTag: videosTable.creatorSelectedTag,
+      }).from(videosTable).where(eq(videosTable.id, cid)).limit(1);
+      if (video) {
+        const restoredTag = video.creatorSelectedTag ?? "human_created";
+        await db.update(videosTable).set({
+          effectiveDisplayTag: restoredTag,
+          tagLocked: false,
+          appealStatus: "reversed",
+          aiReviewStatus: "appeal_resolved",
+        }).where(eq(videosTable.id, cid));
+        await db.insert(adminAuditLogsTable).values({
+          adminUserId: req.user!.userId,
+          action: "classification_reversed",
+          targetType: "video",
+          targetId: cid,
+          description: `Video ${cid} classification reversed via appeal ${id}: ${video.effectiveDisplayTag} → ${restoredTag}`,
+          metadata: {
+            before: video.effectiveDisplayTag,
+            after: restoredTag,
+            appealId: id,
+            contentType: "video",
+            contentId: cid,
+            adminNotes: parsed.data.adminNotes ?? null,
+          },
+        });
+      }
+    }
+  } else if (parsed.data.status === "reversed") {
+    // No linked content — log generic classification_reversed for audit trail
     await db.insert(adminAuditLogsTable).values({
       adminUserId: req.user!.userId,
       action: "classification_reversed",

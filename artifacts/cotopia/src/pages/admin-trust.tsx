@@ -420,12 +420,13 @@ function TimelineTab() {
 
 // ── Appeals ──────────────────────────────────────────────────────────────────
 const APPEAL_STATUS_MAP = {
-  received:          { label: "Received",           className: "bg-blue-500/15 text-blue-400 border-blue-500/30" },
-  under_review:      { label: "Under Review",       className: "bg-amber-500/15 text-amber-400 border-amber-500/30" },
-  more_info_needed:  { label: "More Info Needed",   className: "bg-orange-500/15 text-orange-400 border-orange-500/30" },
-  upheld:            { label: "Upheld",             className: "bg-red-500/15 text-red-400 border-red-500/30" },
-  reversed:          { label: "Reversed",           className: "bg-green-500/15 text-green-400 border-green-500/30" },
-  closed:            { label: "Closed",             className: "bg-slate-500/15 text-slate-400 border-slate-500/30" },
+  submitted:          { label: "Submitted",          className: "bg-blue-500/15 text-blue-400 border-blue-500/30" },
+  under_review:       { label: "Under Review",       className: "bg-amber-500/15 text-amber-400 border-amber-500/30" },
+  evidence_requested: { label: "Evidence Requested", className: "bg-orange-500/15 text-orange-400 border-orange-500/30" },
+  upheld:             { label: "Upheld",             className: "bg-red-500/15 text-red-400 border-red-500/30" },
+  reversed:           { label: "Reversed",           className: "bg-green-500/15 text-green-400 border-green-500/30" },
+  modified:           { label: "Modified",           className: "bg-violet-500/15 text-violet-400 border-violet-500/30" },
+  closed:             { label: "Closed",             className: "bg-slate-500/15 text-slate-400 border-slate-500/30" },
 };
 
 function AppealsTab() {
@@ -481,6 +482,25 @@ function AppealsTab() {
 
           {expanded === (appeal["id"] as number) && (
             <div className="border-t border-border p-4 space-y-4">
+              {/* Classification context — shown when appeal is linked to a song/video */}
+              {Boolean(appeal["classificationContext"]) && (() => {
+                const ctx = appeal["classificationContext"] as Record<string, unknown>;
+                return (
+                  <div className="rounded-lg bg-violet-500/10 border border-violet-500/30 p-3 space-y-1.5">
+                    <p className="text-xs text-violet-300 font-semibold uppercase tracking-wider">Linked Content Classification</p>
+                    <p className="text-sm font-medium">{ctx["title"] as string} <span className="text-xs text-muted-foreground">({appeal["contentType"] as string})</span></p>
+                    <div className="flex flex-wrap gap-2 text-xs">
+                      <span className="rounded bg-secondary/60 px-2 py-0.5">Tag: <strong>{ctx["effectiveDisplayTag"] as string}</strong></span>
+                      <span className={`rounded px-2 py-0.5 ${ctx["tagLocked"] ? "bg-amber-500/15 text-amber-300" : "bg-secondary/60"}`}>
+                        {ctx["tagLocked"] ? "🔒 Locked" : "Unlocked"}
+                      </span>
+                    </div>
+                    {Boolean(ctx["aiOverrideReason"]) && (
+                      <p className="text-xs text-muted-foreground"><span className="font-medium">Decision reason:</span> {ctx["aiOverrideReason"] as string}</p>
+                    )}
+                  </div>
+                );
+              })()}
               {Boolean(appeal["relatedContent"]) && <p className="text-sm"><span className="text-muted-foreground">Related: </span>{appeal["relatedContent"] as string}</p>}
               <div>
                 <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">Reason</p>

@@ -456,7 +456,7 @@ export default function Submit() {
   const [submissionIds, setSubmissionIds] = useState<number[]>([]);
   const [successTitles, setSuccessTitles] = useState<string[]>([]);
   const [creationMethod, setCreationMethod] = useState<CreationMethodOption>("unclassified");
-  const LEGAL_TOTAL = 8;
+  const LEGAL_TOTAL = 9;
   const [legalChecks, setLegalChecks] = useState<boolean[]>(Array(LEGAL_TOTAL).fill(false));
   const allLegalChecked = legalChecks.every(Boolean);
 
@@ -1157,8 +1157,9 @@ export default function Submit() {
                 { i: 3, text: "I understand Everyday Radio by Cotopia does not currently pay streaming royalties, mechanical royalties, performance royalties, publishing royalties, or revenue sharing unless covered by a separate written agreement." },
                 { i: 4, text: "I understand submission and promotion fees are non-refundable once review begins." },
                 { i: 5, text: "I agree to defend, indemnify, and hold harmless Cotopia and its related entities if my upload causes legal claims." },
-                { i: 6, label: <span>I accurately disclosed whether this content is human-created, AI-assisted, hybrid, or fully AI-generated. I confirm this submission contains meaningful human creative authorship and that I own or control all rights, permissions, licenses, consents, and contractual authority necessary to submit and authorize Cotopia&apos;s use of it. See the <a href="/legal/ai-policy" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">AI Content Policy</a>.</span> },
-                { i: 7, text: "I understand that fully AI-generated content without meaningful human creative authorship is not accepted under Everyday Radio's current policy. If AI tools were used, I have disclosed their use and confirm that I possess the necessary rights and permissions for all generated or assisted elements." },
+                { i: 6, label: <span>I accurately disclosed whether this content is human-created, AI-assisted, hybrid, or fully AI-generated as defined in Everyday Radio's <a href="/legal/ai-policy" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">AI Content Policy (Section 12)</a>. I confirm I own or control all necessary rights, permissions, and consents for all AI-generated or AI-assisted elements.</span> },
+                { i: 7, text: "I understand that fully AI-generated content without meaningful human creative authorship is not accepted under Everyday Radio's current policy (Section 12.1). If AI tools were used, I have disclosed their use and confirm I hold all necessary rights and permissions for all AI-generated or AI-assisted elements." },
+                { i: 8, label: <span>I acknowledge that Everyday Radio may apply automated AI detection tools to submitted content, and that I have the right to dispute any resulting classification through the <a href="/trust/appeals" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">Appeals process</a> (Section 12.5).</span> },
               ] as { i: number; text?: string; label?: React.ReactNode }[]).map(({ i, text, label }) => (
                 <div key={i} className="flex items-start gap-3 py-1">
                   <Checkbox

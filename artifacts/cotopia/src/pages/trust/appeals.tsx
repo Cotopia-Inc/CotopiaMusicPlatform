@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
-import { Flag, ChevronLeft, CheckCircle } from "lucide-react";
+import { Flag, ChevronLeft, CheckCircle, Tag, Lock, Info } from "lucide-react";
 import { useSubmitTrustAppeal } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -18,17 +18,59 @@ const ACTION_OPTIONS = [
   "Other",
 ];
 
-const STATUSES = ["Received", "Under Review", "More Information Needed", "Upheld", "Reversed", "Closed"];
+const STATUSES = ["Submitted", "Under Review", "Evidence Requested", "Upheld", "Reversed", "Modified", "Closed"];
+
+const TAG_LABELS: Record<string, string> = {
+  human_created: "Human Created",
+  ai_assisted: "AI Assisted",
+  human_ai_collab: "Human + AI Collaboration",
+  fully_ai_generated: "Fully AI Generated",
+  unclassified: "Unclassified",
+};
 
 export default function TrustAppeals() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [submitted, setSubmitted] = useState(false);
 
+  // Parse query params for pre-population from a locked-tag notice
+  const params = new URLSearchParams(window.location.search);
+  const qContentType = params.get("contentType") as "song" | "video" | null;
+  const qContentIdStr = params.get("contentId");
+  const qContentId = qContentIdStr ? parseInt(qContentIdStr, 10) : null;
+  const hasContentLink = Boolean(qContentType && qContentId && !isNaN(qContentId));
+
+  const [classificationCtx, setClassificationCtx] = useState<{
+    title: string;
+    effectiveDisplayTag: string;
+    tagLocked: boolean;
+    aiOverrideReason: string | null;
+  } | null>(null);
+
+  // Fetch classification context when navigated from a locked-tag notice
+  useEffect(() => {
+    if (!hasContentLink) return;
+    const base = import.meta.env.BASE_URL;
+    const token = localStorage.getItem("cotopia_token");
+    const path = qContentType === "song" ? `${base}api/songs/${qContentId}` : `${base}api/videos/${qContentId}`;
+    fetch(path, token ? { headers: { Authorization: `Bearer ${token}` } } : {})
+      .then(r => r.ok ? r.json() : null)
+      .then((data: Record<string, unknown> | null) => {
+        if (!data) return;
+        setClassificationCtx({
+          title: (data["title"] as string) ?? "",
+          effectiveDisplayTag: (data["effectiveDisplayTag"] as string) ?? "unclassified",
+          tagLocked: Boolean(data["tagLocked"]),
+          aiOverrideReason: (data["aiOverrideReason"] as string | null) ?? null,
+        });
+      })
+      .catch(() => {});
+  }, [hasContentLink, qContentType, qContentId]);
+
   const [form, setForm] = useState({
     submitterName: user?.displayName ?? user?.username ?? "",
     submitterEmail: user?.email ?? "",
-    actionType: "",
+    actionType: hasContentLink ? "AI authorship tag dispute" : "",
     relatedContent: "",
     reason: "",
     supportingInfo: "",
@@ -59,6 +101,8 @@ export default function TrustAppeals() {
         relatedContent: form.relatedContent || undefined,
         reason: form.reason,
         supportingInfo: form.supportingInfo || undefined,
+        contentType: (hasContentLink && qContentType) ? qContentType : undefined,
+        contentId: (hasContentLink && qContentId) ? qContentId : undefined,
       },
     });
   }
@@ -112,6 +156,44 @@ export default function TrustAppeals() {
           If you believe a platform decision was made in error, you can request a review here.
           All appeals are reviewed by our team. Submitting an appeal does not guarantee a reversal.
         </p>
+
+        {/* Classification context banner — shown when navigated from a locked-tag notice */}
+        {hasContentLink && (
+          <div className="mb-6 rounded-xl border border-violet-500/30 bg-violet-500/10 p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <Tag className="w-4 h-4 text-violet-400 flex-shrink-0" />
+              <p className="text-sm font-semibold text-violet-300">AI Classification Dispute</p>
+            </div>
+            {classificationCtx ? (
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  You are disputing the classification of: <span className="font-medium text-foreground">{classificationCtx.title}</span>
+                </p>
+                <div className="flex flex-wrap gap-3 text-xs">
+                  <div className="flex items-center gap-1.5 rounded-md bg-secondary/50 px-2.5 py-1.5">
+                    <Tag className="w-3 h-3 text-muted-foreground" />
+                    <span className="text-muted-foreground">Current tag:</span>
+                    <span className="font-medium text-foreground">{TAG_LABELS[classificationCtx.effectiveDisplayTag] ?? classificationCtx.effectiveDisplayTag}</span>
+                  </div>
+                  {classificationCtx.tagLocked && (
+                    <div className="flex items-center gap-1.5 rounded-md bg-amber-500/10 border border-amber-500/20 px-2.5 py-1.5">
+                      <Lock className="w-3 h-3 text-amber-400" />
+                      <span className="text-amber-300 text-xs">Classification locked by platform review</span>
+                    </div>
+                  )}
+                </div>
+                {classificationCtx.aiOverrideReason && (
+                  <div className="flex items-start gap-1.5 rounded-md bg-secondary/30 px-2.5 py-1.5">
+                    <Info className="w-3 h-3 text-muted-foreground mt-0.5 flex-shrink-0" />
+                    <p className="text-xs text-muted-foreground"><span className="font-medium">Decision reason:</span> {classificationCtx.aiOverrideReason}</p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">Loading classification details…</p>
+            )}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid sm:grid-cols-2 gap-4">

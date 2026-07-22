@@ -10,8 +10,10 @@ export const trustAppealsTable = pgTable("trust_appeals", {
   relatedContent: text("related_content"),
   reason: text("reason").notNull(),
   supportingInfo: text("supporting_info"),
-  status: text("status").notNull().default("received"),
+  status: text("status").notNull().default("submitted"),
   adminNotes: text("admin_notes"),
+  contentType: text("content_type"),
+  contentId: integer("content_id"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull().$onUpdate(() => new Date()),
 });

@@ -210,6 +210,14 @@ export async function ensureTables(): Promise<void> {
         CONSTRAINT creator_payment_settings_user_unique UNIQUE (user_id)
       );
 
+      -- trust_appeals: content classification link columns (added Jul 2026)
+      ALTER TABLE trust_appeals ADD COLUMN IF NOT EXISTS content_type TEXT;
+      ALTER TABLE trust_appeals ADD COLUMN IF NOT EXISTS content_id INTEGER;
+
+      -- trust_appeals: rename legacy status values to spec-aligned names (idempotent)
+      UPDATE trust_appeals SET status = 'submitted' WHERE status = 'received';
+      UPDATE trust_appeals SET status = 'evidence_requested' WHERE status = 'more_info_needed';
+
       -- Creator Support: demo tip / activity ledger (added Jul 2026)
       CREATE TABLE IF NOT EXISTS support_transactions (
         id SERIAL PRIMARY KEY,

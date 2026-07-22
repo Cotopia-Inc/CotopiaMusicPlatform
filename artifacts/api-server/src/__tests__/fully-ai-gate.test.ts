@@ -294,7 +294,7 @@ describe("audit — appeal_created (authenticated submitter)", () => {
       .limit(5);
     const meta = logs2[0]!.metadata as Record<string, unknown>;
     expect(meta.before).toBeNull();
-    expect(meta.after).toBe("received");
+    expect(meta.after).toBe("submitted");
   });
 });
 

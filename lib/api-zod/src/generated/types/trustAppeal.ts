@@ -5,6 +5,7 @@
  * Cotopia Streaming Platform API
  * OpenAPI spec version: 0.1.0
  */
+import type { TrustAppealClassificationContext } from './trustAppealClassificationContext';
 
 export interface TrustAppeal {
   id: number;
@@ -23,6 +24,12 @@ export interface TrustAppeal {
   status: string;
   /** @nullable */
   adminNotes?: string | null;
+  /** @nullable */
+  contentType?: string | null;
+  /** @nullable */
+  contentId?: number | null;
+  /** @nullable */
+  classificationContext?: TrustAppealClassificationContext;
   createdAt: string;
   updatedAt: string;
 }
