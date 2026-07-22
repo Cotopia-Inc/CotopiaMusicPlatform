@@ -355,6 +355,10 @@ router.patch(
 );
 
 // ── Hive detection scan ───────────────────────────────────────────────────────
+//
+// Responds 202 immediately after marking scan_pending so the HTTP connection is
+// released well before Render's / Replit's proxy timeout (~30 s). The Hive call
+// and all follow-up DB writes run in a detached background task.
 
 router.post(
   "/admin/ai-review/scan",
@@ -368,7 +372,6 @@ router.post(
 
     const { contentType, contentId } = body.data;
     const table = contentType === "song" ? songsTable : videosTable;
-    const urlField = contentType === "song" ? "streamUrl" : "videoUrl";
 
     const [content] = await db
       .select()
@@ -388,82 +391,87 @@ router.post(
     }
 
     const settings = await getSettings();
+    const requestedBy = req.user!.userId;
 
     await db.update(table as typeof songsTable)
       .set({ aiReviewStatus: "scan_pending" })
       .where(eq((table as typeof songsTable).id, contentId));
 
-    const result = await scanWithHive(mediaUrl, {
-      lowThreshold: settings?.aiLowThreshold ?? 25,
-      highThreshold: settings?.aiHighThreshold ?? 60,
-      criticalThreshold: settings?.aiCriticalThreshold ?? 90,
-    });
+    // Respond immediately — the scan can take 10-120 s depending on file size.
+    res.status(202).json({ ok: true, queued: true });
 
-    const [scan] = await db.insert(aiDetectionScansTable).values({
-      contentType,
-      contentId,
-      provider: result.provider,
-      modelVersion: result.modelVersion,
-      scanStatus: result.available ? "complete" : (result.error ? "failed" : "unavailable"),
-      rawResult: result.rawResult as Record<string, unknown> | undefined,
-      aiLikelihoodPercent: result.aiLikelihoodPercent ?? undefined,
-      confidenceLevel: result.confidenceLevel,
-      riskLevel: result.riskLevel ?? undefined,
-      detectionIndicators: result.detectionIndicators,
-      errorMessage: result.error ?? undefined,
-      requestedBy: req.user!.userId,
-      scannedAt: new Date(),
-    }).returning();
+    // --- background task (fire-and-forget) ---
+    void (async () => {
+      try {
+        const result = await scanWithHive(mediaUrl, {
+          lowThreshold: settings?.aiLowThreshold ?? 25,
+          highThreshold: settings?.aiHighThreshold ?? 60,
+          criticalThreshold: settings?.aiCriticalThreshold ?? 90,
+        });
 
-    if (result.available && result.aiLikelihoodPercent !== null) {
-      const score = result.aiLikelihoodPercent;
-      const threshold = settings?.autoRejectDetectionThreshold ?? 95;
-      const autoFlagged = score >= threshold;
+        const [scan] = await db.insert(aiDetectionScansTable).values({
+          contentType,
+          contentId,
+          provider: result.provider,
+          modelVersion: result.modelVersion,
+          scanStatus: result.available ? "complete" : (result.error ? "failed" : "unavailable"),
+          rawResult: result.rawResult as Record<string, unknown> | undefined,
+          aiLikelihoodPercent: result.aiLikelihoodPercent ?? undefined,
+          confidenceLevel: result.confidenceLevel,
+          riskLevel: result.riskLevel ?? undefined,
+          detectionIndicators: result.detectionIndicators,
+          errorMessage: result.error ?? undefined,
+          requestedBy,
+          scannedAt: new Date(),
+        }).returning();
 
-      await db.update(table as typeof songsTable).set({
-        aiEstimatePercent: score,
-        aiConfidenceLevel: result.confidenceLevel,
-        aiRiskLevel: result.riskLevel ?? undefined,
-        aiDetectionReasons: result.detectionIndicators,
-        aiReviewStatus: autoFlagged ? "auto_flagged" : "scan_complete",
-      }).where(eq((table as typeof songsTable).id, contentId));
+        if (result.available && result.aiLikelihoodPercent !== null) {
+          const score = result.aiLikelihoodPercent;
+          const threshold = settings?.autoRejectDetectionThreshold ?? 95;
+          const autoFlagged = score >= threshold;
 
-      if (autoFlagged) {
-        await db
-          .update(submissionsTable)
-          .set({ aiReviewStatus: "auto_flagged" })
-          .where(
-            and(
-              eq(submissionsTable.contentId, contentId),
-              eq(submissionsTable.type, contentType),
-            ),
-          );
+          await db.update(table as typeof songsTable).set({
+            aiEstimatePercent: score,
+            aiConfidenceLevel: result.confidenceLevel,
+            aiRiskLevel: result.riskLevel ?? undefined,
+            aiDetectionReasons: result.detectionIndicators,
+            aiReviewStatus: autoFlagged ? "auto_flagged" : "scan_complete",
+          }).where(eq((table as typeof songsTable).id, contentId));
+
+          if (autoFlagged) {
+            await db
+              .update(submissionsTable)
+              .set({ aiReviewStatus: "auto_flagged" })
+              .where(
+                and(
+                  eq(submissionsTable.contentId, contentId),
+                  eq(submissionsTable.type, contentType),
+                ),
+              );
+          }
+        } else {
+          await db.update(table as typeof songsTable).set({
+            aiReviewStatus: result.error ? "scan_complete" : "not_scanned",
+          }).where(eq((table as typeof songsTable).id, contentId));
+        }
+
+        await logAudit(requestedBy, "ai_scan_triggered", contentType, contentId,
+          `AI scan triggered for ${contentType} ${contentId} — provider: ${result.provider}, available: ${result.available}`,
+          { scanId: scan.id, available: result.available, score: result.aiLikelihoodPercent });
+      } catch (err) {
+        req.log.error({ err, contentType, contentId }, "ai-review/scan background task failed");
+        await db.update(table as typeof songsTable)
+          .set({ aiReviewStatus: "not_scanned" })
+          .where(eq((table as typeof songsTable).id, contentId))
+          .catch(() => undefined);
       }
-    } else {
-      await db.update(table as typeof songsTable).set({
-        aiReviewStatus: result.error ? "scan_complete" : "not_scanned",
-      }).where(eq((table as typeof songsTable).id, contentId));
-    }
-
-    await logAudit(req.user!.userId, "ai_scan_triggered", contentType, contentId,
-      `AI scan triggered for ${contentType} ${contentId} — provider: ${result.provider}, available: ${result.available}`,
-      { scanId: scan.id, available: result.available, score: result.aiLikelihoodPercent });
-
-    res.json({
-      ok: true,
-      scanId: scan.id,
-      available: result.available,
-      aiLikelihoodPercent: result.aiLikelihoodPercent,
-      confidenceLevel: result.confidenceLevel,
-      riskLevel: result.riskLevel,
-      detectionIndicators: result.detectionIndicators,
-      error: result.error,
-      disclaimer: "Automated AI-detection results are advisory estimates and may be inaccurate. They must be evaluated together with creator disclosures, project evidence, human review, and platform policy.",
-    });
+    })();
   },
 );
 
 // ── Cover art scan (manual trigger) ──────────────────────────────────────────
+//
+// Same async pattern as /scan — respond 202 immediately, scan in background.
 
 router.post(
   "/admin/ai-review/scan-cover",
@@ -497,44 +505,43 @@ router.post(
 
     const settings = await getSettings();
     const coverContentType = `${contentType}_cover` as string;
+    const requestedBy = req.user!.userId;
 
-    const result = await scanWithHive(imageUrl, {
-      lowThreshold: settings?.aiLowThreshold ?? 25,
-      highThreshold: settings?.aiHighThreshold ?? 60,
-      criticalThreshold: settings?.aiCriticalThreshold ?? 90,
-    });
+    // Respond immediately — cover images scan faster but still need async treatment.
+    res.status(202).json({ ok: true, queued: true });
 
-    const [scan] = await db.insert(aiDetectionScansTable).values({
-      contentType: coverContentType,
-      contentId,
-      provider: result.provider,
-      modelVersion: result.modelVersion,
-      scanStatus: result.available ? "complete" : (result.error ? "failed" : "unavailable"),
-      rawResult: result.rawResult as Record<string, unknown> | undefined,
-      aiLikelihoodPercent: result.aiLikelihoodPercent ?? undefined,
-      confidenceLevel: result.confidenceLevel,
-      riskLevel: result.riskLevel ?? undefined,
-      detectionIndicators: result.detectionIndicators,
-      errorMessage: result.error ?? undefined,
-      requestedBy: req.user!.userId,
-      scannedAt: new Date(),
-    }).returning();
+    // --- background task (fire-and-forget) ---
+    void (async () => {
+      try {
+        const result = await scanWithHive(imageUrl, {
+          lowThreshold: settings?.aiLowThreshold ?? 25,
+          highThreshold: settings?.aiHighThreshold ?? 60,
+          criticalThreshold: settings?.aiCriticalThreshold ?? 90,
+        });
 
-    await logAudit(req.user!.userId, "ai_cover_scan_triggered", contentType, contentId,
-      `Cover art AI scan triggered for ${contentType} ${contentId} — available: ${result.available}`,
-      { scanId: scan.id, available: result.available, score: result.aiLikelihoodPercent });
+        const [scan] = await db.insert(aiDetectionScansTable).values({
+          contentType: coverContentType,
+          contentId,
+          provider: result.provider,
+          modelVersion: result.modelVersion,
+          scanStatus: result.available ? "complete" : (result.error ? "failed" : "unavailable"),
+          rawResult: result.rawResult as Record<string, unknown> | undefined,
+          aiLikelihoodPercent: result.aiLikelihoodPercent ?? undefined,
+          confidenceLevel: result.confidenceLevel,
+          riskLevel: result.riskLevel ?? undefined,
+          detectionIndicators: result.detectionIndicators,
+          errorMessage: result.error ?? undefined,
+          requestedBy,
+          scannedAt: new Date(),
+        }).returning();
 
-    res.json({
-      ok: true,
-      scanId: scan.id,
-      available: result.available,
-      aiLikelihoodPercent: result.aiLikelihoodPercent,
-      confidenceLevel: result.confidenceLevel,
-      riskLevel: result.riskLevel,
-      detectionIndicators: result.detectionIndicators,
-      error: result.error,
-      disclaimer: "Automated AI-detection results are advisory estimates and may be inaccurate.",
-    });
+        await logAudit(requestedBy, "ai_cover_scan_triggered", contentType, contentId,
+          `Cover art AI scan triggered for ${contentType} ${contentId} — available: ${result.available}`,
+          { scanId: scan.id, available: result.available, score: result.aiLikelihoodPercent });
+      } catch (err) {
+        req.log.error({ err, contentType, contentId }, "ai-review/scan-cover background task failed");
+      }
+    })();
   },
 );
 

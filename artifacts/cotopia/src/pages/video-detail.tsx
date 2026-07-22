@@ -979,18 +979,23 @@ export default function VideoDetail() {
               queryClient.invalidateQueries({ queryKey: getGetVideoQueryKey(videoId) });
             }}
             onScanRequest={async () => {
-              const token = localStorage.getItem("cotopia_token");
-              const res = await fetch(`/api/admin/ai-review/scan`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-                body: JSON.stringify({ contentType: "video", contentId: video.id }),
-              });
-              if (!res.ok) {
-                toast({ variant: "destructive", title: "Scan request failed" });
-                return;
+              try {
+                const token = localStorage.getItem("cotopia_token");
+                const res = await fetch(`/api/admin/ai-review/scan`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                  body: JSON.stringify({ contentType: "video", contentId: video.id }),
+                });
+                if (!res.ok) {
+                  const body = await res.json().catch(() => ({})) as { error?: string };
+                  toast({ variant: "destructive", title: "Scan request failed", description: body.error ?? `Server returned ${res.status}` });
+                  return;
+                }
+                toast({ title: "Scan queued", description: "Results will appear once the scan completes." });
+                setTimeout(() => queryClient.invalidateQueries({ queryKey: getGetVideoQueryKey(videoId) }), 8000);
+              } catch {
+                toast({ variant: "destructive", title: "Scan request failed", description: "Network error — please try again." });
               }
-              toast({ title: "Scan queued", description: "Results will appear once the scan completes." });
-              setTimeout(() => queryClient.invalidateQueries({ queryKey: getGetVideoQueryKey(videoId) }), 3000);
             }}
           />
         )}
