@@ -573,9 +573,9 @@ export default function AdminSettings() {
             <SaveIndicator status={aiSaveStatus} />
           </div>
 
-          {/* Hive provider status row */}
+          {/* AI detection provider status row */}
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs text-muted-foreground font-medium">Hive provider:</span>
+            <span className="text-xs text-muted-foreground font-medium">AI detection provider:</span>
 
             {hiveConfigured === null && (
               <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-secondary text-muted-foreground border border-border">
@@ -611,10 +611,10 @@ export default function AdminSettings() {
                     ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
                     : "bg-destructive/10 text-destructive border-destructive/20"
               }`}>
-                {hiveTestResult.status === "ok" && "✓ Key accepted by Hive"}
-                {hiveTestResult.status === "not_configured" && "HIVE_API_KEY not set"}
+                {hiveTestResult.status === "ok" && "✓ Key accepted"}
+                {hiveTestResult.status === "not_configured" && "API key not set"}
                 {hiveTestResult.status === "invalid_key" && "✗ Key rejected (401)"}
-                {hiveTestResult.status === "unreachable" && "✗ Hive unreachable"}
+                {hiveTestResult.status === "unreachable" && "✗ Provider unreachable"}
               </span>
             )}
 
@@ -652,7 +652,7 @@ export default function AdminSettings() {
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Creator & Detection Policy</p>
           {([
             { key: "allowCreatorSelfTagging", label: "Allow creator self-tagging", desc: "Creators can declare their content's AI origin at submission time." },
-            { key: "enableAiReview", label: "Enable AI detection scans", desc: "Trigger Hive Moderation scans on submitted content for automated AI likelihood scoring." },
+            { key: "enableAiReview", label: "Enable AI detection scans", desc: "Trigger AI detection scans on submitted content for automated AI likelihood scoring." },
             { key: "autoRejectFullyAi", label: "Auto-reject fully AI submissions", desc: "Automatically reject submissions where the creator declares fully AI-generated content." },
           ] as { key: keyof AiSettings; label: string; desc: string }[]).map(({ key, label, desc }) => (
             <div key={key} className="flex items-center justify-between p-4 bg-secondary/30 rounded-lg border border-border">

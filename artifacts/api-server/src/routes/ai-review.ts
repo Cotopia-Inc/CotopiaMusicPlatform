@@ -565,33 +565,33 @@ router.get(
   async (_req, res): Promise<void> => {
     const configured = !!process.env.HIVE_API_KEY;
     if (!configured) {
-      res.json({ configured: false, status: "not_configured", message: "HIVE_API_KEY is not set in environment variables." });
+      res.json({ configured: false, status: "not_configured", message: "AI detection API key is not set in environment variables." });
       return;
     }
 
-    // Attempt a lightweight auth-check against the Hive API.
-    // Hive returns 401 for invalid keys, anything else means the key is accepted.
+    // Attempt a lightweight auth-check against the V3 API.
+    // A 401 means the key is invalid; any other response means the key is accepted.
     try {
-      const probe = await fetch("https://api.thehive.ai/api/v2/task/sync", {
+      const probe = await fetch("https://api.thehive.ai/api/v3/hive/ai-generated-and-deepfake-content-detection", {
         method: "POST",
         headers: {
-          Authorization: `Token ${process.env.HIVE_API_KEY}`,
+          Authorization: `Bearer ${process.env.HIVE_API_KEY}`,
           "Content-Type": "application/json",
           Accept: "application/json",
         },
-        body: JSON.stringify({ url: "https://example.com/__hive_key_check__" }),
+        body: JSON.stringify({ input: [{ media_url: "https://example.com/__key_check__" }] }),
         signal: AbortSignal.timeout(10_000),
       });
 
       if (probe.status === 401) {
-        res.json({ configured: true, status: "invalid_key", message: "HIVE_API_KEY is set but was rejected by Hive (401 Unauthorized). Check that the key is correct." });
+        res.json({ configured: true, status: "invalid_key", message: "AI detection API key is set but was rejected (401 Unauthorized). Check that the key is correct." });
         return;
       }
 
       // Any non-401 response (even 4xx for bad URL) means the key is accepted.
-      res.json({ configured: true, status: "ok", message: `Hive API key accepted (HTTP ${probe.status}).` });
+      res.json({ configured: true, status: "ok", message: `AI detection API key accepted (HTTP ${probe.status}).` });
     } catch (err) {
-      res.json({ configured: true, status: "unreachable", message: `HIVE_API_KEY is set but Hive API could not be reached: ${err instanceof Error ? err.message : "network error"}` });
+      res.json({ configured: true, status: "unreachable", message: `AI detection API key is set but provider could not be reached: ${err instanceof Error ? err.message : "network error"}` });
     }
   },
 );
