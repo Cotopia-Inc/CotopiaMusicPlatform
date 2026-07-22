@@ -192,13 +192,36 @@ export async function scanWithHive(
         const classes = item["classes"] as Array<{ class: string; score: number }> | undefined;
         if (!Array.isArray(classes)) continue;
         for (const cls of classes) {
-          if (cls.class === "ai_generated" && typeof cls.score === "number") {
+          // Match "ai_generated" exactly OR any "ai_generated_*" variant
+          // (e.g. "ai_generated_audio", "ai_generated_voice") that Hive may
+          // return for different media types. Worst-case: keep highest score.
+          if (
+            (cls.class === "ai_generated" || cls.class.startsWith("ai_generated_")) &&
+            typeof cls.score === "number"
+          ) {
             const pct = Math.round(cls.score * 100);
-            // Worst-case: take the highest score seen across all segments.
             if (aiScore === null || pct > aiScore) aiScore = pct;
           }
           if (cls.score > 0.5 && !indicators.includes(cls.class)) {
             indicators.push(cls.class);
+          }
+        }
+      }
+
+      // Fallback: some Hive endpoints only return the negative complement class
+      // (e.g. "not_ai_generated"). Derive the positive score as 100 – complement.
+      if (aiScore === null) {
+        for (const item of outputArr) {
+          const classes = item["classes"] as Array<{ class: string; score: number }> | undefined;
+          if (!Array.isArray(classes)) continue;
+          for (const cls of classes) {
+            if (
+              (cls.class === "not_ai_generated" || cls.class.startsWith("not_ai_generated_")) &&
+              typeof cls.score === "number"
+            ) {
+              const pct = Math.round((1 - cls.score) * 100);
+              if (aiScore === null || pct > aiScore) aiScore = pct;
+            }
           }
         }
       }

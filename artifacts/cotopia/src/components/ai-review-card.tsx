@@ -463,41 +463,47 @@ export function AiReviewCard({
                           )}
                         </div>
                       </div>
-                      {scan.scanStatus === "complete" && scan.aiLikelihoodPercent !== null && (
+                      {scan.scanStatus === "complete" && (
                         <div className="space-y-2">
-                          {/* Summary row */}
-                          <div className="flex flex-wrap items-center gap-3 text-[11px]">
-                            <span>
-                              AI likelihood: <strong className={cn("tabular-nums",
-                                scan.aiLikelihoodPercent >= 90 ? "text-red-500" :
-                                scan.aiLikelihoodPercent >= 60 ? "text-orange-500" :
-                                scan.aiLikelihoodPercent >= 25 ? "text-amber-500" : "text-emerald-500"
-                              )}>{scan.aiLikelihoodPercent}%</strong>
-                            </span>
-                            {scan.riskLevel && (
-                              <span className="capitalize text-muted-foreground">
-                                Risk: <strong className={cn(
-                                  scan.riskLevel === "critical" ? "text-red-500" :
-                                  scan.riskLevel === "high" ? "text-orange-500" :
-                                  scan.riskLevel === "moderate" ? "text-amber-500" : "text-emerald-500"
-                                )}>{scan.riskLevel}</strong>
+                          {/* Summary row — only when a numeric score was extracted */}
+                          {scan.aiLikelihoodPercent !== null ? (
+                            <div className="flex flex-wrap items-center gap-3 text-[11px]">
+                              <span>
+                                AI likelihood: <strong className={cn("tabular-nums",
+                                  scan.aiLikelihoodPercent >= 90 ? "text-red-500" :
+                                  scan.aiLikelihoodPercent >= 60 ? "text-orange-500" :
+                                  scan.aiLikelihoodPercent >= 25 ? "text-amber-500" : "text-emerald-500"
+                                )}>{scan.aiLikelihoodPercent}%</strong>
                               </span>
-                            )}
-                            {scan.confidenceLevel && scan.confidenceLevel !== "unavailable" && (
-                              <span className="capitalize text-muted-foreground">
-                                Confidence: <strong>{scan.confidenceLevel}</strong>
-                              </span>
-                            )}
-                            {(() => {
-                              const segCount = getSegmentCount(scan.rawResult);
-                              return segCount > 1 ? (
-                                <span className="text-muted-foreground">
-                                  Segments: <strong>{segCount}</strong>
+                              {scan.riskLevel && (
+                                <span className="capitalize text-muted-foreground">
+                                  Risk: <strong className={cn(
+                                    scan.riskLevel === "critical" ? "text-red-500" :
+                                    scan.riskLevel === "high" ? "text-orange-500" :
+                                    scan.riskLevel === "moderate" ? "text-amber-500" : "text-emerald-500"
+                                  )}>{scan.riskLevel}</strong>
                                 </span>
-                              ) : null;
-                            })()}
-                          </div>
-                          {/* Full class-by-class breakdown from rawResult */}
+                              )}
+                              {scan.confidenceLevel && scan.confidenceLevel !== "unavailable" && (
+                                <span className="capitalize text-muted-foreground">
+                                  Confidence: <strong>{scan.confidenceLevel}</strong>
+                                </span>
+                              )}
+                              {(() => {
+                                const segCount = getSegmentCount(scan.rawResult);
+                                return segCount > 1 ? (
+                                  <span className="text-muted-foreground">
+                                    Segments: <strong>{segCount}</strong>
+                                  </span>
+                                ) : null;
+                              })()}
+                            </div>
+                          ) : (
+                            <div className="text-[11px] text-muted-foreground italic">
+                              Score not extracted — see class breakdown below for raw Hive output.
+                            </div>
+                          )}
+                          {/* Full class-by-class breakdown from rawResult — always shown for complete scans */}
                           {(() => {
                             const breakdown = parseClassBreakdown(scan.rawResult);
                             if (!breakdown || breakdown.length === 0) return null;
