@@ -14,7 +14,7 @@ import { eq, and, desc } from "drizzle-orm";
 import {
   api, bearer, createUser, createArtistProfile, cleanupUsers, type TestUser,
 } from "./helpers";
-import { scanWithHive } from "../lib/hive-detection";
+
 
 const created: number[] = [];
 
@@ -184,7 +184,11 @@ describe("AI classification — fully-AI gate server enforcement (cases 4–5)",
     expect(res.body.appealLink).toBe("/trust/appeals");
 
     const rows = await db
-      .select({ status: submissionsTable.status, aiReviewStatus: submissionsTable.aiReviewStatus })
+      .select({
+        status: submissionsTable.status,
+        aiReviewStatus: submissionsTable.aiReviewStatus,
+        paymentStatus: submissionsTable.paymentStatus,
+      })
       .from(submissionsTable)
       .where(and(
         eq(submissionsTable.userId, artist.id),
@@ -195,6 +199,8 @@ describe("AI classification — fully-AI gate server enforcement (cases 4–5)",
     expect(rows.length).toBe(1);
     expect(rows[0]!.status).toBe("rejected");
     expect(rows[0]!.aiReviewStatus).toBe("auto_rejected");
+    // No fee charged — paymentStatus must remain unpaid (no PayPal order created)
+    expect(rows[0]!.paymentStatus).toBe("unpaid");
   });
 
   it("case 5: server enforces the fully-AI block even via the bulk endpoint (client cannot skip)", async () => {
@@ -214,7 +220,11 @@ describe("AI classification — fully-AI gate server enforcement (cases 4–5)",
     expect(res.body.code).toBe("FULLY_AI_REJECTED");
 
     const rows = await db
-      .select({ status: submissionsTable.status, aiReviewStatus: submissionsTable.aiReviewStatus })
+      .select({
+        status: submissionsTable.status,
+        aiReviewStatus: submissionsTable.aiReviewStatus,
+        paymentStatus: submissionsTable.paymentStatus,
+      })
       .from(submissionsTable)
       .where(and(
         eq(submissionsTable.userId, artist.id),
@@ -224,6 +234,8 @@ describe("AI classification — fully-AI gate server enforcement (cases 4–5)",
       .limit(1);
     expect(rows[0]!.status).toBe("rejected");
     expect(rows[0]!.aiReviewStatus).toBe("auto_rejected");
+    // No fee charged — paymentStatus must remain unpaid (no PayPal order created)
+    expect(rows[0]!.paymentStatus).toBe("unpaid");
   });
 });
 
@@ -503,52 +515,55 @@ describe("AI classification — detection unavailable state (case 15)", () => {
     songId = await insertSong(artistProfileId);
   });
 
-  it("case 15: HIVE_API_KEY unset → scanWithHive returns available=false, null score; no numeric score persisted in scan row", async () => {
+  it("case 15: HIVE_API_KEY unset → scan endpoint response has no numeric percentage; persisted scan row has null aiLikelihoodPercent", async () => {
     const saved = process.env.HIVE_API_KEY;
     delete process.env.HIVE_API_KEY;
-    let scanRowId: number | undefined;
     try {
-      const result = await scanWithHive("https://example.com/test-unavailable.mp3");
+      // Trigger the scan via the actual API endpoint
+      const scanRes = await api()
+        .post("/api/admin/ai-review/scan")
+        .set("Authorization", bearer(adminUser.token))
+        .send({ contentType: "song", contentId: songId });
 
-      // Verify the result object has no fabricated data
-      expect(result.available).toBe(false);
-      expect(result.aiLikelihoodPercent).toBeNull();
-      expect(typeof result.aiLikelihoodPercent).not.toBe("number");
-      expect(result.confidenceLevel).toBe("unavailable");
-      expect(result.riskLevel).toBeNull();
-      expect(result.error).toBeNull();
-      expect(result.rawResult).toBeNull();
+      // Endpoint always returns 202 (fire-and-forget); response body must not contain any numeric score
+      expect(scanRes.status).toBe(202);
+      const body = scanRes.body as Record<string, unknown>;
+      expect(body.ok).toBe(true);
+      expect(body.queued).toBe(true);
+      const responseStr = JSON.stringify(body);
+      expect(responseStr).not.toMatch(/"aiLikelihoodPercent"\s*:\s*\d/);
+      expect(responseStr).not.toMatch(/"percent"\s*:\s*\d/);
 
-      // Simulate what the background scan handler persists (mirrors ai-review.ts scan logic):
-      // `aiLikelihoodPercent: result.aiLikelihoodPercent ?? undefined` → stored as NULL
-      const [scan] = await db.insert(aiDetectionScansTable).values({
-        contentType: "song",
-        contentId: songId,
-        provider: result.provider,
-        modelVersion: result.modelVersion ?? undefined,
-        scanStatus: result.available ? "complete" : (result.error ? "failed" : "unavailable"),
-        rawResult: result.rawResult ?? undefined,
-        aiLikelihoodPercent: result.aiLikelihoodPercent ?? undefined,
-        confidenceLevel: result.confidenceLevel,
-        riskLevel: result.riskLevel ?? undefined,
-        requestedBy: adminUser.id,
-        scannedAt: new Date(),
-      }).returning();
-      scanRowId = scan.id;
+      // Wait for the fire-and-forget background task to finish.
+      // scanWithHive returns UNAVAILABLE synchronously (no API key → no HTTP call),
+      // so this is very fast; 500 ms is ample.
+      await new Promise<void>((resolve) => setTimeout(resolve, 500));
 
-      // Query the stored row and confirm no numeric score was written
-      const [stored] = await db
-        .select({ aiLikelihoodPercent: aiDetectionScansTable.aiLikelihoodPercent, scanStatus: aiDetectionScansTable.scanStatus })
+      // Verify the stored scan row has null aiLikelihoodPercent — no fabricated score persisted
+      const [scan] = await db
+        .select({
+          aiLikelihoodPercent: aiDetectionScansTable.aiLikelihoodPercent,
+          scanStatus: aiDetectionScansTable.scanStatus,
+        })
         .from(aiDetectionScansTable)
-        .where(eq(aiDetectionScansTable.id, scan.id))
+        .where(and(
+          eq(aiDetectionScansTable.contentId, songId),
+          eq(aiDetectionScansTable.contentType, "song"),
+        ))
+        .orderBy(desc(aiDetectionScansTable.createdAt))
         .limit(1);
-      expect(stored!.aiLikelihoodPercent).toBeNull();
-      expect(stored!.scanStatus).toBe("unavailable");
+
+      expect(scan).toBeDefined();
+      expect(scan!.aiLikelihoodPercent).toBeNull();
+      expect(typeof scan!.aiLikelihoodPercent).not.toBe("number");
+      expect(scan!.scanStatus).toBe("unavailable");
     } finally {
       if (saved !== undefined) process.env.HIVE_API_KEY = saved;
-      if (scanRowId !== undefined) {
-        await db.delete(aiDetectionScansTable).where(eq(aiDetectionScansTable.id, scanRowId));
-      }
+      // Clean up scan rows for this test song
+      await db.delete(aiDetectionScansTable).where(and(
+        eq(aiDetectionScansTable.contentId, songId),
+        eq(aiDetectionScansTable.contentType, "song"),
+      ));
     }
   });
 });
