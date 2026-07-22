@@ -91,9 +91,10 @@ router.post("/trust/appeals", optionalAuth, async (req: AuthRequest, res): Promi
       targetId: appeal.id,
       description: `Appeal submitted: actionType=${parsed.data.actionType}, relatedContent=${parsed.data.relatedContent ?? ""}`,
       metadata: {
+        before: null,
+        after: "received",
         actionType: parsed.data.actionType,
         relatedContent: parsed.data.relatedContent ?? null,
-        status: "received",
       },
     });
   }
@@ -342,8 +343,9 @@ router.patch("/admin/trust/appeals/:id", requireAuth, requireRole(...ADMIN_ROLES
       targetId: id,
       description: `Classification reversed via appeal ${id} — relatedContent: ${existing.relatedContent ?? "unspecified"} (actionType=${existing.actionType ?? ""})`,
       metadata: {
+        before: existing.actionType,
+        after: "reversed",
         appealId: id,
-        actionType: existing.actionType,
         relatedContent: existing.relatedContent ?? null,
         adminNotes: parsed.data.adminNotes ?? null,
       },

@@ -282,6 +282,19 @@ describe("audit — appeal_created (authenticated submitter)", () => {
     expect(logs.length).toBeGreaterThan(0);
     expect(logs[0]!.action).toBe("appeal_created");
     expect(logs[0]!.adminUserId).toBe(u.id);
+
+    // Verify before/after transition fields
+    const logs2 = await db
+      .select({ metadata: adminAuditLogsTable.metadata })
+      .from(adminAuditLogsTable)
+      .where(and(
+        eq(adminAuditLogsTable.adminUserId, u.id),
+        eq(adminAuditLogsTable.action, "appeal_created"),
+      ))
+      .limit(5);
+    const meta = logs2[0]!.metadata as Record<string, unknown>;
+    expect(meta.before).toBeNull();
+    expect(meta.after).toBe("received");
   });
 });
 
@@ -343,6 +356,22 @@ describe("audit — appeal_decision and classification_reversed", () => {
       .limit(5);
     expect(reversalLogs.length).toBeGreaterThan(0);
     expect(reversalLogs[0]!.targetId).toBe(appeal.id);
+
+    // Verify before/after classification fields
+    const reversalLogs2 = await db
+      .select({ metadata: adminAuditLogsTable.metadata })
+      .from(adminAuditLogsTable)
+      .where(and(
+        eq(adminAuditLogsTable.adminUserId, admin.id),
+        eq(adminAuditLogsTable.action, "classification_reversed"),
+        eq(adminAuditLogsTable.targetId, appeal.id),
+      ))
+      .limit(5);
+    const meta = reversalLogs2[0]!.metadata as Record<string, unknown>;
+    expect("before" in meta).toBe(true);
+    expect("after" in meta).toBe(true);
+    expect(meta.before).toBe("ai_classification");
+    expect(meta.after).toBe("reversed");
   });
 });
 
@@ -456,5 +485,96 @@ describe("audit — recommend action (ai_review_recommend)", () => {
       .send({ action: "recommend" });
     expect(reviewRes.status).toBe(400);
     expect(reviewRes.body.error).toMatch(/recommendation note/i);
+  });
+});
+
+// ─── Audit: flag, escalate, request_evidence actions ─────────────────────
+
+async function makeContentForReview(artistToken: string, title: string): Promise<number> {
+  const res = await api()
+    .post("/api/submissions")
+    .set("Authorization", bearer(artistToken))
+    .send({ type: "song", title, plan: "basic", creationMethod: "human_created", fileUrl: "https://example.com/test.mp3" });
+  expect(res.status).toBe(201);
+  return res.body.contentId as number;
+}
+
+describe("audit — flag, escalate, request_evidence actions", () => {
+  it("writes ai_review_flag audit log when moderator flags content", async () => {
+    const artist = await makeArtist();
+    const mod = await makeStaff("moderator");
+    const contentId = await makeContentForReview(artist.token, "Flag Test Song");
+
+    const res = await api()
+      .patch(`/api/admin/ai-review/song/${contentId}`)
+      .set("Authorization", bearer(mod.token))
+      .send({ action: "flag" });
+    expect(res.status).toBe(200);
+
+    const logs = await db
+      .select({ action: adminAuditLogsTable.action, metadata: adminAuditLogsTable.metadata })
+      .from(adminAuditLogsTable)
+      .where(and(
+        eq(adminAuditLogsTable.adminUserId, mod.id),
+        eq(adminAuditLogsTable.action, "ai_review_flag"),
+      ))
+      .limit(5);
+    expect(logs.length).toBeGreaterThan(0);
+    const meta = logs[0]!.metadata as Record<string, unknown>;
+    expect("before" in meta).toBe(true);
+    expect("after" in meta).toBe(true);
+    expect(meta.after).toBe("moderator_review");
+  });
+
+  it("writes ai_review_escalate audit log when content is escalated", async () => {
+    const artist = await makeArtist();
+    const mod = await makeStaff("moderator");
+    const contentId = await makeContentForReview(artist.token, "Escalate Test Song");
+
+    const res = await api()
+      .patch(`/api/admin/ai-review/song/${contentId}`)
+      .set("Authorization", bearer(mod.token))
+      .send({ action: "escalate" });
+    expect(res.status).toBe(200);
+
+    const logs = await db
+      .select({ action: adminAuditLogsTable.action, metadata: adminAuditLogsTable.metadata })
+      .from(adminAuditLogsTable)
+      .where(and(
+        eq(adminAuditLogsTable.adminUserId, mod.id),
+        eq(adminAuditLogsTable.action, "ai_review_escalate"),
+      ))
+      .limit(5);
+    expect(logs.length).toBeGreaterThan(0);
+    const meta = logs[0]!.metadata as Record<string, unknown>;
+    expect("before" in meta).toBe(true);
+    expect("after" in meta).toBe(true);
+    expect(meta.after).toBe("escalated_to_admin");
+  });
+
+  it("writes ai_review_request_evidence audit log when admin requests evidence", async () => {
+    const artist = await makeArtist();
+    const admin = await makeStaff("admin");
+    const contentId = await makeContentForReview(artist.token, "Evidence Test Song");
+
+    const res = await api()
+      .patch(`/api/admin/ai-review/song/${contentId}`)
+      .set("Authorization", bearer(admin.token))
+      .send({ action: "request_evidence" });
+    expect(res.status).toBe(200);
+
+    const logs = await db
+      .select({ action: adminAuditLogsTable.action, metadata: adminAuditLogsTable.metadata })
+      .from(adminAuditLogsTable)
+      .where(and(
+        eq(adminAuditLogsTable.adminUserId, admin.id),
+        eq(adminAuditLogsTable.action, "ai_review_request_evidence"),
+      ))
+      .limit(5);
+    expect(logs.length).toBeGreaterThan(0);
+    const meta = logs[0]!.metadata as Record<string, unknown>;
+    expect("before" in meta).toBe(true);
+    expect("after" in meta).toBe(true);
+    expect(meta.after).toBe("evidence_requested");
   });
 });
