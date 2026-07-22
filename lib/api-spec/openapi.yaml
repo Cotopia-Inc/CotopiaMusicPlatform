@@ -5183,7 +5183,7 @@ components:
           description: Songs + videos declared as ai_assisted
         declaredHybrid:
           type: integer
-          description: Songs + videos declared as hybrid (human_ai_collab)
+          description: Songs + videos declared as hybrid (hybrid_human_ai)
         declaredFullyAi:
           type: integer
           description: Songs + videos declared as fully_ai_generated
