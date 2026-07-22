@@ -304,8 +304,11 @@ router.patch("/admin/trust/appeals/:id", requireAuth, requireRole(...ADMIN_ROLES
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
 
   // Fetch the current appeal to capture the before status
-  const [existing] = await db.select({ status: trustAppealsTable.status, actionType: trustAppealsTable.actionType })
-    .from(trustAppealsTable).where(eq(trustAppealsTable.id, id)).limit(1);
+  const [existing] = await db.select({
+    status: trustAppealsTable.status,
+    actionType: trustAppealsTable.actionType,
+    relatedContent: trustAppealsTable.relatedContent,
+  }).from(trustAppealsTable).where(eq(trustAppealsTable.id, id)).limit(1);
   if (!existing) { res.status(404).json({ error: "Not found" }); return; }
 
   const [row] = await db.update(trustAppealsTable)
@@ -324,9 +327,28 @@ router.patch("/admin/trust/appeals/:id", requireAuth, requireRole(...ADMIN_ROLES
       before: existing.status,
       after: parsed.data.status,
       actionType: existing.actionType,
+      relatedContent: existing.relatedContent ?? null,
       adminNotes: parsed.data.adminNotes ?? null,
     },
   });
+
+  // When an appeal is reversed, log a separate classification_reversed entry
+  // so the audit trail explicitly captures that a content classification was overturned.
+  if (parsed.data.status === "reversed") {
+    await db.insert(adminAuditLogsTable).values({
+      adminUserId: req.user!.userId,
+      action: "classification_reversed",
+      targetType: "appeal",
+      targetId: id,
+      description: `Classification reversed via appeal ${id} — relatedContent: ${existing.relatedContent ?? "unspecified"} (actionType=${existing.actionType ?? ""})`,
+      metadata: {
+        appealId: id,
+        actionType: existing.actionType,
+        relatedContent: existing.relatedContent ?? null,
+        adminNotes: parsed.data.adminNotes ?? null,
+      },
+    });
+  }
 
   res.json(row);
 });

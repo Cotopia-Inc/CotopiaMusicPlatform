@@ -216,6 +216,7 @@ const adminReviewBody = z.object({
     "lock",           // lock tag
     "unlock",         // unlock tag
     "flag",           // moderator flag for admin review
+    "recommend",      // moderator recommendation with notes (escalates to admin)
     "escalate",       // escalate to admin
     "request_evidence",
     "approve",        // admin_approved
@@ -234,7 +235,7 @@ async function applyAdminReview(
   adminId: number,
   adminRole: string,
   body: z.infer<typeof adminReviewBody>,
-): Promise<{ error?: string; updated?: Record<string, unknown> }> {
+): Promise<{ error?: string; statusCode?: number; updated?: Record<string, unknown> }> {
   const table = contentType === "song" ? songsTable : videosTable;
 
   const [content] = await db
@@ -249,7 +250,7 @@ async function applyAdminReview(
     .where(eq((table as typeof songsTable).id, contentId))
     .limit(1);
 
-  if (!content) return { error: "Content not found" };
+  if (!content) return { error: "Content not found", statusCode: 404 };
 
   const isAdmin = (["admin", "master_admin"] as string[]).includes(adminRole);
   const isMod = adminRole === "moderator";
@@ -258,9 +259,9 @@ async function applyAdminReview(
 
   switch (body.action) {
     case "assign_tag": {
-      if (!isAdmin) return { error: "Only admins may assign a platform tag." };
-      if (!body.platformAssignedTag) return { error: "platformAssignedTag is required for assign_tag" };
-      if (!body.aiOverrideReason) return { error: "A written reason is required when assigning a platform tag." };
+      if (!isAdmin) return { error: "Only admins may assign a platform tag.", statusCode: 403 };
+      if (!body.platformAssignedTag) return { error: "platformAssignedTag is required for assign_tag", statusCode: 400 };
+      if (!body.aiOverrideReason) return { error: "A written reason is required when assigning a platform tag.", statusCode: 400 };
       updates.platformAssignedTag = body.platformAssignedTag;
       updates.tagSource = "admin";
       updates.effectiveDisplayTag = body.platformAssignedTag;
@@ -272,8 +273,8 @@ async function applyAdminReview(
       break;
     }
     case "lock": {
-      if (!isAdmin) return { error: "Only admins may lock a tag." };
-      if (!body.aiOverrideReason) return { error: "A written reason is required to lock a tag." };
+      if (!isAdmin) return { error: "Only admins may lock a tag.", statusCode: 403 };
+      if (!body.aiOverrideReason) return { error: "A written reason is required to lock a tag.", statusCode: 400 };
       updates.tagLocked = true;
       updates.aiOverrideReason = body.aiOverrideReason;
       updates.aiReviewedBy = adminId;
@@ -281,15 +282,21 @@ async function applyAdminReview(
       break;
     }
     case "unlock": {
-      if (!isAdmin) return { error: "Only admins may unlock a tag." };
+      if (!isAdmin) return { error: "Only admins may unlock a tag.", statusCode: 403 };
       updates.tagLocked = false;
       updates.aiReviewedBy = adminId;
       updates.aiReviewedAt = new Date();
       break;
     }
     case "flag": {
-      if (!isMod && !isAdmin) return { error: "Forbidden" };
+      if (!isMod && !isAdmin) return { error: "Forbidden", statusCode: 403 };
       updates.aiReviewStatus = "moderator_review";
+      break;
+    }
+    case "recommend": {
+      if (!isMod && !isAdmin) return { error: "Forbidden", statusCode: 403 };
+      if (!body.moderatorNotes) return { error: "A recommendation note is required for the recommend action.", statusCode: 400 };
+      updates.aiReviewStatus = "escalated_to_admin";
       break;
     }
     case "escalate": {
@@ -297,22 +304,22 @@ async function applyAdminReview(
       break;
     }
     case "request_evidence": {
-      if (!isAdmin) return { error: "Only admins may request evidence." };
+      if (!isAdmin) return { error: "Only admins may request evidence.", statusCode: 403 };
       updates.aiReviewStatus = "evidence_requested";
       updates.aiReviewedBy = adminId;
       updates.aiReviewedAt = new Date();
       break;
     }
     case "approve": {
-      if (!isAdmin) return { error: "Only admins may approve." };
+      if (!isAdmin) return { error: "Only admins may approve.", statusCode: 403 };
       updates.aiReviewStatus = "admin_approved";
       updates.aiReviewedBy = adminId;
       updates.aiReviewedAt = new Date();
       break;
     }
     case "reject": {
-      if (!isAdmin) return { error: "Only admins may reject." };
-      if (!body.aiOverrideReason) return { error: "A written reason is required to reject for AI policy." };
+      if (!isAdmin) return { error: "Only admins may reject.", statusCode: 403 };
+      if (!body.aiOverrideReason) return { error: "A written reason is required to reject for AI policy.", statusCode: 400 };
       updates.aiReviewStatus = "admin_rejected";
       updates.aiOverrideReason = body.aiOverrideReason;
       updates.aiReviewedBy = adminId;
@@ -345,7 +352,7 @@ router.patch(
     if (!parsed.success) { res.status(400).json({ error: "Invalid request", issues: parsed.error.issues }); return; }
 
     const result = await applyAdminReview("song", Number(req.params.id), req.user!.userId, req.user!.role, parsed.data);
-    if (result.error) { res.status(result.error === "Content not found" ? 404 : 403).json({ error: result.error }); return; }
+    if (result.error) { res.status(result.statusCode ?? 400).json({ error: result.error }); return; }
     res.json({ ok: true, ...result.updated });
   },
 );
@@ -358,7 +365,7 @@ router.patch(
     if (!parsed.success) { res.status(400).json({ error: "Invalid request", issues: parsed.error.issues }); return; }
 
     const result = await applyAdminReview("video", Number(req.params.id), req.user!.userId, req.user!.role, parsed.data);
-    if (result.error) { res.status(result.error === "Content not found" ? 404 : 403).json({ error: result.error }); return; }
+    if (result.error) { res.status(result.statusCode ?? 400).json({ error: result.error }); return; }
     res.json({ ok: true, ...result.updated });
   },
 );

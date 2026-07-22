@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { eq, desc, and } from "drizzle-orm";
-import { db, submissionsTable, usersTable, songsTable, videosTable, artistsTable, adminAuditLogsTable } from "@workspace/db";
+import { db, submissionsTable, usersTable, songsTable, videosTable, artistsTable, adminAuditLogsTable, appSettingsTable } from "@workspace/db";
 import { notify } from "../lib/notify";
 import {
   CreateSubmissionBody, GetSubmissionParams,
@@ -181,9 +181,13 @@ router.post("/submissions", requireAuth, requireVerifiedEmail, async (req: AuthR
     contentId = video.id;
   }
 
-  // Fully AI-generated content is not accepted per platform policy.
-  // Save the record for audit purposes (status=rejected), skip payment and publish, return 422.
-  if (creationMethod === "fully_ai_generated") {
+  // Check app_settings.autoRejectFullyAi to decide whether to hard-block or flag for review.
+  const [settings] = await db.select({ autoRejectFullyAi: appSettingsTable.autoRejectFullyAi })
+    .from(appSettingsTable).limit(1);
+  const autoRejectFullyAi = settings?.autoRejectFullyAi ?? false;
+
+  if (creationMethod === "fully_ai_generated" && autoRejectFullyAi) {
+    // Hard block: save as rejected, skip payment/publish, return 422.
     const [submission] = await db.insert(submissionsTable).values({
       userId: req.user!.userId,
       type: d.type,
@@ -201,7 +205,7 @@ router.post("/submissions", requireAuth, requireVerifiedEmail, async (req: AuthR
       targetType: "submission",
       targetId: submission.id,
       description: `Submission auto-rejected: fully_ai_generated policy (${d.type} id=${contentId})`,
-      metadata: { creationMethod, type: d.type, contentId, policy: "fully_ai_generated" },
+      metadata: { creationMethod, type: d.type, contentId, policy: "fully_ai_generated", before: null, after: "auto_rejected" },
     });
     res.status(422).json({
       error: "Fully AI-generated content is not accepted under Everyday Radio's current policy.",
@@ -212,6 +216,10 @@ router.post("/submissions", requireAuth, requireVerifiedEmail, async (req: AuthR
     return;
   }
 
+  // When autoRejectFullyAi is disabled and content is fully AI-generated,
+  // accept the submission but route it to moderator review instead of auto-publishing.
+  const aiReviewStatus = creationMethod === "fully_ai_generated" ? "moderator_review" : undefined;
+
   const [submission] = await db.insert(submissionsTable).values({
     userId: req.user!.userId,
     type: d.type,
@@ -221,6 +229,7 @@ router.post("/submissions", requireAuth, requireVerifiedEmail, async (req: AuthR
     paymentStatus: "unpaid",
     submitterNotes,
     creationMethod,
+    ...(aiReviewStatus !== undefined ? { aiReviewStatus } : {}),
   }).returning();
 
   // Fire-and-forget: scans run in background, do not block the response.
@@ -285,9 +294,17 @@ router.post("/submissions/bulk", requireAuth, requireVerifiedEmail, async (req: 
   };
   const submitterNotes = JSON.stringify(metaFields);
 
+  // Check app_settings.autoRejectFullyAi to decide whether to hard-block or flag for review.
+  const [bulkSettings] = await db.select({ autoRejectFullyAi: appSettingsTable.autoRejectFullyAi })
+    .from(appSettingsTable).limit(1);
+  const autoRejectFullyAi = bulkSettings?.autoRejectFullyAi ?? false;
+
+  const isFullyAi = creationMethod === "fully_ai_generated";
+  // When autoRejectFullyAi is disabled, fully-AI submissions are accepted but flagged for moderator review.
+  const shouldHardReject = isFullyAi && autoRejectFullyAi;
+
   const results: object[] = [];
   const rejectedSubmissionIds: number[] = [];
-  const isFullyAi = creationMethod === "fully_ai_generated";
 
   for (const file of d.files) {
     let contentId: number;
@@ -330,19 +347,28 @@ router.post("/submissions/bulk", requireAuth, requireVerifiedEmail, async (req: 
       contentId = video.id;
     }
 
+    let submissionAiStatus: string;
+    if (shouldHardReject) {
+      submissionAiStatus = "auto_rejected";
+    } else if (isFullyAi) {
+      submissionAiStatus = "moderator_review";
+    } else {
+      submissionAiStatus = "not_scanned";
+    }
+
     const [submission] = await db.insert(submissionsTable).values({
       userId: req.user!.userId,
       type: d.type,
       contentId,
       plan: d.plan ?? "basic",
-      status: isFullyAi ? "rejected" : "draft",
+      status: shouldHardReject ? "rejected" : "draft",
       paymentStatus: "unpaid",
       submitterNotes,
       creationMethod,
-      aiReviewStatus: isFullyAi ? "auto_rejected" : "not_scanned",
+      aiReviewStatus: submissionAiStatus,
     }).returning();
 
-    if (isFullyAi) {
+    if (shouldHardReject) {
       rejectedSubmissionIds.push(submission.id);
     } else {
       // Fire-and-forget: no-ops if enableAiReview is disabled or provider is not configured.
@@ -352,9 +378,8 @@ router.post("/submissions/bulk", requireAuth, requireVerifiedEmail, async (req: 
     }
   }
 
-  // Fully AI-generated content is not accepted per platform policy.
-  // Records saved above (status=rejected) for audit; skip payment and publish.
-  if (isFullyAi) {
+  // When autoRejectFullyAi is enabled, hard-block: records already saved as rejected; skip payment/publish.
+  if (shouldHardReject) {
     for (const subId of rejectedSubmissionIds) {
       await db.insert(adminAuditLogsTable).values({
         adminUserId: req.user!.userId,
@@ -362,7 +387,7 @@ router.post("/submissions/bulk", requireAuth, requireVerifiedEmail, async (req: 
         targetType: "submission",
         targetId: subId,
         description: `Submission auto-rejected: fully_ai_generated policy (bulk ${d.type})`,
-        metadata: { creationMethod, type: d.type, policy: "fully_ai_generated", fileCount: d.files.length },
+        metadata: { creationMethod, type: d.type, policy: "fully_ai_generated", fileCount: d.files.length, before: null, after: "auto_rejected" },
       });
     }
     res.status(422).json({

@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { z } from "zod/v4";
 import { eq, desc, ilike, and, count, avg, sql, or, notInArray, isNotNull } from "drizzle-orm";
 import {
   db, usersTable, submissionsTable, songsTable, videosTable, artistsTable,
@@ -653,8 +654,49 @@ router.get("/admin/settings", requireAuth, requireRole("master_admin"), async (_
   res.json(parseSettingsFees(settings));
 });
 
+// Cannot use UpdateAppSettingsBody.extend() due to cross-package zod type incompatibility.
+// Define the full settings body inline so all fields (including AI policy additions) are accepted.
+const UpdateSettingsBody = z.object({
+  appName: z.string().optional(),
+  logoUrl: z.string().optional(),
+  primaryColor: z.string().optional(),
+  secondaryColor: z.string().optional(),
+  accentColor: z.string().optional(),
+  footerText: z.string().optional(),
+  songSubmissionFee: z.number().optional(),
+  videoSubmissionFee: z.number().optional(),
+  singleSongFee: z.number().optional(),
+  batchSongFee: z.number().optional(),
+  premiumSongFee: z.number().optional(),
+  singleVideoFee: z.number().optional(),
+  batchVideoFee: z.number().optional(),
+  premiumVideoFee: z.number().optional(),
+  maintenanceMode: z.boolean().optional(),
+  requireEmailVerification: z.boolean().optional(),
+  featureRotation: z.boolean().optional(),
+  autoEscalationEnabled: z.boolean().optional(),
+  strikesUntilSuspension: z.number().min(1).optional(),
+  autoSuspensionDays: z.number().min(1).optional(),
+  suspensionsUntilBanReview: z.number().min(1).optional(),
+  showTopRated: z.boolean().optional(),
+  topRatedMinRatings: z.number().min(1).optional(),
+  enableAiReview: z.boolean().optional(),
+  allowCreatorSelfTagging: z.boolean().optional(),
+  autoRejectFullyAi: z.boolean().optional(),
+  autoRejectDetectionThreshold: z.number().optional(),
+  aiLowThreshold: z.number().optional(),
+  aiHighThreshold: z.number().optional(),
+  aiCriticalThreshold: z.number().optional(),
+  showHumanBadge: z.boolean().optional(),
+  showAiBadge: z.boolean().optional(),
+  showHybridBadge: z.boolean().optional(),
+  showFullyAiBadge: z.boolean().optional(),
+  showTitleIcons: z.boolean().optional(),
+  showCoverOverlays: z.boolean().optional(),
+});
+
 router.patch("/admin/settings", requireAuth, requireRole("master_admin"), async (req: AuthRequest, res): Promise<void> => {
-  const parsed = UpdateAppSettingsBody.safeParse(req.body);
+  const parsed = UpdateSettingsBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
 
   const dbData: Record<string, unknown> = { ...parsed.data };
