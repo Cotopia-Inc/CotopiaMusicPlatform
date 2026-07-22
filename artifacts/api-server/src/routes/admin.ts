@@ -670,7 +670,34 @@ router.patch("/admin/settings", requireAuth, requireRole("master_admin"), async 
   let [existing] = await db.select().from(appSettingsTable).limit(1);
   if (!existing) [existing] = await db.insert(appSettingsTable).values({}).returning();
 
+  // Capture AI policy field changes for audit log before the update
+  const AI_POLICY_FIELDS = [
+    "enableAiReview", "allowCreatorSelfTagging", "autoRejectFullyAi",
+    "autoRejectDetectionThreshold", "aiLowThreshold", "aiHighThreshold", "aiCriticalThreshold",
+    "showHumanBadge", "showAiBadge", "showHybridBadge", "showFullyAiBadge", "showTitleIcons", "showCoverOverlays",
+  ] as const;
+  const policyChanges: Array<{ field: string; before: unknown; after: unknown }> = [];
+  const existingRaw = existing as Record<string, unknown>;
+  for (const field of AI_POLICY_FIELDS) {
+    if (dbData[field] !== undefined && existingRaw[field] !== dbData[field]) {
+      policyChanges.push({ field, before: existingRaw[field], after: dbData[field] });
+    }
+  }
+
   const [updated] = await db.update(appSettingsTable).set(dbData).where(eq(appSettingsTable.id, existing.id)).returning();
+
+  // Log one audit entry per changed AI-policy field
+  const adminId = req.user!.userId;
+  for (const change of policyChanges) {
+    await db.insert(adminAuditLogsTable).values({
+      adminUserId: adminId,
+      action: "settings_ai_policy_changed",
+      targetType: "app_settings",
+      targetId: existing.id,
+      description: `AI policy setting changed: ${change.field} ${change.before} → ${change.after}`,
+      metadata: { field: change.field, before: change.before, after: change.after },
+    });
+  }
 
   // Invalidate the maintenance mode cache so changes take effect immediately
   invalidateMaintenanceCache();

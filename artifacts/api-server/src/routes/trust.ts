@@ -4,7 +4,7 @@ import { z } from "zod/v4";
 import {
   db,
   trustKnownIssuesTable, trustReleaseNotesTable, trustWeHeardYouTable,
-  trustTimelineTable, trustAppealsTable,
+  trustTimelineTable, trustAppealsTable, adminAuditLogsTable,
 } from "@workspace/db";
 import { requireAuth, requireRole, optionalAuth, type AuthRequest } from "../lib/auth";
 
@@ -81,6 +81,23 @@ router.post("/trust/appeals", optionalAuth, async (req: AuthRequest, res): Promi
       status: "received",
     })
     .returning();
+
+  // Log audit entry for authenticated submitters (adminUserId is NOT nullable)
+  if (req.user?.userId) {
+    await db.insert(adminAuditLogsTable).values({
+      adminUserId: req.user.userId,
+      action: "appeal_created",
+      targetType: "appeal",
+      targetId: appeal.id,
+      description: `Appeal submitted: actionType=${parsed.data.actionType}, relatedContent=${parsed.data.relatedContent ?? ""}`,
+      metadata: {
+        actionType: parsed.data.actionType,
+        relatedContent: parsed.data.relatedContent ?? null,
+        status: "received",
+      },
+    });
+  }
+
   res.status(201).json(appeal);
 });
 
@@ -281,15 +298,36 @@ router.get("/admin/trust/appeals", requireAuth, requireRole(...ADMIN_ROLES), asy
   res.json(rows);
 });
 
-router.patch("/admin/trust/appeals/:id", requireAuth, requireRole(...ADMIN_ROLES), async (req, res): Promise<void> => {
+router.patch("/admin/trust/appeals/:id", requireAuth, requireRole(...ADMIN_ROLES), async (req: AuthRequest, res): Promise<void> => {
   const id = Number(req.params["id"]);
   const parsed = AppealUpdateBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+
+  // Fetch the current appeal to capture the before status
+  const [existing] = await db.select({ status: trustAppealsTable.status, actionType: trustAppealsTable.actionType })
+    .from(trustAppealsTable).where(eq(trustAppealsTable.id, id)).limit(1);
+  if (!existing) { res.status(404).json({ error: "Not found" }); return; }
+
   const [row] = await db.update(trustAppealsTable)
     .set({ status: parsed.data.status, adminNotes: parsed.data.adminNotes ?? null })
     .where(eq(trustAppealsTable.id, id))
     .returning();
   if (!row) { res.status(404).json({ error: "Not found" }); return; }
+
+  await db.insert(adminAuditLogsTable).values({
+    adminUserId: req.user!.userId,
+    action: "appeal_decision",
+    targetType: "appeal",
+    targetId: id,
+    description: `Appeal ${id} status: ${existing.status} → ${parsed.data.status} (actionType=${existing.actionType ?? ""})`,
+    metadata: {
+      before: existing.status,
+      after: parsed.data.status,
+      actionType: existing.actionType,
+      adminNotes: parsed.data.adminNotes ?? null,
+    },
+  });
+
   res.json(row);
 });
 

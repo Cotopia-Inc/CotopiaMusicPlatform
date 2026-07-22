@@ -325,7 +325,14 @@ async function applyAdminReview(
 
   await logAudit(adminId, `ai_review_${body.action}`, contentType, contentId,
     `AI review action '${body.action}' on ${contentType} ${contentId}`,
-    { action: body.action, platformAssignedTag: body.platformAssignedTag, reason: body.aiOverrideReason });
+    {
+      action: body.action,
+      before: content.aiReviewStatus,
+      after: updates.aiReviewStatus ?? content.aiReviewStatus,
+      platformAssignedTag: body.platformAssignedTag,
+      reason: body.aiOverrideReason,
+      moderatorNotes: body.moderatorNotes,
+    });
 
   return { updated: updates };
 }
