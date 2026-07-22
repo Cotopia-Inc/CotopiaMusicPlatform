@@ -354,6 +354,17 @@ router.patch(
   },
 );
 
+// ── URL helper ────────────────────────────────────────────────────────────────
+// Hive requires a publicly reachable absolute URL. Storage paths in older
+// records (pre-R2) are stored as relative paths ("/api/storage/objects/…").
+// Convert them using the request's forwarded-host so Hive can fetch the file.
+function makeAbsoluteUrl(url: string, req: AuthRequest): string {
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  const proto = (req.headers["x-forwarded-proto"] as string | undefined) ?? req.protocol ?? "https";
+  const host = (req.headers["x-forwarded-host"] as string | undefined) ?? req.get("host") ?? "localhost";
+  return `${proto}://${host}${url.startsWith("/") ? url : `/${url}`}`;
+}
+
 // ── Hive detection scan ───────────────────────────────────────────────────────
 //
 // Responds 202 immediately after marking scan_pending so the HTTP connection is
@@ -381,14 +392,17 @@ router.post(
 
     if (!content) { res.status(404).json({ error: "Content not found" }); return; }
 
-    const mediaUrl = (content as Record<string, unknown>)[
+    const rawMediaUrl = (content as Record<string, unknown>)[
       contentType === "song" ? "streamUrl" : "videoUrl"
     ] as string | null;
 
-    if (!mediaUrl) {
+    if (!rawMediaUrl) {
       res.status(422).json({ error: "No media URL available to scan" });
       return;
     }
+
+    // Hive requires an absolute URL — convert relative paths before responding.
+    const mediaUrl = makeAbsoluteUrl(rawMediaUrl, req);
 
     const settings = await getSettings();
     const requestedBy = req.user!.userId;
@@ -494,14 +508,17 @@ router.post(
 
     if (!content) { res.status(404).json({ error: "Content not found" }); return; }
 
-    const imageUrl = (content as Record<string, unknown>)[
+    const rawImageUrl = (content as Record<string, unknown>)[
       contentType === "song" ? "coverUrl" : "thumbnailUrl"
     ] as string | null;
 
-    if (!imageUrl) {
+    if (!rawImageUrl) {
       res.status(422).json({ error: "No cover art URL available to scan" });
       return;
     }
+
+    // Hive requires an absolute URL — convert relative paths before responding.
+    const imageUrl = makeAbsoluteUrl(rawImageUrl, req);
 
     const settings = await getSettings();
     const coverContentType = `${contentType}_cover` as string;
@@ -542,6 +559,29 @@ router.post(
         req.log.error({ err, contentType, contentId }, "ai-review/scan-cover background task failed");
       }
     })();
+  },
+);
+
+// ── Delete a single scan record ───────────────────────────────────────────────
+
+router.delete(
+  "/admin/ai-scans/:id",
+  requireAuth, requireRole(...STAFF_ROLES),
+  async (req: AuthRequest, res): Promise<void> => {
+    const id = Number(req.params.id);
+    if (!id || isNaN(id)) { res.status(400).json({ error: "Invalid scan id" }); return; }
+
+    const [deleted] = await db
+      .delete(aiDetectionScansTable)
+      .where(eq(aiDetectionScansTable.id, id))
+      .returning({ id: aiDetectionScansTable.id });
+
+    if (!deleted) { res.status(404).json({ error: "Scan record not found" }); return; }
+
+    await logAudit(req.user!.userId, "ai_scan_deleted", "ai_scan", id,
+      `Deleted AI scan record ${id}`);
+
+    res.json({ ok: true });
   },
 );
 

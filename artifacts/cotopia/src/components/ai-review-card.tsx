@@ -13,8 +13,8 @@
  * and platform policy. Never describe results as conclusive proof.
  */
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, Lock, LockOpen, ShieldCheck, ShieldAlert, ChevronDown, ChevronUp, Scan, History } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { AlertTriangle, Lock, LockOpen, ShieldCheck, ShieldAlert, ChevronDown, ChevronUp, Scan, History, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
@@ -186,6 +186,8 @@ export function AiReviewCard({
   const [selectedTag, setSelectedTag] = useState<string>("");
   const [reason, setReason] = useState("");
 
+  const queryClient = useQueryClient();
+
   const { data: scanHistory } = useQuery<ScanRecord[]>({
     queryKey: ["ai-scans", contentType, contentId],
     queryFn: async () => {
@@ -197,10 +199,18 @@ export function AiReviewCard({
       return res.json();
     },
     enabled: (isAdmin || isModerator) && !!contentId,
-    // Keep polling while a scan is in-flight so history updates automatically.
     refetchInterval: data.aiReviewStatus === "scan_pending" ? 5000 : false,
     staleTime: 10_000,
   });
+
+  async function handleDeleteScan(scanId: number) {
+    const token = localStorage.getItem("cotopia_token");
+    await fetch(`/api/admin/ai-scans/${scanId}`, {
+      method: "DELETE",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    queryClient.invalidateQueries({ queryKey: ["ai-scans", contentType, contentId] });
+  }
 
   const hasScore = typeof data.aiEstimatePercent === "number" && data.aiEstimatePercent !== null;
 
@@ -362,10 +372,10 @@ export function AiReviewCard({
             <div className="space-y-2">
               <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground uppercase tracking-wider">
                 <History className="w-3 h-3" />
-                Scan History
+                Scan History ({scanHistory.length})
               </div>
-              <div className="space-y-1.5">
-                {scanHistory.slice(0, 5).map((scan) => {
+              <div className="max-h-64 overflow-y-auto space-y-1.5 pr-0.5">
+                {scanHistory.map((scan) => {
                   const statusColor =
                     scan.scanStatus === "complete" ? "text-emerald-600 dark:text-emerald-400" :
                     scan.scanStatus === "failed" ? "text-red-500" :
@@ -381,10 +391,23 @@ export function AiReviewCard({
                         <span className={cn("font-medium capitalize", statusColor)}>
                           {scan.scanStatus}
                         </span>
-                        <span className="text-[10px] text-muted-foreground tabular-nums">{dateStr}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] text-muted-foreground tabular-nums">{dateStr}</span>
+                          {isAdmin && (
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteScan(scan.id)}
+                              className="text-muted-foreground hover:text-red-500 transition-colors"
+                              aria-label="Delete scan record"
+                              title="Delete this scan record"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
                       </div>
                       {scan.scanStatus === "complete" && scan.aiLikelihoodPercent !== null && (
-                        <div className="flex items-center gap-3 text-[11px]">
+                        <div className="flex flex-wrap items-center gap-3 text-[11px]">
                           <span>
                             AI likelihood: <strong className="tabular-nums">{scan.aiLikelihoodPercent}%</strong>
                           </span>
@@ -408,7 +431,7 @@ export function AiReviewCard({
                         </div>
                       )}
                       {scan.scanStatus === "failed" && scan.errorMessage && (
-                        <div className="text-[10px] text-red-500 truncate" title={scan.errorMessage}>
+                        <div className="text-[10px] text-red-500 break-all" title={scan.errorMessage}>
                           Error: {scan.errorMessage}
                         </div>
                       )}
