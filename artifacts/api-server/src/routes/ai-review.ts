@@ -138,9 +138,9 @@ router.post("/songs/:id/creation-tag", requireAuth, async (req: AuthRequest, res
     })
     .where(eq(songsTable.id, songId));
 
-  await logAudit(userId, "creator_tag_change", "song", songId,
-    `Creator changed creation method: ${prevMethod} → ${creationMethod}`,
-    { prevMethod, newMethod: creationMethod });
+  await logAudit(userId, "creator_tag_set", "song", songId,
+    `Creator set creation method: ${prevMethod} → ${creationMethod}`,
+    { before: prevMethod, after: creationMethod, userId, contentType: "song", contentId: songId });
 
   res.json({ ok: true, creationMethod, effectiveDisplayTag, requiresReview: shouldEscalate });
 });
@@ -199,9 +199,9 @@ router.post("/videos/:id/creation-tag", requireAuth, async (req: AuthRequest, re
     })
     .where(eq(videosTable.id, videoId));
 
-  await logAudit(userId, "creator_tag_change", "video", videoId,
-    `Creator changed creation method: ${prevMethod} → ${creationMethod}`,
-    { prevMethod, newMethod: creationMethod });
+  await logAudit(userId, "creator_tag_set", "video", videoId,
+    `Creator set creation method: ${prevMethod} → ${creationMethod}`,
+    { before: prevMethod, after: creationMethod, userId, contentType: "video", contentId: videoId });
 
   res.json({ ok: true, creationMethod, effectiveDisplayTag, requiresReview: shouldEscalate });
 });

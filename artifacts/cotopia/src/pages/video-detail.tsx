@@ -341,7 +341,7 @@ export default function VideoDetail() {
     if (video) {
       setLocalFavorited(video.isFavorited ?? false);
       setLocalRating(video.userRating ?? null);
-      setSelectedOriginTag(((video as any).creationMethod ?? "unclassified") as CreationMethodOption);
+      setSelectedOriginTag(((video as any).creatorSelectedTag ?? (video as any).effectiveDisplayTag ?? (video as any).creationMethod ?? "unclassified") as CreationMethodOption);
     }
   }, [video?.id]);
 
@@ -904,7 +904,14 @@ export default function VideoDetail() {
             {originOpen && (
               <div className="p-5 space-y-4">
                 {!config.allowCreatorSelfTagging ? (
-                  <p className="text-xs text-muted-foreground">Content origin tags are currently managed by the platform. Contact support to request a change.</p>
+                  <div className="space-y-2">
+                    {(video as any).effectiveDisplayTag && (video as any).effectiveDisplayTag !== "unclassified" && (
+                      <div className="flex items-center gap-2">
+                        <AiOriginBadge method={(video as any).effectiveDisplayTag as CreationMethod} />
+                      </div>
+                    )}
+                    <p className="text-xs text-muted-foreground">Content origin tags are currently managed by the platform. Contact support to request a change.</p>
+                  </div>
                 ) : (
                   <>
                     <CreationMethodSelector
@@ -917,7 +924,7 @@ export default function VideoDetail() {
                         <Button
                           size="sm"
                           onClick={handleSaveOriginTag}
-                          disabled={tagSaving || selectedOriginTag === ((video as any).creationMethod ?? "unclassified")}
+                          disabled={tagSaving || selectedOriginTag === ((video as any).creatorSelectedTag ?? (video as any).effectiveDisplayTag ?? (video as any).creationMethod ?? "unclassified")}
                           className="h-7 text-xs gap-1.5"
                         >
                           {tagSaving ? "Saving…" : <><Save className="w-3 h-3" /> Save origin</>}

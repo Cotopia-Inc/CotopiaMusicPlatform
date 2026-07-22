@@ -228,7 +228,7 @@ export default function SongDetail() {
     if (song) {
       setLocalFavorited(song.isFavorited ?? false);
       setLocalRating(song.userRating ?? null);
-      setSelectedOriginTag(((song as any).creationMethod ?? "unclassified") as CreationMethodOption);
+      setSelectedOriginTag(((song as any).creatorSelectedTag ?? (song as any).effectiveDisplayTag ?? (song as any).creationMethod ?? "unclassified") as CreationMethodOption);
     }
   }, [song?.id]);
 
@@ -576,7 +576,14 @@ export default function SongDetail() {
             {originOpen && (
               <div className="p-5 space-y-4">
                 {!config.allowCreatorSelfTagging ? (
-                  <p className="text-xs text-muted-foreground">Content origin tags are currently managed by the platform. Contact support to request a change.</p>
+                  <div className="space-y-2">
+                    {(song as any).effectiveDisplayTag && (song as any).effectiveDisplayTag !== "unclassified" && (
+                      <div className="flex items-center gap-2">
+                        <AiOriginBadge method={(song as any).effectiveDisplayTag as CreationMethod} />
+                      </div>
+                    )}
+                    <p className="text-xs text-muted-foreground">Content origin tags are currently managed by the platform. Contact support to request a change.</p>
+                  </div>
                 ) : (
                   <>
                     <CreationMethodSelector
@@ -589,7 +596,7 @@ export default function SongDetail() {
                         <Button
                           size="sm"
                           onClick={handleSaveOriginTag}
-                          disabled={tagSaving || selectedOriginTag === ((song as any).creationMethod ?? "unclassified")}
+                          disabled={tagSaving || selectedOriginTag === ((song as any).creatorSelectedTag ?? (song as any).effectiveDisplayTag ?? (song as any).creationMethod ?? "unclassified")}
                           className="h-7 text-xs gap-1.5"
                         >
                           {tagSaving ? "Saving…" : <><Save className="w-3 h-3" /> Save origin</>}
