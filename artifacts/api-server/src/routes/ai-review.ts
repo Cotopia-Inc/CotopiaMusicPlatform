@@ -117,6 +117,7 @@ router.post("/songs/:id/creation-tag", requireAuth, async (req: AuthRequest, res
   }
 
   const { creationMethod } = parsed.data;
+  const prevCreatorTag = song.creatorSelectedTag;
   const prevMethod = song.creationMethod;
 
   const effectiveDisplayTag = resolveDisplayTag("creator", null, creationMethod, creationMethod);
@@ -139,8 +140,8 @@ router.post("/songs/:id/creation-tag", requireAuth, async (req: AuthRequest, res
     .where(eq(songsTable.id, songId));
 
   await logAudit(userId, "creator_tag_set", "song", songId,
-    `Creator set creation method: ${prevMethod} → ${creationMethod}`,
-    { before: prevMethod, after: creationMethod, userId, contentType: "song", contentId: songId });
+    `Creator set creation method: ${prevCreatorTag ?? prevMethod} → ${creationMethod}`,
+    { before: prevCreatorTag ?? prevMethod, after: creationMethod, userId, contentType: "song", contentId: songId });
 
   res.json({ ok: true, creationMethod, effectiveDisplayTag, requiresReview: shouldEscalate });
 });
@@ -160,7 +161,7 @@ router.post("/videos/:id/creation-tag", requireAuth, async (req: AuthRequest, re
   }
 
   const [video] = await db
-    .select({ id: videosTable.id, artistId: videosTable.artistId, tagLocked: videosTable.tagLocked, creationMethod: videosTable.creationMethod })
+    .select({ id: videosTable.id, artistId: videosTable.artistId, tagLocked: videosTable.tagLocked, creationMethod: videosTable.creationMethod, creatorSelectedTag: videosTable.creatorSelectedTag })
     .from(videosTable)
     .where(eq(videosTable.id, videoId))
     .limit(1);
@@ -184,6 +185,7 @@ router.post("/videos/:id/creation-tag", requireAuth, async (req: AuthRequest, re
   }
 
   const { creationMethod } = parsed.data;
+  const prevCreatorTag = video.creatorSelectedTag;
   const prevMethod = video.creationMethod;
   const effectiveDisplayTag = resolveDisplayTag("creator", null, creationMethod, creationMethod);
   const shouldEscalate = prevMethod !== creationMethod && !["unclassified", "human_created"].includes(creationMethod);
@@ -200,8 +202,8 @@ router.post("/videos/:id/creation-tag", requireAuth, async (req: AuthRequest, re
     .where(eq(videosTable.id, videoId));
 
   await logAudit(userId, "creator_tag_set", "video", videoId,
-    `Creator set creation method: ${prevMethod} → ${creationMethod}`,
-    { before: prevMethod, after: creationMethod, userId, contentType: "video", contentId: videoId });
+    `Creator set creation method: ${prevCreatorTag ?? prevMethod} → ${creationMethod}`,
+    { before: prevCreatorTag ?? prevMethod, after: creationMethod, userId, contentType: "video", contentId: videoId });
 
   res.json({ ok: true, creationMethod, effectiveDisplayTag, requiresReview: shouldEscalate });
 });
