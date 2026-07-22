@@ -53,6 +53,12 @@ async function getVideoWithArtist(id: number, userId?: number) {
       aiConfidenceLevel: videosTable.aiConfidenceLevel,
       aiRiskLevel: videosTable.aiRiskLevel,
       aiReviewStatus: videosTable.aiReviewStatus,
+      creatorSelectedTag: videosTable.creatorSelectedTag,
+      platformAssignedTag: videosTable.platformAssignedTag,
+      tagSource: videosTable.tagSource,
+      aiDetectionReasons: videosTable.aiDetectionReasons,
+      aiOverrideReason: videosTable.aiOverrideReason,
+      appealStatus: videosTable.appealStatus,
     })
     .from(videosTable)
     .leftJoin(artistsTable, eq(videosTable.artistId, artistsTable.id))

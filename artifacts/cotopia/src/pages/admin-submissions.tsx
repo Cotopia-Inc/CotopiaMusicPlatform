@@ -19,173 +19,14 @@ import {
   Play, Pause, ChevronDown, ChevronUp, Music, Video,
   CheckCircle, XCircle, Clock, AlertCircle, AlertTriangle,
   ArrowUpCircle, CornerUpLeft, Scale, StickyNote, Star, Send, Trash2,
-  ImageIcon, Scan, Loader2,
 } from "lucide-react";
 import { CopyrightStrikeModal, type StrikeTarget } from "@/components/copyright-strike-modal";
 import { RoleTag } from "@/components/role-badges";
 import { AiReviewCard } from "@/components/ai-review-card";
+import { CoverArtScanPanel } from "@/components/cover-art-scan-panel";
 import type { CreationMethod } from "@/components/ai-origin-badge";
 
 type Mode = "moderator" | "admin" | "editor";
-
-interface CoverScan {
-  aiLikelihoodPercent: number | null;
-  confidenceLevel: string | null;
-  riskLevel: string | null;
-  scanStatus: string;
-  scannedAt: string | null;
-}
-
-function CoverArtScanPanel({
-  contentType,
-  contentId,
-  coverUrl,
-}: {
-  contentType: "song" | "video";
-  contentId: number;
-  coverUrl: string | null;
-}) {
-  const [scan, setScan] = useState<CoverScan | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [scanning, setScanning] = useState(false);
-  const { toast } = useToast();
-
-  const coverContentType = `${contentType}_cover`;
-
-  const fetchLatest = useCallback(async () => {
-    try {
-      const token = localStorage.getItem("cotopia_token");
-      const res = await fetch(
-        `${import.meta.env.BASE_URL}api/admin/ai-scans/${coverContentType}/${contentId}`,
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
-      if (!res.ok) return;
-      const data = await res.json() as CoverScan[];
-      setScan(data[0] ?? null);
-    } catch {
-      // silent — no cover scan yet is normal
-    } finally {
-      setLoading(false);
-    }
-  }, [contentId, coverContentType]);
-
-  useEffect(() => { void fetchLatest(); }, [fetchLatest]);
-
-  const triggerScan = async () => {
-    if (!coverUrl) {
-      toast({ variant: "destructive", title: "No cover art", description: "This submission has no cover art URL to scan." });
-      return;
-    }
-    setScanning(true);
-    try {
-      const token = localStorage.getItem("cotopia_token");
-      const res = await fetch(`${import.meta.env.BASE_URL}api/admin/ai-review/scan-cover`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ contentType, contentId }),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        toast({ variant: "destructive", title: "Scan failed", description: (err as { error?: string }).error ?? "Could not scan cover art" });
-        return;
-      }
-      toast({ title: "Cover art scanned", description: "Results are shown below." });
-      await fetchLatest();
-    } catch {
-      toast({ variant: "destructive", title: "Scan failed", description: "Network error" });
-    } finally {
-      setScanning(false);
-    }
-  };
-
-  const riskColor = (level: string | null) => {
-    if (level === "critical") return "text-red-500";
-    if (level === "high") return "text-orange-500";
-    if (level === "moderate") return "text-amber-500";
-    return "text-emerald-500";
-  };
-
-  return (
-    <div className="rounded-xl border border-border bg-card overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-3">
-        <div className="flex items-center gap-2 text-sm font-semibold">
-          <ImageIcon className="w-4 h-4 text-primary" />
-          Cover Art AI Scan
-        </div>
-        {coverUrl && (
-          <button
-            type="button"
-            onClick={() => void triggerScan()}
-            disabled={scanning}
-            className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border border-border bg-secondary/50 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
-          >
-            {scanning ? <><Loader2 className="w-3 h-3 animate-spin" />Scanning…</> : <><Scan className="w-3 h-3" />Scan Cover Art</>}
-          </button>
-        )}
-      </div>
-
-      <div className="border-t border-border px-4 py-3 space-y-3">
-        {!coverUrl && (
-          <p className="text-xs text-muted-foreground italic">No cover art on this submission.</p>
-        )}
-
-        {coverUrl && (
-          <div className="flex items-start gap-3">
-            <img
-              src={coverUrl}
-              alt="Cover art"
-              className="w-14 h-14 rounded-lg object-cover border border-border flex-shrink-0"
-            />
-            <div className="flex-1 min-w-0 space-y-1.5">
-              {loading && (
-                <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                  <Loader2 className="w-3 h-3 animate-spin" />Loading scan history…
-                </p>
-              )}
-              {!loading && !scan && (
-                <p className="text-xs text-muted-foreground italic">Cover art not yet scanned. Click "Scan Cover Art" to check.</p>
-              )}
-              {!loading && scan && (
-                <>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {typeof scan.aiLikelihoodPercent === "number" ? (
-                      <span className={`text-sm font-semibold tabular-nums ${riskColor(scan.riskLevel)}`}>
-                        {scan.aiLikelihoodPercent}% AI likelihood
-                      </span>
-                    ) : (
-                      <span className="text-xs text-muted-foreground italic">Score unavailable</span>
-                    )}
-                    {scan.riskLevel && (
-                      <span className={`text-[10px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded-full border ${
-                        scan.riskLevel === "critical" ? "bg-red-500/10 text-red-500 border-red-500/30" :
-                        scan.riskLevel === "high" ? "bg-orange-500/10 text-orange-500 border-orange-500/30" :
-                        scan.riskLevel === "moderate" ? "bg-amber-500/10 text-amber-500 border-amber-500/30" :
-                        "bg-emerald-500/10 text-emerald-500 border-emerald-500/30"
-                      }`}>
-                        {scan.riskLevel}
-                      </span>
-                    )}
-                    {scan.confidenceLevel && scan.confidenceLevel !== "unavailable" && (
-                      <span className="text-[10px] text-muted-foreground capitalize">{scan.confidenceLevel} confidence</span>
-                    )}
-                  </div>
-                  {scan.scannedAt && (
-                    <p className="text-[10px] text-muted-foreground">
-                      Scanned {format(new Date(scan.scannedAt), "MMM d, yyyy 'at' h:mm a")}
-                    </p>
-                  )}
-                  <p className="text-[10px] text-amber-600 dark:text-amber-400">
-                    Advisory estimate only — not conclusive proof.
-                  </p>
-                </>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
 
 function statusBadge(status: string) {
   const map: Record<string, { label: string; className: string }> = {
@@ -546,6 +387,7 @@ function SubmissionCard({
               contentType={(sub.type as "song" | "video") ?? "song"}
               contentId={sub.contentId ?? sub.id}
               coverUrl={(sub as unknown as Record<string, unknown>).coverUrl as string | null}
+              isAdmin={mode === "admin"}
             />
           )}
 

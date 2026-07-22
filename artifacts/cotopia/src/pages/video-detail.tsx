@@ -32,6 +32,7 @@ import { usePlayer } from "@/lib/player";
 import { CommentSection } from "@/components/comment-section";
 import { AiOriginBadge, type CreationMethod } from "@/components/ai-origin-badge";
 import { AiReviewCard } from "@/components/ai-review-card";
+import { CoverArtScanPanel } from "@/components/cover-art-scan-panel";
 
 function formatTime(iso: string) {
   const d = new Date(iso);
@@ -950,6 +951,14 @@ export default function VideoDetail() {
         })()}
 
         {/* AI Authorship Review — staff only */}
+        {user && ["admin", "master_admin", "editor", "moderator"].includes(user.role) && (video as any).thumbnailUrl && (
+          <CoverArtScanPanel
+            contentType="video"
+            contentId={video.id}
+            coverUrl={(video as any).thumbnailUrl}
+            isAdmin={["admin", "master_admin"].includes(user.role)}
+          />
+        )}
         {user && ["admin", "master_admin", "editor", "moderator"].includes(user.role) && (
           <AiReviewCard
             contentType="video"

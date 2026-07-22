@@ -33,6 +33,7 @@ import { VerifyEmailBanner } from "@/components/verify-email-banner";
 import { CommentSection } from "@/components/comment-section";
 import { AiOriginBadge, type CreationMethod } from "@/components/ai-origin-badge";
 import { AiReviewCard } from "@/components/ai-review-card";
+import { CoverArtScanPanel } from "@/components/cover-art-scan-panel";
 
 function formatTime(iso: string) {
   const d = new Date(iso);
@@ -631,6 +632,14 @@ export default function SongDetail() {
         })()}
 
         {/* AI Authorship Review — staff only */}
+        {user && ["admin", "master_admin", "editor", "moderator"].includes(user.role) && song.coverUrl && (
+          <CoverArtScanPanel
+            contentType="song"
+            contentId={song.id}
+            coverUrl={song.coverUrl}
+            isAdmin={["admin", "master_admin"].includes(user.role)}
+          />
+        )}
         {user && ["admin", "master_admin", "editor", "moderator"].includes(user.role) && (
           <AiReviewCard
             contentType="song"

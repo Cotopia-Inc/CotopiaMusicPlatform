@@ -57,6 +57,12 @@ async function getSongWithArtist(id: number, userId?: number) {
       aiConfidenceLevel: songsTable.aiConfidenceLevel,
       aiRiskLevel: songsTable.aiRiskLevel,
       aiReviewStatus: songsTable.aiReviewStatus,
+      creatorSelectedTag: songsTable.creatorSelectedTag,
+      platformAssignedTag: songsTable.platformAssignedTag,
+      tagSource: songsTable.tagSource,
+      aiDetectionReasons: songsTable.aiDetectionReasons,
+      aiOverrideReason: songsTable.aiOverrideReason,
+      appealStatus: songsTable.appealStatus,
     })
     .from(songsTable)
     .leftJoin(artistsTable, eq(songsTable.artistId, artistsTable.id))
