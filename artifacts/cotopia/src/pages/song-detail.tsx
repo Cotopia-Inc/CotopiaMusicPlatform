@@ -53,7 +53,15 @@ export default function SongDetail() {
   const { toast } = useToast();
 
   const { data: song, isLoading } = useGetSong(songId, {
-    query: { enabled: !!songId, queryKey: getGetSongQueryKey(songId) }
+    query: {
+      enabled: !!songId,
+      queryKey: getGetSongQueryKey(songId),
+      // Poll every 5 s while a background scan is in-flight; stop once resolved.
+      refetchInterval: (q) => {
+        const status = (q.state.data as any)?.aiReviewStatus;
+        return status === "scan_pending" ? 5000 : false;
+      },
+    }
   });
 
   const { data: songSupportStatus } = useGetCreatorSupportStatus(
@@ -672,8 +680,9 @@ export default function SongDetail() {
                   toast({ variant: "destructive", title: "Scan request failed", description: body.error ?? `Server returned ${res.status}` });
                   return;
                 }
-                toast({ title: "Scan queued", description: "Results will appear once the scan completes." });
-                setTimeout(() => queryClient.invalidateQueries({ queryKey: getGetSongQueryKey(songId) }), 8000);
+                toast({ title: "Scan queued", description: "Results will appear automatically once the scan completes." });
+                queryClient.invalidateQueries({ queryKey: getGetSongQueryKey(songId) });
+                queryClient.invalidateQueries({ queryKey: ["ai-scans", "song", songId] });
               } catch {
                 toast({ variant: "destructive", title: "Scan request failed", description: "Network error — please try again." });
               }

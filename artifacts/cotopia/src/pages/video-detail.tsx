@@ -53,7 +53,15 @@ export default function VideoDetail() {
   const { addToQueue } = usePlayer();
 
   const { data: video, isLoading } = useGetVideo(videoId, {
-    query: { enabled: !!videoId, queryKey: getGetVideoQueryKey(videoId) }
+    query: {
+      enabled: !!videoId,
+      queryKey: getGetVideoQueryKey(videoId),
+      // Poll every 5 s while a background scan is in-flight; stop once resolved.
+      refetchInterval: (q) => {
+        const status = (q.state.data as any)?.aiReviewStatus;
+        return status === "scan_pending" ? 5000 : false;
+      },
+    }
   });
 
   const { data: videoSupportStatus } = useGetCreatorSupportStatus(
@@ -991,8 +999,9 @@ export default function VideoDetail() {
                   toast({ variant: "destructive", title: "Scan request failed", description: body.error ?? `Server returned ${res.status}` });
                   return;
                 }
-                toast({ title: "Scan queued", description: "Results will appear once the scan completes." });
-                setTimeout(() => queryClient.invalidateQueries({ queryKey: getGetVideoQueryKey(videoId) }), 8000);
+                toast({ title: "Scan queued", description: "Results will appear automatically once the scan completes." });
+                queryClient.invalidateQueries({ queryKey: getGetVideoQueryKey(videoId) });
+                queryClient.invalidateQueries({ queryKey: ["ai-scans", "video", videoId] });
               } catch {
                 toast({ variant: "destructive", title: "Scan request failed", description: "Network error — please try again." });
               }

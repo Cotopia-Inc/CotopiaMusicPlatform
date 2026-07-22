@@ -13,7 +13,8 @@
  * and platform policy. Never describe results as conclusive proof.
  */
 import { useState } from "react";
-import { AlertTriangle, Lock, LockOpen, ShieldCheck, ShieldAlert, ChevronDown, ChevronUp, Scan } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { AlertTriangle, Lock, LockOpen, ShieldCheck, ShieldAlert, ChevronDown, ChevronUp, Scan, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
@@ -154,6 +155,19 @@ const MOD_ACTIONS = [
   { value: "escalate", label: "Escalate to Admin" },
 ] as const;
 
+interface ScanRecord {
+  id: number;
+  scanStatus: string;
+  provider: string;
+  aiLikelihoodPercent: number | null;
+  confidenceLevel: string | null;
+  riskLevel: string | null;
+  detectionIndicators: string[] | null;
+  errorMessage: string | null;
+  scannedAt: string | null;
+  createdAt: string;
+}
+
 export function AiReviewCard({
   contentType,
   contentId,
@@ -171,6 +185,22 @@ export function AiReviewCard({
   const [selectedAction, setSelectedAction] = useState<string>("");
   const [selectedTag, setSelectedTag] = useState<string>("");
   const [reason, setReason] = useState("");
+
+  const { data: scanHistory } = useQuery<ScanRecord[]>({
+    queryKey: ["ai-scans", contentType, contentId],
+    queryFn: async () => {
+      const token = localStorage.getItem("cotopia_token");
+      const res = await fetch(`/api/admin/ai-scans/${contentType}/${contentId}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: (isAdmin || isModerator) && !!contentId,
+    // Keep polling while a scan is in-flight so history updates automatically.
+    refetchInterval: data.aiReviewStatus === "scan_pending" ? 5000 : false,
+    staleTime: 10_000,
+  });
 
   const hasScore = typeof data.aiEstimatePercent === "number" && data.aiEstimatePercent !== null;
 
@@ -320,10 +350,78 @@ export function AiReviewCard({
               size="sm"
               className="gap-2 text-xs"
               onClick={onScanRequest}
+              disabled={data.aiReviewStatus === "scan_pending"}
             >
               <Scan className="w-3.5 h-3.5" />
-              Request Detection Scan
+              {data.aiReviewStatus === "scan_pending" ? "Scanning…" : "Request Detection Scan"}
             </Button>
+          )}
+
+          {/* Scan history */}
+          {(isAdmin || isModerator) && scanHistory && scanHistory.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground uppercase tracking-wider">
+                <History className="w-3 h-3" />
+                Scan History
+              </div>
+              <div className="space-y-1.5">
+                {scanHistory.slice(0, 5).map((scan) => {
+                  const statusColor =
+                    scan.scanStatus === "complete" ? "text-emerald-600 dark:text-emerald-400" :
+                    scan.scanStatus === "failed" ? "text-red-500" :
+                    "text-muted-foreground";
+                  const ts = scan.scannedAt ?? scan.createdAt;
+                  const dateStr = ts ? new Date(ts).toLocaleString() : "—";
+                  return (
+                    <div
+                      key={scan.id}
+                      className="rounded-lg border border-border bg-muted/30 px-3 py-2 text-xs space-y-0.5"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className={cn("font-medium capitalize", statusColor)}>
+                          {scan.scanStatus}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground tabular-nums">{dateStr}</span>
+                      </div>
+                      {scan.scanStatus === "complete" && scan.aiLikelihoodPercent !== null && (
+                        <div className="flex items-center gap-3 text-[11px]">
+                          <span>
+                            AI likelihood: <strong className="tabular-nums">{scan.aiLikelihoodPercent}%</strong>
+                          </span>
+                          {scan.riskLevel && (
+                            <span className="capitalize text-muted-foreground">
+                              Risk: <strong>{scan.riskLevel}</strong>
+                            </span>
+                          )}
+                          {scan.confidenceLevel && scan.confidenceLevel !== "unavailable" && (
+                            <span className="capitalize text-muted-foreground">
+                              Confidence: <strong>{scan.confidenceLevel}</strong>
+                            </span>
+                          )}
+                        </div>
+                      )}
+                      {scan.detectionIndicators && scan.detectionIndicators.length > 0 && (
+                        <div className="flex flex-wrap gap-1 pt-0.5">
+                          {scan.detectionIndicators.map((ind) => (
+                            <Badge key={ind} variant="secondary" className="text-[9px] px-1.5 py-0">{ind}</Badge>
+                          ))}
+                        </div>
+                      )}
+                      {scan.scanStatus === "failed" && scan.errorMessage && (
+                        <div className="text-[10px] text-red-500 truncate" title={scan.errorMessage}>
+                          Error: {scan.errorMessage}
+                        </div>
+                      )}
+                      {scan.scanStatus === "unavailable" && (
+                        <div className="text-[10px] text-muted-foreground">
+                          Provider returned no result — file may be too small or key unconfigured.
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           )}
 
           {/* Admin / moderator action panel */}
