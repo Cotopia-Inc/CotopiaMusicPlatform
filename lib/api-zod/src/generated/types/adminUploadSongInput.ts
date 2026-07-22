@@ -5,6 +5,7 @@
  * Cotopia Streaming Platform API
  * OpenAPI spec version: 0.1.0
  */
+import type { AdminUploadSongInputCreationMethod } from './adminUploadSongInputCreationMethod';
 import type { AdminUploadSongInputReleaseType } from './adminUploadSongInputReleaseType';
 
 export interface AdminUploadSongInput {
@@ -23,4 +24,5 @@ export interface AdminUploadSongInput {
   isFeatured?: boolean;
   lyrics?: string;
   credits?: string;
+  creationMethod?: AdminUploadSongInputCreationMethod;
 }

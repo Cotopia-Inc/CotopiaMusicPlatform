@@ -5,6 +5,7 @@
  * Cotopia Streaming Platform API
  * OpenAPI spec version: 0.1.0
  */
+import type { AdminBulkUploadVideosInputCreationMethod } from './adminBulkUploadVideosInputCreationMethod';
 import type { AdminBulkUploadVideosInputVideosItem } from './adminBulkUploadVideosInputVideosItem';
 
 export interface AdminBulkUploadVideosInput {
@@ -15,6 +16,7 @@ export interface AdminBulkUploadVideosInput {
   isExplicit?: boolean;
   description?: string;
   credits?: string;
+  creationMethod?: AdminBulkUploadVideosInputCreationMethod;
   thumbnailUrl?: string;
   releaseDate?: string;
   isFeatured?: boolean;

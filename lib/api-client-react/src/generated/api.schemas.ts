@@ -1637,6 +1637,17 @@ export const AdminUploadSongInputReleaseType = {
   album: 'album',
 } as const;
 
+export type AdminUploadSongInputCreationMethod = typeof AdminUploadSongInputCreationMethod[keyof typeof AdminUploadSongInputCreationMethod];
+
+
+export const AdminUploadSongInputCreationMethod = {
+  unclassified: 'unclassified',
+  human_created: 'human_created',
+  ai_assisted: 'ai_assisted',
+  hybrid_human_ai: 'hybrid_human_ai',
+  fully_ai_generated: 'fully_ai_generated',
+} as const;
+
 export interface AdminUploadSongInput {
   title: string;
   userId?: number;
@@ -1653,6 +1664,7 @@ export interface AdminUploadSongInput {
   isFeatured?: boolean;
   lyrics?: string;
   credits?: string;
+  creationMethod?: AdminUploadSongInputCreationMethod;
 }
 
 export type AdminBulkUploadSongsInputReleaseType = typeof AdminBulkUploadSongsInputReleaseType[keyof typeof AdminBulkUploadSongsInputReleaseType];
@@ -1662,6 +1674,17 @@ export const AdminBulkUploadSongsInputReleaseType = {
   single: 'single',
   ep: 'ep',
   album: 'album',
+} as const;
+
+export type AdminBulkUploadSongsInputCreationMethod = typeof AdminBulkUploadSongsInputCreationMethod[keyof typeof AdminBulkUploadSongsInputCreationMethod];
+
+
+export const AdminBulkUploadSongsInputCreationMethod = {
+  unclassified: 'unclassified',
+  human_created: 'human_created',
+  ai_assisted: 'ai_assisted',
+  hybrid_human_ai: 'hybrid_human_ai',
+  fully_ai_generated: 'fully_ai_generated',
 } as const;
 
 export type AdminBulkUploadSongsInputSongsItem = {
@@ -1684,8 +1707,20 @@ export interface AdminBulkUploadSongsInput {
   isFeatured?: boolean;
   lyrics?: string;
   credits?: string;
+  creationMethod?: AdminBulkUploadSongsInputCreationMethod;
   songs: AdminBulkUploadSongsInputSongsItem[];
 }
+
+export type AdminUploadVideoInputCreationMethod = typeof AdminUploadVideoInputCreationMethod[keyof typeof AdminUploadVideoInputCreationMethod];
+
+
+export const AdminUploadVideoInputCreationMethod = {
+  unclassified: 'unclassified',
+  human_created: 'human_created',
+  ai_assisted: 'ai_assisted',
+  hybrid_human_ai: 'hybrid_human_ai',
+  fully_ai_generated: 'fully_ai_generated',
+} as const;
 
 export interface AdminUploadVideoInput {
   title: string;
@@ -1701,7 +1736,19 @@ export interface AdminUploadVideoInput {
   releaseDate?: string;
   isFeatured?: boolean;
   credits?: string;
+  creationMethod?: AdminUploadVideoInputCreationMethod;
 }
+
+export type AdminBulkUploadVideosInputCreationMethod = typeof AdminBulkUploadVideosInputCreationMethod[keyof typeof AdminBulkUploadVideosInputCreationMethod];
+
+
+export const AdminBulkUploadVideosInputCreationMethod = {
+  unclassified: 'unclassified',
+  human_created: 'human_created',
+  ai_assisted: 'ai_assisted',
+  hybrid_human_ai: 'hybrid_human_ai',
+  fully_ai_generated: 'fully_ai_generated',
+} as const;
 
 export type AdminBulkUploadVideosInputVideosItem = {
   title: string;
@@ -1718,6 +1765,7 @@ export interface AdminBulkUploadVideosInput {
   isExplicit?: boolean;
   description?: string;
   credits?: string;
+  creationMethod?: AdminBulkUploadVideosInputCreationMethod;
   thumbnailUrl?: string;
   releaseDate?: string;
   isFeatured?: boolean;

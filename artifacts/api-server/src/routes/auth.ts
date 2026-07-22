@@ -418,6 +418,7 @@ router.get("/platform-config", async (_req, res): Promise<void> => {
       showFullyAiBadge: appSettingsTable.showFullyAiBadge,
       showTitleIcons: appSettingsTable.showTitleIcons,
       showCoverOverlays: appSettingsTable.showCoverOverlays,
+      allowCreatorSelfTagging: appSettingsTable.allowCreatorSelfTagging,
     })
     .from(appSettingsTable)
     .limit(1);
@@ -439,6 +440,7 @@ router.get("/platform-config", async (_req, res): Promise<void> => {
     showFullyAiBadge: s?.showFullyAiBadge ?? false,
     showTitleIcons: s?.showTitleIcons ?? true,
     showCoverOverlays: s?.showCoverOverlays ?? true,
+    allowCreatorSelfTagging: s?.allowCreatorSelfTagging ?? true,
   });
 });
 

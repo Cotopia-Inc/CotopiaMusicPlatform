@@ -400,7 +400,7 @@ router.post("/admin/upload-song", requireAuth, requireRole(...ADMIN_ROLES, "edit
   const parsed = AdminUploadSongBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
 
-  const { title, artistId: rawArtistId, userId: rawUserId, albumId, genre, mood, isExplicit, duration, streamUrl, coverUrl, releaseDate, releaseType, isFeatured, lyrics, credits } = parsed.data;
+  const { title, artistId: rawArtistId, userId: rawUserId, albumId, genre, mood, isExplicit, duration, streamUrl, coverUrl, releaseDate, releaseType, isFeatured, lyrics, credits, creationMethod } = parsed.data;
 
   const resolvedArtistId = rawArtistId ?? (rawUserId ? await findOrCreateArtistProfile(rawUserId) : null);
   if (!resolvedArtistId) { res.status(400).json({ error: "User not found" }); return; }
@@ -428,6 +428,7 @@ router.post("/admin/upload-song", requireAuth, requireRole(...ADMIN_ROLES, "edit
     playCount: 0,
     lyrics: lyrics ?? null,
     credits: credits ?? null,
+    creationMethod: creationMethod ?? "unclassified",
   }).returning();
 
   // Create submission in pending_admin_final_review — skips payment and moderator
@@ -453,7 +454,7 @@ router.post("/admin/bulk-upload-songs", requireAuth, requireRole(...ADMIN_ROLES,
   const parsed = AdminBulkUploadSongsBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
 
-  const { artistId: rawArtistId2, userId: rawUserId2, releaseName, releaseType: inputReleaseType, genre, mood: bulkMood, isExplicit: bulkIsExplicit, coverUrl, releaseDate, isFeatured, lyrics: bulkLyrics, credits: bulkCredits, songs } = parsed.data;
+  const { artistId: rawArtistId2, userId: rawUserId2, releaseName, releaseType: inputReleaseType, genre, mood: bulkMood, isExplicit: bulkIsExplicit, coverUrl, releaseDate, isFeatured, lyrics: bulkLyrics, credits: bulkCredits, songs, creationMethod: bulkCreationMethod } = parsed.data;
 
   const resolvedArtistId2 = rawArtistId2 ?? (rawUserId2 ? await findOrCreateArtistProfile(rawUserId2) : null);
   if (!resolvedArtistId2) { res.status(400).json({ error: "User not found" }); return; }
@@ -499,6 +500,7 @@ router.post("/admin/bulk-upload-songs", requireAuth, requireRole(...ADMIN_ROLES,
       playCount: 0,
       lyrics: bulkLyrics ?? null,
       credits: bulkCredits ?? null,
+      creationMethod: bulkCreationMethod ?? "unclassified",
     }))
   ).returning();
 
@@ -529,7 +531,7 @@ router.post("/admin/upload-video", requireAuth, requireRole(...ADMIN_ROLES, "edi
   const parsed = AdminUploadVideoBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
 
-  const { title, artistId: rawArtistId3, userId: rawUserId3, genre: videoGenre, mood: videoMood, isExplicit: videoIsExplicit, description, duration, videoUrl, thumbnailUrl, releaseDate, isFeatured, credits: videoCredits } = parsed.data;
+  const { title, artistId: rawArtistId3, userId: rawUserId3, genre: videoGenre, mood: videoMood, isExplicit: videoIsExplicit, description, duration, videoUrl, thumbnailUrl, releaseDate, isFeatured, credits: videoCredits, creationMethod: videoCreationMethod } = parsed.data;
 
   const resolvedArtistId3 = rawArtistId3 ?? (rawUserId3 ? await findOrCreateArtistProfile(rawUserId3) : null);
   if (!resolvedArtistId3) { res.status(400).json({ error: "User not found" }); return; }
@@ -554,6 +556,7 @@ router.post("/admin/upload-video", requireAuth, requireRole(...ADMIN_ROLES, "edi
     releaseDate: releaseDate ?? null,
     viewCount: 0,
     credits: videoCredits ?? null,
+    creationMethod: videoCreationMethod ?? "unclassified",
   }).returning();
 
   // Create submission in pending_admin_final_review — skip payment and moderator
@@ -577,7 +580,7 @@ router.post("/admin/bulk-upload-videos", requireAuth, requireRole(...ADMIN_ROLES
   const parsed = AdminBulkUploadVideosBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
 
-  const { artistId: rawArtistId4, userId: rawUserId4, genre: bulkVideoGenre, mood: bulkVideoMood, isExplicit: bulkVideoIsExplicit, description, credits: bulkVideoCredits, thumbnailUrl, releaseDate, isFeatured, videos } = parsed.data;
+  const { artistId: rawArtistId4, userId: rawUserId4, genre: bulkVideoGenre, mood: bulkVideoMood, isExplicit: bulkVideoIsExplicit, description, credits: bulkVideoCredits, thumbnailUrl, releaseDate, isFeatured, videos, creationMethod: bulkVideoCreationMethod } = parsed.data;
 
   const resolvedArtistId4 = rawArtistId4 ?? (rawUserId4 ? await findOrCreateArtistProfile(rawUserId4) : null);
   if (!resolvedArtistId4) { res.status(400).json({ error: "User not found" }); return; }
@@ -603,6 +606,7 @@ router.post("/admin/bulk-upload-videos", requireAuth, requireRole(...ADMIN_ROLES
       releaseDate: releaseDate ?? null,
       viewCount: 0,
       credits: bulkVideoCredits ?? null,
+      creationMethod: bulkVideoCreationMethod ?? "unclassified",
     }))
   ).returning();
 

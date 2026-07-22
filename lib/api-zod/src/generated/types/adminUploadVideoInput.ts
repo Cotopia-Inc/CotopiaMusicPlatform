@@ -5,6 +5,7 @@
  * Cotopia Streaming Platform API
  * OpenAPI spec version: 0.1.0
  */
+import type { AdminUploadVideoInputCreationMethod } from './adminUploadVideoInputCreationMethod';
 
 export interface AdminUploadVideoInput {
   title: string;
@@ -20,4 +21,5 @@ export interface AdminUploadVideoInput {
   releaseDate?: string;
   isFeatured?: boolean;
   credits?: string;
+  creationMethod?: AdminUploadVideoInputCreationMethod;
 }

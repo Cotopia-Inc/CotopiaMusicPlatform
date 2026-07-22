@@ -33,6 +33,7 @@ import { VerifyEmailBanner } from "@/components/verify-email-banner";
 import { CommentSection } from "@/components/comment-section";
 import { AiOriginBadge, type CreationMethod } from "@/components/ai-origin-badge";
 import { AiReviewCard } from "@/components/ai-review-card";
+import { CreationMethodSelector, type CreationMethodOption } from "@/components/creation-method-selector";
 import { CoverArtScanPanel } from "@/components/cover-art-scan-panel";
 
 function formatTime(iso: string) {
@@ -162,6 +163,29 @@ export default function SongDetail() {
       setDeletingChatMsgId(null);
     }
   }
+  async function handleSaveOriginTag() {
+    setTagSaving(true);
+    try {
+      const token = localStorage.getItem("cotopia_token");
+      const res = await fetch(`/api/songs/${songId}/creation-tag`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ creationMethod: selectedOriginTag }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        toast({ variant: "destructive", title: "Failed to save", description: (err as any).error ?? "Could not save origin tag" });
+        return;
+      }
+      toast({ title: "Origin saved" });
+      queryClient.invalidateQueries({ queryKey: getGetSongQueryKey(songId) });
+    } catch {
+      toast({ variant: "destructive", title: "Network error", description: "Please try again" });
+    } finally {
+      setTagSaving(false);
+    }
+  }
+
   const rateMutation = useRateSong();
   const favoriteMutation = useFavoriteSong();
   const unfavoriteMutation = useUnfavoriteSong();
@@ -178,6 +202,9 @@ export default function SongDetail() {
   const [editStageName, setEditStageName] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [lyricsExpanded, setLyricsExpanded] = useState(false);
+  const [originOpen, setOriginOpen] = useState(false);
+  const [selectedOriginTag, setSelectedOriginTag] = useState<CreationMethodOption>("unclassified");
+  const [tagSaving, setTagSaving] = useState(false);
   const coverUpload = useUpload({
     onSuccess: (res) => setEditCoverUrl(`/api/storage${res.objectPath}`),
   });
@@ -201,6 +228,7 @@ export default function SongDetail() {
     if (song) {
       setLocalFavorited(song.isFavorited ?? false);
       setLocalRating(song.userRating ?? null);
+      setSelectedOriginTag(((song as any).creationMethod ?? "unclassified") as CreationMethodOption);
     }
   }, [song?.id]);
 
@@ -529,6 +557,47 @@ export default function SongDetail() {
                     {deleteSongMutation.isPending ? "Deleting…" : "Yes, delete permanently"}
                   </Button>
                 </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Content Origin ── */}
+        {song.artistUserId != null && user?.id === song.artistUserId && (
+          <div className="rounded-xl border border-border/60 overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setOriginOpen(o => !o)}
+              className="w-full flex items-center justify-between px-5 py-3 bg-secondary/40 hover:bg-secondary/60 transition-colors"
+            >
+              <span className="text-sm font-medium">Content Origin</span>
+              {originOpen ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+            </button>
+            {originOpen && (
+              <div className="p-5 space-y-4">
+                {!config.allowCreatorSelfTagging ? (
+                  <p className="text-xs text-muted-foreground">Content origin tags are currently managed by the platform. Contact support to request a change.</p>
+                ) : (
+                  <>
+                    <CreationMethodSelector
+                      value={selectedOriginTag}
+                      onChange={setSelectedOriginTag}
+                      locked={(song as any).tagLocked ?? false}
+                    />
+                    {!((song as any).tagLocked) && (
+                      <div className="flex justify-end">
+                        <Button
+                          size="sm"
+                          onClick={handleSaveOriginTag}
+                          disabled={tagSaving || selectedOriginTag === ((song as any).creationMethod ?? "unclassified")}
+                          className="h-7 text-xs gap-1.5"
+                        >
+                          {tagSaving ? "Saving…" : <><Save className="w-3 h-3" /> Save origin</>}
+                        </Button>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             )}
           </div>

@@ -14,6 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { CreationMethodSelector, type CreationMethodOption } from "@/components/creation-method-selector";
 
 const GENRES = ["Pop", "Hip-Hop", "R&B", "Electronic", "Rock", "Jazz", "Classical", "Country", "Reggae", "Latin", "Afrobeats", "Indie", "Alternative", "Metal", "Folk", "Soul", "Blues", "Other"];
 const MOODS = ["Energetic", "Chill", "Romantic", "Dark", "Happy", "Melancholic", "Motivational", "Party", "Peaceful", "Nostalgic", "Intense", "Dreamy"];
@@ -111,7 +112,7 @@ export default function AdminUploadVideo() {
   const accounts = accountsData ?? [];
 
   // ── Single video state ────────────────────────────────────────
-  const [form, setForm] = useState({ title: "", userId: 0, genre: "", mood: "", isExplicit: false, description: "", credits: "", duration: 0, videoUrl: "", thumbnailUrl: "", releaseDate: "", isFeatured: false });
+  const [form, setForm] = useState({ title: "", userId: 0, genre: "", mood: "", isExplicit: false, description: "", credits: "", duration: 0, videoUrl: "", thumbnailUrl: "", releaseDate: "", isFeatured: false, creationMethod: "unclassified" as CreationMethodOption });
   const [singleDone, setSingleDone] = useState<{ id: number; title: string } | null>(null);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
 
@@ -138,7 +139,7 @@ export default function AdminUploadVideo() {
     }
     try {
       const video = await uploadVideo.mutateAsync({
-        data: { title: form.title, userId: form.userId, genre: form.genre || undefined, mood: form.mood || undefined, isExplicit: form.isExplicit, description: form.description || undefined, credits: form.credits || undefined, duration: form.duration || undefined, videoUrl: form.videoUrl, thumbnailUrl: form.thumbnailUrl || undefined, releaseDate: form.releaseDate || undefined, isFeatured: form.isFeatured },
+        data: { title: form.title, userId: form.userId, genre: form.genre || undefined, mood: form.mood || undefined, isExplicit: form.isExplicit, description: form.description || undefined, credits: form.credits || undefined, duration: form.duration || undefined, videoUrl: form.videoUrl, thumbnailUrl: form.thumbnailUrl || undefined, releaseDate: form.releaseDate || undefined, isFeatured: form.isFeatured, creationMethod: form.creationMethod !== "unclassified" ? form.creationMethod : undefined },
       });
       setSingleDone({ id: video.id, title: video.title });
       toast({ title: "Video uploaded for review", description: `"${video.title}" is waiting in Admin › Submissions for your approval` });
@@ -152,7 +153,7 @@ export default function AdminUploadVideo() {
   const [bulkFiles, setBulkFiles] = useState<File[]>([]);
   const [bulkTitles, setBulkTitles] = useState<string[]>([]);
   const [bulkUrls, setBulkUrls] = useState<(string | null)[]>([]);
-  const [bulkShared, setBulkShared] = useState({ userId: 0, genre: "", mood: "", isExplicit: false, description: "", thumbnailUrl: "", releaseDate: "", isFeatured: false });
+  const [bulkShared, setBulkShared] = useState({ userId: 0, genre: "", mood: "", isExplicit: false, description: "", thumbnailUrl: "", releaseDate: "", isFeatured: false, creationMethod: "unclassified" as CreationMethodOption });
   const [bulkThumbDone, setBulkThumbDone] = useState(false);
   const [bulkDone, setBulkDone] = useState<{ id: number; title: string }[] | null>(null);
 
@@ -215,6 +216,7 @@ export default function AdminUploadVideo() {
           thumbnailUrl: bulkShared.thumbnailUrl || undefined,
           releaseDate: bulkShared.releaseDate || undefined,
           isFeatured: bulkShared.isFeatured,
+          creationMethod: bulkShared.creationMethod !== "unclassified" ? bulkShared.creationMethod : undefined,
           videos: bulkTitles.map((title, i) => ({ title, videoUrl: bulkUrls[i]! })),
         },
       });
@@ -233,7 +235,7 @@ export default function AdminUploadVideo() {
         <div><h2 className="text-xl font-bold">Video Published!</h2><p className="text-muted-foreground mt-1">"{singleDone.title}" is now live.</p></div>
         <div className="flex gap-3">
           <Link href={`/videos/${singleDone.id}`}><Button variant="outline">View Video</Button></Link>
-          <Button onClick={() => { setSingleDone(null); setForm({ title: "", userId: 0, genre: "", mood: "", isExplicit: false, description: "", credits: "", duration: 0, videoUrl: "", thumbnailUrl: "", releaseDate: "", isFeatured: false }); }}>Upload Another</Button>
+          <Button onClick={() => { setSingleDone(null); setForm({ title: "", userId: 0, genre: "", mood: "", isExplicit: false, description: "", credits: "", duration: 0, videoUrl: "", thumbnailUrl: "", releaseDate: "", isFeatured: false, creationMethod: "unclassified" as CreationMethodOption }); }}>Upload Another</Button>
         </div>
       </div>
     );
@@ -253,7 +255,7 @@ export default function AdminUploadVideo() {
             </Link>
           ))}
         </div>
-        <Button onClick={() => { setBulkDone(null); setBulkFiles([]); setBulkTitles([]); setBulkUrls([]); setBulkShared({ userId: 0, genre: "", mood: "", isExplicit: false, description: "", thumbnailUrl: "", releaseDate: "", isFeatured: false }); setBulkThumbDone(false); }}>
+        <Button onClick={() => { setBulkDone(null); setBulkFiles([]); setBulkTitles([]); setBulkUrls([]); setBulkShared({ userId: 0, genre: "", mood: "", isExplicit: false, description: "", thumbnailUrl: "", releaseDate: "", isFeatured: false, creationMethod: "unclassified" as CreationMethodOption }); setBulkThumbDone(false); }}>
           Upload More
         </Button>
       </div>
@@ -388,6 +390,15 @@ export default function AdminUploadVideo() {
               <Switch aria-label="Explicit content" checked={form.isExplicit} onCheckedChange={v => setForm(f => ({ ...f, isExplicit: v }))} />
             </div>
 
+            <div className="space-y-2">
+              <Label>Content Origin</Label>
+              <CreationMethodSelector
+                value={form.creationMethod}
+                onChange={v => setForm(f => ({ ...f, creationMethod: v }))}
+                locked={false}
+              />
+            </div>
+
             <Button type="submit" className="w-full gap-2" disabled={uploadVideo.isPending || videoUpload.isUploading}>
               {uploadVideo.isPending ? <><Loader2 className="w-4 h-4 animate-spin" />Publishing...</> : <><Upload className="w-4 h-4" />Publish Video</>}
             </Button>
@@ -453,6 +464,15 @@ export default function AdminUploadVideo() {
                     <p className="text-xs text-muted-foreground">Mark all videos in this batch as explicit</p>
                   </div>
                   <Switch aria-label="Explicit content" checked={bulkShared.isExplicit} onCheckedChange={v => setBulkShared(f => ({ ...f, isExplicit: v }))} />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Content Origin</Label>
+                  <CreationMethodSelector
+                    value={bulkShared.creationMethod}
+                    onChange={v => setBulkShared(f => ({ ...f, creationMethod: v }))}
+                    locked={false}
+                  />
                 </div>
 
                 {/* Shared thumbnail */}

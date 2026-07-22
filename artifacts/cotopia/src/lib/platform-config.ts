@@ -18,6 +18,7 @@ export interface PlatformConfig {
   showFullyAiBadge: boolean;
   showTitleIcons: boolean;
   showCoverOverlays: boolean;
+  allowCreatorSelfTagging: boolean;
 }
 
 const DEFAULT_CONFIG: PlatformConfig = {
@@ -38,6 +39,7 @@ const DEFAULT_CONFIG: PlatformConfig = {
   showFullyAiBadge: false,
   showTitleIcons: true,
   showCoverOverlays: true,
+  allowCreatorSelfTagging: true,
 };
 
 async function fetchPlatformConfig(): Promise<PlatformConfig> {

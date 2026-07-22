@@ -7,9 +7,11 @@
  */
 
 export * from './adminBulkUploadSongsInput';
+export * from './adminBulkUploadSongsInputCreationMethod';
 export * from './adminBulkUploadSongsInputReleaseType';
 export * from './adminBulkUploadSongsInputSongsItem';
 export * from './adminBulkUploadVideosInput';
+export * from './adminBulkUploadVideosInputCreationMethod';
 export * from './adminBulkUploadVideosInputVideosItem';
 export * from './adminChatMessage';
 export * from './adminCreatorSupportOverview';
@@ -43,8 +45,10 @@ export * from './adminUpdatePaymentMode200';
 export * from './adminUpdatePaymentMode200PaymentMode';
 export * from './adminUpdatePaymentModeBodyPaymentMode';
 export * from './adminUploadSongInput';
+export * from './adminUploadSongInputCreationMethod';
 export * from './adminUploadSongInputReleaseType';
 export * from './adminUploadVideoInput';
+export * from './adminUploadVideoInputCreationMethod';
 export * from './adminUserList';
 export * from './adminUserProfile';
 export * from './adminUserUpdate';

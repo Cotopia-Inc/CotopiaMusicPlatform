@@ -15,6 +15,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { CreationMethodSelector, type CreationMethodOption } from "@/components/creation-method-selector";
 
 const GENRES = ["Pop", "Hip-Hop", "R&B", "Electronic", "Rock", "Jazz", "Classical", "Country", "Reggae", "Latin", "Afrobeats", "Indie", "Alternative", "Metal", "Folk", "Soul", "Blues", "Other"];
 const MOODS = ["Energetic", "Chill", "Romantic", "Dark", "Happy", "Melancholic", "Motivational", "Party", "Peaceful", "Nostalgic", "Intense", "Dreamy"];
@@ -134,6 +135,7 @@ export default function AdminUploadSong() {
     isFeatured: false,
     lyrics: "",
     credits: "",
+    creationMethod: "unclassified" as CreationMethodOption,
   });
   const [singleDone, setSingleDone] = useState<{ id: number; title: string } | null>(null);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
@@ -180,6 +182,7 @@ export default function AdminUploadSong() {
           isFeatured: form.isFeatured,
           lyrics: form.lyrics || undefined,
           credits: form.credits || undefined,
+          creationMethod: form.creationMethod !== "unclassified" ? form.creationMethod : undefined,
         },
       });
       setSingleDone({ id: song.id, title: song.title });
@@ -203,6 +206,7 @@ export default function AdminUploadSong() {
     releaseName: "",
     releaseDate: "",
     isFeatured: false,
+    creationMethod: "unclassified" as CreationMethodOption,
   });
   const [bulkCoverDone, setBulkCoverDone] = useState(false);
   const [bulkDone, setBulkDone] = useState<{ id: number; title: string }[] | null>(null);
@@ -280,6 +284,7 @@ export default function AdminUploadSong() {
           coverUrl: bulkShared.coverUrl || undefined,
           releaseDate: bulkShared.releaseDate || undefined,
           isFeatured: bulkShared.isFeatured,
+          creationMethod: bulkShared.creationMethod !== "unclassified" ? bulkShared.creationMethod : undefined,
           songs: bulkTitles.map((title, i) => ({
             title,
             streamUrl: bulkUrls[i]!,
@@ -306,7 +311,7 @@ export default function AdminUploadSong() {
         </div>
         <div className="flex gap-3">
           <Link href={`/songs/${singleDone.id}`}><Button variant="outline">View Song</Button></Link>
-          <Button onClick={() => { setSingleDone(null); setForm({ title: "", userId: 0, genre: "", mood: "", isExplicit: false, duration: 0, streamUrl: "", coverUrl: "", releaseDate: "", isFeatured: false, lyrics: "", credits: "" }); }}>
+          <Button onClick={() => { setSingleDone(null); setForm({ title: "", userId: 0, genre: "", mood: "", isExplicit: false, duration: 0, streamUrl: "", coverUrl: "", releaseDate: "", isFeatured: false, lyrics: "", credits: "", creationMethod: "unclassified" as CreationMethodOption }); }}>
             Upload Another
           </Button>
         </div>
@@ -332,7 +337,7 @@ export default function AdminUploadSong() {
             </Link>
           ))}
         </div>
-        <Button onClick={() => { setBulkDone(null); setBulkFiles([]); setBulkTitles([]); setBulkUrls([]); setBulkShared({ userId: 0, genre: "", mood: "", isExplicit: false, coverUrl: "", releaseName: "", releaseDate: "", isFeatured: false }); setBulkCoverDone(false); }}>
+        <Button onClick={() => { setBulkDone(null); setBulkFiles([]); setBulkTitles([]); setBulkUrls([]); setBulkShared({ userId: 0, genre: "", mood: "", isExplicit: false, coverUrl: "", releaseName: "", releaseDate: "", isFeatured: false, creationMethod: "unclassified" as CreationMethodOption }); setBulkCoverDone(false); }}>
           Upload More
         </Button>
       </div>
@@ -490,6 +495,15 @@ export default function AdminUploadSong() {
               />
             </div>
 
+            <div className="space-y-2">
+              <Label>Content Origin</Label>
+              <CreationMethodSelector
+                value={form.creationMethod}
+                onChange={v => setForm(f => ({ ...f, creationMethod: v }))}
+                locked={false}
+              />
+            </div>
+
             <Button type="submit" className="w-full gap-2" disabled={uploadSong.isPending || audioUpload.isUploading}>
               {uploadSong.isPending ? <><Loader2 className="w-4 h-4 animate-spin" />Publishing...</> : <><Upload className="w-4 h-4" />Publish Single</>}
             </Button>
@@ -561,6 +575,15 @@ export default function AdminUploadSong() {
                     <p className="text-xs text-muted-foreground">Mark all songs in this release as explicit</p>
                   </div>
                   <Switch aria-label="Explicit content" checked={bulkShared.isExplicit} onCheckedChange={v => setBulkShared(f => ({ ...f, isExplicit: v }))} />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Content Origin</Label>
+                  <CreationMethodSelector
+                    value={bulkShared.creationMethod}
+                    onChange={v => setBulkShared(f => ({ ...f, creationMethod: v }))}
+                    locked={false}
+                  />
                 </div>
 
                 {/* Shared cover art */}

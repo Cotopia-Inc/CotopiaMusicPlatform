@@ -5863,6 +5863,9 @@ components:
           type: string
         credits:
           type: string
+        creationMethod:
+          type: string
+          enum: [unclassified, human_created, ai_assisted, hybrid_human_ai, fully_ai_generated]
 
     AdminBulkUploadSongsInput:
       type: object
@@ -5893,6 +5896,9 @@ components:
           type: string
         credits:
           type: string
+        creationMethod:
+          type: string
+          enum: [unclassified, human_created, ai_assisted, hybrid_human_ai, fully_ai_generated]
         songs:
           type: array
           items:
@@ -5938,6 +5944,9 @@ components:
           type: boolean
         credits:
           type: string
+        creationMethod:
+          type: string
+          enum: [unclassified, human_created, ai_assisted, hybrid_human_ai, fully_ai_generated]
 
     AdminBulkUploadVideosInput:
       type: object
@@ -5957,6 +5966,9 @@ components:
           type: string
         credits:
           type: string
+        creationMethod:
+          type: string
+          enum: [unclassified, human_created, ai_assisted, hybrid_human_ai, fully_ai_generated]
         thumbnailUrl:
           type: string
         releaseDate:

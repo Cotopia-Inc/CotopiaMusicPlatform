@@ -3024,7 +3024,8 @@ export const AdminUploadSongBody = zod.object({
   "releaseType": zod.enum(['single', 'ep', 'album']).optional(),
   "isFeatured": zod.boolean().optional(),
   "lyrics": zod.string().optional(),
-  "credits": zod.string().optional()
+  "credits": zod.string().optional(),
+  "creationMethod": zod.enum(['unclassified', 'human_created', 'ai_assisted', 'hybrid_human_ai', 'fully_ai_generated']).optional()
 })
 
 
@@ -3044,6 +3045,7 @@ export const AdminBulkUploadSongsBody = zod.object({
   "isFeatured": zod.boolean().optional(),
   "lyrics": zod.string().optional(),
   "credits": zod.string().optional(),
+  "creationMethod": zod.enum(['unclassified', 'human_created', 'ai_assisted', 'hybrid_human_ai', 'fully_ai_generated']).optional(),
   "songs": zod.array(zod.object({
   "title": zod.string(),
   "streamUrl": zod.string(),
@@ -3064,6 +3066,7 @@ export const AdminBulkUploadVideosBody = zod.object({
   "isExplicit": zod.boolean().optional(),
   "description": zod.string().optional(),
   "credits": zod.string().optional(),
+  "creationMethod": zod.enum(['unclassified', 'human_created', 'ai_assisted', 'hybrid_human_ai', 'fully_ai_generated']).optional(),
   "thumbnailUrl": zod.string().optional(),
   "releaseDate": zod.string().optional(),
   "isFeatured": zod.boolean().optional(),
@@ -3092,7 +3095,8 @@ export const AdminUploadVideoBody = zod.object({
   "thumbnailUrl": zod.string().optional(),
   "releaseDate": zod.string().optional(),
   "isFeatured": zod.boolean().optional(),
-  "credits": zod.string().optional()
+  "credits": zod.string().optional(),
+  "creationMethod": zod.enum(['unclassified', 'human_created', 'ai_assisted', 'hybrid_human_ai', 'fully_ai_generated']).optional()
 })
 
 
