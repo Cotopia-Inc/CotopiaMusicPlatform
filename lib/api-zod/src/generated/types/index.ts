@@ -54,6 +54,7 @@ export * from './adminUserProfile';
 export * from './adminUserUpdate';
 export * from './adminUserUpdateRole';
 export * from './agreementRecord';
+export * from './aiClassificationAnalytics';
 export * from './analyticsEventInput';
 export * from './analyticsEventInputContentType';
 export * from './analyticsEventInputEventType';

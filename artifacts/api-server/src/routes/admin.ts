@@ -8,6 +8,7 @@ import {
   playlistsTable, playlistItemsTable, conversationsTable, directMessagesTable,
   dmcaClaimsTable, copyrightStrikesTable, adminAuditLogsTable, notificationsTable,
   agreementAcceptancesTable, broadcastsTable, copyrightConcernsTable, paymentsTable,
+  aiDetectionScansTable, trustAppealsTable,
 } from "@workspace/db";
 import {
   AdminListUsersQueryParams, AdminUpdateUserBody,
@@ -1799,6 +1800,84 @@ router.get("/admin/payments", requireAuth, requireRole("admin", "master_admin"),
     .limit(500);
 
   res.json(rows);
+});
+
+// ── AI Classification Analytics ───────────────────────────────────────────
+
+const NOT_FLAGGED_STATUSES = ["not_scanned", "scan_complete", "admin_approved"];
+
+router.get("/admin/analytics/ai-classification", requireAuth, requireRole(...ADMIN_ROLES), async (_req, res): Promise<void> => {
+  const [
+    songsByMethod,
+    videosByMethod,
+    [songsFlagged], [videosFlagged],
+    [songsEscalated], [videosEscalated],
+    [songsAdminTagged], [videosAdminTagged],
+    [songsLocked], [videosLocked],
+    [songsRejected], [videosRejected],
+    [appealsTotal], [appealsReversed],
+    [scansTotal], [scansFailed],
+    [falsePositiveReversals],
+  ] = await Promise.all([
+    db.select({ method: songsTable.creationMethod, count: count() }).from(songsTable).groupBy(songsTable.creationMethod),
+    db.select({ method: videosTable.creationMethod, count: count() }).from(videosTable).groupBy(videosTable.creationMethod),
+    db.select({ count: count() }).from(songsTable).where(notInArray(songsTable.aiReviewStatus, NOT_FLAGGED_STATUSES)),
+    db.select({ count: count() }).from(videosTable).where(notInArray(videosTable.aiReviewStatus, NOT_FLAGGED_STATUSES)),
+    db.select({ count: count() }).from(songsTable).where(eq(songsTable.aiReviewStatus, "escalated_to_admin")),
+    db.select({ count: count() }).from(videosTable).where(eq(videosTable.aiReviewStatus, "escalated_to_admin")),
+    db.select({ count: count() }).from(songsTable).where(eq(songsTable.tagSource, "admin")),
+    db.select({ count: count() }).from(videosTable).where(eq(videosTable.tagSource, "admin")),
+    db.select({ count: count() }).from(songsTable).where(eq(songsTable.tagLocked, true)),
+    db.select({ count: count() }).from(videosTable).where(eq(videosTable.tagLocked, true)),
+    db.select({ count: count() }).from(songsTable).where(or(eq(songsTable.aiReviewStatus, "admin_rejected"), eq(songsTable.aiReviewStatus, "auto_rejected"))),
+    db.select({ count: count() }).from(videosTable).where(or(eq(videosTable.aiReviewStatus, "admin_rejected"), eq(videosTable.aiReviewStatus, "auto_rejected"))),
+    db.select({ count: count() }).from(trustAppealsTable).where(eq(trustAppealsTable.actionType, "ai_authorship_tag_dispute")),
+    db.select({ count: count() }).from(trustAppealsTable).where(and(eq(trustAppealsTable.actionType, "ai_authorship_tag_dispute"), eq(trustAppealsTable.status, "reversed"))),
+    db.select({ count: count() }).from(aiDetectionScansTable),
+    db.select({ count: count() }).from(aiDetectionScansTable).where(eq(aiDetectionScansTable.scanStatus, "failed")),
+    db.select({ count: count() }).from(trustAppealsTable).where(and(eq(trustAppealsTable.status, "reversed"), isNotNull(trustAppealsTable.contentId))),
+  ]);
+
+  const methodCount = (rows: { method: string | null; count: number }[], key: string) =>
+    rows.filter(r => r.method === key).reduce((s, r) => s + r.count, 0);
+
+  const allMethods = [...songsByMethod, ...videosByMethod];
+  const declaredHumanCreated = methodCount(allMethods, "human_created");
+  const declaredAiAssisted = methodCount(allMethods, "ai_assisted");
+  const declaredHybrid = methodCount(allMethods, "human_ai_collab");
+  const declaredFullyAi = methodCount(allMethods, "fully_ai_generated");
+  const declaredUnclassified = methodCount(allMethods, "unclassified");
+
+  const flaggedCount = (songsFlagged?.count ?? 0) + (videosFlagged?.count ?? 0);
+  const escalatedCount = (songsEscalated?.count ?? 0) + (videosEscalated?.count ?? 0);
+  const adminTaggedCount = (songsAdminTagged?.count ?? 0) + (videosAdminTagged?.count ?? 0);
+  const lockedTagCount = (songsLocked?.count ?? 0) + (videosLocked?.count ?? 0);
+  const aiPolicyRejections = (songsRejected?.count ?? 0) + (videosRejected?.count ?? 0);
+  const appealsFiled = appealsTotal?.count ?? 0;
+  const appealsReversedCount = appealsReversed?.count ?? 0;
+  const scanTotal = scansTotal?.count ?? 0;
+  const scanFailed = scansFailed?.count ?? 0;
+  const scanFailureRate = scanTotal > 0 ? Math.round((scanFailed / scanTotal) * 100 * 10) / 10 : null;
+  const falsePositiveReversalsCount = falsePositiveReversals?.count ?? 0;
+
+  res.json({
+    declaredHumanCreated,
+    declaredAiAssisted,
+    declaredHybrid,
+    declaredFullyAi,
+    declaredUnclassified,
+    flaggedCount,
+    escalatedCount,
+    adminTaggedCount,
+    lockedTagCount,
+    aiPolicyRejections,
+    appealsFiled,
+    appealsReversed: appealsReversedCount,
+    scanTotal,
+    scanFailed,
+    scanFailureRate,
+    falsePositiveReversals: falsePositiveReversalsCount,
+  });
 });
 
 export default router;

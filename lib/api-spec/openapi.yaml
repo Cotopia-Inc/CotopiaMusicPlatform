@@ -1935,6 +1935,23 @@ paths:
               schema:
                 $ref: "#/components/schemas/AnalyticsSummary"
 
+  /admin/analytics/ai-classification:
+    get:
+      operationId: getAdminAiClassificationAnalytics
+      tags: [admin]
+      summary: AI classification analytics counts (admin only)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiClassificationAnalytics"
+        "403":
+          description: Forbidden
+
   /admin/settings:
     get:
       operationId: getAppSettings
@@ -5138,6 +5155,74 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Video"
+
+    AiClassificationAnalytics:
+      type: object
+      required:
+        - declaredHumanCreated
+        - declaredAiAssisted
+        - declaredHybrid
+        - declaredFullyAi
+        - declaredUnclassified
+        - flaggedCount
+        - escalatedCount
+        - adminTaggedCount
+        - lockedTagCount
+        - aiPolicyRejections
+        - appealsFiled
+        - appealsReversed
+        - scanTotal
+        - scanFailed
+        - falsePositiveReversals
+      properties:
+        declaredHumanCreated:
+          type: integer
+          description: Songs + videos declared as human_created
+        declaredAiAssisted:
+          type: integer
+          description: Songs + videos declared as ai_assisted
+        declaredHybrid:
+          type: integer
+          description: Songs + videos declared as hybrid (human_ai_collab)
+        declaredFullyAi:
+          type: integer
+          description: Songs + videos declared as fully_ai_generated
+        declaredUnclassified:
+          type: integer
+          description: Songs + videos with no declared creation method
+        flaggedCount:
+          type: integer
+          description: Content with aiReviewStatus not in [not_scanned, scan_complete, admin_approved]
+        escalatedCount:
+          type: integer
+          description: Content with aiReviewStatus = escalated_to_admin
+        adminTaggedCount:
+          type: integer
+          description: Content with tagSource = admin
+        lockedTagCount:
+          type: integer
+          description: Content with tagLocked = true
+        aiPolicyRejections:
+          type: integer
+          description: Content rejected under AI policy (admin_rejected or auto_rejected)
+        appealsFiled:
+          type: integer
+          description: Trust appeals filed for ai_authorship_tag_dispute
+        appealsReversed:
+          type: integer
+          description: AI tag disputes that were reversed
+        scanTotal:
+          type: integer
+          description: Total AI detection scans run
+        scanFailed:
+          type: integer
+          description: AI detection scans that failed
+        scanFailureRate:
+          type: ["number", "null"]
+          description: Percentage of scans that failed (0–100), null if no scans
+        falsePositiveReversals:
+          type: integer
+          description: Reversed appeals linked to specific content (proxy for detection false positives)
 
     LabelAnalytics:
       type: object

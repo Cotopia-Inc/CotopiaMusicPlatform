@@ -48,6 +48,7 @@ import type {
   AdminUserProfile,
   AdminUserUpdate,
   AgreementRecord,
+  AiClassificationAnalytics,
   AnalyticsEventInput,
   AnalyticsSummary,
   AppSettings,
@@ -7384,6 +7385,83 @@ export function useGetAdminAnalytics<TData = Awaited<ReturnType<typeof getAdminA
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetAdminAnalyticsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetAdminAiClassificationAnalyticsUrl = () => {
+
+
+
+
+  return `/api/admin/analytics/ai-classification`
+}
+
+/**
+ * @summary AI classification analytics counts (admin only)
+ */
+export const getAdminAiClassificationAnalytics = async ( options?: RequestInit): Promise<AiClassificationAnalytics> => {
+
+  return customFetch<AiClassificationAnalytics>(getGetAdminAiClassificationAnalyticsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAdminAiClassificationAnalyticsQueryKey = () => {
+    return [
+    `/api/admin/analytics/ai-classification`
+    ] as const;
+    }
+
+
+export const getGetAdminAiClassificationAnalyticsQueryOptions = <TData = Awaited<ReturnType<typeof getAdminAiClassificationAnalytics>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAdminAiClassificationAnalytics>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAdminAiClassificationAnalyticsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAdminAiClassificationAnalytics>>> = ({ signal }) => getAdminAiClassificationAnalytics({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAdminAiClassificationAnalytics>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAdminAiClassificationAnalyticsQueryResult = NonNullable<Awaited<ReturnType<typeof getAdminAiClassificationAnalytics>>>
+export type GetAdminAiClassificationAnalyticsQueryError = ErrorType<void>
+
+
+/**
+ * @summary AI classification analytics counts (admin only)
+ */
+
+export function useGetAdminAiClassificationAnalytics<TData = Awaited<ReturnType<typeof getAdminAiClassificationAnalytics>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAdminAiClassificationAnalytics>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAdminAiClassificationAnalyticsQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

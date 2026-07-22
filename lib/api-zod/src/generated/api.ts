@@ -2887,6 +2887,29 @@ export const GetAdminAnalyticsResponse = zod.object({
 
 
 /**
+ * @summary AI classification analytics counts (admin only)
+ */
+export const GetAdminAiClassificationAnalyticsResponse = zod.object({
+  "declaredHumanCreated": zod.number().describe('Songs + videos declared as human_created'),
+  "declaredAiAssisted": zod.number().describe('Songs + videos declared as ai_assisted'),
+  "declaredHybrid": zod.number().describe('Songs + videos declared as hybrid (human_ai_collab)'),
+  "declaredFullyAi": zod.number().describe('Songs + videos declared as fully_ai_generated'),
+  "declaredUnclassified": zod.number().describe('Songs + videos with no declared creation method'),
+  "flaggedCount": zod.number().describe('Content with aiReviewStatus not in [not_scanned, scan_complete, admin_approved]'),
+  "escalatedCount": zod.number().describe('Content with aiReviewStatus = escalated_to_admin'),
+  "adminTaggedCount": zod.number().describe('Content with tagSource = admin'),
+  "lockedTagCount": zod.number().describe('Content with tagLocked = true'),
+  "aiPolicyRejections": zod.number().describe('Content rejected under AI policy (admin_rejected or auto_rejected)'),
+  "appealsFiled": zod.number().describe('Trust appeals filed for ai_authorship_tag_dispute'),
+  "appealsReversed": zod.number().describe('AI tag disputes that were reversed'),
+  "scanTotal": zod.number().describe('Total AI detection scans run'),
+  "scanFailed": zod.number().describe('AI detection scans that failed'),
+  "scanFailureRate": zod.number().nullish().describe('Percentage of scans that failed (0–100), null if no scans'),
+  "falsePositiveReversals": zod.number().describe('Reversed appeals linked to specific content (proxy for detection false positives)')
+})
+
+
+/**
  * @summary Get app settings / CMS config
  */
 export const GetAppSettingsResponse = zod.object({

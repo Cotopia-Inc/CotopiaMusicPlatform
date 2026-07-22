@@ -1127,6 +1127,44 @@ export interface AnalyticsSummary {
   topVideos?: Video[];
 }
 
+export interface AiClassificationAnalytics {
+  /** Songs + videos declared as human_created */
+  declaredHumanCreated: number;
+  /** Songs + videos declared as ai_assisted */
+  declaredAiAssisted: number;
+  /** Songs + videos declared as hybrid (human_ai_collab) */
+  declaredHybrid: number;
+  /** Songs + videos declared as fully_ai_generated */
+  declaredFullyAi: number;
+  /** Songs + videos with no declared creation method */
+  declaredUnclassified: number;
+  /** Content with aiReviewStatus not in [not_scanned, scan_complete, admin_approved] */
+  flaggedCount: number;
+  /** Content with aiReviewStatus = escalated_to_admin */
+  escalatedCount: number;
+  /** Content with tagSource = admin */
+  adminTaggedCount: number;
+  /** Content with tagLocked = true */
+  lockedTagCount: number;
+  /** Content rejected under AI policy (admin_rejected or auto_rejected) */
+  aiPolicyRejections: number;
+  /** Trust appeals filed for ai_authorship_tag_dispute */
+  appealsFiled: number;
+  /** AI tag disputes that were reversed */
+  appealsReversed: number;
+  /** Total AI detection scans run */
+  scanTotal: number;
+  /** AI detection scans that failed */
+  scanFailed: number;
+  /**
+     * Percentage of scans that failed (0–100), null if no scans
+     * @nullable
+     */
+  scanFailureRate?: number | null;
+  /** Reversed appeals linked to specific content (proxy for detection false positives) */
+  falsePositiveReversals: number;
+}
+
 export type LabelAnalyticsTopArtistsItem = {
   id?: number;
   stageName?: string;

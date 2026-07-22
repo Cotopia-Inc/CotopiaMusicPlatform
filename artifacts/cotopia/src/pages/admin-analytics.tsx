@@ -1,8 +1,8 @@
-import { useGetAdminAnalytics } from "@workspace/api-client-react";
+import { useGetAdminAnalytics, useGetAdminAiClassificationAnalytics } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
 import { useLocation } from "wouter";
 import { useEffect } from "react";
-import { BarChart3, Music, Video, Users, Play, Eye, MessageSquare, Clock, TrendingUp, Star, Globe, UserCheck, CheckCircle2 } from "lucide-react";
+import { BarChart3, Music, Video, Users, Play, Eye, MessageSquare, Clock, TrendingUp, Star, Globe, UserCheck, CheckCircle2, Bot, ShieldAlert, Flag, Lock, Ban, Scale, ScanLine, AlertTriangle } from "lucide-react";
 import { RoleTag } from "@/components/role-badges";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -35,6 +35,7 @@ export default function AdminAnalytics() {
   }, [user, navigate]);
 
   const { data, isLoading } = useGetAdminAnalytics();
+  const { data: aiData, isLoading: aiLoading } = useGetAdminAiClassificationAnalytics();
 
   if (isLoading) {
     return (
@@ -120,6 +121,72 @@ export default function AdminAnalytics() {
           </CardContent>
         </Card>
       )}
+
+      {/* AI Classification Analytics */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <Bot className="w-4 h-4 text-primary" />
+            AI Classification
+            {aiLoading && <span className="text-xs text-muted-foreground font-normal ml-1">Loading…</span>}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Creator-declared types */}
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">Creator-Declared Origin</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+              <StatCard label="Human Created" value={aiData?.declaredHumanCreated ?? 0} icon={Users} />
+              <StatCard label="AI Assisted" value={aiData?.declaredAiAssisted ?? 0} icon={Bot} />
+              <StatCard label="Hybrid" value={aiData?.declaredHybrid ?? 0} icon={Scale} />
+              <StatCard label="Fully AI" value={aiData?.declaredFullyAi ?? 0} icon={Bot} />
+              <StatCard label="Unclassified" value={aiData?.declaredUnclassified ?? 0} icon={AlertTriangle} />
+            </div>
+          </div>
+
+          {/* Review pipeline counts */}
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">Review Pipeline</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              <StatCard label="Flagged" value={aiData?.flaggedCount ?? 0} icon={Flag} sub="under active review" />
+              <StatCard label="Escalated" value={aiData?.escalatedCount ?? 0} icon={ShieldAlert} sub="sent to admin" />
+              <StatCard label="Admin Tagged" value={aiData?.adminTaggedCount ?? 0} icon={Star} sub="platform-assigned tag" />
+              <StatCard label="Locked Tags" value={aiData?.lockedTagCount ?? 0} icon={Lock} sub="creator cannot change" />
+            </div>
+          </div>
+
+          {/* Outcomes */}
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">Outcomes &amp; Appeals</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              <StatCard label="AI Policy Rejections" value={aiData?.aiPolicyRejections ?? 0} icon={Ban} sub="admin or auto rejected" />
+              <StatCard label="Appeals Filed" value={aiData?.appealsFiled ?? 0} icon={Scale} sub="ai tag disputes" />
+              <StatCard label="Appeals Reversed" value={aiData?.appealsReversed ?? 0} icon={CheckCircle2} sub="creator vindicated" />
+              <StatCard
+                label="False Positives"
+                value={aiData?.falsePositiveReversals ?? 0}
+                icon={AlertTriangle}
+                sub="detection reversed on appeal"
+              />
+            </div>
+          </div>
+
+          {/* Scan health */}
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">Detection Scan Health</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <StatCard label="Total Scans" value={aiData?.scanTotal ?? 0} icon={ScanLine} />
+              <StatCard label="Failed Scans" value={aiData?.scanFailed ?? 0} icon={ShieldAlert} sub="provider errors" />
+              <StatCard
+                label="Failure Rate"
+                value={aiData?.scanFailureRate != null ? `${aiData.scanFailureRate}%` : "—"}
+                icon={AlertTriangle}
+                sub="failed / total scans"
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Top Songs */}
