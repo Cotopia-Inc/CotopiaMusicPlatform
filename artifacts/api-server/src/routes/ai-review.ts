@@ -463,6 +463,81 @@ router.post(
   },
 );
 
+// ── Cover art scan (manual trigger) ──────────────────────────────────────────
+
+router.post(
+  "/admin/ai-review/scan-cover",
+  requireAuth, requireRole(...STAFF_ROLES),
+  async (req: AuthRequest, res): Promise<void> => {
+    const body = z.object({
+      contentType: z.enum(["song", "video"]),
+      contentId: z.number().int().positive(),
+    }).safeParse(req.body);
+    if (!body.success) { res.status(400).json({ error: "contentType and contentId are required" }); return; }
+
+    const { contentType, contentId } = body.data;
+    const table = contentType === "song" ? songsTable : videosTable;
+
+    const [content] = await db
+      .select()
+      .from(table as typeof songsTable)
+      .where(eq((table as typeof songsTable).id, contentId))
+      .limit(1);
+
+    if (!content) { res.status(404).json({ error: "Content not found" }); return; }
+
+    const imageUrl = (content as Record<string, unknown>)[
+      contentType === "song" ? "coverUrl" : "thumbnailUrl"
+    ] as string | null;
+
+    if (!imageUrl) {
+      res.status(422).json({ error: "No cover art URL available to scan" });
+      return;
+    }
+
+    const settings = await getSettings();
+    const coverContentType = `${contentType}_cover` as string;
+
+    const result = await scanWithHive(imageUrl, {
+      lowThreshold: settings?.aiLowThreshold ?? 25,
+      highThreshold: settings?.aiHighThreshold ?? 60,
+      criticalThreshold: settings?.aiCriticalThreshold ?? 90,
+    });
+
+    const [scan] = await db.insert(aiDetectionScansTable).values({
+      contentType: coverContentType,
+      contentId,
+      provider: result.provider,
+      modelVersion: result.modelVersion,
+      scanStatus: result.available ? "complete" : (result.error ? "failed" : "unavailable"),
+      rawResult: result.rawResult as Record<string, unknown> | undefined,
+      aiLikelihoodPercent: result.aiLikelihoodPercent ?? undefined,
+      confidenceLevel: result.confidenceLevel,
+      riskLevel: result.riskLevel ?? undefined,
+      detectionIndicators: result.detectionIndicators,
+      errorMessage: result.error ?? undefined,
+      requestedBy: req.user!.userId,
+      scannedAt: new Date(),
+    }).returning();
+
+    await logAudit(req.user!.userId, "ai_cover_scan_triggered", contentType, contentId,
+      `Cover art AI scan triggered for ${contentType} ${contentId} — available: ${result.available}`,
+      { scanId: scan.id, available: result.available, score: result.aiLikelihoodPercent });
+
+    res.json({
+      ok: true,
+      scanId: scan.id,
+      available: result.available,
+      aiLikelihoodPercent: result.aiLikelihoodPercent,
+      confidenceLevel: result.confidenceLevel,
+      riskLevel: result.riskLevel,
+      detectionIndicators: result.detectionIndicators,
+      error: result.error,
+      disclaimer: "Automated AI-detection results are advisory estimates and may be inaccurate.",
+    });
+  },
+);
+
 // ── Get scan history for content ──────────────────────────────────────────────
 
 router.get(
@@ -472,8 +547,8 @@ router.get(
     const contentType = String(req.params.contentType);
     const contentId = Number(req.params.contentId);
 
-    if (!["song", "video"].includes(contentType)) {
-      res.status(400).json({ error: "contentType must be song or video" });
+    if (!["song", "video", "song_cover", "video_cover"].includes(contentType)) {
+      res.status(400).json({ error: "contentType must be song, video, song_cover, or video_cover" });
       return;
     }
 

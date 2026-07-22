@@ -11,7 +11,7 @@ import {
 import { requireAuth, requireVerifiedEmail, type AuthRequest } from "../lib/auth";
 import { publishContent, isFutureRelease } from "../lib/publisher";
 import { awardBadgeByName } from "./badges";
-import { scheduleScan } from "../lib/ai-scan";
+import { scheduleScan, scheduleCoverScan } from "../lib/ai-scan";
 
 const BETA_END_DATE = new Date("2026-12-31T23:59:59Z");
 
@@ -178,9 +178,10 @@ router.post("/submissions", requireAuth, requireVerifiedEmail, async (req: AuthR
     submitterNotes,
   }).returning();
 
-  // Fire-and-forget: scan runs in background, does not block the response.
-  // No-ops if enableAiReview is disabled or Hive is not configured.
+  // Fire-and-forget: scans run in background, do not block the response.
+  // No-ops if enableAiReview is disabled or provider is not configured.
   void scheduleScan(d.type as "song" | "video", contentId, d.fileUrl ?? null);
+  void scheduleCoverScan(d.type as "song" | "video", contentId, d.coverUrl ?? null);
 
   const enriched = await enrichSubmission(submission);
   res.status(201).json(enriched);
@@ -304,8 +305,9 @@ router.post("/submissions/bulk", requireAuth, requireVerifiedEmail, async (req: 
       creationMethod,
     }).returning();
 
-    // Fire-and-forget: no-ops if enableAiReview is disabled or Hive is not configured.
+    // Fire-and-forget: no-ops if enableAiReview is disabled or provider is not configured.
     void scheduleScan(d.type as "song" | "video", contentId, file.fileUrl ?? null);
+    void scheduleCoverScan(d.type as "song" | "video", contentId, d.coverUrl ?? null);
 
     results.push(await enrichSubmission(submission));
   }
