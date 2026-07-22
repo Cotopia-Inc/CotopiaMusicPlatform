@@ -169,7 +169,9 @@ interface ScanRecord {
   createdAt: string;
 }
 
-/** Parse the full per-class score breakdown stored in rawResult from Hive V3. */
+/** Parse the full per-class score breakdown stored in rawResult from Hive V3.
+ *  Aggregates across ALL output items (one per segment for chunked scans)
+ *  by taking the worst-case (max) score per class name. */
 function parseClassBreakdown(
   rawResult: Record<string, unknown> | null | undefined,
 ): Array<{ name: string; percent: number }> | null {
@@ -178,13 +180,36 @@ function parseClassBreakdown(
     const statusArr = rawResult["status"] as Array<Record<string, unknown>> | undefined;
     const response = statusArr?.[0]?.["response"] as Record<string, unknown> | undefined;
     const output = response?.["output"] as Array<Record<string, unknown>> | undefined;
-    const classes = output?.[0]?.["classes"] as Array<{ class: string; score: number }> | undefined;
-    if (!Array.isArray(classes) || classes.length === 0) return null;
-    return classes
-      .map((c) => ({ name: c.class.replace(/_/g, " "), percent: Math.round(c.score * 100) }))
+    if (!Array.isArray(output) || output.length === 0) return null;
+    const maxPerClass = new Map<string, number>();
+    for (const item of output) {
+      const classes = item["classes"] as Array<{ class: string; score: number }> | undefined;
+      if (!Array.isArray(classes)) continue;
+      for (const cls of classes) {
+        const pct = Math.round(cls.score * 100);
+        const existing = maxPerClass.get(cls.class) ?? 0;
+        if (pct > existing) maxPerClass.set(cls.class, pct);
+      }
+    }
+    if (maxPerClass.size === 0) return null;
+    return Array.from(maxPerClass.entries())
+      .map(([name, percent]) => ({ name: name.replace(/_/g, " "), percent }))
       .sort((a, b) => b.percent - a.percent);
   } catch {
     return null;
+  }
+}
+
+/** Count how many segments Hive processed (output items in status[0].response.output). */
+function getSegmentCount(rawResult: Record<string, unknown> | null | undefined): number {
+  if (!rawResult) return 0;
+  try {
+    const statusArr = rawResult["status"] as Array<Record<string, unknown>> | undefined;
+    const response = statusArr?.[0]?.["response"] as Record<string, unknown> | undefined;
+    const output = response?.["output"] as Array<Record<string, unknown>> | undefined;
+    return Array.isArray(output) ? output.length : 0;
+  } catch {
+    return 0;
   }
 }
 
@@ -463,6 +488,14 @@ export function AiReviewCard({
                                 Confidence: <strong>{scan.confidenceLevel}</strong>
                               </span>
                             )}
+                            {(() => {
+                              const segCount = getSegmentCount(scan.rawResult);
+                              return segCount > 1 ? (
+                                <span className="text-muted-foreground">
+                                  Segments: <strong>{segCount}</strong>
+                                </span>
+                              ) : null;
+                            })()}
                           </div>
                           {/* Full class-by-class breakdown from rawResult */}
                           {(() => {
@@ -499,9 +532,31 @@ export function AiReviewCard({
                           ))}
                         </div>
                       )}
-                      {scan.scanStatus === "failed" && scan.errorMessage && (
-                        <div className="text-[10px] text-red-500 break-all" title={scan.errorMessage}>
-                          Error: {scan.errorMessage}
+                      {scan.scanStatus === "failed" && (
+                        <div className="rounded-md border border-red-500/30 bg-red-500/5 px-3 py-2 mt-1">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="space-y-1 min-w-0">
+                              <div className="text-[11px] font-medium text-red-600 dark:text-red-400">Scan failed</div>
+                              {scan.errorMessage && (
+                                <div className="text-[10px] text-red-500/80 break-all leading-relaxed">{scan.errorMessage}</div>
+                              )}
+                            </div>
+                            {onScanRequest && (isAdmin || isModerator) && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="text-[10px] h-6 px-2 shrink-0 border-red-500/40 text-red-600 dark:text-red-400 hover:bg-red-500/10"
+                                disabled={scanRequesting || data.aiReviewStatus === "scan_pending"}
+                                onClick={async () => {
+                                  setScanRequesting(true);
+                                  try { await onScanRequest(); } finally { setScanRequesting(false); }
+                                }}
+                              >
+                                {scanRequesting ? <Loader2 className="w-3 h-3 animate-spin" /> : "Retry"}
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       )}
                       {scan.scanStatus === "unavailable" && (

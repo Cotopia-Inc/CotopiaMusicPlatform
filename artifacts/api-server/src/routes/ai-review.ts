@@ -421,6 +421,9 @@ router.post(
       ))
       .catch(() => undefined);
 
+    // Extract duration so the Hive adapter can build 60-second segments for long files.
+    const durationSeconds = (content as Record<string, unknown>)["duration"] as number | undefined;
+
     // Respond immediately — the scan can take 10-120 s depending on file size.
     res.status(202).json({ ok: true, queued: true });
 
@@ -431,6 +434,7 @@ router.post(
           lowThreshold: settings?.aiLowThreshold ?? 25,
           highThreshold: settings?.aiHighThreshold ?? 60,
           criticalThreshold: settings?.aiCriticalThreshold ?? 90,
+          durationSeconds: durationSeconds ?? 0,
         });
 
         const [scan] = await db.insert(aiDetectionScansTable).values({
