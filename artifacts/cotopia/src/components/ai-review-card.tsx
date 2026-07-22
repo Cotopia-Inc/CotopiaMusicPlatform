@@ -14,7 +14,7 @@
  */
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, Lock, LockOpen, ShieldCheck, ShieldAlert, ChevronDown, ChevronUp, Scan, History, X } from "lucide-react";
+import { AlertTriangle, Lock, LockOpen, ShieldCheck, ShieldAlert, ChevronDown, ChevronUp, Scan, History, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
@@ -163,9 +163,29 @@ interface ScanRecord {
   confidenceLevel: string | null;
   riskLevel: string | null;
   detectionIndicators: string[] | null;
+  rawResult: Record<string, unknown> | null;
   errorMessage: string | null;
   scannedAt: string | null;
   createdAt: string;
+}
+
+/** Parse the full per-class score breakdown stored in rawResult from Hive V3. */
+function parseClassBreakdown(
+  rawResult: Record<string, unknown> | null | undefined,
+): Array<{ name: string; percent: number }> | null {
+  if (!rawResult) return null;
+  try {
+    const statusArr = rawResult["status"] as Array<Record<string, unknown>> | undefined;
+    const response = statusArr?.[0]?.["response"] as Record<string, unknown> | undefined;
+    const output = response?.["output"] as Array<Record<string, unknown>> | undefined;
+    const classes = output?.[0]?.["classes"] as Array<{ class: string; score: number }> | undefined;
+    if (!Array.isArray(classes) || classes.length === 0) return null;
+    return classes
+      .map((c) => ({ name: c.class.replace(/_/g, " "), percent: Math.round(c.score * 100) }))
+      .sort((a, b) => b.percent - a.percent);
+  } catch {
+    return null;
+  }
 }
 
 export function AiReviewCard({
@@ -182,6 +202,7 @@ export function AiReviewCard({
 }: AiReviewCardProps) {
   const [expanded, setExpanded] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [scanRequesting, setScanRequesting] = useState(false);
   const [selectedAction, setSelectedAction] = useState<string>("");
   const [selectedTag, setSelectedTag] = useState<string>("");
   const [reason, setReason] = useState("");
@@ -359,11 +380,22 @@ export function AiReviewCard({
               variant="outline"
               size="sm"
               className="gap-2 text-xs"
-              onClick={onScanRequest}
-              disabled={data.aiReviewStatus === "scan_pending"}
+              disabled={scanRequesting || data.aiReviewStatus === "scan_pending"}
+              onClick={async () => {
+                if (scanRequesting || data.aiReviewStatus === "scan_pending") return;
+                setScanRequesting(true);
+                try {
+                  await onScanRequest();
+                } finally {
+                  setScanRequesting(false);
+                }
+              }}
             >
-              <Scan className="w-3.5 h-3.5" />
-              {data.aiReviewStatus === "scan_pending" ? "Scanning…" : "Request Detection Scan"}
+              {(scanRequesting || data.aiReviewStatus === "scan_pending") ? (
+                <><Loader2 className="w-3.5 h-3.5 animate-spin" />Scanning…</>
+              ) : (
+                <><Scan className="w-3.5 h-3.5" />Request Detection Scan</>
+              )}
             </Button>
           )}
 
@@ -407,26 +439,63 @@ export function AiReviewCard({
                         </div>
                       </div>
                       {scan.scanStatus === "complete" && scan.aiLikelihoodPercent !== null && (
-                        <div className="flex flex-wrap items-center gap-3 text-[11px]">
-                          <span>
-                            AI likelihood: <strong className="tabular-nums">{scan.aiLikelihoodPercent}%</strong>
-                          </span>
-                          {scan.riskLevel && (
-                            <span className="capitalize text-muted-foreground">
-                              Risk: <strong>{scan.riskLevel}</strong>
+                        <div className="space-y-2">
+                          {/* Summary row */}
+                          <div className="flex flex-wrap items-center gap-3 text-[11px]">
+                            <span>
+                              AI likelihood: <strong className={cn("tabular-nums",
+                                scan.aiLikelihoodPercent >= 90 ? "text-red-500" :
+                                scan.aiLikelihoodPercent >= 60 ? "text-orange-500" :
+                                scan.aiLikelihoodPercent >= 25 ? "text-amber-500" : "text-emerald-500"
+                              )}>{scan.aiLikelihoodPercent}%</strong>
                             </span>
-                          )}
-                          {scan.confidenceLevel && scan.confidenceLevel !== "unavailable" && (
-                            <span className="capitalize text-muted-foreground">
-                              Confidence: <strong>{scan.confidenceLevel}</strong>
-                            </span>
-                          )}
+                            {scan.riskLevel && (
+                              <span className="capitalize text-muted-foreground">
+                                Risk: <strong className={cn(
+                                  scan.riskLevel === "critical" ? "text-red-500" :
+                                  scan.riskLevel === "high" ? "text-orange-500" :
+                                  scan.riskLevel === "moderate" ? "text-amber-500" : "text-emerald-500"
+                                )}>{scan.riskLevel}</strong>
+                              </span>
+                            )}
+                            {scan.confidenceLevel && scan.confidenceLevel !== "unavailable" && (
+                              <span className="capitalize text-muted-foreground">
+                                Confidence: <strong>{scan.confidenceLevel}</strong>
+                              </span>
+                            )}
+                          </div>
+                          {/* Full class-by-class breakdown from rawResult */}
+                          {(() => {
+                            const breakdown = parseClassBreakdown(scan.rawResult);
+                            if (!breakdown || breakdown.length === 0) return null;
+                            return (
+                              <div className="space-y-1 pt-0.5">
+                                <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Full Detection Breakdown</div>
+                                {breakdown.map(({ name, percent }) => (
+                                  <div key={name} className="flex items-center gap-2">
+                                    <div className="text-[10px] text-muted-foreground capitalize w-40 shrink-0 truncate" title={name}>{name}</div>
+                                    <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                                      <div
+                                        className={cn("h-full rounded-full transition-all",
+                                          percent >= 90 ? "bg-red-500" :
+                                          percent >= 60 ? "bg-orange-500" :
+                                          percent >= 25 ? "bg-amber-400" : "bg-emerald-500"
+                                        )}
+                                        style={{ width: `${percent}%` }}
+                                      />
+                                    </div>
+                                    <div className="text-[10px] font-semibold tabular-nums w-9 text-right">{percent}%</div>
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          })()}
                         </div>
                       )}
                       {scan.detectionIndicators && scan.detectionIndicators.length > 0 && (
                         <div className="flex flex-wrap gap-1 pt-0.5">
                           {scan.detectionIndicators.map((ind) => (
-                            <Badge key={ind} variant="secondary" className="text-[9px] px-1.5 py-0">{ind}</Badge>
+                            <Badge key={ind} variant="secondary" className="text-[9px] px-1.5 py-0 capitalize">{ind.replace(/_/g, " ")}</Badge>
                           ))}
                         </div>
                       )}

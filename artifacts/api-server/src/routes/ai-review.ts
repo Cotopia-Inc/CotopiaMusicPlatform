@@ -411,6 +411,16 @@ router.post(
       .set({ aiReviewStatus: "scan_pending" })
       .where(eq((table as typeof songsTable).id, contentId));
 
+    // Mirror pending status to the associated submission so admin-submissions
+    // can show the spinner and start polling scan history immediately.
+    await db.update(submissionsTable)
+      .set({ aiReviewStatus: "scan_pending" })
+      .where(and(
+        eq(submissionsTable.contentId, contentId),
+        eq(submissionsTable.type, contentType),
+      ))
+      .catch(() => undefined);
+
     // Respond immediately — the scan can take 10-120 s depending on file size.
     res.status(202).json({ ok: true, queued: true });
 
@@ -452,21 +462,28 @@ router.post(
             aiReviewStatus: autoFlagged ? "auto_flagged" : "scan_complete",
           }).where(eq((table as typeof songsTable).id, contentId));
 
-          if (autoFlagged) {
-            await db
-              .update(submissionsTable)
-              .set({ aiReviewStatus: "auto_flagged" })
-              .where(
-                and(
-                  eq(submissionsTable.contentId, contentId),
-                  eq(submissionsTable.type, contentType),
-                ),
-              );
-          }
+          // Mirror final status to submission (all outcomes, not just auto_flagged)
+          const finalSubmissionStatus = autoFlagged ? "auto_flagged" : "scan_complete";
+          await db.update(submissionsTable)
+            .set({ aiReviewStatus: finalSubmissionStatus })
+            .where(and(
+              eq(submissionsTable.contentId, contentId),
+              eq(submissionsTable.type, contentType),
+            ))
+            .catch(() => undefined);
         } else {
+          const fallbackStatus = result.error ? "scan_complete" : "not_scanned";
           await db.update(table as typeof songsTable).set({
-            aiReviewStatus: result.error ? "scan_complete" : "not_scanned",
+            aiReviewStatus: fallbackStatus,
           }).where(eq((table as typeof songsTable).id, contentId));
+
+          await db.update(submissionsTable)
+            .set({ aiReviewStatus: fallbackStatus })
+            .where(and(
+              eq(submissionsTable.contentId, contentId),
+              eq(submissionsTable.type, contentType),
+            ))
+            .catch(() => undefined);
         }
 
         await logAudit(requestedBy, "ai_scan_triggered", contentType, contentId,
@@ -477,6 +494,13 @@ router.post(
         await db.update(table as typeof songsTable)
           .set({ aiReviewStatus: "not_scanned" })
           .where(eq((table as typeof songsTable).id, contentId))
+          .catch(() => undefined);
+        await db.update(submissionsTable)
+          .set({ aiReviewStatus: "not_scanned" })
+          .where(and(
+            eq(submissionsTable.contentId, contentId),
+            eq(submissionsTable.type, contentType),
+          ))
           .catch(() => undefined);
       }
     })();

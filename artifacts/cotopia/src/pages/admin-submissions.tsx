@@ -307,6 +307,8 @@ function SubmissionCard({
   onDelete: (id: number) => void;
   isPending: boolean;
 }) {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [expanded, setExpanded] = useState(false);
   const [notes, setNotes] = useState("");
   const [strikeTarget, setStrikeTarget] = useState<StrikeTarget | null>(null);
@@ -497,20 +499,43 @@ function SubmissionCard({
               isAdmin={mode === "admin"}
               isModerator={mode === "moderator"}
               onAction={async (action, params) => {
-                const token = localStorage.getItem("cotopia_token");
-                await fetch(`${import.meta.env.BASE_URL}api/admin/ai-review/${sub.type}/${sub.contentId ?? sub.id}`, {
-                  method: "PATCH",
-                  headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-                  body: JSON.stringify({ action, ...params }),
-                });
+                try {
+                  const token = localStorage.getItem("cotopia_token");
+                  const res = await fetch(`${import.meta.env.BASE_URL}api/admin/ai-review/${sub.type}/${sub.contentId ?? sub.id}`, {
+                    method: "PATCH",
+                    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+                    body: JSON.stringify({ action, ...params }),
+                  });
+                  if (!res.ok) {
+                    const err = await res.json().catch(() => ({})) as { error?: string };
+                    toast({ variant: "destructive", title: "Action failed", description: err.error ?? `Server returned ${res.status}` });
+                    return;
+                  }
+                  toast({ title: "Classification updated" });
+                  queryClient.invalidateQueries({ queryKey: ["adminListSubmissions"] });
+                } catch {
+                  toast({ variant: "destructive", title: "Action failed", description: "Network error — please try again." });
+                }
               }}
               onScanRequest={async () => {
-                const token = localStorage.getItem("cotopia_token");
-                await fetch(`${import.meta.env.BASE_URL}api/admin/ai-review/scan`, {
-                  method: "POST",
-                  headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-                  body: JSON.stringify({ contentType: sub.type, contentId: sub.contentId ?? sub.id }),
-                });
+                try {
+                  const token = localStorage.getItem("cotopia_token");
+                  const res = await fetch(`${import.meta.env.BASE_URL}api/admin/ai-review/scan`, {
+                    method: "POST",
+                    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+                    body: JSON.stringify({ contentType: sub.type, contentId: sub.contentId ?? sub.id }),
+                  });
+                  if (!res.ok) {
+                    const body = await res.json().catch(() => ({})) as { error?: string };
+                    toast({ variant: "destructive", title: "Scan request failed", description: body.error ?? `Server returned ${res.status}` });
+                    return;
+                  }
+                  toast({ title: "Scan queued", description: "Results will appear automatically once the scan completes." });
+                  queryClient.invalidateQueries({ queryKey: ["adminListSubmissions"] });
+                  queryClient.invalidateQueries({ queryKey: ["ai-scans", sub.type, sub.contentId ?? sub.id] });
+                } catch {
+                  toast({ variant: "destructive", title: "Scan request failed", description: "Network error — please try again." });
+                }
               }}
             />
           )}
@@ -683,7 +708,15 @@ export default function AdminSubmissions() {
   const queryParams = { status: statusFilter !== "all" ? statusFilter : undefined };
   const { data, isLoading } = useAdminListSubmissions(
     queryParams,
-    { query: { queryKey: getAdminListSubmissionsQueryKey(queryParams) } }
+    {
+      query: {
+        queryKey: getAdminListSubmissionsQueryKey(queryParams),
+        refetchInterval: (q) => {
+          const items = Array.isArray(q.state.data) ? (q.state.data as Sub[]) : [];
+          return items.some((s) => s.aiReviewStatus === "scan_pending") ? 5000 : false;
+        },
+      },
+    }
   );
 
   const reviewMutation = useReviewSubmission();
