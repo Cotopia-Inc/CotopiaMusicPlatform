@@ -7,8 +7,8 @@
  */
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import {
-  db, songsTable, videosTable, artistsTable, adminAuditLogsTable,
-  appSettingsTable, submissionsTable,
+  db, songsTable, adminAuditLogsTable,
+  appSettingsTable, submissionsTable, aiDetectionScansTable,
 } from "@workspace/db";
 import { eq, and, desc } from "drizzle-orm";
 import {
@@ -239,7 +239,7 @@ describe("AI classification — tag lock enforcement (cases 6–7)", () => {
     artistProfileId = await createArtistProfile(artist.id);
   });
 
-  it("case 6: creator can remove (overwrite) their own unlocked tag — returns 200", async () => {
+  it("case 6: creator can remove their own unlocked tag (reset to unclassified) — returns 200", async () => {
     const songId = await insertSong(artistProfileId, {
       creationMethod: "ai_assisted",
       creatorSelectedTag: "ai_assisted",
@@ -247,18 +247,21 @@ describe("AI classification — tag lock enforcement (cases 6–7)", () => {
       tagLocked: false,
     });
 
+    // "Remove" the tag by resetting to unclassified — the only way to clear via the creator endpoint
     const res = await api()
       .post(`/api/songs/${songId}/creation-tag`)
       .set("Authorization", bearer(artist.token))
-      .send({ creationMethod: "human_created" });
+      .send({ creationMethod: "unclassified" });
 
     expect(res.status).toBe(200);
-    expect(res.body.creationMethod).toBe("human_created");
+    expect(res.body.creationMethod).toBe("unclassified");
 
     const [song] = await db
-      .select({ creationMethod: songsTable.creationMethod })
+      .select({ creationMethod: songsTable.creationMethod, creatorSelectedTag: songsTable.creatorSelectedTag })
       .from(songsTable).where(eq(songsTable.id, songId)).limit(1);
-    expect(song!.creationMethod).toBe("human_created");
+    expect(song!.creationMethod).toBe("unclassified");
+    // creatorSelectedTag is updated to "unclassified" (the tag was removed/reset)
+    expect(song!.creatorSelectedTag).toBe("unclassified");
   });
 
   it("case 7: creator cannot overwrite an admin-locked tag — returns 403 with locked-tag message", async () => {
@@ -450,7 +453,7 @@ describe("AI classification — admin review controls (cases 10–14)", () => {
     expect(log).not.toBeNull();
   });
 
-  it("case 14a: assign_tag without aiOverrideReason is rejected (400)", async () => {
+  it("case 14a: assign_tag without aiOverrideReason is rejected (422)", async () => {
     const songId = await insertSong(artistProfileId);
 
     const res = await api()
@@ -458,11 +461,11 @@ describe("AI classification — admin review controls (cases 10–14)", () => {
       .set("Authorization", bearer(admin.token))
       .send({ action: "assign_tag", platformAssignedTag: "fully_ai_generated" });
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(422);
     expect(res.body.error).toMatch(/reason/i);
   });
 
-  it("case 14b: lock without aiOverrideReason is rejected (400)", async () => {
+  it("case 14b: lock without aiOverrideReason is rejected (422)", async () => {
     const songId = await insertSong(artistProfileId);
 
     const res = await api()
@@ -470,11 +473,11 @@ describe("AI classification — admin review controls (cases 10–14)", () => {
       .set("Authorization", bearer(admin.token))
       .send({ action: "lock" });
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(422);
     expect(res.body.error).toMatch(/reason/i);
   });
 
-  it("case 14c: reject without aiOverrideReason is rejected (400)", async () => {
+  it("case 14c: reject without aiOverrideReason is rejected (422)", async () => {
     const songId = await insertSong(artistProfileId);
 
     const res = await api()
@@ -482,7 +485,7 @@ describe("AI classification — admin review controls (cases 10–14)", () => {
       .set("Authorization", bearer(admin.token))
       .send({ action: "reject" });
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(422);
     expect(res.body.error).toMatch(/reason/i);
   });
 });
@@ -490,21 +493,61 @@ describe("AI classification — admin review controls (cases 10–14)", () => {
 // ── Case 15: Detection unavailable graceful degradation ──────────────────────
 
 describe("AI classification — detection unavailable state (case 15)", () => {
-  it("case 15: when HIVE_API_KEY is unset, scanWithHive returns available=false and null aiLikelihoodPercent", async () => {
+  let adminUser: TestUser;
+  let songId: number;
+
+  beforeAll(async () => {
+    const artistUser = await makeArtist();
+    adminUser = await makeAdmin();
+    const artistProfileId = await createArtistProfile(artistUser.id);
+    songId = await insertSong(artistProfileId);
+  });
+
+  it("case 15: HIVE_API_KEY unset → scanWithHive returns available=false, null score; no numeric score persisted in scan row", async () => {
     const saved = process.env.HIVE_API_KEY;
     delete process.env.HIVE_API_KEY;
+    let scanRowId: number | undefined;
     try {
       const result = await scanWithHive("https://example.com/test-unavailable.mp3");
 
+      // Verify the result object has no fabricated data
       expect(result.available).toBe(false);
       expect(result.aiLikelihoodPercent).toBeNull();
       expect(typeof result.aiLikelihoodPercent).not.toBe("number");
       expect(result.confidenceLevel).toBe("unavailable");
       expect(result.riskLevel).toBeNull();
       expect(result.error).toBeNull();
+      expect(result.rawResult).toBeNull();
+
+      // Simulate what the background scan handler persists (mirrors ai-review.ts scan logic):
+      // `aiLikelihoodPercent: result.aiLikelihoodPercent ?? undefined` → stored as NULL
+      const [scan] = await db.insert(aiDetectionScansTable).values({
+        contentType: "song",
+        contentId: songId,
+        provider: result.provider,
+        modelVersion: result.modelVersion ?? undefined,
+        scanStatus: result.available ? "complete" : (result.error ? "failed" : "unavailable"),
+        rawResult: result.rawResult ?? undefined,
+        aiLikelihoodPercent: result.aiLikelihoodPercent ?? undefined,
+        confidenceLevel: result.confidenceLevel,
+        riskLevel: result.riskLevel ?? undefined,
+        requestedBy: adminUser.id,
+        scannedAt: new Date(),
+      }).returning();
+      scanRowId = scan.id;
+
+      // Query the stored row and confirm no numeric score was written
+      const [stored] = await db
+        .select({ aiLikelihoodPercent: aiDetectionScansTable.aiLikelihoodPercent, scanStatus: aiDetectionScansTable.scanStatus })
+        .from(aiDetectionScansTable)
+        .where(eq(aiDetectionScansTable.id, scan.id))
+        .limit(1);
+      expect(stored!.aiLikelihoodPercent).toBeNull();
+      expect(stored!.scanStatus).toBe("unavailable");
     } finally {
-      if (saved !== undefined) {
-        process.env.HIVE_API_KEY = saved;
+      if (saved !== undefined) process.env.HIVE_API_KEY = saved;
+      if (scanRowId !== undefined) {
+        await db.delete(aiDetectionScansTable).where(eq(aiDetectionScansTable.id, scanRowId));
       }
     }
   });

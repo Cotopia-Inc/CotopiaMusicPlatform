@@ -263,7 +263,7 @@ async function applyAdminReview(
     case "assign_tag": {
       if (!isAdmin) return { error: "Only admins may assign a platform tag.", statusCode: 403 };
       if (!body.platformAssignedTag) return { error: "platformAssignedTag is required for assign_tag", statusCode: 400 };
-      if (!body.aiOverrideReason) return { error: "A written reason is required when assigning a platform tag.", statusCode: 400 };
+      if (!body.aiOverrideReason) return { error: "A written reason is required when assigning a platform tag.", statusCode: 422 };
       updates.platformAssignedTag = body.platformAssignedTag;
       updates.tagSource = "admin";
       updates.effectiveDisplayTag = body.platformAssignedTag;
@@ -286,7 +286,7 @@ async function applyAdminReview(
     }
     case "lock": {
       if (!isAdmin) return { error: "Only admins may lock a tag.", statusCode: 403 };
-      if (!body.aiOverrideReason) return { error: "A written reason is required to lock a tag.", statusCode: 400 };
+      if (!body.aiOverrideReason) return { error: "A written reason is required to lock a tag.", statusCode: 422 };
       updates.tagLocked = true;
       updates.aiOverrideReason = body.aiOverrideReason;
       updates.aiReviewedBy = adminId;
@@ -331,7 +331,7 @@ async function applyAdminReview(
     }
     case "reject": {
       if (!isAdmin) return { error: "Only admins may reject.", statusCode: 403 };
-      if (!body.aiOverrideReason) return { error: "A written reason is required to reject for AI policy.", statusCode: 400 };
+      if (!body.aiOverrideReason) return { error: "A written reason is required to reject for AI policy.", statusCode: 422 };
       updates.aiReviewStatus = "admin_rejected";
       updates.aiOverrideReason = body.aiOverrideReason;
       updates.aiReviewedBy = adminId;
