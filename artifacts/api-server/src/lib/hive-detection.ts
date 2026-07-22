@@ -41,6 +41,8 @@
  * }
  */
 
+import { logger } from "./logger";
+
 export interface HiveScanResult {
   available: boolean;
   provider: string;
@@ -140,6 +142,11 @@ export async function scanWithHive(
     // Allow more time for multi-segment requests (120 s per segment, capped at 5 min).
     const timeoutMs = Math.min(120_000 * inputItems.length, 300_000);
 
+    logger.info(
+      { segments: inputItems.length, firstUrl: mediaUrl.slice(0, 200) },
+      "hive-detection: sending scan request",
+    );
+
     const response = await fetch(
       "https://api.thehive.ai/api/v3/hive/ai-generated-and-deepfake-content-detection",
       {
@@ -225,6 +232,28 @@ export async function scanWithHive(
           }
         }
       }
+    }
+
+    // Log the full Hive response when no score could be extracted — this surfaces
+    // in server logs (Render) and reveals the actual response shape for debugging.
+    if (aiScore === null) {
+      logger.warn(
+        {
+          outputItems: segmentsScanned,
+          firstOutputItem: Array.isArray(outputArr) ? outputArr[0] : undefined,
+          rawKeys: Object.keys(raw),
+          statusKeys: Array.isArray(statusArr) && statusArr[0]
+            ? Object.keys(statusArr[0])
+            : [],
+          responseKeys: responseObj ? Object.keys(responseObj) : [],
+        },
+        "hive-detection: scan complete but no ai_generated score extracted — check response shape",
+      );
+    } else {
+      logger.info(
+        { aiScore, segments: segmentsScanned, indicators },
+        "hive-detection: scan complete",
+      );
     }
 
     const low = options?.lowThreshold ?? 25;

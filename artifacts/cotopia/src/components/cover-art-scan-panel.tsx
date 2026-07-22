@@ -238,53 +238,63 @@ export function CoverArtScanPanel({
                           </div>
                         </div>
 
-                        {scan.scanStatus === "complete" && typeof scan.aiLikelihoodPercent === "number" && (
+                        {scan.scanStatus === "complete" && (
                           <div className="space-y-2">
-                            <div className="space-y-1">
-                              <div className="flex justify-between text-[10px] text-muted-foreground">
-                                <span>Estimated AI likelihood</span>
-                                <span className="font-medium tabular-nums">{scan.aiLikelihoodPercent}%</span>
+                            {/* Percentage bar — only when a numeric score was extracted */}
+                            {typeof scan.aiLikelihoodPercent === "number" ? (
+                              <>
+                                <div className="space-y-1">
+                                  <div className="flex justify-between text-[10px] text-muted-foreground">
+                                    <span>Estimated AI likelihood</span>
+                                    <span className="font-medium tabular-nums">{scan.aiLikelihoodPercent}%</span>
+                                  </div>
+                                  <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                                    <div
+                                      className={cn("h-full rounded-full transition-all", coverRiskBarColor(scan.aiLikelihoodPercent))}
+                                      style={{ width: `${scan.aiLikelihoodPercent}%` }}
+                                      role="progressbar"
+                                      aria-valuenow={scan.aiLikelihoodPercent}
+                                      aria-valuemin={0}
+                                      aria-valuemax={100}
+                                      aria-label={`Estimated AI likelihood: ${scan.aiLikelihoodPercent}%`}
+                                    />
+                                  </div>
+                                  <div className="flex justify-between text-[10px] text-muted-foreground">
+                                    <span>0% — Low</span>
+                                    <span className={cn("font-semibold",
+                                      scan.aiLikelihoodPercent < 25 ? "text-emerald-600 dark:text-emerald-400" :
+                                      scan.aiLikelihoodPercent < 60 ? "text-amber-600 dark:text-amber-400" :
+                                      scan.aiLikelihoodPercent < 90 ? "text-orange-600 dark:text-orange-400" :
+                                      "text-red-600 dark:text-red-400"
+                                    )}>
+                                      {coverRiskLabel(scan.aiLikelihoodPercent)} Risk
+                                    </span>
+                                    <span>100% — Critical</span>
+                                  </div>
+                                </div>
+                                <div className="flex flex-wrap items-center gap-3 text-[11px]">
+                                  {scan.riskLevel && (
+                                    <span className="capitalize text-muted-foreground">
+                                      Risk: <strong className={cn(
+                                        scan.riskLevel === "critical" ? "text-red-500" :
+                                        scan.riskLevel === "high" ? "text-orange-500" :
+                                        scan.riskLevel === "moderate" ? "text-amber-500" : "text-emerald-500"
+                                      )}>{scan.riskLevel}</strong>
+                                    </span>
+                                  )}
+                                  {scan.confidenceLevel && scan.confidenceLevel !== "unavailable" && (
+                                    <span className="capitalize text-muted-foreground">
+                                      Confidence: <strong>{scan.confidenceLevel}</strong>
+                                    </span>
+                                  )}
+                                </div>
+                              </>
+                            ) : (
+                              <div className="text-[11px] text-muted-foreground italic">
+                                Score not extracted — see class breakdown below for raw Hive output.
                               </div>
-                              <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
-                                <div
-                                  className={cn("h-full rounded-full transition-all", coverRiskBarColor(scan.aiLikelihoodPercent))}
-                                  style={{ width: `${scan.aiLikelihoodPercent}%` }}
-                                  role="progressbar"
-                                  aria-valuenow={scan.aiLikelihoodPercent}
-                                  aria-valuemin={0}
-                                  aria-valuemax={100}
-                                  aria-label={`Estimated AI likelihood: ${scan.aiLikelihoodPercent}%`}
-                                />
-                              </div>
-                              <div className="flex justify-between text-[10px] text-muted-foreground">
-                                <span>0% — Low</span>
-                                <span className={cn("font-semibold",
-                                  scan.aiLikelihoodPercent < 25 ? "text-emerald-600 dark:text-emerald-400" :
-                                  scan.aiLikelihoodPercent < 60 ? "text-amber-600 dark:text-amber-400" :
-                                  scan.aiLikelihoodPercent < 90 ? "text-orange-600 dark:text-orange-400" :
-                                  "text-red-600 dark:text-red-400"
-                                )}>
-                                  {coverRiskLabel(scan.aiLikelihoodPercent)} Risk
-                                </span>
-                                <span>100% — Critical</span>
-                              </div>
-                            </div>
-                            <div className="flex flex-wrap items-center gap-3 text-[11px]">
-                              {scan.riskLevel && (
-                                <span className="capitalize text-muted-foreground">
-                                  Risk: <strong className={cn(
-                                    scan.riskLevel === "critical" ? "text-red-500" :
-                                    scan.riskLevel === "high" ? "text-orange-500" :
-                                    scan.riskLevel === "moderate" ? "text-amber-500" : "text-emerald-500"
-                                  )}>{scan.riskLevel}</strong>
-                                </span>
-                              )}
-                              {scan.confidenceLevel && scan.confidenceLevel !== "unavailable" && (
-                                <span className="capitalize text-muted-foreground">
-                                  Confidence: <strong>{scan.confidenceLevel}</strong>
-                                </span>
-                              )}
-                            </div>
+                            )}
+                            {/* Full class-by-class breakdown — always shown for complete scans */}
                             {(() => {
                               const breakdown = parseCoverClassBreakdown(scan.rawResult);
                               if (!breakdown || breakdown.length === 0) return null;
@@ -312,6 +322,22 @@ export function CoverArtScanPanel({
                                     </div>
                                   ))}
                                 </div>
+                              );
+                            })()}
+                            {/* Raw Hive response — shown when breakdown is empty so admins can diagnose */}
+                            {(() => {
+                              const breakdown = parseCoverClassBreakdown(scan.rawResult);
+                              if (breakdown && breakdown.length > 0) return null;
+                              if (!scan.rawResult) return null;
+                              return (
+                                <details className="text-[10px] pt-0.5">
+                                  <summary className="cursor-pointer text-muted-foreground hover:text-foreground select-none">
+                                    Raw Hive response (debug)
+                                  </summary>
+                                  <pre className="mt-1.5 text-[9px] text-muted-foreground bg-muted/40 rounded p-2 overflow-x-auto max-h-48 overflow-y-auto whitespace-pre-wrap break-all leading-relaxed">
+                                    {JSON.stringify(scan.rawResult, null, 2)}
+                                  </pre>
+                                </details>
                               );
                             })()}
                           </div>
