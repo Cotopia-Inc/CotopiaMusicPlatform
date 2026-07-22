@@ -7,9 +7,12 @@ import { UserLink } from "@/components/user-link";
 import { Badge } from "@/components/ui/badge";
 import { usePlayer } from "@/lib/player";
 import { useSeo } from "@/hooks/use-seo";
+import { AiOriginBadge, type CreationMethod } from "@/components/ai-origin-badge";
+import { usePlatformConfig } from "@/lib/platform-config";
 
 export default function Home() {
   const { play } = usePlayer();
+  const config = usePlatformConfig();
   const { data: feed, isLoading } = useGetHomeFeed({
     query: { queryKey: getGetHomeFeedQueryKey() }
   });
@@ -227,6 +230,17 @@ export default function Home() {
                       <div className="absolute top-2 left-2">
                         <Badge className="text-[9px] bg-primary/80 backdrop-blur px-1.5 py-0.5">Featured</Badge>
                       </div>
+                    )}
+                    {(song as any).effectiveDisplayTag && (
+                      <AiOriginBadge
+                        method={(song as any).effectiveDisplayTag as CreationMethod}
+                        variant="cover"
+                        showHumanBadge={config.showHumanBadge}
+                        showAiBadge={config.showAiBadge}
+                        showHybridBadge={config.showHybridBadge}
+                        showFullyAiBadge={config.showFullyAiBadge}
+                        showCoverOverlays={config.showCoverOverlays}
+                      />
                     )}
                   </div>
                 </Link>
@@ -448,6 +462,17 @@ export default function Home() {
                     <div className="absolute top-1.5 right-1.5">
                       <Badge variant="secondary" className="text-[8px] px-1 py-px opacity-80">New</Badge>
                     </div>
+                    {(song as any).effectiveDisplayTag && (
+                      <AiOriginBadge
+                        method={(song as any).effectiveDisplayTag as CreationMethod}
+                        variant="cover"
+                        showHumanBadge={config.showHumanBadge}
+                        showAiBadge={config.showAiBadge}
+                        showHybridBadge={config.showHybridBadge}
+                        showFullyAiBadge={config.showFullyAiBadge}
+                        showCoverOverlays={config.showCoverOverlays}
+                      />
+                    )}
                   </div>
                 </Link>
                 <div>
@@ -513,6 +538,17 @@ export default function Home() {
                       <div className="absolute top-2 left-2">
                         <Badge className="text-[9px] bg-primary/80 backdrop-blur px-1.5 py-0.5">Featured</Badge>
                       </div>
+                    )}
+                    {(video as any).effectiveDisplayTag && (
+                      <AiOriginBadge
+                        method={(video as any).effectiveDisplayTag as CreationMethod}
+                        variant="cover"
+                        showHumanBadge={config.showHumanBadge}
+                        showAiBadge={config.showAiBadge}
+                        showHybridBadge={config.showHybridBadge}
+                        showFullyAiBadge={config.showFullyAiBadge}
+                        showCoverOverlays={config.showCoverOverlays}
+                      />
                     )}
                   </div>
                 </Link>

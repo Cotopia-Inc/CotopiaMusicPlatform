@@ -412,6 +412,12 @@ router.get("/platform-config", async (_req, res): Promise<void> => {
       appName: appSettingsTable.appName,
       logoUrl: appSettingsTable.logoUrl,
       primaryColor: appSettingsTable.primaryColor,
+      showHumanBadge: appSettingsTable.showHumanBadge,
+      showAiBadge: appSettingsTable.showAiBadge,
+      showHybridBadge: appSettingsTable.showHybridBadge,
+      showFullyAiBadge: appSettingsTable.showFullyAiBadge,
+      showTitleIcons: appSettingsTable.showTitleIcons,
+      showCoverOverlays: appSettingsTable.showCoverOverlays,
     })
     .from(appSettingsTable)
     .limit(1);
@@ -427,6 +433,12 @@ router.get("/platform-config", async (_req, res): Promise<void> => {
     appName: s?.appName ?? "",
     logoUrl: s?.logoUrl ?? "",
     primaryColor: s?.primaryColor ?? "#7c3aed",
+    showHumanBadge: s?.showHumanBadge ?? true,
+    showAiBadge: s?.showAiBadge ?? true,
+    showHybridBadge: s?.showHybridBadge ?? true,
+    showFullyAiBadge: s?.showFullyAiBadge ?? false,
+    showTitleIcons: s?.showTitleIcons ?? true,
+    showCoverOverlays: s?.showCoverOverlays ?? true,
   });
 });
 

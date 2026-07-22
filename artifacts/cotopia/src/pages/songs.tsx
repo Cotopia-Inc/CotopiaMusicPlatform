@@ -8,11 +8,14 @@ import { UserLink } from "@/components/user-link";
 import { usePlayer } from "@/lib/player";
 import { SongMenu } from "@/components/song-menu";
 import { useSeo } from "@/hooks/use-seo";
+import { AiOriginBadge, type CreationMethod } from "@/components/ai-origin-badge";
+import { usePlatformConfig } from "@/lib/platform-config";
 
 export default function Songs() {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const { play } = usePlayer();
+  const config = usePlatformConfig();
 
   useSeo({
     title: "Songs",
@@ -73,6 +76,17 @@ export default function Songs() {
                       <Play className="w-6 h-6 fill-current ml-1" />
                     </button>
                   </div>
+                  {song.effectiveDisplayTag && (
+                    <AiOriginBadge
+                      method={song.effectiveDisplayTag as CreationMethod}
+                      variant="cover"
+                      showHumanBadge={config.showHumanBadge}
+                      showAiBadge={config.showAiBadge}
+                      showHybridBadge={config.showHybridBadge}
+                      showFullyAiBadge={config.showFullyAiBadge}
+                      showCoverOverlays={config.showCoverOverlays}
+                    />
+                  )}
                 </div>
               </Link>
               <div>

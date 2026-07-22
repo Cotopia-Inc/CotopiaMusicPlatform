@@ -38,4 +38,6 @@ export interface Song {
   /** @nullable */
   credits?: string | null;
   createdAt: string;
+  /** @nullable */
+  effectiveDisplayTag?: string | null;
 }

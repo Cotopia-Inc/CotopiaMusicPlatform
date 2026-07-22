@@ -6,9 +6,12 @@ import { usePlayer } from "@/lib/player";
 import { UserLink } from "@/components/user-link";
 import { SongMenu } from "@/components/song-menu";
 import { useSeo } from "@/hooks/use-seo";
+import { AiOriginBadge, type CreationMethod } from "@/components/ai-origin-badge";
+import { usePlatformConfig } from "@/lib/platform-config";
 
 export default function Discover() {
   const { play } = usePlayer();
+  const config = usePlatformConfig();
   const { data: discover, isLoading } = useGetDiscover({
     query: { queryKey: getGetDiscoverQueryKey() }
   });
@@ -72,6 +75,17 @@ export default function Discover() {
                             <Play className="w-6 h-6 fill-current ml-1" />
                           </button>
                         </div>
+                        {(song as any).effectiveDisplayTag && (
+                          <AiOriginBadge
+                            method={(song as any).effectiveDisplayTag as CreationMethod}
+                            variant="cover"
+                            showHumanBadge={config.showHumanBadge}
+                            showAiBadge={config.showAiBadge}
+                            showHybridBadge={config.showHybridBadge}
+                            showFullyAiBadge={config.showFullyAiBadge}
+                            showCoverOverlays={config.showCoverOverlays}
+                          />
+                        )}
                       </div>
                     </Link>
                     <div>
@@ -117,6 +131,17 @@ export default function Discover() {
                             <Play className="w-6 h-6 fill-current ml-1" />
                           </button>
                         </div>
+                        {(video as any).effectiveDisplayTag && (
+                          <AiOriginBadge
+                            method={(video as any).effectiveDisplayTag as CreationMethod}
+                            variant="cover"
+                            showHumanBadge={config.showHumanBadge}
+                            showAiBadge={config.showAiBadge}
+                            showHybridBadge={config.showHybridBadge}
+                            showFullyAiBadge={config.showFullyAiBadge}
+                            showCoverOverlays={config.showCoverOverlays}
+                          />
+                        )}
                       </div>
                     </Link>
                     <div>
@@ -185,6 +210,17 @@ export default function Discover() {
                             <Play className="w-6 h-6 fill-current ml-1" />
                           </button>
                         </div>
+                        {songAny.effectiveDisplayTag && (
+                          <AiOriginBadge
+                            method={songAny.effectiveDisplayTag as CreationMethod}
+                            variant="cover"
+                            showHumanBadge={config.showHumanBadge}
+                            showAiBadge={config.showAiBadge}
+                            showHybridBadge={config.showHybridBadge}
+                            showFullyAiBadge={config.showFullyAiBadge}
+                            showCoverOverlays={config.showCoverOverlays}
+                          />
+                        )}
                       </div>
                     </Link>
                     <div>
@@ -266,6 +302,17 @@ export default function Discover() {
                               <Play className="w-6 h-6 fill-current ml-1" />
                             </button>
                           </div>
+                          {vAny.effectiveDisplayTag && (
+                            <AiOriginBadge
+                              method={vAny.effectiveDisplayTag as CreationMethod}
+                              variant="cover"
+                              showHumanBadge={config.showHumanBadge}
+                              showAiBadge={config.showAiBadge}
+                              showHybridBadge={config.showHybridBadge}
+                              showFullyAiBadge={config.showFullyAiBadge}
+                              showCoverOverlays={config.showCoverOverlays}
+                            />
+                          )}
                         </div>
                       </Link>
                       <div>
@@ -325,6 +372,17 @@ export default function Discover() {
                         <Play className="w-6 h-6 fill-current ml-1" />
                       </button>
                     </div>
+                    {(song as any).effectiveDisplayTag && (
+                      <AiOriginBadge
+                        method={(song as any).effectiveDisplayTag as CreationMethod}
+                        variant="cover"
+                        showHumanBadge={config.showHumanBadge}
+                        showAiBadge={config.showAiBadge}
+                        showHybridBadge={config.showHybridBadge}
+                        showFullyAiBadge={config.showFullyAiBadge}
+                        showCoverOverlays={config.showCoverOverlays}
+                      />
+                    )}
                   </div>
                 </Link>
                 <div>
@@ -379,6 +437,17 @@ export default function Discover() {
                         <Play className="w-6 h-6 fill-current ml-1" />
                       </button>
                     </div>
+                    {(video as any).effectiveDisplayTag && (
+                      <AiOriginBadge
+                        method={(video as any).effectiveDisplayTag as CreationMethod}
+                        variant="cover"
+                        showHumanBadge={config.showHumanBadge}
+                        showAiBadge={config.showAiBadge}
+                        showHybridBadge={config.showHybridBadge}
+                        showFullyAiBadge={config.showFullyAiBadge}
+                        showCoverOverlays={config.showCoverOverlays}
+                      />
+                    )}
                   </div>
                 </Link>
                 <div>
@@ -436,6 +505,17 @@ export default function Discover() {
                           <Play className="w-6 h-6 fill-current ml-1" />
                         </button>
                       </div>
+                      {sAny.effectiveDisplayTag && (
+                        <AiOriginBadge
+                          method={sAny.effectiveDisplayTag as CreationMethod}
+                          variant="cover"
+                          showHumanBadge={config.showHumanBadge}
+                          showAiBadge={config.showAiBadge}
+                          showHybridBadge={config.showHybridBadge}
+                          showFullyAiBadge={config.showFullyAiBadge}
+                          showCoverOverlays={config.showCoverOverlays}
+                        />
+                      )}
                     </div>
                   </Link>
                   <div>
@@ -495,6 +575,17 @@ export default function Discover() {
                         <Play className="w-6 h-6 fill-current ml-1" />
                       </button>
                     </div>
+                    {(song as any).effectiveDisplayTag && (
+                      <AiOriginBadge
+                        method={(song as any).effectiveDisplayTag as CreationMethod}
+                        variant="cover"
+                        showHumanBadge={config.showHumanBadge}
+                        showAiBadge={config.showAiBadge}
+                        showHybridBadge={config.showHybridBadge}
+                        showFullyAiBadge={config.showFullyAiBadge}
+                        showCoverOverlays={config.showCoverOverlays}
+                      />
+                    )}
                   </div>
                 </Link>
                 <div>
@@ -550,6 +641,17 @@ export default function Discover() {
                         <Play className="w-6 h-6 fill-current ml-1" />
                       </button>
                     </div>
+                    {(video as any).effectiveDisplayTag && (
+                      <AiOriginBadge
+                        method={(video as any).effectiveDisplayTag as CreationMethod}
+                        variant="cover"
+                        showHumanBadge={config.showHumanBadge}
+                        showAiBadge={config.showAiBadge}
+                        showHybridBadge={config.showHybridBadge}
+                        showFullyAiBadge={config.showFullyAiBadge}
+                        showCoverOverlays={config.showCoverOverlays}
+                      />
+                    )}
                   </div>
                 </Link>
                 <div>

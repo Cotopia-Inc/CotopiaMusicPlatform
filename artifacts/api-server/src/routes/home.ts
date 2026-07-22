@@ -21,6 +21,7 @@ router.get("/home", requireAuth, async (_req, res): Promise<void> => {
     playCount: songsTable.playCount, status: songsTable.status, releaseType: songsTable.releaseType,
     createdAt: songsTable.createdAt, artistIsVerified: usersTable.isVerified,
     artistUserRole: usersTable.role,
+    effectiveDisplayTag: songsTable.effectiveDisplayTag,
   };
 
   const videoSelect = {
@@ -29,7 +30,8 @@ router.get("/home", requireAuth, async (_req, res): Promise<void> => {
     thumbnailUrl: videosTable.thumbnailUrl, videoUrl: videosTable.videoUrl, isFeatured: videosTable.isFeatured,
     viewCount: videosTable.viewCount, status: videosTable.status, createdAt: videosTable.createdAt,
     artistIsVerified: usersTable.isVerified,
-      artistUserRole: usersTable.role,
+    artistUserRole: usersTable.role,
+    effectiveDisplayTag: videosTable.effectiveDisplayTag,
   };
 
   const [featuredSongs, featuredVideos, trendingSongs, newReleases] = await Promise.all([

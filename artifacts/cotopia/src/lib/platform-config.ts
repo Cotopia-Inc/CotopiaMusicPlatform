@@ -12,6 +12,12 @@ export interface PlatformConfig {
   appName: string;
   logoUrl: string;
   primaryColor: string;
+  showHumanBadge: boolean;
+  showAiBadge: boolean;
+  showHybridBadge: boolean;
+  showFullyAiBadge: boolean;
+  showTitleIcons: boolean;
+  showCoverOverlays: boolean;
 }
 
 const DEFAULT_CONFIG: PlatformConfig = {
@@ -26,6 +32,12 @@ const DEFAULT_CONFIG: PlatformConfig = {
   appName: "",
   logoUrl: "",
   primaryColor: "#7c3aed",
+  showHumanBadge: true,
+  showAiBadge: true,
+  showHybridBadge: true,
+  showFullyAiBadge: false,
+  showTitleIcons: true,
+  showCoverOverlays: true,
 };
 
 async function fetchPlatformConfig(): Promise<PlatformConfig> {

@@ -375,6 +375,8 @@ export interface Song {
   /** @nullable */
   credits?: string | null;
   createdAt: string;
+  /** @nullable */
+  effectiveDisplayTag?: string | null;
 }
 
 export type SongDetail = Song & ({
@@ -457,6 +459,8 @@ export interface Video {
   /** @nullable */
   credits?: string | null;
   createdAt: string;
+  /** @nullable */
+  effectiveDisplayTag?: string | null;
 }
 
 export type VideoDetail = Video & ({

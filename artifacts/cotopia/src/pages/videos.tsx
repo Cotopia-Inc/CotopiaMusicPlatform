@@ -2,11 +2,13 @@ import { useListVideos, getListVideosQueryKey } from "@workspace/api-client-reac
 import { Skeleton } from "@/components/ui/skeleton";
 import { Play, Search, Video as VideoIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, type ReactNode } from "react";
 import { Link } from "wouter";
 import { usePlayer } from "@/lib/player";
 import { UserLink } from "@/components/user-link";
 import { useSeo } from "@/hooks/use-seo";
+import { AiOriginBadge, type CreationMethod } from "@/components/ai-origin-badge";
+import { usePlatformConfig } from "@/lib/platform-config";
 
 interface VideoItem {
   id: number;
@@ -17,9 +19,10 @@ interface VideoItem {
   thumbnailUrl?: string | null;
   videoUrl?: string | null;
   duration: number;
+  effectiveDisplayTag?: string | null;
 }
 
-function VideoHoverCard({ video, onPlay }: { video: VideoItem; onPlay: () => void }) {
+function VideoHoverCard({ video, onPlay, badgeEl }: { video: VideoItem; onPlay: () => void; badgeEl?: ReactNode }) {
   const [hovering, setHovering] = useState(false);
   const [videoReady, setVideoReady] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -94,6 +97,7 @@ function VideoHoverCard({ video, onPlay }: { video: VideoItem; onPlay: () => voi
           <Play className="w-8 h-8 fill-current ml-1" />
         </button>
       </div>
+      {badgeEl}
     </div>
   );
 }
@@ -102,6 +106,7 @@ export default function Videos() {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const { play } = usePlayer();
+  const config = usePlatformConfig();
 
   useSeo({
     title: "Videos",
@@ -159,6 +164,17 @@ export default function Videos() {
                     videoUrl: video.videoUrl,
                     duration: video.duration,
                   })}
+                  badgeEl={video.effectiveDisplayTag ? (
+                    <AiOriginBadge
+                      method={video.effectiveDisplayTag as CreationMethod}
+                      variant="cover"
+                      showHumanBadge={config.showHumanBadge}
+                      showAiBadge={config.showAiBadge}
+                      showHybridBadge={config.showHybridBadge}
+                      showFullyAiBadge={config.showFullyAiBadge}
+                      showCoverOverlays={config.showCoverOverlays}
+                    />
+                  ) : undefined}
                 />
               </Link>
               <div>

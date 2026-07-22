@@ -32,4 +32,6 @@ export interface Video {
   /** @nullable */
   credits?: string | null;
   createdAt: string;
+  /** @nullable */
+  effectiveDisplayTag?: string | null;
 }
