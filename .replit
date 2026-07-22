@@ -61,3 +61,6 @@ VAPID_PUBLIC_KEY = "BFnQz2DCxNPmt5XqhI5vkRZQWYgb47e8U_fnKNzVcEPD-kD8l5CON6Kvr8U5
 VAPID_PRIVATE_KEY = "g3RLGWZopYHaz9A9RKykj_-_DJnYBKY_TDyLAFgzOjQ"
 VAPID_SUBJECT = "mailto:support@cotopia.com"
 VITE_VAPID_PUBLIC_KEY = "BFnQz2DCxNPmt5XqhI5vkRZQWYgb47e8U_fnKNzVcEPD-kD8l5CON6Kvr8U5GED0obtw7u_Q8rHSfbtet2W9GCM"
+
+[objectStorage]
+defaultBucketID = "replit-objstore-8d4a9030-93f8-4558-85e0-fa5ede23f59c"
