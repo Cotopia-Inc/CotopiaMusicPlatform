@@ -100,6 +100,10 @@ async function buildAll() {
       "puppeteer",
       "puppeteer-core",
       "electron",
+      // ffmpeg-static resolves the binary path using __dirname at the package level.
+      // If bundled by esbuild, __dirname becomes the dist/ dir and the path is wrong.
+      // Keeping it external lets the runtime require() resolve from node_modules correctly.
+      "ffmpeg-static",
     ],
     sourcemap: "linked",
     plugins: [
