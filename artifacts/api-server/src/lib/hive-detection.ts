@@ -196,20 +196,23 @@ export async function scanWithHive(
 
     if (Array.isArray(outputArr)) {
       for (const item of outputArr) {
-        const classes = item["classes"] as Array<{ class: string; score: number }> | undefined;
+        // Hive V3 returns "value" in the classes array; the documented shape used "score".
+        // Accept either field so both API versions work correctly.
+        const classes = item["classes"] as Array<{ class: string; score?: number; value?: number }> | undefined;
         if (!Array.isArray(classes)) continue;
         for (const cls of classes) {
+          const raw = typeof cls.score === "number" ? cls.score
+            : typeof cls.value === "number" ? cls.value
+            : null;
+          if (raw === null) continue;
           // Match "ai_generated" exactly OR any "ai_generated_*" variant
           // (e.g. "ai_generated_audio", "ai_generated_voice") that Hive may
           // return for different media types. Worst-case: keep highest score.
-          if (
-            (cls.class === "ai_generated" || cls.class.startsWith("ai_generated_")) &&
-            typeof cls.score === "number"
-          ) {
-            const pct = Math.round(cls.score * 100);
+          if (cls.class === "ai_generated" || cls.class.startsWith("ai_generated_")) {
+            const pct = Math.round(raw * 100);
             if (aiScore === null || pct > aiScore) aiScore = pct;
           }
-          if (cls.score > 0.5 && !indicators.includes(cls.class)) {
+          if (raw > 0.5 && !indicators.includes(cls.class)) {
             indicators.push(cls.class);
           }
         }
@@ -219,14 +222,15 @@ export async function scanWithHive(
       // (e.g. "not_ai_generated"). Derive the positive score as 100 – complement.
       if (aiScore === null) {
         for (const item of outputArr) {
-          const classes = item["classes"] as Array<{ class: string; score: number }> | undefined;
+          const classes = item["classes"] as Array<{ class: string; score?: number; value?: number }> | undefined;
           if (!Array.isArray(classes)) continue;
           for (const cls of classes) {
-            if (
-              (cls.class === "not_ai_generated" || cls.class.startsWith("not_ai_generated_")) &&
-              typeof cls.score === "number"
-            ) {
-              const pct = Math.round((1 - cls.score) * 100);
+            const raw = typeof cls.score === "number" ? cls.score
+              : typeof cls.value === "number" ? cls.value
+              : null;
+            if (raw === null) continue;
+            if (cls.class === "not_ai_generated" || cls.class.startsWith("not_ai_generated_")) {
+              const pct = Math.round((1 - raw) * 100);
               if (aiScore === null || pct > aiScore) aiScore = pct;
             }
           }
