@@ -210,20 +210,6 @@ export async function ensureTables(): Promise<void> {
         CONSTRAINT creator_payment_settings_user_unique UNIQUE (user_id)
       );
 
-      -- Cover art admin review decision (added Jul 2026)
-      ALTER TABLE songs ADD COLUMN IF NOT EXISTS cover_art_review_decision TEXT;
-      ALTER TABLE songs ADD COLUMN IF NOT EXISTS cover_art_review_note TEXT;
-      ALTER TABLE videos ADD COLUMN IF NOT EXISTS cover_art_review_decision TEXT;
-      ALTER TABLE videos ADD COLUMN IF NOT EXISTS cover_art_review_note TEXT;
-
-      -- trust_appeals: content classification link columns (added Jul 2026)
-      ALTER TABLE trust_appeals ADD COLUMN IF NOT EXISTS content_type TEXT;
-      ALTER TABLE trust_appeals ADD COLUMN IF NOT EXISTS content_id INTEGER;
-
-      -- trust_appeals: rename legacy status values to spec-aligned names (idempotent)
-      UPDATE trust_appeals SET status = 'submitted' WHERE status = 'received';
-      UPDATE trust_appeals SET status = 'evidence_requested' WHERE status = 'more_info_needed';
-
       -- Creator Support: demo tip / activity ledger (added Jul 2026)
       CREATE TABLE IF NOT EXISTS support_transactions (
         id SERIAL PRIMARY KEY,
@@ -244,6 +230,45 @@ export async function ensureTables(): Promise<void> {
         CONSTRAINT support_transactions_ref_unique UNIQUE (transaction_ref)
       );
     `);
+
+    // ── Individual column migrations ────────────────────────────────────────
+    // Each ALTER TABLE runs as its own query so one failure never blocks the
+    // others. Order matters only when a later migration depends on an earlier
+    // one — otherwise they are fully independent.
+    const columnMigrations: Array<[string, string]> = [
+      // trust_appeals columns (Jul 2026)
+      ["trust_appeals content_type", "ALTER TABLE trust_appeals ADD COLUMN IF NOT EXISTS content_type TEXT"],
+      ["trust_appeals content_id",   "ALTER TABLE trust_appeals ADD COLUMN IF NOT EXISTS content_id INTEGER"],
+      // cover art admin review (Jul 2026)
+      ["songs cover_art_review_decision",  "ALTER TABLE songs  ADD COLUMN IF NOT EXISTS cover_art_review_decision TEXT"],
+      ["songs cover_art_review_note",      "ALTER TABLE songs  ADD COLUMN IF NOT EXISTS cover_art_review_note TEXT"],
+      ["videos cover_art_review_decision", "ALTER TABLE videos ADD COLUMN IF NOT EXISTS cover_art_review_decision TEXT"],
+      ["videos cover_art_review_note",     "ALTER TABLE videos ADD COLUMN IF NOT EXISTS cover_art_review_note TEXT"],
+    ];
+
+    for (const [label, sql] of columnMigrations) {
+      try {
+        await client.query(sql);
+      } catch (colErr) {
+        logger.error({ err: colErr, label }, "ensureTables: column migration failed");
+      }
+    }
+
+    // Idempotent data fixes (safe to re-run; skip silently if trust_appeals
+    // column didn't exist yet — that case is caught above).
+    const dataMigrations: Array<[string, string]> = [
+      ["trust_appeals status submitted",          "UPDATE trust_appeals SET status = 'submitted' WHERE status = 'received'"],
+      ["trust_appeals status evidence_requested", "UPDATE trust_appeals SET status = 'evidence_requested' WHERE status = 'more_info_needed'"],
+    ];
+
+    for (const [label, sql] of dataMigrations) {
+      try {
+        await client.query(sql);
+      } catch (dataErr) {
+        logger.error({ err: dataErr, label }, "ensureTables: data migration failed");
+      }
+    }
+
     logger.info("ensureTables: schema up to date");
   } catch (err) {
     logger.error({ err }, "ensureTables: failed to sync schema");
