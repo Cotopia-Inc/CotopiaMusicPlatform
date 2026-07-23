@@ -210,6 +210,24 @@ export async function ensureTables(): Promise<void> {
         CONSTRAINT creator_payment_settings_user_unique UNIQUE (user_id)
       );
 
+      -- Trust & Safety appeals (includes content_type/content_id added Jul 2026)
+      CREATE TABLE IF NOT EXISTS trust_appeals (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        submitter_email TEXT,
+        submitter_name TEXT,
+        action_type TEXT NOT NULL,
+        related_content TEXT,
+        reason TEXT NOT NULL,
+        supporting_info TEXT,
+        status TEXT NOT NULL DEFAULT 'submitted',
+        admin_notes TEXT,
+        content_type TEXT,
+        content_id INTEGER,
+        created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+      );
+
       -- Creator Support: demo tip / activity ledger (added Jul 2026)
       CREATE TABLE IF NOT EXISTS support_transactions (
         id SERIAL PRIMARY KEY,
@@ -236,7 +254,7 @@ export async function ensureTables(): Promise<void> {
     // others. Order matters only when a later migration depends on an earlier
     // one — otherwise they are fully independent.
     const columnMigrations: Array<[string, string]> = [
-      // trust_appeals columns (Jul 2026)
+      // trust_appeals: backfill columns on DBs that had the table before Jul 2026
       ["trust_appeals content_type", "ALTER TABLE trust_appeals ADD COLUMN IF NOT EXISTS content_type TEXT"],
       ["trust_appeals content_id",   "ALTER TABLE trust_appeals ADD COLUMN IF NOT EXISTS content_id INTEGER"],
       // cover art admin review (Jul 2026)
