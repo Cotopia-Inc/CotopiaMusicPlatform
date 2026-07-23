@@ -500,7 +500,7 @@ export function AiReviewCard({
                             </div>
                           ) : (
                             <div className="text-[11px] text-muted-foreground italic">
-                              Score not extracted — see class breakdown below for raw Hive output.
+                              Score not extracted — see class breakdown below for raw provider output.
                             </div>
                           )}
                           {/* Full class-by-class breakdown from rawResult — always shown for complete scans */}
@@ -537,7 +537,7 @@ export function AiReviewCard({
                             return (
                               <details className="text-[10px] pt-0.5">
                                 <summary className="cursor-pointer text-muted-foreground hover:text-foreground select-none">
-                                  Raw Hive response (debug)
+                                  Raw detection response (debug)
                                 </summary>
                                 <pre className="mt-1.5 text-[9px] text-muted-foreground bg-muted/40 rounded p-2 overflow-x-auto max-h-48 overflow-y-auto whitespace-pre-wrap break-all leading-relaxed">
                                   {JSON.stringify(scan.rawResult, null, 2)}
