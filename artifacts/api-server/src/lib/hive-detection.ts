@@ -10,13 +10,17 @@
  *
  * V3 API endpoint: POST https://api.thehive.ai/api/v3/hive/ai-generated-and-deepfake-content-detection
  * Auth: Bearer <key>
- * Body: { input: [{ media_url, start_ms?, end_ms? }, …] }
+ * Body: { input: [{ media_url } | { media_base64 }], … }
  * Size limits: 200 MB per URL input, 20 MB base64, 60-second clip max per input item.
  *
- * Long files (> 60 s): split into multiple 60-second input items (same URL, different
- * time windows). Hive processes each segment independently and returns one output per
- * input in status[0].response.output[]. We take the worst-case (max) ai_generated
- * score across all segments.
+ * Media-type behaviour differences:
+ *   • IMAGE  — send URL directly (no duration limit applies).
+ *   • AUDIO  — start_ms / end_ms supported; long files split into 60-second
+ *              windows in a single multi-item request.
+ *   • VIDEO  — start_ms / end_ms are NOT supported for video; the file must be
+ *              ≤ 60 seconds itself. For longer videos we use ffmpeg (via the
+ *              bundled ffmpeg-static binary) to extract and re-encode the first
+ *              60 seconds, then send the clip as a base64-encoded data URI.
  *
  * Representative V3 response shape (for reference / offline testing):
  * {
@@ -41,7 +45,75 @@
  * }
  */
 
+import { execFile } from "child_process";
+import { readFile, unlink } from "fs/promises";
+import { tmpdir } from "os";
+import { join } from "path";
+import { randomUUID } from "crypto";
+import { promisify } from "util";
 import { logger } from "./logger";
+
+const execFileAsync = promisify(execFile);
+
+/**
+ * Lazily resolve the ffmpeg binary path from the bundled ffmpeg-static package.
+ * Returns null when the package isn't present (graceful degradation).
+ */
+function getFfmpegBinary(): string | null {
+  try {
+    // ffmpeg-static exports the binary path as its default export.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const bin = require("ffmpeg-static") as string | null;
+    return bin ?? null;
+  } catch {
+    return null;
+  }
+}
+const FFMPEG_BIN = getFfmpegBinary();
+
+/**
+ * Extracts and re-encodes the first 60 seconds of a video from a URL using
+ * the bundled ffmpeg binary. The output is capped at ~2 Mbps so the resulting
+ * MP4 stays well under Hive's 20 MB base64 upload limit (60 s × 2 Mbps / 8 ≈ 15 MB).
+ *
+ * ffmpeg follows HTTP 302 redirects automatically, so Cotopia storage proxy
+ * URLs work without any pre-resolution step.
+ *
+ * Returns a Buffer containing the clip, or null when:
+ *   - ffmpeg-static is not installed
+ *   - the URL is unreachable
+ *   - ffmpeg exits with an error
+ * Errors are logged but never thrown — the caller falls back gracefully.
+ */
+async function extractVideoClip60s(url: string): Promise<Buffer | null> {
+  if (!FFMPEG_BIN) {
+    logger.warn("hive-detection: ffmpeg-static not available; clip extraction skipped");
+    return null;
+  }
+  const outPath = join(tmpdir(), `hive-clip-${randomUUID()}.mp4`);
+  try {
+    await execFileAsync(FFMPEG_BIN, [
+      "-y",                             // overwrite output without prompt
+      "-i", url,                        // input URL (ffmpeg follows 302 redirects)
+      "-t", "60",                       // clip to first 60 seconds
+      "-vf", "scale='min(1280,iw):-2'", // cap resolution at 1280 px wide, preserve AR
+      "-b:v", "2M",                     // 2 Mbps video → ≈15 MB for 60 s (< 20 MB limit)
+      "-b:a", "128k",                   // 128 kbps audio
+      "-movflags", "+faststart",        // relocate moov atom for HTTP streaming
+      outPath,
+    ], { timeout: 180_000 });           // 3-minute hard ceiling per clip
+    logger.info({ url: url.slice(0, 120) }, "hive-detection: ffmpeg clip extracted");
+    return await readFile(outPath);
+  } catch (err) {
+    logger.warn(
+      { err: err instanceof Error ? err.message : String(err), url: url.slice(0, 120) },
+      "hive-detection: ffmpeg clip extraction failed — falling back to direct URL",
+    );
+    return null;
+  } finally {
+    await unlink(outPath).catch(() => undefined);
+  }
+}
 
 export interface HiveScanResult {
   available: boolean;
@@ -87,14 +159,12 @@ const UNAVAILABLE: HiveScanResult = {
  * Scan a publicly-accessible media URL using the Hive V3 AI-generated content
  * detection API.
  *
- * Long content (> 60 s) is automatically split into up to MAX_SEGMENTS segments
- * of 60 s each using Hive's start_ms / end_ms parameters. All segments are sent
- * in a single HTTP request. The final aiLikelihoodPercent is the worst-case
- * (highest) score across all segments.
+ * Set `mediaType` to "video" for video files — the adapter will use ffmpeg to
+ * extract a 60-second clip and send it as base64 (Hive does not support
+ * start_ms/end_ms for video; the file must genuinely be ≤ 60 s).
  *
- * Pass durationSeconds from the DB record so the adapter can build the correct
- * segment list without probing the file. A value of 0 or undefined causes the
- * adapter to send the full URL as a single input item (Hive handles it if short).
+ * For "audio" (default), long content is split into up to MAX_SEGMENTS 60-second
+ * windows using Hive's start_ms/end_ms parameters.
  *
  * Returns UNAVAILABLE when no API key is configured instead of fabricating data.
  */
@@ -104,45 +174,74 @@ export async function scanWithHive(
     lowThreshold?: number;
     highThreshold?: number;
     criticalThreshold?: number;
-    /** Duration of the media in seconds (from the DB). Required for chunked scanning. */
+    /** Duration of the media in seconds (from the DB). Used for audio chunking. */
     durationSeconds?: number;
+    /**
+     * Media type — controls how long content is handled.
+     *   "video"  → ffmpeg clip extraction (start_ms/end_ms not supported for video)
+     *   "audio"  → start_ms/end_ms time-window chunking (default)
+     *   "image"  → single URL, no windowing
+     */
+    mediaType?: "audio" | "video" | "image";
   },
 ): Promise<HiveScanResult> {
   const apiKey = process.env.HIVE_API_KEY;
   if (!apiKey) return UNAVAILABLE;
 
   // ── Build segment input list ──────────────────────────────────────────────
-  // Hive enforces a 60-second clip limit per input item.
-  // For content > 60 s, split into multiple time-range items from the same URL.
   const SEGMENT_MS = 60_000;
-  const MAX_SEGMENTS = 10; // up to 10 min of content per scan
+  const MAX_SEGMENTS = 10; // up to 10 min of audio content per scan
   const durationMs = Math.round((options?.durationSeconds ?? 0) * 1000);
+  const mediaType = options?.mediaType ?? "audio";
 
-  type HiveInputItem = { media_url: string; start_ms?: number; end_ms?: number };
+  // HiveInputItem accepts either a public URL or base64-encoded data.
+  type HiveInputItem =
+    | { media_url: string; start_ms?: number; end_ms?: number }
+    | { media_base64: string };
   const inputItems: HiveInputItem[] = [];
 
-  if (durationMs > SEGMENT_MS) {
-    // Known long file — split into up to MAX_SEGMENTS 60-second windows.
-    let offset = 0;
-    let count = 0;
-    while (offset < durationMs && count < MAX_SEGMENTS) {
-      inputItems.push({
-        media_url: mediaUrl,
-        start_ms: offset,
-        end_ms: Math.min(offset + SEGMENT_MS, durationMs),
-      });
-      offset += SEGMENT_MS;
-      count++;
+  if (mediaType === "video") {
+    // ── VIDEO ────────────────────────────────────────────────────────────────
+    // Hive does NOT support start_ms/end_ms for video — the clip must genuinely
+    // be ≤ 60 s. For long or unknown-duration videos, use ffmpeg to extract and
+    // re-encode the first 60 seconds, then send as a base64 data URI.
+    if (durationMs === 0 || durationMs > SEGMENT_MS) {
+      const clip = await extractVideoClip60s(mediaUrl);
+      if (clip) {
+        inputItems.push({ media_base64: `data:video/mp4;base64,${clip.toString("base64")}` });
+      } else {
+        // ffmpeg unavailable or failed — send the URL directly and let Hive
+        // return whatever error it returns (surfaced to the admin UI).
+        inputItems.push({ media_url: mediaUrl });
+      }
+    } else {
+      // Known short video (≤ 60 s) — send URL directly, no extraction needed.
+      inputItems.push({ media_url: mediaUrl });
     }
-  } else if (durationMs > 0) {
-    // Known short file (≤ 60 s) — single item with no time params.
+  } else if (mediaType === "image") {
+    // ── IMAGE ────────────────────────────────────────────────────────────────
+    // No duration limit for images — single URL, no time params.
     inputItems.push({ media_url: mediaUrl });
   } else {
-    // Duration unknown (0 / not set in DB). Do NOT send the full URL without a
-    // time cap — Hive rejects files > 60 s with "duration too large".
-    // Cap to the first 60 seconds; if the file is actually shorter Hive handles
-    // the clamp gracefully. This ensures we always get a result instead of failing.
-    inputItems.push({ media_url: mediaUrl, start_ms: 0, end_ms: SEGMENT_MS });
+    // ── AUDIO (default) ──────────────────────────────────────────────────────
+    // start_ms / end_ms are supported for audio. Long files split into 60-second
+    // windows; unknown-duration audio sent as-is (Hive handles short clips fine).
+    if (durationMs > SEGMENT_MS) {
+      let offset = 0;
+      let count = 0;
+      while (offset < durationMs && count < MAX_SEGMENTS) {
+        inputItems.push({
+          media_url: mediaUrl,
+          start_ms: offset,
+          end_ms: Math.min(offset + SEGMENT_MS, durationMs),
+        });
+        offset += SEGMENT_MS;
+        count++;
+      }
+    } else {
+      // Short or unknown-duration audio — single item.
+      inputItems.push({ media_url: mediaUrl });
+    }
   }
 
   try {

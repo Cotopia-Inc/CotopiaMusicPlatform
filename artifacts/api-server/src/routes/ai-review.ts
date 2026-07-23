@@ -537,6 +537,7 @@ router.post(
           highThreshold: settings?.aiHighThreshold ?? 60,
           criticalThreshold: settings?.aiCriticalThreshold ?? 90,
           durationSeconds: durationSeconds ?? 0,
+          mediaType: contentType === "video" ? "video" : "audio",
         });
 
         const [scan] = await db.insert(aiDetectionScansTable).values({
