@@ -382,6 +382,80 @@ router.patch(
   },
 );
 
+// ── Cover art admin review ────────────────────────────────────────────────────
+// Admins can record a decision (approved/flagged/replacement_requested) on the
+// cover art of a song or video. Stored on the content row; separate from the
+// AI authorship review which covers the media file itself.
+
+router.get(
+  "/admin/ai-review/cover-art/:contentType/:contentId",
+  requireAuth, requireRole(...STAFF_ROLES),
+  async (req: AuthRequest, res): Promise<void> => {
+    const contentType = req.params.contentType as "song" | "video";
+    const contentId = Number(req.params.contentId);
+    if (!["song", "video"].includes(contentType) || !contentId || isNaN(contentId)) {
+      res.status(400).json({ error: "Invalid params" }); return;
+    }
+    const table = contentType === "song" ? songsTable : videosTable;
+    const [row] = await db
+      .select({
+        coverArtReviewDecision: (table as typeof songsTable).coverArtReviewDecision,
+        coverArtReviewNote: (table as typeof songsTable).coverArtReviewNote,
+      })
+      .from(table as typeof songsTable)
+      .where(eq((table as typeof songsTable).id, contentId))
+      .limit(1);
+    if (!row) { res.status(404).json({ error: "Not found" }); return; }
+    res.json(row);
+  },
+);
+
+router.patch(
+  "/admin/ai-review/cover-art/:contentType/:contentId",
+  requireAuth, requireRole(...STAFF_ROLES),
+  async (req: AuthRequest, res): Promise<void> => {
+    const contentType = req.params.contentType as "song" | "video";
+    const contentId = Number(req.params.contentId);
+    if (!["song", "video"].includes(contentType) || !contentId || isNaN(contentId)) {
+      res.status(400).json({ error: "Invalid params" }); return;
+    }
+    const body = z.object({
+      decision: z.enum(["approved", "flagged", "replacement_requested", "cleared"]),
+      note: z.string().max(1000).optional(),
+    }).safeParse(req.body);
+    if (!body.success) { res.status(422).json({ error: "Invalid request", issues: body.error.issues }); return; }
+
+    const { decision, note } = body.data;
+    const table = contentType === "song" ? songsTable : videosTable;
+    const cleared = decision === "cleared";
+
+    const [row] = await db
+      .select({ id: (table as typeof songsTable).id })
+      .from(table as typeof songsTable)
+      .where(eq((table as typeof songsTable).id, contentId))
+      .limit(1);
+    if (!row) { res.status(404).json({ error: "Content not found" }); return; }
+
+    await db
+      .update(table as typeof songsTable)
+      .set({
+        coverArtReviewDecision: cleared ? null : decision,
+        coverArtReviewNote: cleared ? null : (note ?? null),
+      })
+      .where(eq((table as typeof songsTable).id, contentId));
+
+    await logAudit(req.user!.userId, "cover_art_review_action", contentType, contentId,
+      `Cover art admin decision: ${decision}`,
+      { decision, note: note ?? null });
+
+    res.json({
+      ok: true,
+      coverArtReviewDecision: cleared ? null : decision,
+      coverArtReviewNote: cleared ? null : (note ?? null),
+    });
+  },
+);
+
 // ── URL helper ────────────────────────────────────────────────────────────────
 // Hive requires a publicly reachable absolute URL. Storage paths in older
 // records (pre-R2) are stored as relative paths ("/api/storage/objects/…").

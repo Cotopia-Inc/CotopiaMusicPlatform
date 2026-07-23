@@ -210,6 +210,12 @@ export async function ensureTables(): Promise<void> {
         CONSTRAINT creator_payment_settings_user_unique UNIQUE (user_id)
       );
 
+      -- Cover art admin review decision (added Jul 2026)
+      ALTER TABLE songs ADD COLUMN IF NOT EXISTS cover_art_review_decision TEXT;
+      ALTER TABLE songs ADD COLUMN IF NOT EXISTS cover_art_review_note TEXT;
+      ALTER TABLE videos ADD COLUMN IF NOT EXISTS cover_art_review_decision TEXT;
+      ALTER TABLE videos ADD COLUMN IF NOT EXISTS cover_art_review_note TEXT;
+
       -- trust_appeals: content classification link columns (added Jul 2026)
       ALTER TABLE trust_appeals ADD COLUMN IF NOT EXISTS content_type TEXT;
       ALTER TABLE trust_appeals ADD COLUMN IF NOT EXISTS content_id INTEGER;

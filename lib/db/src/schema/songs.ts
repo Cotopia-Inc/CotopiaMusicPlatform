@@ -41,6 +41,8 @@ export const songsTable = pgTable("songs", {
   aiReviewedAt: timestamp("ai_reviewed_at", { withTimezone: true }),
   aiOverrideReason: text("ai_override_reason"),               // written reason when admin overrides
   appealStatus: text("appeal_status"),                        // submitted | under_review | evidence_requested | upheld | reversed | modified | closed
+  coverArtReviewDecision: text("cover_art_review_decision"),  // approved | flagged | replacement_requested (null = no decision yet)
+  coverArtReviewNote: text("cover_art_review_note"),          // admin note accompanying the decision
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

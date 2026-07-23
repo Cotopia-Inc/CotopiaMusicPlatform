@@ -7,13 +7,15 @@
  * - Polls automatically until a new result appears after triggering a scan
  * - Prominent error banner with retry button on failure
  * - Full scan history, not just the most recent record
+ * - Admin action panel: approve / flag / request replacement / clear (admins only)
  *
  * IMPORTANT: All detection scores are advisory estimates only.
  */
 import { useState, useRef, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ImageIcon, Scan, Loader2, History, X } from "lucide-react";
+import { ImageIcon, Scan, Loader2, History, X, ShieldAlert, CheckCircle, AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -29,6 +31,36 @@ interface CoverScanRecord {
   scannedAt: string | null;
   createdAt: string;
 }
+
+interface CoverArtReviewState {
+  coverArtReviewDecision: string | null;
+  coverArtReviewNote: string | null;
+}
+
+const COVER_ACTIONS = [
+  { value: "approved", label: "Approve Cover Art" },
+  { value: "flagged", label: "Flag for Review" },
+  { value: "replacement_requested", label: "Request Replacement" },
+  { value: "cleared", label: "Clear Decision" },
+] as const;
+
+const DECISION_CONFIG: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
+  approved: {
+    label: "Approved",
+    color: "text-emerald-600 dark:text-emerald-400 border-emerald-500/30 bg-emerald-500/5",
+    icon: <CheckCircle className="w-3.5 h-3.5" />,
+  },
+  flagged: {
+    label: "Flagged for Review",
+    color: "text-amber-600 dark:text-amber-400 border-amber-500/30 bg-amber-500/5",
+    icon: <AlertTriangle className="w-3.5 h-3.5" />,
+  },
+  replacement_requested: {
+    label: "Replacement Requested",
+    color: "text-red-600 dark:text-red-400 border-red-500/30 bg-red-500/5",
+    icon: <RefreshCw className="w-3.5 h-3.5" />,
+  },
+};
 
 function coverRiskBarColor(percent: number): string {
   if (percent < 25) return "bg-emerald-500";
@@ -55,10 +87,12 @@ function parseCoverClassBreakdown(
     if (!Array.isArray(output) || output.length === 0) return null;
     const maxPerClass = new Map<string, number>();
     for (const item of output) {
-      const classes = item["classes"] as Array<{ class: string; score: number }> | undefined;
+      const classes = item["classes"] as Array<{ class: string; score?: number; value?: number }> | undefined;
       if (!Array.isArray(classes)) continue;
       for (const cls of classes) {
-        const pct = Math.round(cls.score * 100);
+        const raw = typeof cls.score === "number" ? cls.score : (typeof cls.value === "number" ? cls.value : null);
+        if (raw === null) continue;
+        const pct = Math.round(raw * 100);
         const existing = maxPerClass.get(cls.class) ?? 0;
         if (pct > existing) maxPerClass.set(cls.class, pct);
       }
@@ -88,11 +122,16 @@ export function CoverArtScanPanel({
   const [scanning, setScanning] = useState(false);
   const preScanCountRef = useRef(0);
 
+  const [selectedAction, setSelectedAction] = useState<string>("");
+  const [actionNote, setActionNote] = useState("");
+  const [actionLoading, setActionLoading] = useState(false);
+
   const coverContentType = `${contentType}_cover`;
-  const queryKey = ["cover-scans", contentType, contentId];
+  const scanQueryKey = ["cover-scans", contentType, contentId];
+  const reviewQueryKey = ["cover-art-review", contentType, contentId];
 
   const { data: scans = [], isLoading } = useQuery<CoverScanRecord[]>({
-    queryKey,
+    queryKey: scanQueryKey,
     queryFn: async () => {
       const token = localStorage.getItem("cotopia_token");
       const res = await fetch(
@@ -105,6 +144,21 @@ export function CoverArtScanPanel({
     enabled: !!contentId,
     refetchInterval: scanning ? 5_000 : false,
     staleTime: 10_000,
+  });
+
+  const { data: reviewState } = useQuery<CoverArtReviewState>({
+    queryKey: reviewQueryKey,
+    queryFn: async () => {
+      const token = localStorage.getItem("cotopia_token");
+      const res = await fetch(
+        `${import.meta.env.BASE_URL}api/admin/ai-review/cover-art/${contentType}/${contentId}`,
+        { headers: { Authorization: `Bearer ${token ?? ""}` } },
+      );
+      if (!res.ok) return { coverArtReviewDecision: null, coverArtReviewNote: null };
+      return res.json() as Promise<CoverArtReviewState>;
+    },
+    enabled: isAdmin && !!contentId,
+    staleTime: 30_000,
   });
 
   useEffect(() => {
@@ -134,7 +188,7 @@ export function CoverArtScanPanel({
         return;
       }
       toast({ title: "Cover art scan queued", description: "Results will appear automatically once the scan completes." });
-      queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({ queryKey: scanQueryKey });
     } catch {
       toast({ variant: "destructive", title: "Scan failed", description: "Network error" });
       setScanning(false);
@@ -147,8 +201,41 @@ export function CoverArtScanPanel({
       method: "DELETE",
       headers: { Authorization: `Bearer ${token ?? ""}` },
     });
-    queryClient.invalidateQueries({ queryKey });
+    queryClient.invalidateQueries({ queryKey: scanQueryKey });
   }
+
+  async function applyAction() {
+    if (!selectedAction) return;
+    setActionLoading(true);
+    try {
+      const token = localStorage.getItem("cotopia_token");
+      const res = await fetch(
+        `${import.meta.env.BASE_URL}api/admin/ai-review/cover-art/${contentType}/${contentId}`,
+        {
+          method: "PATCH",
+          headers: { Authorization: `Bearer ${token ?? ""}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ decision: selectedAction, note: actionNote || undefined }),
+        },
+      );
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({})) as { error?: string };
+        toast({ variant: "destructive", title: "Action failed", description: err.error ?? "Could not apply action" });
+        return;
+      }
+      toast({ title: "Cover art decision saved" });
+      setSelectedAction("");
+      setActionNote("");
+      queryClient.invalidateQueries({ queryKey: reviewQueryKey });
+    } catch {
+      toast({ variant: "destructive", title: "Action failed", description: "Network error" });
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
+  const currentDecision = reviewState?.coverArtReviewDecision ?? null;
+  const currentNote = reviewState?.coverArtReviewNote ?? null;
+  const decisionConfig = currentDecision ? DECISION_CONFIG[currentDecision] : null;
 
   return (
     <div className="rounded-xl border border-border bg-card overflow-hidden">
@@ -240,7 +327,6 @@ export function CoverArtScanPanel({
 
                         {scan.scanStatus === "complete" && (
                           <div className="space-y-2">
-                            {/* Percentage bar — only when a numeric score was extracted */}
                             {typeof scan.aiLikelihoodPercent === "number" ? (
                               <>
                                 <div className="space-y-1">
@@ -294,7 +380,6 @@ export function CoverArtScanPanel({
                                 Score not extracted — see class breakdown below for raw provider output.
                               </div>
                             )}
-                            {/* Full class-by-class breakdown — always shown for complete scans */}
                             {(() => {
                               const breakdown = parseCoverClassBreakdown(scan.rawResult);
                               if (!breakdown || breakdown.length === 0) return null;
@@ -324,7 +409,6 @@ export function CoverArtScanPanel({
                                 </div>
                               );
                             })()}
-                            {/* Raw Hive response — shown when breakdown is empty so admins can diagnose */}
                             {(() => {
                               const breakdown = parseCoverClassBreakdown(scan.rawResult);
                               if (breakdown && breakdown.length > 0) return null;
@@ -380,6 +464,74 @@ export function CoverArtScanPanel({
                     Advisory estimates only — not conclusive proof.
                   </p>
                 </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── Admin action panel ───────────────────────────────────────────── */}
+        {isAdmin && (
+          <div className="border-t border-border pt-3 space-y-3">
+            {/* Current decision banner */}
+            {decisionConfig && (
+              <div className={cn("flex items-start gap-2 rounded-lg border px-3 py-2.5", decisionConfig.color)}>
+                {decisionConfig.icon}
+                <div className="space-y-0.5">
+                  <div className="text-[11px] font-semibold">{decisionConfig.label}</div>
+                  {currentNote && (
+                    <div className="text-[10px] opacity-80 leading-relaxed">{currentNote}</div>
+                  )}
+                </div>
+              </div>
+            )}
+            {!currentDecision && (
+              <div className="text-[10px] text-muted-foreground italic">No admin decision recorded yet.</div>
+            )}
+
+            {/* Action buttons */}
+            <div className="space-y-2">
+              <div className="text-xs font-medium flex items-center gap-1.5">
+                <ShieldAlert className="w-3.5 h-3.5 text-primary" />
+                Admin Actions
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {COVER_ACTIONS.map((a) => (
+                  <button
+                    key={a.value}
+                    type="button"
+                    onClick={() => setSelectedAction(selectedAction === a.value ? "" : a.value)}
+                    className={cn(
+                      "px-2.5 py-1 rounded-lg text-[11px] font-medium border transition-colors",
+                      selectedAction === a.value
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border text-muted-foreground hover:border-primary/50",
+                    )}
+                  >
+                    {a.label}
+                  </button>
+                ))}
+              </div>
+
+              {selectedAction && selectedAction !== "cleared" && (
+                <Textarea
+                  aria-label="Admin note"
+                  placeholder="Optional: add a note about this decision…"
+                  className="text-xs min-h-[60px]"
+                  value={actionNote}
+                  onChange={(e) => setActionNote(e.target.value)}
+                />
+              )}
+
+              {selectedAction && (
+                <Button
+                  type="button"
+                  size="sm"
+                  className="gap-2 text-xs"
+                  onClick={() => void applyAction()}
+                  disabled={actionLoading}
+                >
+                  {actionLoading ? "Applying…" : "Apply"}
+                </Button>
               )}
             </div>
           </div>

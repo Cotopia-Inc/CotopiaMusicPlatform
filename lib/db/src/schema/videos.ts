@@ -35,6 +35,8 @@ export const videosTable = pgTable("videos", {
   aiReviewedAt: timestamp("ai_reviewed_at", { withTimezone: true }),
   aiOverrideReason: text("ai_override_reason"),
   appealStatus: text("appeal_status"),
+  coverArtReviewDecision: text("cover_art_review_decision"),
+  coverArtReviewNote: text("cover_art_review_note"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
