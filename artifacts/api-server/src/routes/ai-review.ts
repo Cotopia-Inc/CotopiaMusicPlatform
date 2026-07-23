@@ -16,7 +16,7 @@ import {
   usersTable, artistsTable,
 } from "@workspace/db";
 import { requireAuth, requireRole, type AuthRequest } from "../lib/auth";
-import { scanWithHive } from "../lib/hive-detection";
+import { scanWithHive, getFFmpegStatus } from "../lib/hive-detection";
 import { r2Available, getR2PublicUrl } from "../lib/r2Storage";
 
 const router = Router();
@@ -874,6 +874,19 @@ router.get(
     } catch (err) {
       res.json({ configured: true, status: "unreachable", message: `AI detection API key is set but provider could not be reached: ${err instanceof Error ? err.message : "network error"}` });
     }
+  },
+);
+
+// ── ffmpeg diagnostic ─────────────────────────────────────────────────────────
+// GET /api/ai/ffmpeg-status  (master_admin only)
+// Returns the resolved binary path and a live `ffmpeg -version` test so we can
+// confirm the binary is present and executable in the production environment.
+router.get(
+  "/ai/ffmpeg-status",
+  requireAuth, requireRole("master_admin"),
+  async (_req, res): Promise<void> => {
+    const status = await getFFmpegStatus();
+    res.json(status);
   },
 );
 

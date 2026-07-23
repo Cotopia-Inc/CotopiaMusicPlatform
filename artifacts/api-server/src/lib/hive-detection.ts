@@ -46,7 +46,8 @@
  */
 
 import { execFile } from "child_process";
-import { readFile, unlink } from "fs/promises";
+import { accessSync, constants } from "fs";
+import { readFile, writeFile, unlink } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
 import { randomUUID } from "crypto";
@@ -56,80 +57,145 @@ import { logger } from "./logger";
 const execFileAsync = promisify(execFile);
 
 /**
- * Lazily resolve the ffmpeg binary path from the bundled ffmpeg-static package.
- * Returns null when the package isn't present (graceful degradation).
+ * Resolve the ffmpeg binary path and verify it is executable on this system.
+ * Returns null when the package is absent or the binary can't be executed.
  */
 function getFfmpegBinary(): string | null {
   try {
-    // ffmpeg-static exports the binary path as its default export.
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const bin = require("ffmpeg-static") as string | null;
-    return bin ?? null;
-  } catch {
+    if (!bin) return null;
+    // Verify the binary physically exists and is executable on this host.
+    // This catches the case where pnpm installed the package but the binary
+    // was stripped, has wrong permissions, or is for a different arch.
+    accessSync(bin, constants.X_OK);
+    return bin;
+  } catch (err) {
+    logger.warn({ err: String(err) }, "hive-detection: ffmpeg-static binary not executable");
     return null;
   }
 }
 const FFMPEG_BIN = getFfmpegBinary();
-// Log at module load time so the path is visible in Render's deploy logs.
 logger.info(
-  { ffmpegBin: FFMPEG_BIN ?? "(not found)", exists: FFMPEG_BIN != null },
-  "hive-detection: ffmpeg-static binary resolution",
+  { ffmpegBin: FFMPEG_BIN ?? "(not found / not executable)", ready: FFMPEG_BIN != null },
+  "hive-detection: ffmpeg binary status",
 );
 
 /**
- * Extracts and re-encodes the first 60 seconds of a video from a URL using
- * the bundled ffmpeg binary. The output is capped at ~2 Mbps so the resulting
- * MP4 stays well under Hive's 20 MB base64 upload limit (60 s × 2 Mbps / 8 ≈ 15 MB).
+ * Extracts and re-encodes the first 60 seconds of a video using the bundled
+ * ffmpeg binary. The clip is capped at 2 Mbps so the resulting MP4 stays well
+ * under Hive's 20 MB base64 upload limit (60 s × 2 Mbps / 8 ≈ 15 MB).
  *
- * ffmpeg follows HTTP 302 redirects automatically, so Cotopia storage proxy
- * URLs work without any pre-resolution step.
+ * Download strategy: Node.js `fetch` downloads a capped slice of the video
+ * (first 200 MB via HTTP Range). This keeps ffmpeg entirely off the network —
+ * it reads a local temp file — which eliminates any Render loopback / TLS /
+ * redirect issues that plagued the previous URL-input approach.
  *
- * Returns a Buffer containing the clip, or null when:
- *   - ffmpeg-static is not installed
- *   - the URL is unreachable
- *   - ffmpeg exits with an error
- * Errors are logged but never thrown — the caller falls back gracefully.
+ * 200 MB cap rationale: at 8 Mbps (HD) that is ~200 s of content; at 2 Mbps
+ * (typical web video) it is ~800 s. We only ever need 60 s for Hive.
+ *
+ * Returns a Buffer containing the clip, or null on any failure (never throws).
  */
 async function extractVideoClip60s(url: string): Promise<Buffer | null> {
   if (!FFMPEG_BIN) {
-    logger.warn("hive-detection: ffmpeg-static not available; clip extraction skipped");
+    logger.warn("hive-detection: ffmpeg binary unavailable; video clip extraction skipped");
     return null;
   }
+
+  // Cap download at 200 MB — covers ≥60 s at any realistic web-video bitrate.
+  const MAX_DOWNLOAD_BYTES = 200 * 1024 * 1024;
+  const inPath  = join(tmpdir(), `hive-in-${randomUUID()}.mp4`);
   const outPath = join(tmpdir(), `hive-clip-${randomUUID()}.mp4`);
-  logger.info({ url: url.slice(0, 200), ffmpegBin: FFMPEG_BIN }, "hive-detection: starting ffmpeg clip extraction");
+
+  logger.info(
+    { url: url.slice(0, 200), ffmpegBin: FFMPEG_BIN, maxMB: 200 },
+    "hive-detection: downloading video for clip extraction",
+  );
+
   try {
-    const { stderr } = await execFileAsync(FFMPEG_BIN, [
-      "-loglevel", "error",             // suppress progress spam; only log real errors
-      "-y",                             // overwrite output without prompt
-      "-i", url,                        // input URL (ffmpeg follows 302 redirects)
-      "-t", "60",                       // clip to first 60 seconds
-      "-vf", "scale='min(1280,iw):-2'", // cap resolution at 1280 px wide, preserve AR
-      "-b:v", "2M",                     // 2 Mbps video → ≈15 MB for 60 s (< 20 MB limit)
-      "-b:a", "128k",                   // 128 kbps audio
-      "-movflags", "+faststart",        // relocate moov atom for HTTP streaming
-      outPath,
-    ], { timeout: 180_000 });           // 3-minute hard ceiling per clip
-    if (stderr) {
-      logger.warn({ stderr: stderr.slice(0, 500) }, "hive-detection: ffmpeg stderr (non-fatal)");
+    // ── Step 1: download via Node.js fetch (no ffmpeg network access) ──────
+    const dlResp = await fetch(url, {
+      headers: { Range: `bytes=0-${MAX_DOWNLOAD_BYTES - 1}` },
+      signal: AbortSignal.timeout(120_000),
+    });
+
+    // 200 OK (server ignores Range) or 206 Partial Content are both fine.
+    if (!dlResp.ok && dlResp.status !== 206) {
+      logger.error(
+        { status: dlResp.status, url: url.slice(0, 200) },
+        "hive-detection: video download failed — cannot extract clip",
+      );
+      return null;
     }
+
+    const downloaded = Buffer.from(await dlResp.arrayBuffer());
+    logger.info(
+      { downloadedBytes: downloaded.length },
+      "hive-detection: video downloaded; running ffmpeg",
+    );
+    await writeFile(inPath, downloaded);
+
+    // ── Step 2: ffmpeg reads local file — no network needed ────────────────
+    const { stderr } = await execFileAsync(FFMPEG_BIN, [
+      "-loglevel", "error",             // only print real errors, no progress spam
+      "-y",                             // overwrite without prompt
+      "-i", inPath,                     // LOCAL temp file (no URL / no network)
+      "-t", "60",                       // clip to first 60 seconds
+      "-vf", "scale='min(1280,iw):-2'", // cap width at 1280 px, preserve aspect ratio
+      "-b:v", "2M",                     // 2 Mbps → ≈15 MB for 60 s (< 20 MB Hive limit)
+      "-b:a", "128k",                   // 128 kbps audio
+      "-movflags", "+faststart",        // moov atom first for HTTP streaming
+      outPath,
+    ], { timeout: 120_000 });
+
+    if (stderr) {
+      logger.warn({ stderr: stderr.slice(0, 500) }, "hive-detection: ffmpeg stderr");
+    }
+
     const buf = await readFile(outPath);
     logger.info(
-      { url: url.slice(0, 120), sizeBytes: buf.length },
+      { clipBytes: buf.length },
       "hive-detection: ffmpeg clip extracted successfully",
     );
     return buf;
+
   } catch (err) {
-    // Capture full stderr from the child_process error so the Render logs show
-    // exactly what ffmpeg rejected (bad codec, unreachable URL, etc.)
     const msg = err instanceof Error ? err.message : String(err);
-    // child_process wraps stderr in the error message after a newline
     logger.error(
-      { ffmpegBin: FFMPEG_BIN, url: url.slice(0, 200), detail: msg.slice(0, 1000) },
-      "hive-detection: ffmpeg clip extraction FAILED",
+      { ffmpegBin: FFMPEG_BIN, url: url.slice(0, 200), detail: msg.slice(0, 1200) },
+      "hive-detection: video clip extraction FAILED",
     );
     return null;
   } finally {
+    await unlink(inPath).catch(() => undefined);
     await unlink(outPath).catch(() => undefined);
+  }
+}
+
+/**
+ * Returns diagnostic information about the ffmpeg binary on this host.
+ * Used by the /api/ai/ffmpeg-status admin endpoint to verify production state.
+ */
+export async function getFFmpegStatus(): Promise<{
+  binPath: string | null;
+  ready: boolean;
+  version: string | null;
+  error: string | null;
+}> {
+  if (!FFMPEG_BIN) {
+    return { binPath: null, ready: false, version: null, error: "binary not found or not executable" };
+  }
+  try {
+    const { stdout, stderr } = await execFileAsync(FFMPEG_BIN, ["-version"], { timeout: 5_000 });
+    const firstLine = (stdout || stderr || "").split("\n")[0].trim();
+    return { binPath: FFMPEG_BIN, ready: true, version: firstLine || "(unknown)", error: null };
+  } catch (err) {
+    return {
+      binPath: FFMPEG_BIN,
+      ready: false,
+      version: null,
+      error: err instanceof Error ? err.message.slice(0, 300) : String(err),
+    };
   }
 }
 
