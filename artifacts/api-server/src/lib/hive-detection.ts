@@ -122,6 +122,7 @@ export async function scanWithHive(
   const inputItems: HiveInputItem[] = [];
 
   if (durationMs > SEGMENT_MS) {
+    // Known long file — split into up to MAX_SEGMENTS 60-second windows.
     let offset = 0;
     let count = 0;
     while (offset < durationMs && count < MAX_SEGMENTS) {
@@ -133,9 +134,15 @@ export async function scanWithHive(
       offset += SEGMENT_MS;
       count++;
     }
-  } else {
-    // Short file — single item with no time params so Hive can infer boundaries.
+  } else if (durationMs > 0) {
+    // Known short file (≤ 60 s) — single item with no time params.
     inputItems.push({ media_url: mediaUrl });
+  } else {
+    // Duration unknown (0 / not set in DB). Do NOT send the full URL without a
+    // time cap — Hive rejects files > 60 s with "duration too large".
+    // Cap to the first 60 seconds; if the file is actually shorter Hive handles
+    // the clamp gracefully. This ensures we always get a result instead of failing.
+    inputItems.push({ media_url: mediaUrl, start_ms: 0, end_ms: SEGMENT_MS });
   }
 
   try {
@@ -165,12 +172,20 @@ export async function scanWithHive(
       const errText = await response.text().catch(() => response.statusText);
       let error: string;
       if (response.status === 400) {
-        // 400 is usually "clip too long" or "URL not reachable" — give actionable message.
-        error = `Hive rejected the file (400). Possible causes: URL not publicly reachable, clip exceeds 200 MB, or unsupported format. Detail: ${errText.slice(0, 300)}`;
+        const lower = errText.toLowerCase();
+        if (lower.includes("duration") || lower.includes("too large") || lower.includes("60")) {
+          error = `Video is too long for the detection provider (max 60 s per segment). `
+            + `Make sure the content has a duration recorded in the database so automatic chunking activates. `
+            + `Detail: ${errText.slice(0, 200)}`;
+        } else if (lower.includes("reachable") || lower.includes("fetch") || lower.includes("url")) {
+          error = `Detection provider could not reach the media URL — ensure the file is publicly accessible. Detail: ${errText.slice(0, 200)}`;
+        } else {
+          error = `Detection provider rejected the file (400). Possible causes: URL not publicly reachable, file exceeds 200 MB, or unsupported format. Detail: ${errText.slice(0, 200)}`;
+        }
       } else if (response.status === 413) {
-        error = "Segment too large for Hive (> 200 MB). Use a lower bitrate or shorter clip.";
+        error = "Segment too large for detection provider (> 200 MB). Use a lower bitrate or shorter clip.";
       } else {
-        error = `Hive API error ${response.status}: ${errText.slice(0, 300)}`;
+        error = `Detection provider error ${response.status}: ${errText.slice(0, 200)}`;
       }
       return { ...UNAVAILABLE, available: false, error };
     }
