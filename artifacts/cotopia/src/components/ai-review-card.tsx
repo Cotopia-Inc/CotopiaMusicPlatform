@@ -183,10 +183,12 @@ function parseClassBreakdown(
     if (!Array.isArray(output) || output.length === 0) return null;
     const maxPerClass = new Map<string, number>();
     for (const item of output) {
-      const classes = item["classes"] as Array<{ class: string; score: number }> | undefined;
+      const classes = item["classes"] as Array<{ class: string; score?: number; value?: number }> | undefined;
       if (!Array.isArray(classes)) continue;
       for (const cls of classes) {
-        const pct = Math.round(cls.score * 100);
+        const raw = typeof cls.score === "number" ? cls.score : typeof cls.value === "number" ? cls.value : null;
+        if (raw === null) continue;
+        const pct = Math.round(raw * 100);
         const existing = maxPerClass.get(cls.class) ?? 0;
         if (pct > existing) maxPerClass.set(cls.class, pct);
       }
