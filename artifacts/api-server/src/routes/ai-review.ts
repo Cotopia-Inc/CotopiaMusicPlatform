@@ -17,6 +17,7 @@ import {
 } from "@workspace/db";
 import { requireAuth, requireRole, type AuthRequest } from "../lib/auth";
 import { scanWithHive } from "../lib/hive-detection";
+import { r2Available, getR2PublicUrl } from "../lib/r2Storage";
 
 const router = Router();
 
@@ -456,15 +457,39 @@ router.patch(
   },
 );
 
-// ── URL helper ────────────────────────────────────────────────────────────────
-// Hive requires a publicly reachable absolute URL. Storage paths in older
-// records (pre-R2) are stored as relative paths ("/api/storage/objects/…").
-// Convert them using the request's forwarded-host so Hive can fetch the file.
+// ── URL helpers ───────────────────────────────────────────────────────────────
+
+/**
+ * Convert a relative storage path to an absolute URL using the request host.
+ * Used as a fallback when R2 direct URLs are not available.
+ */
 function makeAbsoluteUrl(url: string, req: AuthRequest): string {
   if (url.startsWith("http://") || url.startsWith("https://")) return url;
   const proto = (req.headers["x-forwarded-proto"] as string | undefined) ?? req.protocol ?? "https";
   const host = (req.headers["x-forwarded-host"] as string | undefined) ?? req.get("host") ?? "localhost";
   return `${proto}://${host}${url.startsWith("/") ? url : `/${url}`}`;
+}
+
+/**
+ * Resolve the best public URL for a media file for use by external services
+ * (Hive AI detection, ffmpeg clip extraction).
+ *
+ * Preference order:
+ *   1. Already absolute URL → return as-is (GCS signed URL, external CDN, etc.)
+ *   2. R2 available + relative /api/storage/objects/… path → return R2 public CDN
+ *      URL directly. This bypasses the Cotopia Express proxy which on Render
+ *      would require ffmpeg/Hive to make a loopback request through the load
+ *      balancer — a path that can stall or be blocked.
+ *   3. Fallback: construct absolute URL via request host headers.
+ */
+function resolveMediaUrl(rawUrl: string, req: AuthRequest): string {
+  if (rawUrl.startsWith("http://") || rawUrl.startsWith("https://")) return rawUrl;
+  // Convert "/api/storage/objects/uploads/<uuid>" → "/objects/uploads/<uuid>"
+  if (r2Available() && rawUrl.startsWith("/api/storage/objects/")) {
+    const objectPath = rawUrl.slice("/api/storage".length); // "/objects/uploads/<uuid>"
+    return getR2PublicUrl(objectPath);
+  }
+  return makeAbsoluteUrl(rawUrl, req);
 }
 
 // ── Hive detection scan ───────────────────────────────────────────────────────
@@ -503,8 +528,11 @@ router.post(
       return;
     }
 
-    // Hive requires an absolute URL — convert relative paths before responding.
-    const mediaUrl = makeAbsoluteUrl(rawMediaUrl, req);
+    // Resolve the best public URL for this media file.
+    // For R2-backed storage on Render this returns the direct CDN URL, which
+    // avoids loopback through Render's own load balancer when ffmpeg downloads
+    // the file for clip extraction (the loopback path was causing silent failures).
+    const mediaUrl = resolveMediaUrl(rawMediaUrl, req);
 
     const settings = await getSettings();
     const requestedBy = req.user!.userId;

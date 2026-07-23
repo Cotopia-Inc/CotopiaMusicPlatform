@@ -70,6 +70,11 @@ function getFfmpegBinary(): string | null {
   }
 }
 const FFMPEG_BIN = getFfmpegBinary();
+// Log at module load time so the path is visible in Render's deploy logs.
+logger.info(
+  { ffmpegBin: FFMPEG_BIN ?? "(not found)", exists: FFMPEG_BIN != null },
+  "hive-detection: ffmpeg-static binary resolution",
+);
 
 /**
  * Extracts and re-encodes the first 60 seconds of a video from a URL using
@@ -91,8 +96,10 @@ async function extractVideoClip60s(url: string): Promise<Buffer | null> {
     return null;
   }
   const outPath = join(tmpdir(), `hive-clip-${randomUUID()}.mp4`);
+  logger.info({ url: url.slice(0, 200), ffmpegBin: FFMPEG_BIN }, "hive-detection: starting ffmpeg clip extraction");
   try {
-    await execFileAsync(FFMPEG_BIN, [
+    const { stderr } = await execFileAsync(FFMPEG_BIN, [
+      "-loglevel", "error",             // suppress progress spam; only log real errors
       "-y",                             // overwrite output without prompt
       "-i", url,                        // input URL (ffmpeg follows 302 redirects)
       "-t", "60",                       // clip to first 60 seconds
@@ -102,12 +109,23 @@ async function extractVideoClip60s(url: string): Promise<Buffer | null> {
       "-movflags", "+faststart",        // relocate moov atom for HTTP streaming
       outPath,
     ], { timeout: 180_000 });           // 3-minute hard ceiling per clip
-    logger.info({ url: url.slice(0, 120) }, "hive-detection: ffmpeg clip extracted");
-    return await readFile(outPath);
+    if (stderr) {
+      logger.warn({ stderr: stderr.slice(0, 500) }, "hive-detection: ffmpeg stderr (non-fatal)");
+    }
+    const buf = await readFile(outPath);
+    logger.info(
+      { url: url.slice(0, 120), sizeBytes: buf.length },
+      "hive-detection: ffmpeg clip extracted successfully",
+    );
+    return buf;
   } catch (err) {
-    logger.warn(
-      { err: err instanceof Error ? err.message : String(err), url: url.slice(0, 120) },
-      "hive-detection: ffmpeg clip extraction failed — falling back to direct URL",
+    // Capture full stderr from the child_process error so the Render logs show
+    // exactly what ffmpeg rejected (bad codec, unreachable URL, etc.)
+    const msg = err instanceof Error ? err.message : String(err);
+    // child_process wraps stderr in the error message after a newline
+    logger.error(
+      { ffmpegBin: FFMPEG_BIN, url: url.slice(0, 200), detail: msg.slice(0, 1000) },
+      "hive-detection: ffmpeg clip extraction FAILED",
     );
     return null;
   } finally {
