@@ -386,7 +386,9 @@ export async function scanWithHive(
     const statusArr = raw["status"] as Array<Record<string, unknown>> | undefined;
     const firstStatus = statusArr?.[0];
     const responseObj = firstStatus?.["response"] as Record<string, unknown> | undefined;
-    const outputArr = responseObj?.["output"] as Array<Record<string, unknown>> | undefined;
+    // Some Hive response shapes nest output under status[0].response.output;
+    // others (newer API versions) return output directly at the root level.
+    const outputArr = (responseObj?.["output"] ?? raw["output"]) as Array<Record<string, unknown>> | undefined;
 
     let aiScore: number | null = null;
     const indicators: string[] = [];

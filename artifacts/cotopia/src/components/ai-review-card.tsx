@@ -179,7 +179,7 @@ function parseClassBreakdown(
   try {
     const statusArr = rawResult["status"] as Array<Record<string, unknown>> | undefined;
     const response = statusArr?.[0]?.["response"] as Record<string, unknown> | undefined;
-    const output = response?.["output"] as Array<Record<string, unknown>> | undefined;
+    const output = (response?.["output"] ?? rawResult["output"]) as Array<Record<string, unknown>> | undefined;
     if (!Array.isArray(output) || output.length === 0) return null;
     const maxPerClass = new Map<string, number>();
     for (const item of output) {
