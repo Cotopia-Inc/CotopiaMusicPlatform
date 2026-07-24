@@ -232,10 +232,9 @@ router.post("/submissions", requireAuth, requireVerifiedEmail, async (req: AuthR
     ...(aiReviewStatus !== undefined ? { aiReviewStatus } : {}),
   }).returning();
 
-  // Fire-and-forget: scans run in background, do not block the response.
-  // No-ops if enableAiReview is disabled or provider is not configured.
-  void scheduleScan(d.type as "song" | "video", contentId, d.fileUrl ?? null);
-  void scheduleCoverScan(d.type as "song" | "video", contentId, d.coverUrl ?? null);
+  // Scans are manual-only — admin must press "Request Detection Scan".
+  // Auto-scanning on submission create was removed to prevent unintended
+  // Hive API calls and rate-limit exhaustion.
 
   const enriched = await enrichSubmission(submission);
   res.status(201).json(enriched);
@@ -371,9 +370,7 @@ router.post("/submissions/bulk", requireAuth, requireVerifiedEmail, async (req: 
     if (shouldHardReject) {
       rejectedSubmissionIds.push(submission.id);
     } else {
-      // Fire-and-forget: no-ops if enableAiReview is disabled or provider is not configured.
-      void scheduleScan(d.type as "song" | "video", contentId, file.fileUrl ?? null);
-      void scheduleCoverScan(d.type as "song" | "video", contentId, d.coverUrl ?? null);
+      // Scans are manual-only — no auto-scan on bulk create either.
       results.push(await enrichSubmission(submission));
     }
   }
