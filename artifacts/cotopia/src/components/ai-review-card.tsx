@@ -402,28 +402,33 @@ export function AiReviewCard({
 
           {/* Scan trigger */}
           {(isAdmin || isModerator) && onScanRequest && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="gap-2 text-xs"
-              disabled={scanRequesting || data.aiReviewStatus === "scan_pending"}
-              onClick={async () => {
-                if (scanRequesting || data.aiReviewStatus === "scan_pending") return;
-                setScanRequesting(true);
-                try {
-                  await onScanRequest();
-                } finally {
-                  setScanRequesting(false);
-                }
-              }}
-            >
-              {(scanRequesting || data.aiReviewStatus === "scan_pending") ? (
-                <><Loader2 className="w-3.5 h-3.5 animate-spin" />Scanning…</>
-              ) : (
-                <><Scan className="w-3.5 h-3.5" />Request Detection Scan</>
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="gap-2 text-xs"
+                disabled={scanRequesting || data.aiReviewStatus === "scan_pending"}
+                onClick={async () => {
+                  if (scanRequesting || data.aiReviewStatus === "scan_pending") return;
+                  setScanRequesting(true);
+                  try {
+                    await onScanRequest();
+                  } finally {
+                    setScanRequesting(false);
+                  }
+                }}
+              >
+                {(scanRequesting || data.aiReviewStatus === "scan_pending") ? (
+                  <><Loader2 className="w-3.5 h-3.5 animate-spin" />Scanning…</>
+                ) : (
+                  <><Scan className="w-3.5 h-3.5" />Request Detection Scan</>
+                )}
+              </Button>
+              {contentType === "video" && (
+                <p className="text-[10px] text-muted-foreground">Large files may take a little longer.</p>
               )}
-            </Button>
+            </>
           )}
 
           {/* Scan history */}
